@@ -1,0 +1,53 @@
+#====================================================
+#
+#　マップのメッシュフィールド配置のエディタ [meshfield.txt]
+#　制作者 : 有馬　武志
+#
+#====================================================
+
+#----------------------------------------------------
+#　メッシュフィールドの設置数
+#----------------------------------------------------
+MESHFIELD_SETNUM = 3
+
+#----------------------------------------------------
+#　メッシュフィールドの設置情報
+#----------------------------------------------------
+MESHFIELD_START
+	TEXTURETYPE = 1
+	X_DIVIDE = 15
+	Z_DIVIDE = 15
+	X_LENGTH = 800.00
+	Z_LENGTH = 800.00
+	VTX0_HEIGHT = 0.00
+	VTX1_HEIGHT = 0.00
+	VTX2_HEIGHT = 0.00
+	VTX3_HEIGHT = 0.00
+	POS = -400.00 0.00 400.00
+MESHFIELD_END
+
+MESHFIELD_START
+	TEXTURETYPE = 0
+	X_DIVIDE = 1
+	Z_DIVIDE = 1
+	X_LENGTH = 134.00
+	Z_LENGTH = 180.00
+	VTX0_HEIGHT = 0.00
+	VTX1_HEIGHT = 0.00
+	VTX2_HEIGHT = -115.00
+	VTX3_HEIGHT = -115.00
+	POS = -65.62 -0.56 -398.75
+MESHFIELD_END
+
+MESHFIELD_START
+	TEXTURETYPE = 0
+	X_DIVIDE = 1
+	Z_DIVIDE = 1
+	X_LENGTH = 134.00
+	Z_LENGTH = 180.00
+	VTX0_HEIGHT = 0.00
+	VTX1_HEIGHT = 0.00
+	VTX2_HEIGHT = -115.00
+	VTX3_HEIGHT = -115.00
+	POS = -65.62 106.69 570.00
+MESHFIELD_END
