@@ -25,7 +25,6 @@ class CScene2D;
 class CInputKeyBoard;
 class CXInput;
 class CLoadTextEffect;
-class CSatisfaction;
 class CLogo;
 
 //=================================
@@ -79,7 +78,6 @@ public:
 	static CLoadTextEffect * GetLoadEffect(void) { return m_pLoadEffect; }		//読み込んだエフェクトのポインタ
 	static CLoadTextMotion * GetBoyMotion(void) { return m_pBoyMotion; }		//男性モーションの取得
 	static CLoadTextMotion * GetGirlMotion(void) { return m_pGirlMotion; }		//女性モーションの取得
-	static CSatisfaction * GetSatisfaction(void) { return m_pSatisfaction; }	//満足度の取得
 	static bool GetCustomerPutin(void) { return m_bCustomer; }							//お客さんの乗車状態
 	static CLogo * GetScoreUI(int nNum) { return m_pScoreUI[nNum]; }						//スコア関係のUIの取得
 	static TYPE GetType(void) { return m_type; }
@@ -95,9 +93,6 @@ private:
 	void UpdateLeftHandle(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);		//左ハンドル
 	void UpdateBack(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//後退
 	void UpdateFront(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//前進
-	void UpdateRideBefor(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);	//乗車前の状態
-	void UpdateRideStart(void);	//運送開始
-	void UpdateRide(void);		//乗車状態かどうか
 	void UpdateDown(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);		//降車したら
 	void UpdateEnd(void);		//終了
 	void ChangeLine(void);		//文章の変更
@@ -122,7 +117,6 @@ private:
 	static CLoadTextEffect * m_pLoadEffect;		//エフェクトの読み込みポインタ
 	static CLoadTextMotion * m_pBoyMotion;		//男性モーション読み込み
 	static CLoadTextMotion * m_pGirlMotion;		//女性モーション読み込み
-	static CSatisfaction * m_pSatisfaction;		//お客さんの満足度
 	static bool m_bCustomer;				//お客さんの乗車状態フラグ
 	static CLogo *m_pScoreUI[MAX_SCORE_UI_TUTORIAL];		//ロゴへのポインタ スコアUIに関係している物
 

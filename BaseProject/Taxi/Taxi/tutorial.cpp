@@ -16,26 +16,13 @@
 #include "gamecamera.h"
 #include "player.h"
 #include "loadText.h"
-#include "sparkeffect .h"
-#include "smokeeffect.h"
 #include "tire.h"
-#include "ground.h"
 #include "logo.h"
 #include "object.h"
 #include "loadText.h"
-#include "effecttool.h"
-#include "particlebillboad.h"
-#include "humanbace.h"
-#include "mark.h"
-#include "arrow.h"
-#include "score.h"
-#include "totalscore.h"
-#include "satisfactionlevel.h"
 #include "time.h"
-#include "objbillboad.h"
 #include "wall.h"
-#include "addcoin.h"
-#include "grasseffect.h"
+
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -114,7 +101,6 @@ CGround * CTutorial::m_pGround = NULL;
 CLoadTextEffect * CTutorial::m_pLoadEffect = NULL;
 CLoadTextMotion * CTutorial::m_pBoyMotion = NULL;
 CLoadTextMotion * CTutorial::m_pGirlMotion = NULL;
-CSatisfaction * CTutorial::m_pSatisfaction = NULL;
 CLogo * CTutorial::m_pScoreUI[MAX_SCORE_UI_TUTORIAL] = {};
 bool CTutorial::m_bCustomer = false;
 CTutorial::TYPE CTutorial::m_type = TYPE_START;
@@ -148,70 +134,30 @@ HRESULT CTutorial::Init()
 	//--------------------
 	CFade::Load();					//フェードテクスチャ
 	CMeshField::Load();				//メッシュフィールドテクスチャ
-	CSmokeEffect::LoadTex();		//煙テクスチャ
-	CSparkEffect::LoadTex();		//火花テクスチャ
 	CTire::LoadTexture();			//タイヤテクスチャ
-	CGround::Load();				//川テクスチャ
 	CObject::Load();				//オブジェクトテクスチャ
-	CMark::LoadModel();				//マークモデル
 	CShadow::Load();				//影のテクスチャ
-	CArrow::Load();					//矢印の読み込み
-	CObjBillboad::LoadTexture();	//オブジェクトビルボードのテクスチャ
 	CWall::Load();					//壁の読み込み
-	//草テクスチャの読み込み
-	CGrassEffect::LoadTex();
-
-	//エフェクトの読み込み
-	if (m_pLoadEffect == NULL)
-	{
-		m_pLoadEffect = CLoadTextEffect::Create(TEXT_EFFECT_TOOL);	//テキストの読み込み
-		CEffectTool::LoadEffect();									//エフェクトの読み込み
-		CParticleBillboad::LoadTexture();							//テクスチャの読み込みs
-	}
-
-	//エフェクトの破棄
-	if (m_pLoadEffect != NULL)
-	{
-		m_pLoadEffect->Uninit();
-		delete m_pLoadEffect;
-		m_pLoadEffect = NULL;
-	}
 
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 	CPlayer::LoadModel();		//モデルの読み込み
 
 	if (m_pBoyMotion == NULL) { m_pBoyMotion = CLoadTextMotion::Create(TEXT_BOY_MOTION); }		//男性モーション読み込み
 	if (m_pGirlMotion == NULL) { m_pGirlMotion = CLoadTextMotion::Create(TEXT_GIRL_MOTION); }	//女性モーション読み込み
-	CHumanBace::LoadModel();	//人モデルの読み込み
-
-	//コインテクスチャの読み込み
-	CAddCoin::LoadTex();
 
 	//--------------------
 	// Create
 	//--------------------
 	ObjectCreate();		//オブジェクトの生成
 
-	//オブジェクトビルボードの生成
-	CLoadTextObjBill::Create(TEXT_OBJBILL);
-
 	//壁の読み込み
 	WallTexLoad();
 
 	MeshFildCreate();	//地面の生成
 
-	//川の生成
-	m_pGround = CGround::Create(D3DXVECTOR3(0.0f, -185.0f, 9000.0f), D3DXVECTOR3(-0.2f, 0.0f, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR2(20000.0f, 300.0f), 0);
-
-	//タイマーの生成
-	CTime::Create(D3DXVECTOR3(150.0f, 70.0f, 0.0f));
-
 	//プレイヤーの生成
 	m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, -300.0f));
 	m_pPlayer->LoadText();
-
-	//お客さんの生成
-	CLoadTextCustomer::Create(TEXT_CUSTOMER_SUMMER);
 
 	//UIの生成
 	CLogo::Create(FLAM_POS, FLAM_SIZE, CTexture::TYPE_TUTORIAL_FLAM, 0, CLogo::TYPE_LOGO);	//フレーム
@@ -239,15 +185,6 @@ HRESULT CTutorial::Init()
 	m_pScoreUI[3] = CLogo::Create(D3DXVECTOR3(1080.0f, 120.0f, 0.0f), D3DXVECTOR2(160.0f, 15.0f), CTexture::TYPE_SCORELOGO, 0, CLogo::TYPE_LOGO);		// スコア
 	m_pScoreUI[4] = CLogo::Create(D3DXVECTOR3(950.0f, 95.0f, 0.0f), D3DXVECTOR2(13.0f, 13.0f), CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO);			// \マーク表示(トータルスコア)
 	m_pScoreUI[5] = CLogo::Create(D3DXVECTOR3(958.0f, 155.0f, 0.0f), D3DXVECTOR2(13.0f, 13.0f), CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO);		// \マーク表示(スコア)
-
-	// 満足度の生成
-	m_pSatisfaction = CSatisfaction::Create(D3DXVECTOR3(30.0f, 430.0f, 0.0f), D3DXVECTOR2(15.0f, 35.0f), 3);
-
-	// トータルスコアの生成
-	CTotalScore::Create(D3DXVECTOR3(1205.0f, 95.0f, 0.0f));
-
-	// スコアの生成
-	CScore::Create(D3DXVECTOR3(1200.0f, 156.0f, 0.0f));
 
 	//カメラの生成
 	if (m_pCamera == NULL)
@@ -280,22 +217,11 @@ void CTutorial::Uninit(void)
 	//-------------------
 	CFade::UnLoad();					//フェードテクスチャ
 	CMeshField::UnLoad();				//メッシュフィールドテクスチャ
-	CSparkEffect::Unload();				//火花エフェクトのテクスチャ
-	CSmokeEffect::Unload();				//煙エフェクトのテクスチャ
 	CTire::UnloadTexture();				//タイヤテクスチャ
 	CPlayer::UnloadModel();				//プレイヤーモデル
-	CGround::UnLoad();					//川テクスチャ
 	CObject::UnLoad();					//オブジェクトのテクスチャの破棄
-	CEffectTool::UnloadEffect();		//エフェクトの破棄
-	CParticleBillboad::UnloadTexture();	//エフェクトのテクスチャを破棄
-	CHumanBace::UnloadModel();			//人モデルの破棄
-	CMark::UnloadModel();				//マークモデルの破棄
 	CShadow::UnLoad();					//影テクスチャ
-	CArrow::UnLoad();					//矢印			
-	CObjBillboad::UnloadTexture();		//オブジェクトテクスチャの破棄
 	CWall::UnLoad();					//壁のテクスチャ破棄
-	CAddCoin::UnloadTex();				//コインのテクスチャ
-	CGrassEffect::Unload();
 	//-------------------
 	// Uninit
 	//-------------------
@@ -358,7 +284,6 @@ void CTutorial::Uninit(void)
 	}
 
 	if (m_pLine != NULL) { m_pLine = NULL; }					//文章ポリゴンの破棄
-	if (m_pSatisfaction != NULL) { m_pSatisfaction = NULL; }	//満足度の破棄
 }
 
 //=============================================================================
@@ -392,12 +317,9 @@ void CTutorial::Update(void)
 	case TYPE_BACK:		UpdateBack(pCInputKeyBoard, pCInputJoypad); break;
 	case TYPE_FRONT:	UpdateFront(pCInputKeyBoard, pCInputJoypad); break;
 	case TYPE_MIDDLE2:	UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_RIDE1:	UpdateRideBefor(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_RIDE2:	UpdateRide(); break;
 	case TYPE_MIDDLE3:
 	case TYPE_MIDDLE4:
 	case TYPE_MIDDLE5:  UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_RIDESTART: UpdateRideStart(); break;
 	case TYPE_END:		UpdateDown(pCInputKeyBoard, pCInputJoypad);		break;
 	case TYPE_END1:
 	case TYPE_END2:     UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
@@ -838,148 +760,6 @@ void CTutorial::UpdateEnd(void)
 	if (m_nCountTime % END_TIME == 0) { UpdateFade(); }
 }
 
-//=============================================================================
-// 乗車前処理
-//=============================================================================
-void CTutorial::UpdateRideBefor(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//時間の可算
-	m_nCountTime++;
-
-	//入力情報
-	if (pInputKeyboad->GetKeyboardTrigger(DIK_RETURN) == true)
-	{//次の画像に変更
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-		//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//スペースキーの破棄
-		if (m_pSpace != NULL)
-		{
-			m_pSpace->Uninit();
-			m_pSpace = NULL;
-		}
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{
-			UninitBottun();
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_12))
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-							//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//スペースキーの破棄
-		if (m_pSpace != NULL)
-		{
-			m_pSpace->Uninit();
-			m_pSpace = NULL;
-		}
-
-		//ゲームパッド表示
-		if (m_bInput == true) 
-		{ 
-			UninitBottun();
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-	else if (m_nCountTime % TIME == 0)
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-		//スペースキーの破棄
-		if (m_pSpace != NULL)
-		{
-			m_pSpace->Uninit();
-			m_pSpace = NULL;
-		}
-	}
-}
-
-//=============================================================================
-//  乗車状態かの判定
-//=============================================================================
-void CTutorial::UpdateRide(void)
-{
-	if (m_pPlayer->GetPutin() == true)
-	{//乗車状態なら
-		m_pPlayer->SetControl(false);	//操作できない状態にする
-
-		//画像の破棄
-		if (m_pImage != NULL)
-		{
-			m_pImage->Uninit();
-			m_pImage = NULL;
-		}
-
-		ChangeLine();
-	}
-	else
-	{//乗車画像の表示
-		if (m_pImage == NULL)
-		{
-			m_pImage = CLogo::Create(IMAGE_POS, D3DXVECTOR2(1.0f, 1.0f), CTexture::TYPE_TUTORIAL_STOP, 0, CLogo::TYPE_LOGO);
-		}
-
-		m_bCustomer = true;	//乗車可能状態にする
-	}
-
-	//画像を拡大する
-	if (m_pImage != NULL)
-	{
-		m_pImage->Zoom(IMAGE_POS, IMAGE_SIZE, IMAGE_ADDSIZE, true);
-	}
-}
-
-//=============================================================================
-// 乗車スタート処理
-//=============================================================================
-void CTutorial::UpdateRideStart(void)
-{
-	if (m_pPlayer != NULL)
-	{
-		m_pPlayer->SetControl(true); //プレイヤーを操作できるようにする
-
-		//画像を表示する
-		if (m_pImage == NULL)
-		{
-			m_pImage = CLogo::Create(IMAGE_POS, D3DXVECTOR2(1.0f, 1.0f), CTexture::TYPE_TUTORIAL_GO, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{
-			m_pImage->Zoom(IMAGE_POS, IMAGE_SIZE, IMAGE_ADDSIZE, true);
-		}
-
-		//スペースキーの破棄
-		if (m_pSpace != NULL)
-		{
-			m_pSpace->Uninit();
-			m_pSpace = NULL;
-		}
-
-		if (m_pPlayer->GetPutin() == false)
-		{//降車状態だったら次の文章へ
-			ChangeLine();
-		}
-	}
-}
 
 //=============================================================================
 // 降車したら

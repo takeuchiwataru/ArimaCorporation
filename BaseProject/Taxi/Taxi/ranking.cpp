@@ -13,9 +13,7 @@
 #include "sound.h"
 #include "background.h"
 #include "texture.h"
-#include "satisfactionlevel.h"
 #include "logo.h"
-#include "totalscore.h"
 #include "select.h"
 //*****************************************************************************
 // マクロ定義
@@ -40,12 +38,8 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-int				 CRanking::m_aTotalScore[MAX_LEVEL_NUM][MAX_RANKING] = { { 15000, 13000, 11000, 10000, 8000 } , { 18000, 15000, 13000, 10000, 8000 } };
-int				 CRanking::m_aSatisfactionLevel[MAX_LEVEL_NUM][MAX_RANKING] = { { 17, 14, 10, 6, 5 } ,{ 15, 11, 8, 6, 5 } };
+
 int				 CRanking::m_nNum = MAX_RANKING;
-int				 CRanking::m_nSatisfaction = MAX_RANKING;
-CTotalScore		 *CRanking::m_apTotalScore[MAX_RANKING] = {};
-CSatisfaction	 *CRanking::m_pSatisfaction[MAX_RANKING] = {};
 //=============================================================================
 // デフォルトコンストラクタ
 //=============================================================================
@@ -91,22 +85,6 @@ HRESULT CRanking::Init()
 	CLogo::Create(RAKING_CLASS_POS, RAKING_CLASS_SIZE, CTexture::TYPE_RANKING_CLASS, 0, CLogo::TYPE_LOGO);	// クラス
 	CLogo::Create(RAKING_TOTAL_POS, RAKING_TOTAL_SIZE, CTexture::TYPE_RANKING_TOTALLOGO, 0, CLogo::TYPE_LOGO);	// トータルスコア
 
-	// トータルスコアの生成
-	for (int nCntRnaking = 0; nCntRnaking < MAX_RANKING; nCntRnaking++)
-	{
-		nTotalScore = m_aTotalScore[nSelectLevel][nCntRnaking];
-		m_apTotalScore[nCntRnaking] = CTotalScore::Create(RAKING_NUMBER_POS);
-		m_apTotalScore[nCntRnaking]->SetRankingScore(nTotalScore);
-		nTotalScore /= 10;
-	}
-
-	// 満足度の生成
-	for (int nCntSatisfaction = 0; nCntSatisfaction < MAX_RANKING; nCntSatisfaction++)
-	{
-		nSatisfaction = m_aSatisfactionLevel[nSelectLevel][nCntSatisfaction];
-		m_pSatisfaction[nCntSatisfaction] = CSatisfaction::Create(RAKING_SATISFACTION_POS, RAKING_SATISFACTION_SIZE, nSatisfaction);
-	}
-
 	return S_OK;
 }
 //=============================================================================
@@ -120,25 +98,6 @@ void CRanking::Uninit(void)
 	//フェードのテクスチャの破棄
 	CFade::UnLoad();
 
-	// 満足度の破棄
-	for (int nCntSatisfaction = 0; nCntSatisfaction < MAX_RANKING; nCntSatisfaction++)
-	{
-		if (m_pSatisfaction[nCntSatisfaction] != NULL)
-		{
-			m_pSatisfaction[nCntSatisfaction]->Uninit();
-			m_pSatisfaction[nCntSatisfaction] = NULL;
-		}
-	}
-
-	// トータルスコアのの破棄
-	for (int nCntRnaking = 0; nCntRnaking < MAX_RANKING; nCntRnaking++)
-	{
-		if (m_apTotalScore[nCntRnaking] != NULL)
-		{
-			m_apTotalScore[nCntRnaking]->Uninit();
-			m_apTotalScore[nCntRnaking] = NULL;
-		}
-	}
 	//フェード以外削除
 	CScene::NotFadeReleseAll();
 }
@@ -174,34 +133,14 @@ void CRanking::Update(void)
 
 	m_nCntFrame++;
 
-	if (m_nSatisfaction < MAX_RANKING)
-	{
-		if (m_pSatisfaction[m_nSatisfaction] != NULL) { m_pSatisfaction[m_nSatisfaction]->ChangeCol(RANK_IN_COL); }
-	}
 	if (m_nNum >= MAX_RANKING) { return; }	// ランキングの最大数以上の場合 更新処理の終了
-	if (m_apTotalScore[m_nNum] != NULL) { m_apTotalScore[m_nNum]->ChangeCol(RANK_IN_COL); }
-
 }
 //=============================================================================
 // 描画処理
 //=============================================================================
 void CRanking::Draw(void)
 {
-	for (int nCntSatisfaction = 0; nCntSatisfaction < MAX_RANKING; nCntSatisfaction++)
-	{	// 満足度をNULLチェックして描画
-		if (m_pSatisfaction[nCntSatisfaction] != NULL)
-		{
-			m_pSatisfaction[nCntSatisfaction]->Draw();
-		}
-	}
-
-	for (int nCntRnaking = 0; nCntRnaking < MAX_RANKING; nCntRnaking++)
-	{	// スコアをNULLチェックして描画
-		if (m_apTotalScore[nCntRnaking] != NULL)
-		{
-			m_apTotalScore[nCntRnaking]->Draw();
-		}
-	}
+	
 }
 
 //=============================================================================
@@ -209,102 +148,102 @@ void CRanking::Draw(void)
 //=============================================================================
 void CRanking::RankingSave(int nTotalScore, int nLvevl)
 {
-	CTotalScore *pTotalScore = NULL;		// ポインタ生成
+	//CTotalScore *pTotalScore = NULL;		// ポインタ生成
 
-	int nData;		// データ入れ替え用
-	int nScore = nTotalScore;		// 現在のスコア保管
-	int nSatisfaction = nLvevl;
-	int nSelectLevel = CSelect::GetSelectLevel();
-	m_nNum = MAX_RANKING;
-	m_nSatisfaction = MAX_RANKING;
+	//int nData;		// データ入れ替え用
+	//int nScore = nTotalScore;		// 現在のスコア保管
+	//int nSatisfaction = nLvevl;
+	//int nSelectLevel = CSelect::GetSelectLevel();
+	//m_nNum = MAX_RANKING;
+	//m_nSatisfaction = MAX_RANKING;
 
-	// ランクの入れ替え
-	for (int nCount = 0; nCount < MAX_RANKING; nCount++)
-	{
-		if (m_aTotalScore[nSelectLevel][MAX_RANKING - 1] <= nScore)
-		{ // ランクインするなら
-			m_nNum -= 1;
-			m_aTotalScore[nSelectLevel][MAX_RANKING - 1] = nScore;
-		}
+	//// ランクの入れ替え
+	//for (int nCount = 0; nCount < MAX_RANKING; nCount++)
+	//{
+	//	if (m_aTotalScore[nSelectLevel][MAX_RANKING - 1] <= nScore)
+	//	{ // ランクインするなら
+	//		m_nNum -= 1;
+	//		m_aTotalScore[nSelectLevel][MAX_RANKING - 1] = nScore;
+	//	}
 
-		for (int nCount001 = 0; nCount001 < MAX_RANKING - 1; nCount001++)
-		{
-			for (int nCount002 = nCount001 + 1; nCount002 < MAX_RANKING; nCount002++)
-			{
-				if (m_aTotalScore[nSelectLevel][nCount002] >= m_aTotalScore[nSelectLevel][nCount001])
-				{	// 順位の入れ替え
-					nData = m_aTotalScore[nSelectLevel][nCount001];
-					m_aTotalScore[nSelectLevel][nCount001] = m_aTotalScore[nSelectLevel][nCount002];
-					m_aTotalScore[nSelectLevel][nCount002] = nData;
-					m_nNum--;
-				}
-			}
-		}
-		break;
-	}
+	//	for (int nCount001 = 0; nCount001 < MAX_RANKING - 1; nCount001++)
+	//	{
+	//		for (int nCount002 = nCount001 + 1; nCount002 < MAX_RANKING; nCount002++)
+	//		{
+	//			if (m_aTotalScore[nSelectLevel][nCount002] >= m_aTotalScore[nSelectLevel][nCount001])
+	//			{	// 順位の入れ替え
+	//				nData = m_aTotalScore[nSelectLevel][nCount001];
+	//				m_aTotalScore[nSelectLevel][nCount001] = m_aTotalScore[nSelectLevel][nCount002];
+	//				m_aTotalScore[nSelectLevel][nCount002] = nData;
+	//				m_nNum--;
+	//			}
+	//		}
+	//	}
+	//	break;
+	//}
 
-	// 満足度の入れ替え
-	for (int nCount = 0; nCount < MAX_RANKING; nCount++)
-	{
-		if (m_aSatisfactionLevel[nSelectLevel][MAX_RANKING - 1] <= nSatisfaction)
-		{ // ランクインするなら
-			m_nSatisfaction -= 1;
-			m_aSatisfactionLevel[nSelectLevel][MAX_RANKING - 1] = nSatisfaction;
-		}
+	//// 満足度の入れ替え
+	//for (int nCount = 0; nCount < MAX_RANKING; nCount++)
+	//{
+	//	if (m_aSatisfactionLevel[nSelectLevel][MAX_RANKING - 1] <= nSatisfaction)
+	//	{ // ランクインするなら
+	//		m_nSatisfaction -= 1;
+	//		m_aSatisfactionLevel[nSelectLevel][MAX_RANKING - 1] = nSatisfaction;
+	//	}
 
-		for (int nCount001 = 0; nCount001 < MAX_RANKING - 1; nCount001++)
-		{
-			for (int nCount002 = nCount001 + 1; nCount002 < MAX_RANKING; nCount002++)
-			{
-				if (m_aSatisfactionLevel[nSelectLevel][nCount002] >= m_aSatisfactionLevel[nSelectLevel][nCount001])
-				{	// 順位の入れ替え
-					nData = m_aSatisfactionLevel[nSelectLevel][nCount001];
-					m_aSatisfactionLevel[nSelectLevel][nCount001] = m_aSatisfactionLevel[nSelectLevel][nCount002];
-					m_aSatisfactionLevel[nSelectLevel][nCount002] = nData;
-					m_nSatisfaction--;
-				}
-			}
-		}
-		break;
-	}
+	//	for (int nCount001 = 0; nCount001 < MAX_RANKING - 1; nCount001++)
+	//	{
+	//		for (int nCount002 = nCount001 + 1; nCount002 < MAX_RANKING; nCount002++)
+	//		{
+	//			if (m_aSatisfactionLevel[nSelectLevel][nCount002] >= m_aSatisfactionLevel[nSelectLevel][nCount001])
+	//			{	// 順位の入れ替え
+	//				nData = m_aSatisfactionLevel[nSelectLevel][nCount001];
+	//				m_aSatisfactionLevel[nSelectLevel][nCount001] = m_aSatisfactionLevel[nSelectLevel][nCount002];
+	//				m_aSatisfactionLevel[nSelectLevel][nCount002] = nData;
+	//				m_nSatisfaction--;
+	//			}
+	//		}
+	//	}
+	//	break;
+	//}
 
 
-	// ファイルの書き込み
-	FILE *pFile = NULL;
+	//// ファイルの書き込み
+	//FILE *pFile = NULL;
 
-	// ランキングの順位の書き込み
-	if (nSelectLevel == 0)
-	{
-		pFile = fopen("data/TEXT/Ranking/ranking.bin", "wb");
-	}
-	else if (nSelectLevel == 1)
-	{
-		pFile = fopen("data/TEXT/Ranking/ranking001.bin", "wb");
-	}
+	//// ランキングの順位の書き込み
+	//if (nSelectLevel == 0)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/ranking.bin", "wb");
+	//}
+	//else if (nSelectLevel == 1)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/ranking001.bin", "wb");
+	//}
 
-	if (pFile != NULL)
-	{
-		fwrite(m_aTotalScore[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
+	//if (pFile != NULL)
+	//{
+	//	fwrite(m_aTotalScore[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
 
-		fclose(pFile);
-	}
+	//	fclose(pFile);
+	//}
 
-	// 満足度の順位を書き込み
-	if (nSelectLevel == 0)
-	{
-		pFile = fopen("data/TEXT/Ranking/SatisfactionLevel.bin", "wb");
-	}
-	else 	if (nSelectLevel == 1)
-	{
-		pFile = fopen("data/TEXT/Ranking/SatisfactionLevel001.bin", "wb");
-	}
+	//// 満足度の順位を書き込み
+	//if (nSelectLevel == 0)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/SatisfactionLevel.bin", "wb");
+	//}
+	//else 	if (nSelectLevel == 1)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/SatisfactionLevel001.bin", "wb");
+	//}
 
-	if (pFile != NULL)
-	{
-		fwrite(m_aSatisfactionLevel[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
+	//if (pFile != NULL)
+	//{
+	//	fwrite(m_aSatisfactionLevel[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
 
-		fclose(pFile);
-	}
+	//	fclose(pFile);
+	//}
 }
 
 //=============================================================================
@@ -312,40 +251,40 @@ void CRanking::RankingSave(int nTotalScore, int nLvevl)
 //=============================================================================
 void CRanking::RankingLoad(void)
 {
-	// 読み込み
-	FILE *pFile = NULL;
-	int nSelectLevel = CSelect::GetSelectLevel();
+	//// 読み込み
+	//FILE *pFile = NULL;
+	//int nSelectLevel = CSelect::GetSelectLevel();
 
-	// スコアのランキングの読み込み
-	if (nSelectLevel == 0)
-	{
-		pFile = fopen("data/TEXT/Ranking/ranking.bin", "rb");
-	}
-	else if (nSelectLevel == 1)
-	{
-		pFile = fopen("data/TEXT/Ranking/ranking001.bin", "rb");
-	}
+	//// スコアのランキングの読み込み
+	//if (nSelectLevel == 0)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/ranking.bin", "rb");
+	//}
+	//else if (nSelectLevel == 1)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/ranking001.bin", "rb");
+	//}
 
-	if (pFile != NULL)
-	{
-		fread(m_aTotalScore[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
+	//if (pFile != NULL)
+	//{
+	//	fread(m_aTotalScore[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
 
-		fclose(pFile);
-	}
+	//	fclose(pFile);
+	//}
 
-	// 満足度のランキングの読み込み
-	if (nSelectLevel == 0)
-	{
-		pFile = fopen("data/TEXT/Ranking/SatisfactionLevel.bin", "wb");
-	}
-	else 	if (nSelectLevel == 1)
-	{
-		pFile = fopen("data/TEXT/Ranking/SatisfactionLevel001.bin", "wb");
-	}
-	if (pFile != NULL)
-	{
-		fwrite(m_aSatisfactionLevel[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
+	//// 満足度のランキングの読み込み
+	//if (nSelectLevel == 0)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/SatisfactionLevel.bin", "wb");
+	//}
+	//else 	if (nSelectLevel == 1)
+	//{
+	//	pFile = fopen("data/TEXT/Ranking/SatisfactionLevel001.bin", "wb");
+	//}
+	//if (pFile != NULL)
+	//{
+	//	fwrite(m_aSatisfactionLevel[nSelectLevel], sizeof(int), MAX_RANKING, pFile);
 
-		fclose(pFile);
-	}
+	//	fclose(pFile);
+	//}
 }

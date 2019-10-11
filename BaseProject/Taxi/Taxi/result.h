@@ -31,10 +31,8 @@ class CEffect;
 class CWall;
 class CItem;
 class CShadow;
-class CReport;
 class CResultCamera;
 class CLoadTextMotion;
-class CResultPlayer;
 class CTotalScore;
 
 //=====================
@@ -63,7 +61,6 @@ public:
 	static void SetGrades(int nTotalScore, int nLevel) { m_nGetTotalScoer = nTotalScore; m_nGetLevel = nLevel; }
 
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
-	static CResultPlayer * GetPlayer(void) { return m_pPlayer; }
 	static CResultCamera * GetCamera(void) { return m_pCamera; }
 	static int GetFirstScore(void) { return m_aTotalScore[0]; }
 
@@ -129,12 +126,10 @@ private:
 
 	static CMeshField		*m_pMeshField;		// メッシュフィールドの ポインタ
 	static CObject			*m_pObject;			// オブジェクトの ポインタ
-	static CReport			*m_pReport;			// 報告のポインタ
 	static CResultCamera	*m_pCamera;			// リザルトカメラへのポインタ
 	static int				m_nGetTotalScoer;	// トータルスコア取得用
 	static int				m_nGetLevel;		// 満足度レベル取得用
 	static CLoadTextMotion	*m_pPlayerMotion;	//プレイヤーのモーション読み込み
-	static CResultPlayer	*m_pPlayer;
 	static int			m_aTotalScore[MAX_RANKING];
 
 	int						m_nCntTime;			// カウンター

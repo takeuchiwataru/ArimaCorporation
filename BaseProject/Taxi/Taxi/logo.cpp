@@ -13,7 +13,6 @@
 #include "billboord.h"
 #include "game.h"
 #include "player.h"
-#include "arrow.h"
 #include "texture.h"
 #include "tutorial.h"
 
@@ -144,7 +143,6 @@ CLogo * CLogo::Create(D3DXVECTOR3 pos, D3DXVECTOR2 size, int nType, int nTransfo
 			pLogo->Init();
 			//テクスチャを割り当てる
 			if (CLogo::TYPE_LOGO == type) { pLogo->BindTexture(*CTexture::GetTexture(nType)); }
-			else if (CLogo::TYPE_MULTIRENDERING == type) { pLogo->BindTexture(CArrow::GetTex()); }
 			//位置を割り当てる
 			pLogo->SetPosition(pos);
 			pLogo->m_posOld = pos;
@@ -276,8 +274,6 @@ void CLogo::TexAnim()
 	{	// 空車か乗車のTexture
 		int nType = 0;
 		bool bPutin = false;
-		if (CManager::GetMode() == CManager::MODE_GAME) { bPutin = CGame::GetPlayer()->GetPutin(); }
-		else if (CManager::GetMode() == CManager::MODE_TUTORIAL) { bPutin = CTutorial::GetPlayer()->GetPutin(); }
 
 		if (bPutin == false) { nType = 0; CScene2D::SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }		// 空車の場合
 		else if (bPutin == true) { nType = 1; CScene2D::SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));} // 乗車の場合

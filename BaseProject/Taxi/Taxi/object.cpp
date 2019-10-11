@@ -12,10 +12,7 @@
 #include "player.h"
 #include "fade.h"
 #include "shadow.h"
-#include "effectmgr.h"
-#include "loadEffect.h"
 #include "tutorial.h"
-#include "objbillboad.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -142,7 +139,6 @@ CObject::CObject() : CModel3D(OBJECT_PRIOTITY, CScene::OBJTYPE_OBJECT)
 	m_Spin = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_nStageCount = 0;
 	m_bStageNext = false;
-	m_pLoadEffect = NULL;
 }
 //===============================================================================
 //　デストラクタ
@@ -155,18 +151,23 @@ CObject::~CObject(){}
 HRESULT CObject::Init(void)
 {
 	//アップデートを通さないオブジェクトのタイプ
-	int anUpdateType[UPDATE_TYPE_NUM] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
-										  TYPE_BILL02, TYPE_TVBILL, TYPE_TANUKI,
-										  TYPE_OCLOCK, TYPE_REDBILL, TYPE_CORN2,
-										  TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
-										  TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL, TYPE_TAPIOCA, TYPE_HOSPITAL, TYPE_LCDPANEL };
+	//int anUpdateType[UPDATE_TYPE_NUM] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
+	//									  TYPE_BILL02, TYPE_TVBILL, TYPE_TANUKI,
+	//									  TYPE_OCLOCK, TYPE_REDBILL, TYPE_CORN2,
+	//									  TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
+	//									  TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL, TYPE_TAPIOCA, TYPE_HOSPITAL, TYPE_LCDPANEL };
 
-	//小さいオブジェクトのタイプ
-	int anSmallObjType[SMALL_OBJ_NUM] = { TYPE_DRINKMACHINE, TYPE_GRASS, TYPE_CARDBORD, TYPE_CORN,
-										  TYPE_BENCH, TYPE_PHONEBOX, TYPE_LEAF, TYPE_SIGNBOARD, TYPE_BEERBOX, TYPE_FENCE};
+	////小さいオブジェクトのタイプ
+	//int anSmallObjType[SMALL_OBJ_NUM] = { TYPE_DRINKMACHINE, TYPE_GRASS, TYPE_CARDBORD, TYPE_CORN,
+	//									  TYPE_BENCH, TYPE_PHONEBOX, TYPE_LEAF, TYPE_SIGNBOARD, TYPE_BEERBOX, TYPE_FENCE};
 
-	//高いオブジェクトのタイプ
-	int anHightObjType[HIGHT_OBJ_NUM] = { TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD};
+	////高いオブジェクトのタイプ
+	//int anHightObjType[HIGHT_OBJ_NUM] = { TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD};
+
+	// 仮
+	int anUpdateType[UPDATE_TYPE_NUM] = {};
+	int anSmallObjType[SMALL_OBJ_NUM] = {};
+	int anHightObjType[HIGHT_OBJ_NUM] = {};
 
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
@@ -197,12 +198,6 @@ HRESULT CObject::Init(void)
 		}
 	}
 
-	//距離だけを求めるタイプ
-	if (m_nType == TYPE_TREE02 || m_nType == TYPE_FLOWER)
-	{
-		CModel3D::SetOnlyLength(true);
-	}
-
 	if (!bUpdate)
 	{
 		bool bSmallObj = false;
@@ -226,18 +221,7 @@ HRESULT CObject::Init(void)
 		}
 	}
 
-	if (m_nType == 30 && CManager::GetMode() == CManager::MODE_GAME)
-	{// 噴水にエフェクトをつける
-		m_pLoadEffect = CLoadEffect::Create(6, D3DXVECTOR3(0.0f, 0.0f, 0.0f), 4);
-	}
-	else if (m_nType == 33 && CManager::GetMode() == CManager::MODE_GAME)
-	{// 消火栓エフェクト
-		CModel3D::SetBoolRoll(false);
-		m_pLoadEffect = CLoadEffect::Create(5, D3DXVECTOR3(0.0f, 0.0f, 0.0f), 4);
-	}
-
 	//変数の初期化
-	m_pEffectMgr = NULL;
 	m_pObjBill = NULL;
 	return S_OK;
 }
@@ -247,22 +231,6 @@ HRESULT CObject::Init(void)
 //=============================================================================
 void CObject::Uninit(void)
 {
-	//エフェクトマネージャーの破棄
-	if (m_pEffectMgr != NULL)
-	{
-		m_pEffectMgr->Uninit();
-		delete m_pEffectMgr;
-		m_pEffectMgr = NULL;
-	}
-
-	//ツールで作成したエフェクトを破棄
-	if (m_pLoadEffect != NULL)
-	{
-		m_pLoadEffect->Uninit();
-		delete m_pLoadEffect;
-		m_pLoadEffect = NULL;
-	}
-
 	//オブジェクトビルボード
 	m_pObjBill = NULL;
 
@@ -279,25 +247,6 @@ void CObject::Update(void)
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
-
-	// 噴水のときエフェクトを出す
-	FountainEffect();
-
-	//葉のエフェクトの更新処理
-	LeafEffect(fLength);
-
-	//花壇の描画範囲判定
-	if ((m_nType == TYPE_FLOWER) && (CModel3D::GetDraw() != false))
-	{
-		if (fLength > FLOWER_LENGTH)
-		{//描画しない
-			SetDraw(false);
-		}
-		else
-		{
-			SetDraw(true);
-		}
-	}
 
 	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
@@ -363,9 +312,6 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 			//pObject->m_move = D3DXVECTOR3(move, move, move);
 			// コリジョンをONOFF
 			pObject->m_nCollision = nCollision;
-
-			//エフェクトマネージャーの生成
-			pObject->CreateEffectMgr(pos);
 		}
 	}
 
@@ -588,19 +534,6 @@ void CObject::DeleteObject(void)
 	}
 }
 
-//===============================================================================
-// エフェクトマネージャーの生成
-//===============================================================================
-void CObject::CreateEffectMgr(D3DXVECTOR3 pos)
-{
-	if ((m_nType != TYPE_TREE00) && (m_nType != TYPE_TREE01) && (m_nType != TYPE_TREE02)) { return; }
-
-	if ((m_pEffectMgr == NULL) && (CManager::MODE_GAME == CManager::GetMode()))
-	{ //エフェクトマネージャーの生成
-		m_pEffectMgr = CEffectMgr::Create(D3DXVECTOR3(pos.x, pos.y + EFFECT_HIGHT, pos.z), CEffectMgr::TYPE_SUMMER);
-	}
-}
-
 //=============================================================================
 // 噴水による移動量の変化
 //=============================================================================
@@ -639,74 +572,6 @@ D3DXVECTOR3 CObject::Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move)
 	}
 
 	return vecMove;
-}
-
-//=============================================================================
-// 噴水のエフェクトの生成
-//=============================================================================
-void CObject::FountainEffect(void)
-{
-	if ((m_nType == 30 || (m_nType == 33 && CModel3D::GetBoolBlow())) && NULL != m_pLoadEffect)
-	{// 噴水にエフェクトをつける
-		CManager::MODE mode = CManager::GetMode();
-		D3DXVECTOR3 PlayerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-
-		//モードごとに取得
-		if (mode == CManager::MODE_GAME)
-		{
-			PlayerPos = CGame::GetPlayer()->GetPos();
-		}
-		else if (mode == CManager::MODE_TUTORIAL)
-		{
-			PlayerPos = CTutorial::GetPlayer()->GetPos();
-		}
-
-		//距離を求める
-		D3DXVECTOR3 Distance = PlayerPos - CModel3D::GetPosition();
-		float fLength = sqrtf((Distance.x * Distance.x) + (Distance.z * Distance.z));
-
-		if (fLength < FOUNTAIN_LENGTH)
-		{//噴水の更新範囲
-			if(m_nType == 30){ m_pLoadEffect->SetPos(CModel3D::GetPosition() + D3DXVECTOR3(0.0f, CModel3D::GetVtxMax().y, 0.0f)); }
-			else if (m_nType == 33) { m_pLoadEffect->SetPos(CModel3D::GetPosition()); }
-
-			m_pLoadEffect->Update();
-		}
-	}
-}
-
-//=============================================================================
-// 葉のエフェクト更新処理
-//=============================================================================
-void CObject::LeafEffect(float fLength)
-{
-	if (m_pEffectMgr != NULL)
-	{
-		//葉っぱのエフェクト処理を更新
-		if(fLength < LEAF_LENGTH)
-		{
-			m_pEffectMgr->Update();
-		}
-
-		if (fLength > WOOD_LENGTH)
-		{
-			//ビルボードの生成
-			if (m_pObjBill == NULL)
-			{
-				m_pObjBill = CObjBillboad::Create(CModel3D::GetPosition(), m_nType);
-				m_pObjBill->SetModelInfo(m_scale, m_nTex, m_nCollision);
-			}
-			else if (m_pObjBill != NULL)
-			{
-				m_pObjBill->SetDraw(true);
-				CModel3D::SetDraw(false);
-			}
-		}
-		else
-		{
-			CModel3D::SetDraw(true);
-		}
-	}
 }
 
 //===============================================================================

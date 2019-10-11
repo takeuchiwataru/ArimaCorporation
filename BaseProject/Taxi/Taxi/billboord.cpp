@@ -38,7 +38,6 @@ CBillBoord::CBillBoord() : CScene3D(3, CScene::OBJTYPE_BILLBOORD)
 	m_pVtxBuff = NULL;
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_size = D3DXVECTOR2(0.0f, 0.0f);
-	m_bOnOff = false;
 }
 //===============================================================================
 //　デストラクタ
@@ -75,47 +74,13 @@ void CBillBoord::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CScene3D::Update();
 
-	//プレイヤーの位置情報
-	//D3DXVECTOR3 EnemyPos = CGame::GetEnemy()->GetPos();
-
-	//CDebugProc::Print("生成場所 x = %.1f,y = %.1f,z = %.1f\n", EnemyPos.x, EnemyPos.y + 100.0f, EnemyPos.z);
-
-	//発見の状態
-	if (m_State == BILLBOORD_EXCLAMATION)
-	{
-		//発見
-		BindTexture(m_pTexture[1]);
-		//表示の状態を渡す
-		CLogo::SetLogoState(2, 7);
-	}
-	//追尾の状態
-	else if (m_State == BILLBOORD_ATTACK)
-	{
-		//追尾
-		BindTexture(m_pTexture[2]);
-		//表示の状態を渡す
-		CLogo::SetLogoState(3,8);
-
-	}	
-	//疑問の状態
-	else if (m_State == BILLBOORD_QUESTION)
-	{
-		//疑問
-		BindTexture(m_pTexture[3]);
-		//表示の状態を渡す
-		CLogo::SetLogoState(1,6);
-	}
-	//何もしていない状態
-	else if (m_State == BILLBOORD_NONE)
+	if (m_State == BILLBOORD_NONE)
 	{
 		//何もしていない状態
 		BindTexture(m_pTexture[0]);
 		//表示の状態を渡す
 		CLogo::SetLogoState(0,5);
 	}
-
-	//ビルボード
-	//CScene3D::SetPosition(D3DXVECTOR3(EnemyPos.x, EnemyPos.y + 140.0f, EnemyPos.z));
 }
 //=============================================================================
 // 描画処理

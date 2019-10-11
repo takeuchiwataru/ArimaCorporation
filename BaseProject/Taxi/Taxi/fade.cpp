@@ -43,7 +43,6 @@
 LPDIRECT3DTEXTURE9 CFade::m_pTexture[MAX_TEXTURE] = {};
 CFade::FADE CFade::m_fade = CFade::FADE_NONE;
 CManager::MODE CFade::m_modeNext = CManager::MODE_TITLE;
-CGame::STAGENUM	  CFade::m_StageNext = CGame::STAGENUM_1;
 CFade::MODEFADE CFade::m_modegame = CFade::MODEFADE_NONE;
 CGame *CFade::m_pGame = NULL;
 //===============================================================================
@@ -188,11 +187,6 @@ void CFade::Update(void)
 					//モード設定
 					CManager::SetMode(m_modeNext);
 				}
-				else if (m_modegame == MODEFADE_GAME)
-				{
-					//モード設定
-					m_pGame->SetStageState(m_StageNext);
-				}
 
 				//UpdateAllを戻す！
 				CScene::SetUpdatePri(0);
@@ -270,35 +264,6 @@ CFade * CFade::Create(CManager::MODE modeNext)
 
 				//フェードのモード
 				m_modegame = MODEFADE_MODE;
-
-				m_fade = FADE_OUT;
-			}
-		}
-	}
-
-	return pFade;
-}
-CFade * CFade::Create(CGame::STAGENUM StageNext)
-{
-	CFade *pFade = NULL;
-
-	if (m_fade == FADE_NONE)
-	{
-		//NULLチェック
-		if (pFade == NULL)
-		{//メモリの動的確保
-
-			pFade = new CFade;
-
-			if (pFade != NULL)
-			{
-				//オブジェクトクラスの生成
-				pFade->Init();
-
-				m_StageNext = StageNext;
-
-				//フェードのモード
-				m_modegame = MODEFADE_GAME;
 
 				m_fade = FADE_OUT;
 			}

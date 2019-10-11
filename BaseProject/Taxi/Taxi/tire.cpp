@@ -164,7 +164,7 @@ void CTire::Update(int nCntTire, float fGravity)
 	if (nCntTire == 0) { SetIncline(pPlayer); }
 
 	//重力の加算
-	if ((PlayerStateSpeed != CPlayer::STATE_SPEED_BRAKS) && (pPlayer->GetSmoke() == false))
+	if ((PlayerStateSpeed != CPlayer::STATE_SPEED_BRAKS))
 	{
 		m_move.y -= cosf(0) * fGravity;
 		bGravity = true;
@@ -283,7 +283,6 @@ void CTire::UpdateField(CPlayer * pPlayer)
 					m_move.y = 0.0f;					//移動量を初期化する
 					m_bLand = true;
 
-					pPlayer->SetGrassEffect(false);	//草のエフェクトを生成状態ではなくする
 
 					//ジャンプ中かどうか
 					bool bJumpFlag = pPlayer->GetJump();
@@ -291,14 +290,6 @@ void CTire::UpdateField(CPlayer * pPlayer)
 					{
 						pPlayer->GetPlayerInfoPoint()->nCountTime -= (int)std::round(pPlayer->GetPlayerInfoPoint()->nCountTime * 0.05f);
 					}
-					else
-					{
-						if (pField->GetMeshType() == GRASS_TEXNUM)
-						{//草むらのテクスチャなら
-							pPlayer->SetGrassEffect(true);	//草のエフェクト生成状態にする
-						}
-					}
-
 					//ジャンプの状態設定
 					pPlayer->SetJump(false);
 					m_pIncline->SetJumpFlag(false);

@@ -14,8 +14,6 @@
 #include "background.h"
 #include "texture.h"
 #include "logo.h"
-#include "satisfactionlevel.h"
-#include "totalscore.h"
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -89,9 +87,6 @@ CSelect::CSelect()
 		m_apMenu[nCntStage] = NULL;
 		m_pHuman[nCntStage] = NULL;
 		m_nSizeOld[nCntStage] = {};
-		m_pSatisfaction[nCntStage] = NULL;
-		m_pTotalScore[nCntStage] = NULL;
-		m_apHighScore[nCntStage] = NULL;
 		m_apMoney[nCntStage] = NULL;
 	}
 	for (int nCntNum = 0; nCntNum < MAX_SELECT_NUM; nCntNum++)
@@ -207,31 +202,10 @@ void CSelect::Uninit(void)
 
 	for (int nCntHuman = 0; nCntHuman < MAX_SELECT_STAGE; nCntHuman++)
 	{
-
-		// 満足度の破棄
-		if (m_pSatisfaction[nCntHuman] != NULL)
-		{
-			m_pSatisfaction[nCntHuman]->Uninit();
-			m_pSatisfaction[nCntHuman] = NULL;
-		}
-
-		// トータルスコアの破棄
-		if (m_pTotalScore[nCntHuman] != NULL)
-		{
-			m_pTotalScore[nCntHuman]->Uninit();
-			m_pTotalScore[nCntHuman] = NULL;
-		}
-
 		if (m_pHuman[nCntHuman] != NULL)
 		{
 			m_pHuman[nCntHuman]->Uninit();
 			m_pHuman[nCntHuman] = NULL;
-		}
-
-		if (m_apHighScore[nCntHuman] != NULL)
-		{
-			m_apHighScore[nCntHuman]->Uninit();
-			m_apHighScore[nCntHuman] = NULL;
 		}
 
 		if (m_apMoney[nCntHuman] != NULL)
@@ -348,19 +322,6 @@ void CSelect::Update(void)
 	// サークルアイコンの更新
 	if (m_pCircle != NULL) { m_pCircle->SetRot(m_fAddRot, CIRCLE_SIZE);}
 
-	for (int nCntSelect = 0; nCntSelect < MAX_SELECT_STAGE; nCntSelect++)
-	{
-		// 満足度の更新
-		if (m_pSatisfaction[nCntSelect] != NULL) { m_pSatisfaction[nCntSelect]->Update(); }
-
-		// トータルスコアの更新
-		if (m_pTotalScore[nCntSelect] != NULL) { m_pTotalScore[nCntSelect]->Update(); }
-
-		if (m_apHighScore[nCntSelect] != NULL) { m_apHighScore[nCntSelect]->Update(); }
-
-		if (m_apMoney[nCntSelect] != NULL) { m_apMoney[nCntSelect]->Update(); }
-	}
-
 	for (int nCntLogo = 0; nCntLogo < MAX_SELECT_NUM; nCntLogo++)
 	{	// ロゴの更新
 		if (m_apSelectLevel[nCntLogo] != NULL)
@@ -406,13 +367,7 @@ void CSelect::Draw(void)
 		if (m_pBg != NULL) { m_pBg->Draw(); }
 		for (int nCntHuman = 0; nCntHuman < MAX_SELECT_STAGE; nCntHuman++)
 		{
-			// 満足度の描画
-			if (m_pSatisfaction[nCntHuman] != NULL) { m_pSatisfaction[nCntHuman]->Draw(); }
-
-			// トータルスコアのの描画
-			if (m_pTotalScore[nCntHuman] != NULL) { m_pTotalScore[nCntHuman]->Draw(); }
-
-			if (m_apHighScore[nCntHuman] != NULL) { m_apHighScore[nCntHuman]->Draw(); }
+			
 
 			if (m_apMoney[nCntHuman] != NULL) { m_apMoney[nCntHuman]->Draw(); }
 		}
@@ -630,32 +585,6 @@ void CSelect::SelectLevel(void)
 	m_bMove = m_apSelectLevel[0]->GetMoveFlag();
 	if (m_bMove == true)
 	{
-		// 満足度の生成
-		if (m_pSatisfaction[0] == NULL)
-		{
-			m_pSatisfaction[0] = CSatisfaction::Create(D3DXVECTOR3(SATYIFACTION_POS.x, 325.0f, 0.0f), SATYIFACTION_SIZE, RankingLoad(1, 0));
-			m_pSatisfaction[0]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-		}
-
-		if (m_pSatisfaction[1] == NULL)
-		{
-			m_pSatisfaction[1] = CSatisfaction::Create(SATYIFACTION_POS, SATYIFACTION_SIZE, RankingLoad(1, 1));
-			m_pSatisfaction[1]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.0f, 1.0f));
-		}
-
-		// 現在の1位のスコアと満足度のロゴ
-		if (m_apHighScore[0] == NULL)
-		{
-			m_apHighScore[0] = CLogo::Create(D3DXVECTOR3(TOTAL_POS.x, 265.0f, 0.0f), TOTAL_SIZE, CTexture::TYPE_SELECT_HIGH_SCORE, 0, CLogo::TYPE_LOGO);
-			m_apHighScore[0]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
-		}
-
-		if (m_apHighScore[1] == NULL)
-		{ 
-			m_apHighScore[1] = CLogo::Create(TOTAL_POS, TOTAL_SIZE, CTexture::TYPE_SELECT_HIGH_SCORE, 0, CLogo::TYPE_LOGO);
-			m_apHighScore[1]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f));
-		}
-
 		if (m_apMoney[0] == NULL)
 		{
 			m_apMoney[0] = CLogo::Create(D3DXVECTOR3(MONEY_POS.x, 325.0f, 0.0f), MONEY_SIZE, CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO);
@@ -666,21 +595,6 @@ void CSelect::SelectLevel(void)
 		{ 
 			m_apMoney[1] = CLogo::Create(MONEY_POS, MONEY_SIZE, CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO); 
 			m_apMoney[1]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f));
-		}
-
-		// トータルスコアの生成
-		if (m_pTotalScore[0] == NULL)
-		{
-			m_pTotalScore[0] = CTotalScore::Create(D3DXVECTOR3(SCORE_POS.x , 325.0f, 0.0f));
-			m_pTotalScore[0]->SetRankingScore(RankingLoad(0, 0));
-			m_pTotalScore[0]->SetCol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
-		}
-
-		if (m_pTotalScore[1] == NULL)
-		{
-			m_pTotalScore[1] = CTotalScore::Create(SCORE_POS);
-			m_pTotalScore[1]->SetRankingScore(RankingLoad(0, 1));
-			m_pTotalScore[1]->SetCol(D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f));
 		}
 	}
 
@@ -708,20 +622,14 @@ void CSelect::Select(void)
 		if (m_apSelectLevel[m_nStageNumber] != NULL) { m_apSelectLevel[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 		if (m_nStageNumber == 0 || m_nStageNumber == 1)
 		{
-			if (m_pSatisfaction[m_nStageNumber] != NULL) { m_pSatisfaction[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.0f, 1.0f)); }
-			if (m_apHighScore[m_nStageNumber] != NULL) { m_apHighScore[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 			if (m_apMoney[m_nStageNumber] != NULL) { m_apMoney[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
-			if (m_pTotalScore[m_nStageNumber] != NULL) { m_pTotalScore[m_nStageNumber]->SetCol(D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 		}
 		m_nStageNumber = (m_nStageNumber + (MAX_SELECT_NUM - 1)) % MAX_SELECT_NUM;
 
 		if (m_apSelectLevel[m_nStageNumber] != NULL) { m_apSelectLevel[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
 		if (m_nStageNumber == 0 || m_nStageNumber == 1)
 		{
-			if (m_pSatisfaction[m_nStageNumber] != NULL) { m_pSatisfaction[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f)); }
-			if (m_apHighScore[m_nStageNumber] != NULL) { m_apHighScore[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
 			if (m_apMoney[m_nStageNumber] != NULL) { m_apMoney[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
-			if (m_pTotalScore[m_nStageNumber] != NULL) { m_pTotalScore[m_nStageNumber]->SetCol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
 		}
 		m_bPress = true;
 		//	選択音
@@ -734,10 +642,7 @@ void CSelect::Select(void)
 		if (m_apSelectLevel[m_nStageNumber] != NULL) { m_apSelectLevel[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 		if (m_nStageNumber == 0 || m_nStageNumber == 1)
 		{
-			if (m_pSatisfaction[m_nStageNumber] != NULL) { m_pSatisfaction[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.0f, 1.0f)); }
-			if (m_apHighScore[m_nStageNumber] != NULL) { m_apHighScore[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 			if (m_apMoney[m_nStageNumber] != NULL) { m_apMoney[m_nStageNumber]->SetColor(&D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
-			if (m_pTotalScore[m_nStageNumber] != NULL) { m_pTotalScore[m_nStageNumber]->SetCol(D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f)); }
 		}
 
 		m_nStageNumber = (m_nStageNumber + 1) % MAX_SELECT_NUM;
@@ -746,10 +651,7 @@ void CSelect::Select(void)
 
 		if (m_nStageNumber == 0 || m_nStageNumber == 1)
 		{
-			if (m_pSatisfaction[m_nStageNumber] != NULL) { m_pSatisfaction[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f)); }
-			if (m_apHighScore[m_nStageNumber] != NULL) { m_apHighScore[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
 			if (m_apMoney[m_nStageNumber] != NULL) { m_apMoney[m_nStageNumber]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
-			if (m_pTotalScore[m_nStageNumber] != NULL) { m_pTotalScore[m_nStageNumber]->SetCol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)); }
 		}
 		m_bPress = true;
 		
@@ -784,27 +686,6 @@ void CSelect::BackUninit(void)
 
 	for (int nCntHuman = 0; nCntHuman < MAX_SELECT_STAGE; nCntHuman++)
 	{
-
-		// 満足度の破棄
-		if (m_pSatisfaction[nCntHuman] != NULL)
-		{
-			m_pSatisfaction[nCntHuman]->Uninit();
-			m_pSatisfaction[nCntHuman] = NULL;
-		}
-
-		// トータルスコアの破棄
-		if (m_pTotalScore[nCntHuman] != NULL)
-		{
-			m_pTotalScore[nCntHuman]->Uninit();
-			m_pTotalScore[nCntHuman] = NULL;
-		}
-
-		if (m_apHighScore[nCntHuman] != NULL)
-		{
-			m_apHighScore[nCntHuman]->Uninit();
-			m_apHighScore[nCntHuman] = NULL;
-		}
-
 		if (m_apMoney[nCntHuman] != NULL)
 		{
 			m_apMoney[nCntHuman]->Uninit();
