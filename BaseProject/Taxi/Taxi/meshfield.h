@@ -30,20 +30,10 @@ public://誰でも扱える
 	void Update(void);
 	void Draw(void);
 	static CMeshField *Create(D3DXVECTOR3 pos, int nMeshX, int nMeshZ, float fMeshXUV, float fMeshYUV, float fMeshWidth, float fMeshDepth,float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ, int nTexTypeint,int nMeshType);
-	/*static*/ int GetMeshType(void) { return m_nMeshType; }
+	int GetMeshType(void) { return m_nMeshType; }
 	void DeleteMeshField(void);
 
 private://個人でのみ使う
-	//typedef struct
-	//{
-	//	D3DXVECTOR3			InitPos;					//Posの初期値
-	//	int					nDivision_X;				//分割数X
-	//	int					nDivision_Z;				//分割数Z
-	//	float				fDepth;						//奥行
-	//	float				fWidth;						//横幅
-	//	int					nTexType;					//テクスチャのTypeの設定
-	//	int					nMeshType;					//メッシュフィールドかメッシュシリンダーの種類
-	//}MeshField;
 
 	static LPDIRECT3DTEXTURE9		m_pTexture[MAX_MESH_TEXTURE];	// テクスチャへのポインタ
 	static LPDIRECT3DVERTEXBUFFER9	m_pVtxBuff;						// 頂点バッファへのポインタ

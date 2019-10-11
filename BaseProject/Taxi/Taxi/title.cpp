@@ -13,7 +13,6 @@
 #include "sound.h"
 #include "background.h"
 #include "texture.h"
-#include "seasoneffect.h"
 #include "logo.h"
 #include "ranking.h"
 //*****************************************************************************
@@ -148,27 +147,5 @@ void CTitle::Update(void)
 //=============================================================================
 void CTitle::Draw(void)
 {
-
-}
-
-//=============================================================================
-// 季節エフェクトの更新
-//=============================================================================
-void CTitle::SeasoneEffectUpdata(void)
-{
-	m_nFrame++;		// フレームのカウンター
-	m_nCntCreate++;	// 季節生成のカウンター
-
-					// エフェクトフレーム
-	if ((m_nFrame % EFFECT_FRAME) == 0)
-	{
-		m_nCntTex++;
-		if ((m_nCntTex % SEASON_MAX) == 0) {}
-	}
-	if ((m_nCntCreate % EFFECT_CREATE) == 0)
-	{	// エフェクトの生成
-		CSeasonEffect::Create(CSeasonEffect::SEASONTYPE_SPRING + m_nCntTex, EFFECT_ROS, EFFECT_SIZE, CTexture::TYPE_SEASONEFFECT);
-		m_nCntCreate = 0;
-	}
 
 }

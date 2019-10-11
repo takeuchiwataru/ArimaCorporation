@@ -17,11 +17,8 @@
 #include "model.h"
 #include "wall.h"
 #include "billboord.h"
-#include "effect.h"
 #include "shadow.h"
-#include "report.h"
 #include "resultcamera.h"
-#include "resultplayer.h"
 #include "loadText.h"
 #include "tire.h"
 //*****************************************************************************
@@ -41,12 +38,10 @@
 //*****************************************************************************
 CMeshField		*CResult::m_pMeshField = NULL;
 CObject			*CResult::m_pObject = NULL;
-CReport			*CResult::m_pReport = NULL;
 CResultCamera	*CResult::m_pCamera = NULL;
 int				CResult::m_nGetTotalScoer = 0;
 int				CResult::m_nGetLevel = 0;
 CLoadTextMotion * CResult::m_pPlayerMotion = NULL;
-CResultPlayer *CResult::m_pPlayer = NULL;
 int			   CResult::m_aTotalScore[MAX_RANKING] = { 1800, 1500, 1200, 1000, 800 };
 
 //=============================================================================
@@ -82,7 +77,6 @@ HRESULT CResult::Init()
 
 	// リザルトプレイヤーの読み込み
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-	m_pPlayer->LoadModel();
 
 	//メッシュフィールドのテクスチャの読み込み
 	m_pMeshField->Load();
@@ -130,18 +124,9 @@ HRESULT CResult::Init()
 //=============================================================================
 void CResult::Uninit(void)
 {
-	// 報告の破棄
-	if (m_pReport != NULL)
-	{
-		m_pReport->Uninit();
-		m_pReport = NULL;
-	}
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
-
-	// リザルトプレイヤーの読み込み
-	m_pPlayer->UnloadModel();
 
 	//タイヤのテクスチャ破棄
 	CTire::UnloadTexture();
@@ -167,13 +152,6 @@ void CResult::Uninit(void)
 	{
 		m_pObject->Uninit();
 		m_pObject = NULL;
-	}
-
-	// プレイヤーの破棄
-	if (m_pPlayer != NULL)
-	{
-		m_pPlayer->Uninit();
-		m_pPlayer = NULL;
 	}
 
 	//プレイヤーのモーションの破棄

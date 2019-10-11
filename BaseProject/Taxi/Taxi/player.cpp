@@ -20,22 +20,10 @@
 #include "tire.h"
 #include "wall.h"
 #include "incline.h"
-#include "taillamp.h"
 #include "sound.h"
-#include "car.h"
-#include "smokeeffect.h"
-#include "sparkeffect .h"
 #include "tutorial.h"
-#include "ground.h"
-#include "loadEffect.h"
 #include "gamecamera.h"
 #include "object.h"
-#include "combo.h"
-#include "score.h"
-#include "time.h"
-#include "customer.h"
-#include "grasseffect.h"
-#include "addcoin.h"
 
 //=============================================================================
 // マクロ定義
@@ -89,7 +77,6 @@ int CPlayer::m_nMaxMotion = 0;
 D3DXVECTOR3 CPlayer::m_pos = VECTOR_ZERO;
 CMotion::MOTION_INFO * CPlayer::m_pMotionInfo = NULL;
 LPDIRECT3DTEXTURE9 CPlayer::m_pTexture = NULL;
-bool CPlayer::m_bCustomrStop = false;
 
 //=============================================================================
 // 生成処理
@@ -225,30 +212,17 @@ HRESULT CPlayer::Init(void)
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
 	m_bJump = false;						//ジャンプ状態
 	m_bControl = true;						//コントローラーフラグ
-	m_bPutin = false;						//乗車状態フラグ
 	m_nCountJumpTime = 0;					//ジャンプ状態の時間を加算
 	m_fvtxMaxY = 0.0f;						//モデル頂点の最大値（Y）
 	m_fMass = 200.0f;						// 質量
 	m_nCountTime = 0;						// 時間カウンター
-	m_bSmoke = true;						// 煙のエフェクトオンオフ
 	m_bCrcleCarIn = false;
-	m_bHazardlamp = false;
 	m_pLoadEffect = NULL;					// エフェクトツールポインタ
-	m_pCombo = NULL;
 	m_nCntCombo = 0;
 	m_nCntShake = 0;
 	m_bShake = true;
-	m_posFountain = VECTOR_ZERO;
-	m_bFountainSound = false;
-	m_bComboFlag = false;
-	m_bFlagIn = false;
 	m_nCntFlag = 0;
 	m_bDirive = true;
-	m_bCustomerMove = false;
-	m_nCountSound = 0;			//フェンスの音カウンター
-	m_nCountLeaf = 0;			//葉の音のカウンター
-	m_nCountWood = 0;			//木の音のカウンター
-	m_bGrassEffect = false;		//草エフェクトの生成フラグ
 
 	//タイヤのポインタを初期化
 	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
@@ -276,14 +250,6 @@ HRESULT CPlayer::Init(void)
 			m_pMotion->Init();
 		}
 	}
-
-	for (int nCntTailLamp = 0; nCntTailLamp < 2; nCntTailLamp++)
-	{// テールランプの生成
-		m_apTailLamp[nCntTailLamp] = CTailLamp::Create(D3DXVECTOR3(22.0f - (nCntTailLamp * 44.0f), 35.0f, -85.0f), D3DXVECTOR2(10.0f, 10.0f), &m_mtxWorld);
-	}
-
-	// エフェクトツールを生成
-	if (m_pLoadEffect == NULL){ m_pLoadEffect = CLoadEffect::Create(7, m_pos, 6); }
 
 	//モデルの最小値・最大値の取得
 	m_vtxMaxModel = m_pModel->GetVtxMax();
@@ -323,19 +289,6 @@ void CPlayer::Uninit(void)
 		m_pText = NULL;
 	}
 
-	if (m_pLoadEffect != NULL)
-	{// エフェクトツールの破棄
-		m_pLoadEffect->Uninit();
-		delete m_pLoadEffect;
-		m_pLoadEffect = NULL;
-	}
-
-	if (m_pCombo != NULL)
-	{	// コンボの破棄
-		m_pCombo->Uninit();
-		m_pCombo = NULL;
-	}
-
 	//死亡フラグを立てる
 	Release();
 }
@@ -349,7 +302,6 @@ void CPlayer::Update(void)
 	D3DXVECTOR3 TirePos[MAX_TIRE];
 	CManager::MODE mode = CManager::GetMode();
 	CGameCamera * pGameCamera = NULL;
-	CGameCamera::MODECAMERA pCameraMode = {};
 	m_bShake = true;
 
 	if (m_bControl)
@@ -381,7 +333,7 @@ void CPlayer::Update(void)
 	CarCalculate(TirePos);	// 車体の高さ・角度設定
 
 	//タイムアップ状態なら以降は更新しない
-	if (CTime::GetTime() == 0 && CManager::MODE_GAME == CManager::GetMode()) { return; }
+	//if (CTime::GetTime() == 0 && CManager::MODE_GAME == CManager::GetMode()) { return; }
 
 	UpdateMove();			// 移動処理
 	/*UpdateStateJump();		// ジャンプ状態の更新処理
@@ -456,69 +408,57 @@ void CPlayer::ControlKey(void)
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CXInput * pInputJoypad = CManager::GetXInput();				//ジョイパットの取得
 
-	if (!CCustomer::GetPutIn())
+	//前進後退の設定
+	if (m_bDirive)
 	{
-		if (pInputKeyboard->GetKeyboardTrigger(DIK_Q) == true || pInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_1))
-		{// ハザードランプ点灯or消灯
-			m_bHazardlamp = m_bHazardlamp ? false : true;
-
-			// ハザードランプ点灯フラグによって変える
-			if (m_bHazardlamp) { SetTailLampType(CTailLamp::TYPE_HAZARD_LAMP); }
-			else { SetTailLampType(CTailLamp::TYPE_NONE); }
-		}
-
-		//前進後退の設定
-		if (m_bDirive)
-		{
-			if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-				(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
-				(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
-			{
-				SetState(STATE_DRIVE);		//前進状態に設定
-			}
-			if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-				(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
-				(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true))
-			{
-				SetState(STATE_REVERSE);	//後退状態に設定
-			}
-		}
-
-		//向きの設定
-		if (m_StateSpeed != STATE_SPEED_STOP)
-		{
-			if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_18))
-			{ //左ハンドル状態
-				SetStateHandle(HANDLE_LEFT);
-			}
-			else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_19))
-			{//右ハンドル状態
-				SetStateHandle(HANDLE_RIGHT);
-			}
-			else
-			{//ハンドルを触っていない状態
-				SetStateHandle(HANDLE_MAX);
-			}
-		}
-		else
-		{
-			SetStateHandle(HANDLE_MAX);
-		}
-
-		//アクセル
-		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true) ||
-			(pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
 			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
-		{ //アクセルを状態
-			SetStateSpeed(STATE_SPEED_ACCEL);
+		{
+			SetState(STATE_DRIVE);		//前進状態に設定
+		}
+		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
+			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true))
+		{
+			SetState(STATE_REVERSE);	//後退状態に設定
+		}
+	}
+
+	//向きの設定
+	if (m_StateSpeed != STATE_SPEED_STOP)
+	{
+		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_18))
+		{ //左ハンドル状態
+			SetStateHandle(HANDLE_LEFT);
+		}
+		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_19))
+		{//右ハンドル状態
+			SetStateHandle(HANDLE_RIGHT);
 		}
 		else
-		{//減速状態
-			SetStateSpeed(STATE_SPEED_DOWN);
+		{//ハンドルを触っていない状態
+			SetStateHandle(HANDLE_MAX);
 		}
+	}
+	else
+	{
+		SetStateHandle(HANDLE_MAX);
+	}
+
+	//アクセル
+	if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
+		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true) ||
+		(pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
+		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
+	{ //アクセルを状態
+		SetStateSpeed(STATE_SPEED_ACCEL);
+	}
+	else
+	{//減速状態
+		SetStateSpeed(STATE_SPEED_DOWN);
 	}
 
 	CSound *pSound = CManager::GetSound();
@@ -538,11 +478,6 @@ void CPlayer::UpdateMove(void)
 	m_OldPos = m_pos;	//前回の位置を保存する
 
 	RemakeAngle(&m_rot.y);
-
-	if (m_bCustomerMove)
-	{// 客が迫っているとき
-		return;
-	}
 
 
 	//状態ごとの更新処理
@@ -612,16 +547,12 @@ void CPlayer::UpdateMove(void)
 		m_move.x += sinf(m_rot.y) * m_PlayerInfo.fAccel;
 		m_move.z += cosf(m_rot.y) * m_PlayerInfo.fAccel;
 
-		//テールランプの表示
-		SetTailLampType(CTailLamp::TYPE_BREAKING);
-
 		//揺れを無効にする
 		m_bShake = false;
 		break;
 
 	case STATE_SPEED_DOWN:  //減速状態
 		m_PlayerInfo.nCountTime = 0;
-		if (m_apTailLamp[0]->GetType() != CTailLamp::TYPE_HAZARD_LAMP) { SetTailLampType(CTailLamp::TYPE_NONE); }
 		break;
 	}
 
@@ -705,7 +636,7 @@ void CPlayer::UpdateMove(void)
 		m_bCustomrStop = false;
 	}*/
 
-	if ((m_StateSpeed == STATE_SPEED_BRAKS) && (m_bSmoke == true))
+	if ((m_StateSpeed == STATE_SPEED_BRAKS))
 	{
 		//角度を変える
 		m_rot.x += SHAKE_BRAK;
@@ -755,20 +686,12 @@ void CPlayer::SetState(CPlayer::STATE state)
 		{// バック音
 			pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
 			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
-
-			if (STATE_SPEED_STOP != m_StateSpeed)
-			{// テールランプをバック用に点灯
-				SetTailLampType(CTailLamp::TYPE_BACK);
-			}
 		}
 		else if (STATE_DRIVE == state)
 		{
 			pSound->StopSound(CSound::SOUND_LABEL_SE_BACK);
 			pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
 			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_ACCEL);
-
-			//テールランプを消す
-			if (m_apTailLamp[0]->GetType() != CTailLamp::TYPE_HAZARD_LAMP) { SetTailLampType(CTailLamp::TYPE_NONE); }
 		}
 	}
 
@@ -861,15 +784,17 @@ void CPlayer::CollisionObject(void)
 	CScene *pScene;
 
 	//吹っ飛ば差ないオブジェクト番号の登録
-	int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
+	/*int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
 														 TYPE_BILL02, TYPE_TVBILL, TYPE_FLOWER, TYPE_TANUKI,
 														 TYPE_OCLOCK, TYPE_REDBILL, TYPE_TREE02,  TYPE_CORN2,
 														 TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
 														 TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL,
-														 TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD , TYPE_TAPIOCA, TYPE_HOSPITAL };
+														 TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD , TYPE_TAPIOCA, TYPE_HOSPITAL };*/
+
+	int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { 0 };	// 仮
 	bool bType = false;	//タイプのフラグ
 
-	for (int nCntPriority = CAR_PRIOTITY; nCntPriority <= OBJECT_PRIOTITY; nCntPriority++)
+	for (int nCntPriority = 2; nCntPriority <= OBJECT_PRIOTITY; nCntPriority++)
 	{
 		// プライオリティーチェック
 		pScene = CScene::GetTop(nCntPriority);
@@ -895,11 +820,10 @@ void CPlayer::CollisionObject(void)
 
 						if (bType == false)
 						{// 指定した障害物だったら吹き飛ばす
-							if (m_pCombo != NULL) { m_pCombo->ResetCombo(); }
 							if (!m_bJump) { m_move = pObject->BlowOff(m_pos, m_move, m_fMass); }		// オブジェクトを吹き飛ばす
 
 							//音の再生処理
-							PlaySoundObj(nType, pSound);
+							//PlaySoundObj(nType, pSound);
 						}
 						if (nType == 30 || nType == 33)
 						{// 噴水 || 消火栓
@@ -913,63 +837,10 @@ void CPlayer::CollisionObject(void)
 				{// 壁
 					if (pObject->CollisionObject(&m_pos, &m_OldPos, &m_move))
 					{
-						if (m_pCombo != NULL) { m_pCombo->ResetCombo(); }
 					}
 				}
 			}
-			else if (pScene->GetObjType() == OBJTYPE_CAR)
-			{// タイプがNPC車だったら
-				CCarBase *pCar = (CCarBase*)pScene;		// オブジェクトクラスのポインタ変数にする
 
-				if (pCar->Collision(m_pos, m_pModel[0].GetVtxMax(), m_pModel[0].GetVtxMin(), m_move))
-				{// 衝突した
-					if (m_pCombo != NULL) { m_pCombo->ResetCombo(); }
-					m_bComboFlag = true;		//コンボを入らない状態にする
-					m_bFlagIn = false;
-					if (pCar->GetType() == 9)
-					{//	警察
-						m_move = pCar->BlowOff(m_pos, m_move, m_fMass) * 1.55f;		// オブジェクトを吹き飛ばす
-					}
-					else
-					{//それ以外の車
-						if (D3DXVec3Length(&m_move) > 25.0f)
-						{// 移動量が一定以上で転がす
-							pCar->SetStateRoll(true);
-						}
-						m_move = pCar->BlowOff(m_pos, m_move, m_fMass);		// オブジェクトを吹き飛ばす
-					}
-					pSound->SetVolume(CSound::SOUND_LABEL_SE_CRASH_CAR, 1.2f);
-					pSound->PlaySound(CSound::SOUND_LABEL_SE_CRASH_CAR);
-				}
-
-				//	プレイヤーとの距離
-				D3DXVECTOR3 CarPos = pCar->GetPosition();
-				float fLengthPlayer = sqrtf((CarPos.x - m_pos.x)* (CarPos.x - m_pos.x) + (CarPos.z - m_pos.z)*(CarPos.z - m_pos.z));
-
-				if (fLengthPlayer < 300)
-				{//	範囲内処理
-					m_bCrcleCarIn = true;
-				}
-
-				// コンボ判定(すれすれの場合)
-				if ((fLengthPlayer < DRIFT_SPACE_BIG) && (fLengthPlayer > DRIFT_SPACE_SMALL))
-				{//	範囲内処理
-					m_bFlagIn = true;
-					if (m_bFlagIn == true)
-					{
-						m_nCntFlag++;
-						if (m_nCntFlag > 2)
-						{
-							if (m_bComboFlag == false)
-							{//コンボが入る状態ならコンボ追加
-								SetCombo(0, false, THROUGH_COMBO_TIME);
-								m_nCntFlag = 0;
-							}
-						}
-					}
-				}
-				else { m_nCntFlag = 0; }
-			}
 			// Nextに次のSceneを入れる
 			pScene = pSceneNext;
 		}
@@ -1115,7 +986,6 @@ void CPlayer::UpdateStateJump(void)
 	if (m_bJump)
 	{//ジャンプ状態の時間を加算
 		m_nCountJumpTime++;
-		SetCombo(1, true, JUMP_FREAM_TIME);
 
 		//X軸の角度制限
 		if (m_rot.x > 0.5f)
@@ -1217,323 +1087,66 @@ void CPlayer::DebugProc(void)
 }
 
 //=============================================================================
-// テールランプの種類の設定
-//=============================================================================
-void CPlayer::SetTailLampType(CTailLamp::TYPE type)
-{
-	for (int nCntTailLamp = 0; nCntTailLamp < 2; nCntTailLamp++)
-	{// テールランプの数分ループ
-		if (NULL != m_apTailLamp[nCntTailLamp])
-		{// テールランプを透明にする
-			m_apTailLamp[nCntTailLamp]->SetType(type);
-		}
-	}
-}
-
-//=============================================================================
-// 川による影響
-//=============================================================================
-void CPlayer::RiverInfluence(void)
-{
-	//現在のモードを取得する
-	CManager::MODE mode = CManager::GetMode();
-	CGround * pRiver = NULL;
-
-	if (mode == CManager::MODE_GAME)
-	{//ゲーム
-		pRiver = CGame::GetRiver();
-	}
-	else if (mode == CManager::MODE_TUTORIAL)
-	{//チュートリアル
-		pRiver = CTutorial::GetRiver();
-	}
-
-	if (m_pos.y <= -190.0f)
-	{
-		if (m_pos.x >= -19200.0f && m_pos.x <= 19200.0f &&
-			m_pos.z >= 8800.0f && m_pos.z <= 9200.0f)
-		{// 川の範囲内
-			if (m_move.x > 0)
-			{// 流れに逆らう
-				m_move += pRiver->RiverMove() * 1.5f;
-			}
-			else
-			{// 流れに沿う
-				m_move += pRiver->RiverMove();
-			}
-
-			if ((m_move.x > 0.5f || m_move.x < -0.5f || m_move.z > 0.5f || m_move.z < -0.5f) && m_pos.y <= -200.0f)
-			{// 水しぶきエフェクトを出す
-				if (m_pLoadEffect != NULL)
-				{
-					m_pLoadEffect->SetPos(m_pos);
-					m_pLoadEffect->Update();
-				}
-			}
-		}
-	}
-
-	if (m_pos.x + RIVER_SOUND_RANGE >= -19200.0f && m_pos.x - RIVER_SOUND_RANGE <= 19200.0f &&
-		m_pos.z + RIVER_SOUND_RANGE >= 8800.0f && m_pos.z - RIVER_SOUND_RANGE <= 9200.0f)
-	{// 川の音を再生
-		pRiver->Sound(true);
-
-		// 川の位置
-		D3DXVECTOR3 posRiver = D3DXVECTOR3(m_pos.x, 0.0f, 9000.0f);
-		if (m_pos.z < 8800.0f) { posRiver.z -= RIVER_SOUND_RANGE; }
-		else { posRiver.z += RIVER_SOUND_RANGE; }
-
-		// X軸が川の外
-		if (m_pos.x < -19200.0f) { posRiver.x = -19200.0f; }
-		else if (m_pos.x > 19200.0f) { posRiver.x = 19200.0f; }
-
-		// プレイヤーと川の距離を求める
-		float fLength = sqrtf(powf(m_pos.x - posRiver.x, 2.0f) + powf(m_pos.z - posRiver.z, 2.0f));
-
-		// 音量の設定
-		float fVolume = RIVER_SOUND_RANGE - fLength;									 // 距離による音量の変化
-		D3DXVECTOR2 volume = D3DXVECTOR2(fVolume, fLength);								 // 正規化するために「D3DXVECTOR2」に値を入れる
-		D3DXVec2Normalize(&volume, &volume);											 // 正規化
-		CManager::GetSound()->SetVolume(CSound::SOUND_LABEL_SE_RIVER, volume.y * 4.0f);  // 音量の設定
-		pRiver->SetDraw(true);															 // 見える状態にする
-	}
-	else
-	{// 音を消す
-		pRiver->Sound(false);
-		pRiver->SetDraw(false);	//見えない状態にする
-	}
-}
-
-//=============================================================================
-// 噴水の音
-//=============================================================================
-void CPlayer::FountainSound(void)
-{
-	CSound *pSound = CManager::GetSound();
-
-	// 噴水の位置を取得
-	CScene *pScene = CScene::GetTop(OBJECT_PRIOTITY);
-	while (pScene != NULL)
-	{// プライオリティー内のリスト構造を最後まで見る
-		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
-
-		if (pScene->GetObjType() == OBJTYPE_OBJECT)
-		{// タイプが障害物だったら
-			CObject *pObject = (CObject*)pScene;	// オブジェクトクラスのポインタ変数にする
-			int nType = pObject->GetType();			// 障害物の種類を取得
-			if (30 == nType)
-			{// 噴水
-				m_posFountain = pObject->GetPosition();
-				break;
-			}
-		}
-
-		// Nextに次のSceneを入れる
-		pScene = pSceneNext;
-	}
-
-	// プレイヤーと川の距離を求める
-	float fLength = sqrtf(powf(m_posFountain.x - m_pos.x, 2.0f) + powf(m_posFountain.z - m_pos.z, 2.0f));
-
-	if (fLength < FOUNTAIN_SOUND_RANGE && fLength > -FOUNTAIN_SOUND_RANGE)
-	{// 範囲内
-		if (!m_bFountainSound)
-		{// 噴水の音を再生
-			m_bFountainSound = true;
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_FOUNTAIN);
-		}
-
-		// 音量の設定
-		float fVolume = FOUNTAIN_SOUND_RANGE - fLength;						// 距離による音量の変化
-		D3DXVECTOR2 volume = D3DXVECTOR2(fVolume, fLength);					// 正規化するために「D3DXVECTOR2」に値を入れる
-		D3DXVec2Normalize(&volume, &volume);								// 正規化
-		pSound->SetVolume(CSound::SOUND_LABEL_SE_RIVER, volume.y * 4.0f);	// 音量の設定
-	}
-	else
-	{// 音を消す
-		if (m_bFountainSound)
-		{
-			m_bFountainSound = false;
-			pSound->StopSound(CSound::SOUND_LABEL_SE_FOUNTAIN);
-		}
-	}
-}
-
-//=============================================================================
-// コンボの設定
-//=============================================================================
-void CPlayer::SetCombo(int nType, bool bJump, int nFrame)
-{
-	if (m_bJump == bJump && m_bPutin == true)
-	{	// ジャンプ時の判定が同 & お客さんが乗っている場合
-		if (m_pCombo == NULL && m_nCntCombo >= 60)
-		{
-			m_pCombo = CCombo::Create((CCombo::TYPE)nType);
-			CScore::AddScore(JUMP_ADD_SCORE);
-			m_nCntCombo = 0;
-			CManager::GetSound()->PlaySoundA(CSound::SOUND_LABEL_SE_COMBO);
-			CAddCoin::Create();		//コインの表示
-		}
-
-		m_nCntCombo++;
-
-		if ((m_nCntCombo % nFrame) == 0)
-		{	// コンボ加算 & スコア加算
-			if (m_pCombo != NULL)
-			{
-				if (m_pCombo->GetType() != (CCombo::TYPE)nType)
-				{
-					m_pCombo->SetType((CCombo::TYPE)nType);
-				}
-				m_pCombo->AddCombo(1);
-				CManager::GetSound()->PlaySoundA(CSound::SOUND_LABEL_SE_COMBO);
-				CScore::AddScore(JUMP_ADD_SCORE + (11 * m_pCombo->GetCombo()));
-				CAddCoin::Create();		//コインの表示
-			}
-		}
-	}
-
-}
-
-//=============================================================================
-// 煙エフェクトの更新
-//=============================================================================
-void CPlayer::UpdateSmoke(D3DXVECTOR3 * TirePos)
-{
-	if ((m_state == STATE_DRIVE) && (m_StateSpeed == STATE_SPEED_BRAKS) && (m_bSmoke == true))
-	{//ブレーキ時のエフェクト
-
-		m_nCountTime++;
-
-		if ((m_nCountTime % 2) == 0)
-		{
-			float fRandPos = (float)((rand() % 60) - 30);
-			D3DXVECTOR3	RandPos = D3DXVECTOR3(fRandPos, 0.0f, fRandPos);
-			CSmokeEffect::Create(TirePos[LEFT_BACK] + RandPos);	//左後ろタイヤ
-			CSmokeEffect::Create(TirePos[RIGHT_BACK] + RandPos);	//右後ろタイヤ
-		}
-
-		for (int nCntEffect = 0; nCntEffect < 4; nCntEffect++)
-		{
-			//火花エフェクトの生成
-			CSparkEffect::Create(TirePos[LEFT_BACK]);
-			CSparkEffect::Create(TirePos[RIGHT_BACK]);
-		}
-
-		if (m_StateHandle == HANDLE_LEFT)
-		{// ドリフト時のコンボ
-			SetCombo(2, false, DRIFT_COMBO_TIME);
-			m_rot.z -= SHAKE_DRIFT;
-		}
-		else if (m_StateHandle == HANDLE_RIGHT)
-		{
-			SetCombo(2, false, DRIFT_COMBO_TIME);
-			m_rot.z += SHAKE_DRIFT;
-		}
-
-	}
-	else if ((m_state == STATE_DRIVE) && (m_StateHandle != HANDLE_MAX) && (m_bSmoke == true))
-	{//カーブ時のエフェクト
-		float fRandPos = (float)((rand() % 20) - 10);
-		D3DXVECTOR3	RandPos = D3DXVECTOR3(fRandPos, 0.0f, fRandPos);
-		CSmokeEffect::Create(TirePos[LEFT_BACK] + RandPos);	//左後ろタイヤ
-		CSmokeEffect::Create(TirePos[RIGHT_BACK] + RandPos);	//右後ろタイヤ
-	}
-}
-
-//=============================================================================
-// 草エフェクトの更新処理
-//=============================================================================
-void CPlayer::UpdateGrass(D3DXVECTOR3 * TirePos)
-{
-	if ((m_bGrassEffect) && (m_StateSpeed != STATE_SPEED_STOP) && (m_StateSpeed != STATE_SPEED_BRAKS))
-	{
-		for (int nCnt = 0; nCnt < 4; nCnt++)
-		{
-			float fRandPos = (float)((rand() % 60) - 30);
-			D3DXVECTOR3	RandPos = D3DXVECTOR3(fRandPos, 0.0f, fRandPos);
-			CGrassEffect::Create(TirePos[LEFT_BACK] + RandPos, (rand() % MAX_PATTERN));	//左後ろタイヤ
-			CGrassEffect::Create(TirePos[RIGHT_BACK] + RandPos, (rand() % MAX_PATTERN));	//右後ろタイヤ
-		}
-	}
-}
-
-//=============================================================================
 // 音の再生
 //=============================================================================
 void CPlayer::PlaySoundObj(int nType, CSound * pSound)
 {
-	switch (nType)
-	{
-	case TYPE_PHONEBOX: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_STEAL); break;
+	/*switch (nType)
+	{*/
+	/*case TYPE_PHONEBOX: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_STEAL); break;
 	case TYPE_CARDBORD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX); break;
 	case TYPE_CORN:
 		pSound->SetVolume(CSound::SOUND_LABEL_SE_SMALLBOX, 0.5f);
 		pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX);
 		break;
 	case TYPE_LEAF:
-		if ((m_nCountLeaf % 2) == 0) { m_nCountLeaf = 0; }	//カウンターのリセット
-
-		//音の再生
-		if (m_nCountLeaf == 0)
-		{
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_LEAF, 2.5f);
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_LEAF);
-		}
-		else if(m_nCountLeaf == 1)
-		{
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_LEAF1, 5.0f);
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_LEAF1);
-		}
-
-		//カウンターの加算
-		m_nCountLeaf++;
-		break;
-	case TYPE_FENCE:
-		if ((m_nCountSound % 5) == 0) { m_nCountSound = 0; }
-
-		if (m_nCountSound == 0)
-		{//フェンス00
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		}
-		else if (m_nCountSound == 1)
-		{//フェンス01
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		}
-		else if (m_nCountSound == 2)
-		{//フェンス02
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		}
-		else if (m_nCountSound == 3)
-		{//フェンス02
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		}
-		else if (m_nCountSound == 4)
-		{//フェンス02
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		}
-
-		m_nCountSound++;	//カウンターの加算
-		break;
 		
-	case TYPE_BENCH:
-		if ((m_nCountWood % 2) == 0) { m_nCountWood = 0; }	//カウンターをリセットする
-
-		//音の再生
-		if (m_nCountWood == 0)
-		{
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_WOOD00, 2.0f);
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD00);
-		}
-		else if (m_nCountWood)
-		{
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01);
-		}
-
-		//カウンターの加算
-		m_nCountWood++;
 		break;
+	case TYPE_FENCE:*/
+		//if ((m_nCountSound % 5) == 0) { m_nCountSound = 0; }
 
-	case TYPE_SIGNBOARD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01); break;
-	}
+		//if (m_nCountSound == 0)
+		//{//フェンス00
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+		//}
+		//else if (m_nCountSound == 1)
+		//{//フェンス01
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+		//}
+		//else if (m_nCountSound == 2)
+		//{//フェンス02
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+		//}
+		//else if (m_nCountSound == 3)
+		//{//フェンス02
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+		//}
+		//else if (m_nCountSound == 4)
+		//{//フェンス02
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+		//}
+
+		//m_nCountSound++;	//カウンターの加算
+		//break;
+		
+	//case TYPE_BENCH:
+		//if ((m_nCountWood % 2) == 0) { m_nCountWood = 0; }	//カウンターをリセットする
+
+		////音の再生
+		//if (m_nCountWood == 0)
+		//{
+		//	pSound->SetVolume(CSound::SOUND_LABEL_SE_WOOD00, 2.0f);
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD00);
+		//}
+		//else if (m_nCountWood)
+		//{
+		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01);
+		//}
+
+		////カウンターの加算
+		//m_nCountWood++;
+		//break;
+
+	//case TYPE_SIGNBOARD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01); break;
+	//}
 }

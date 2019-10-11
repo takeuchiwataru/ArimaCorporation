@@ -19,8 +19,6 @@
 // 前方宣言
 //*****************************************************************************
 class CLogo;
-class CSatisfaction;
-class CTotalScore;
 class CScene2D;
 
 //=====================
@@ -58,9 +56,6 @@ private:
 	CScene2D		*m_pFream;						// フレーム
 	CScene2D		*m_pBg;							// 難易度選択時の背景
 	CLogo			*m_apSelectLevel[MAX_SELECT_NUM];	// 難易度
-	CSatisfaction	*m_pSatisfaction[MAX_SELECT_STAGE];	// 満足度
-	CTotalScore		*m_pTotalScore[MAX_SELECT_STAGE];	// トータルスコア
-	CLogo			*m_apHighScore[MAX_SELECT_STAGE];
 	CLogo			*m_apMoney[MAX_SELECT_STAGE];
 	bool			m_bPress;						// 押下時のフラグ
 	bool			m_bSame;						// 同じ場合のフラグ

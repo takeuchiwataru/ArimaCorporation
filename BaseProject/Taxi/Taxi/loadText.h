@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include "motion.h"
 #include "player.h"
-#include "effecttool.h"
 
 //=============================================================================
 // テキスト読み込みクラス
@@ -94,63 +93,5 @@ public:
 
 private:
 	CPlayer::PLAYER_INFO m_PlayerInfo;
-};
-
-//=============================================================================
-//	お客さんの情報
-//=============================================================================
-class CLoadTextCustomer : CLoadText
-{
-public:
-	CLoadTextCustomer();
-	~CLoadTextCustomer();
-	HRESULT Init(void);
-	void Uninit(void);
-	static void Create(char * pFileName);
-};
-
-//=============================================================================
-//	人のNPC読み込み
-//=============================================================================
-class CLoadTextHumanNPC : CLoadText
-{
-public:
-	CLoadTextHumanNPC();
-	~CLoadTextHumanNPC();
-	HRESULT Init(void);
-	void Uninit(void);
-	static void Create(char * pFileName);
-};
-
-//=============================================================================
-//	オブジェクトビルボードの読み込み
-//=============================================================================
-class CLoadTextObjBill : CLoadText
-{
-public:
-	CLoadTextObjBill();
-	~CLoadTextObjBill();
-	HRESULT Init(void);
-	void Uninit(void);
-	static void Create(char * pFileName);
-};
-
-//=============================================================================
-// エフェクト読み込み処理
-//=============================================================================
-class CLoadTextEffect : public CLoadText
-{
-public:
-	CLoadTextEffect();
-	~CLoadTextEffect();
-	HRESULT Init(void);
-	void Uninit(void);
-	static CLoadTextEffect * Create(char * pFileName);
-	int GetMaxEffect(void) { return m_nMaxEffect; };				//エフェクトの最大数
-	CEffectTool::Effect * GetEffect(void) { return m_pEffect; };		//エフェクト情報の取得
-
-private:
-	CEffectTool::Effect * m_pEffect;									//エフェクト情報のポインタ
-	int	m_nMaxEffect;												//読み込むエフェクトの最大数
 };
 #endif

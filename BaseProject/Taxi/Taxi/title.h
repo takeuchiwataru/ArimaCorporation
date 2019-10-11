@@ -32,7 +32,6 @@ public:
 	void	Draw(void);						// 描画処理
 
 private:
-	void SeasoneEffectUpdata(void);			// 季節エフェクトの更新
 	int					m_nFrame;			// 季節のカウンター
 	int					m_nCntTex;			// テクスチャのカウンター
 	int					m_nCntCreate;		// 生成時間

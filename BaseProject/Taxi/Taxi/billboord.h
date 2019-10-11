@@ -25,9 +25,6 @@ public://誰でも扱える
 	typedef enum
 	{
 		BILLBOORD_NONE = 0,			//何もしない状態
-		BILLBOORD_EXCLAMATION,		//発見モード
-		BILLBOORD_QUESTION,			//疑問モード
-		BILLBOORD_ATTACK,			//攻撃モード
 		BILLBOORD_MAX				//最大数
 	}BILLBOORD;
 
@@ -49,9 +46,7 @@ private://個人でのみ使う
 	D3DXVECTOR3					m_pos;							// 位置
 	D3DXVECTOR2					m_size;							// サイズ
 	BILLBOORD					m_State;						// 状態
-	float						m_bOnOff;
 	float						m_fLength;
 	float						m_fAngle;
-	int							m_nCntShake;
 };
 #endif
