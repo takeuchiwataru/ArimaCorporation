@@ -119,6 +119,9 @@ HRESULT CGame::Init()
 	//影のテクスチャ読み込み
 	m_pShadow->Load();
 
+	//オブジェクトのテクスチャの読み込み
+	m_pObject->Load();
+
 	//タイヤのテクスチャ読み込み
 	CTire::LoadTexture();
 
@@ -129,7 +132,7 @@ HRESULT CGame::Init()
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 	CPlayer::LoadModel();	//モデルの読み込み
 
-							//プレイヤーの生成
+	//プレイヤーの生成
 	m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, -300.0f));
 	m_pPlayer->LoadText();
 
@@ -143,7 +146,7 @@ HRESULT CGame::Init()
 
 	CFeed::Load();
 
-	CFeed::Create(D3DXVECTOR3(-17000.0f, 1.0f, 1800.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), 0);
+	CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), 0);
 
 	//===================================
 	//		変数の初期化
@@ -414,12 +417,22 @@ void CGame::SetStage(void)
 		WallTextLoad(6);
 		MeshTextLoad(6);
 
+		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
+		{
+			//オブジェクトの生成
+			m_pObject = CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
+		}
 		for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
 		{
 			//フィールドの生成
 			m_pMeshField = CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
 				m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
 				m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3, m_Mesh[nCount].m_nTexType, 0);
+		}
+		for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
+		{
+			//壁の生成
+			m_pWall = CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
 		}
 
 		m_nCntSetStage = 1;
@@ -439,7 +452,7 @@ void CGame::TextLoad(int nLoadNumber)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-						//ファイルポインタの初期化処理
+	//ファイルポインタの初期化処理
 	pFile = NULL;
 
 	//ファイルを開く 読み込み

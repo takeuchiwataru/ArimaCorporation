@@ -5,7 +5,6 @@
 //
 //=============================================================================
 #include "meshfield.h"
-#include "markmeshfield.h"
 #include "mesh.h"
 #include "manager.h"
 #include "scene.h"
@@ -39,7 +38,7 @@ LPDIRECT3DINDEXBUFFER9 CMeshField::m_pIdxBuff = NULL;				// インデックスへのポイ
 //===============================================================================
 //　デフォルトコンストラクタ
 //===============================================================================
-CMeshField::CMeshField() : CMesh(MESHFIELD_PRIOTITY, CScene::OBJTYPE_MESHFILED)
+CMeshField::CMeshField()
 {
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_nWidthDivide = 5;
@@ -67,6 +66,8 @@ HRESULT CMeshField::Init(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	CMesh::Init();
+
+	CScene::SetObjType(CScene::OBJTYPE_GROUND);
 
 	return S_OK;
 }
@@ -176,107 +177,3 @@ void CMeshField::UnLoad(void)
 		}
 	}
 }
-//===============================================================================
-// ファイルにセーブ
-//===============================================================================
-void CMeshField::TextSave(void)
-{
-	int nMarkMeshField = CMarkMeshField::GetMeshFieldNum();
-
-	CScene *pScene;
-
-	//プライオリティーチェック
-	pScene = CScene::GetTop(MESHFIELD_PRIOTITY);
-
-	//ファイルのポインタ
-	FILE *pFile;
-
-	//ファイル読み取り設定
-	pFile = fopen(MESHFILE_NAME, "wb");
-
-	//プレイヤーのテキストデータの読み込み
-	if (pFile != NULL)
-	{
-		//説明文
-		fprintf(pFile, "#====================================================\n");
-		fprintf(pFile, "#\n");
-		fprintf(pFile, "#　マップのメッシュフィールド配置のエディタ [meshfield.txt]\n");
-		fprintf(pFile, "#　制作者 : 有馬　武志\n");
-		fprintf(pFile, "#\n");
-		fprintf(pFile, "#====================================================\n\n");
-		//置いたオブジェクトの数
-		fprintf(pFile, "#----------------------------------------------------\n");
-		fprintf(pFile, "#　メッシュフィールドの設置数\n");
-		fprintf(pFile, "#----------------------------------------------------\n");
-		fprintf(pFile, "MESHFIELD_SETNUM = ");
-		fprintf(pFile, "%d\n\n", nMarkMeshField);
-		//説明文
-		fprintf(pFile, "#----------------------------------------------------\n");
-		fprintf(pFile, "#　メッシュフィールドの設置情報\n");
-		fprintf(pFile, "#----------------------------------------------------\n");
-
-		//NULLチェック
-		while (pScene != NULL)
-		{
-			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-			CScene *pSceneNext = pScene->GetNext();
-
-			if (pScene->GetDeath() == false)
-			{
-				//タイプがオブジェクトだったら
-				if (pScene->GetObjType() == OBJTYPE_MESHFILED)
-				{
-					//開始のための宣言
-					fprintf(pFile, "MESHFIELD_START\n");
-					//テクスチャの種類を入れる
-					fprintf(pFile, "	TEXTURETYPE = ");
-					fprintf(pFile, "%d\n", ((CMeshField*)pScene)->m_nTexType); 
-					//横の分割数を入れる
-					fprintf(pFile, "	X_DIVIDE = ");
-					fprintf(pFile, "%d\n", ((CMeshField*)pScene)->m_nWidthDivide); 
-					//縦の分割数を入れる
-					fprintf(pFile, "	Z_DIVIDE = ");
-					fprintf(pFile, "%d\n", ((CMeshField*)pScene)->m_nDepthDivide);
-					//Xのテクスチャ座標を入れる
-					fprintf(pFile, "	X_TEXUV = ");
-					fprintf(pFile, "%.1f\n", ((CMeshField*)pScene)->m_fTextXUV);
-					//Yのテクスチャ座標を入れる
-					fprintf(pFile, "	Y_TEXUV = ");
-					fprintf(pFile, "%.1f\n", ((CMeshField*)pScene)->m_fTextYUV);
-					//横の長さを入れる
-					fprintf(pFile, "	X_LENGTH = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fWidthLength);
-					//縦の長さを入れる
-					fprintf(pFile, "	Z_LENGTH = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fDepthLength);
-					//0番の頂点の高さを入れる
-					fprintf(pFile, "	VTX0_HEIGHT = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fVtxHeight_No0);
-					//1番の頂点の高さを入れる
-					fprintf(pFile, "	VTX1_HEIGHT = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fVtxHeight_No1);
-					//2番の頂点の高さを入れる
-					fprintf(pFile, "	VTX2_HEIGHT = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fVtxHeight_No2);
-					//3番の頂点の高さを入れる
-					fprintf(pFile, "	VTX3_HEIGHT = ");
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_fVtxHeight_No3);
-					//位置を入れる
-					fprintf(pFile, "	POS = ");
-					fprintf(pFile, "%.2f ", ((CMeshField*)pScene)->m_pos.x);
-					fprintf(pFile, "%.2f ", ((CMeshField*)pScene)->m_pos.y);
-					fprintf(pFile, "%.2f\n", ((CMeshField*)pScene)->m_pos.z);
-					//開始のための宣言
-					fprintf(pFile, "MESHFIELD_END\n\n");
-				}
-			}
-
-			//Nextに次のSceneを入れる
-			pScene = pSceneNext;
-		}
-
-		//ファイルを閉じる
-		fclose(pFile);
-	}
-}
-

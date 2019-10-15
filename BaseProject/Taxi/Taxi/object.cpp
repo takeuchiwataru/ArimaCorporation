@@ -17,87 +17,9 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define MODEL_NAME_1	"data\\MODEL\\壊れるもの\\tree2.x"			//読み込むテクスチャファイル
 
-#define MODEL_NAME_1	"data\\MODEL\\壊れるもの\\自販機.x"			// 読み込むモデルファイル
-#define MODEL_NAME_2	"data\\MODEL\\壊れるもの\\grass.x"			// 読み込むモデルファイル
-#define MODEL_NAME_3	"data\\MODEL\\壊れないもの\\TreeU.x"		// 読み込むモデルファイル
-#define MODEL_NAME_4	"data\\MODEL\\壊れないもの\\TreeD.x"		// 読み込むモデルファイル
-#define MODEL_NAME_5	"data\\MODEL\\飛ばせるもの\\段ボール.x"		// 読み込むモデルファイル
-#define MODEL_NAME_6	"data\\MODEL\\飛ばせるもの\\cone.x"			// 読み込むモデルファイル
-#define MODEL_NAME_7	"data\\MODEL\\壊れないもの\\ビル200.x"		// 読み込むモデルファイル
-#define MODEL_NAME_8	"data\\MODEL\\壊れないもの\\ビル400.x"		// 読み込むモデルファイル
-#define MODEL_NAME_9	"data\\MODEL\\壊れないもの\\ビル600.x"		// 読み込むモデルファイル
-#define MODEL_NAME_10	"data\\MODEL\\壊れるもの\\街灯.x"			// 読み込むモデルファイル
-#define MODEL_NAME_11	"data\\MODEL\\壊れるもの\\信号機2.x"		// 読み込むモデルファイル
-#define MODEL_NAME_12	"data\\MODEL\\壊れるもの\\信号機3.x"		// 読み込むモデルファイル
-#define MODEL_NAME_13	"data\\MODEL\\飛ばせるもの\\ベンチ.x"		// 読み込むモデルファイル
-#define MODEL_NAME_14	"data\\MODEL\\壊れないもの\\テレビ塔.x"		// 読み込むモデルファイル
-#define MODEL_NAME_15	"data\\MODEL\\壊れるもの\\tree.x"			// 読み込むモデルファイル
-#define MODEL_NAME_16	"data\\MODEL\\壊れるもの\\公衆電話.x"		// 読み込むモデルファイル
-#define MODEL_NAME_17	"data\\MODEL\\壊れるもの\\草壇.x"			// 読み込むモデルファイル
-#define MODEL_NAME_18	"data\\MODEL\\壊れないもの\\花壇.x"			// 読み込むモデルファイル
-#define MODEL_NAME_19	"data\\MODEL\\壊れないもの\\狸小路屋根.x"	// 読み込むモデルファイル
-#define MODEL_NAME_20	"data\\MODEL\\当たり判定用\\box.x"			// 読み込むモデルファイル
-#define MODEL_NAME_21	"data\\MODEL\\飛ばせるもの\\看板.x"			// 読み込むモデルファイル
-#define MODEL_NAME_22	"data\\MODEL\\飛ばせるもの\\ビールケース.x"	// 読み込むモデルファイル
-#define MODEL_NAME_23	"data\\MODEL\\壊れないもの\\時計台.x"		// 読み込むモデルファイル
-#define MODEL_NAME_24	"data\\MODEL\\壊れないもの\\赤レンガ.x"		// 読み込むモデルファイル
-#define MODEL_NAME_25	"data\\MODEL\\壊れないもの\\コーン.x"		//読み込むモデルファイル
-#define MODEL_NAME_26	"data\\MODEL\\壊れないもの\\札幌駅.x"		//読み込むモデルファイル
-#define MODEL_NAME_27	"data\\MODEL\\壊れないもの\\エスタ.x"		//読み込むモデルファイル
-#define MODEL_NAME_28	"data\\MODEL\\壊れないもの\\大丸.x"			//読み込むモデルファイル
-#define MODEL_NAME_29	"data\\MODEL\\壊れないもの\\アピアドーム.x"	//読み込むテクスチャファイル
-#define MODEL_NAME_30	"data\\MODEL\\壊れないもの\\JRタワー.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_31	"data\\MODEL\\壊れないもの\\噴水.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_32	"data\\MODEL\\壊れるもの\\指示看板.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_33	"data\\MODEL\\飛ばせるもの\\柵.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_34	"data\\MODEL\\壊れるもの\\fire_hydrant.x"	//読み込むテクスチャファイル
-#define MODEL_NAME_35	"data\\MODEL\\壊れないもの\\観覧車.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_36	"data\\MODEL\\壊れないもの\\タピオカカー.x"	//読み込むテクスチャファイル
-#define MODEL_NAME_37	"data\\MODEL\\壊れないもの\\北大病院.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_38	"data\\MODEL\\壊れないもの\\LCDpanel.x"		//読み込むテクスチャファイル
-
-#define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\bender.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\grass.png"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_3	"data\\TEXTURE\\modeltex\\葉っぱ.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_4	"data\\TEXTURE\\modeltex\\tree.jpg"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_5	"data\\TEXTURE\\modeltex\\ビル200正面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_6	"data\\TEXTURE\\modeltex\\ビル200側面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_7	"data\\TEXTURE\\modeltex\\ビル400正面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_8	"data\\TEXTURE\\modeltex\\ビル400側面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_9	"data\\TEXTURE\\modeltex\\ビル600正面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_10	"data\\TEXTURE\\modeltex\\ビル600側面.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_11	"data\\TEXTURE\\modeltex\\街灯.jpg"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_12	"data\\TEXTURE\\modeltex\\信号機2.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_13	"data\\TEXTURE\\modeltex\\信号機3.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_14	"data\\TEXTURE\\modeltex\\ベンチ.png"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_15	"data\\TEXTURE\\modeltex\\テレビ塔.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_16	"data\\TEXTURE\\modeltex\\leaf.png"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_17 "data\\TEXTURE\\modeltex\\公衆電話.png"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_18 "data\\TEXTURE\\modeltex\\草壇.jpg"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_19 "data\\TEXTURE\\modeltex\\花壇.jpg"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_20 "data\\TEXTURE\\modeltex\\狸小路.png"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_21 "data\\TEXTURE\\modeltex\\看板.jpg"			// 読み込むテクスチャファイル
-#define TEXTURE_NAME_22 "data\\TEXTURE\\modeltex\\ビールケース.png"	// 読み込むテクスチャファイル
-#define TEXTURE_NAME_23 "data\\TEXTURE\\modeltex\\時計台.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_24 "data\\TEXTURE\\modeltex\\赤レンガ.jpg"		// 読み込むテクスチャファイル
-#define TEXTURE_NAME_25 "data\\TEXTURE\\modeltex\\コーン.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_26 "data\\TEXTURE\\modeltex\\札幌駅.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_27 "data\\TEXTURE\\modeltex\\エスタ.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_28 "data\\TEXTURE\\modeltex\\大丸.jpg"			//読み込むテクスチャファイル
-#define TEXTURE_NAME_29 "data\\TEXTURE\\modeltex\\アピアドーム.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_30 "data\\TEXTURE\\modeltex\\JRタワー.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_31 "data\\TEXTURE\\modeltex\\噴水.jpg"			//読み込むテクスチャファイル
-#define TEXTURE_NAME_32 "data\\TEXTURE\\modeltex\\指示看板.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_33 "data\\TEXTURE\\modeltex\\柵.png"			//読み込むテクスチャファイル
-#define TEXTURE_NAME_34 "data\\TEXTURE\\modeltex\\.jpg"				//読み込むテクスチャファイル
-#define TEXTURE_NAME_35 "data\\TEXTURE\\modeltex\\観覧車2.png"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_36 "data\\TEXTURE\\modeltex\\セーコーマートビル.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_37 "data\\TEXTURE\\modeltex\\ローソンビル.jpg"			//読み込むテクスチャファイル
-#define TEXTURE_NAME_38 "data\\TEXTURE\\modeltex\\セブンイレブンビル.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_39 "data\\TEXTURE\\modeltex\\ファミリーマートビル.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_40 "data\\TEXTURE\\modeltex\\タピオカカー.png"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_41 "data\\TEXTURE\\modeltex\\北大病院.jpg"		//読み込むテクスチャファイル
+#define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\leaf.png"		//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
@@ -329,43 +251,6 @@ HRESULT CObject::Load(void)
 
 	// Xファイルの読み込み
 	D3DXLoadMeshFromX(MODEL_NAME_1, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
-	D3DXLoadMeshFromX(MODEL_NAME_2, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
-	D3DXLoadMeshFromX(MODEL_NAME_3, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
-	D3DXLoadMeshFromX(MODEL_NAME_4, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[3], NULL, &m_nNumMatModel[3], &m_pMeshModel[3]);
-	D3DXLoadMeshFromX(MODEL_NAME_5, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[4], NULL, &m_nNumMatModel[4], &m_pMeshModel[4]);
-	D3DXLoadMeshFromX(MODEL_NAME_6, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[5], NULL, &m_nNumMatModel[5], &m_pMeshModel[5]);
-	D3DXLoadMeshFromX(MODEL_NAME_7, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[6], NULL, &m_nNumMatModel[6], &m_pMeshModel[6]);
-	D3DXLoadMeshFromX(MODEL_NAME_8, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[7], NULL, &m_nNumMatModel[7], &m_pMeshModel[7]);
-	D3DXLoadMeshFromX(MODEL_NAME_9, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[8], NULL, &m_nNumMatModel[8], &m_pMeshModel[8]);
-	D3DXLoadMeshFromX(MODEL_NAME_10, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[9], NULL, &m_nNumMatModel[9], &m_pMeshModel[9]);
-	D3DXLoadMeshFromX(MODEL_NAME_11, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[10], NULL, &m_nNumMatModel[10], &m_pMeshModel[10]);
-	D3DXLoadMeshFromX(MODEL_NAME_12, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[11], NULL, &m_nNumMatModel[11], &m_pMeshModel[11]);
-	D3DXLoadMeshFromX(MODEL_NAME_13, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[12], NULL, &m_nNumMatModel[12], &m_pMeshModel[12]);
-	D3DXLoadMeshFromX(MODEL_NAME_14, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[13], NULL, &m_nNumMatModel[13], &m_pMeshModel[13]);
-	D3DXLoadMeshFromX(MODEL_NAME_15, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[14], NULL, &m_nNumMatModel[14], &m_pMeshModel[14]);
-	D3DXLoadMeshFromX(MODEL_NAME_16, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[15], NULL, &m_nNumMatModel[15], &m_pMeshModel[15]);
-	D3DXLoadMeshFromX(MODEL_NAME_17, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[16], NULL, &m_nNumMatModel[16], &m_pMeshModel[16]);
-	D3DXLoadMeshFromX(MODEL_NAME_18, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[17], NULL, &m_nNumMatModel[17], &m_pMeshModel[17]);
-	D3DXLoadMeshFromX(MODEL_NAME_19, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[18], NULL, &m_nNumMatModel[18], &m_pMeshModel[18]);
-	D3DXLoadMeshFromX(MODEL_NAME_20, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[19], NULL, &m_nNumMatModel[19], &m_pMeshModel[19]);
-	D3DXLoadMeshFromX(MODEL_NAME_21, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[20], NULL, &m_nNumMatModel[20], &m_pMeshModel[20]);
-	D3DXLoadMeshFromX(MODEL_NAME_22, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[21], NULL, &m_nNumMatModel[21], &m_pMeshModel[21]);
-	D3DXLoadMeshFromX(MODEL_NAME_23, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[22], NULL, &m_nNumMatModel[22], &m_pMeshModel[22]);
-	D3DXLoadMeshFromX(MODEL_NAME_24, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[23], NULL, &m_nNumMatModel[23], &m_pMeshModel[23]);
-	D3DXLoadMeshFromX(MODEL_NAME_25, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[24], NULL, &m_nNumMatModel[24], &m_pMeshModel[24]);
-	D3DXLoadMeshFromX(MODEL_NAME_26, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[25], NULL, &m_nNumMatModel[25], &m_pMeshModel[25]);
-	D3DXLoadMeshFromX(MODEL_NAME_27, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[26], NULL, &m_nNumMatModel[26], &m_pMeshModel[26]);
-	D3DXLoadMeshFromX(MODEL_NAME_28, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[27], NULL, &m_nNumMatModel[27], &m_pMeshModel[27]);
-	D3DXLoadMeshFromX(MODEL_NAME_29, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[28], NULL, &m_nNumMatModel[28], &m_pMeshModel[28]);
-	D3DXLoadMeshFromX(MODEL_NAME_30, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[29], NULL, &m_nNumMatModel[29], &m_pMeshModel[29]);
-	D3DXLoadMeshFromX(MODEL_NAME_31, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[30], NULL, &m_nNumMatModel[30], &m_pMeshModel[30]);
-	D3DXLoadMeshFromX(MODEL_NAME_32, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[31], NULL, &m_nNumMatModel[31], &m_pMeshModel[31]);
-	D3DXLoadMeshFromX(MODEL_NAME_33, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[32], NULL, &m_nNumMatModel[32], &m_pMeshModel[32]);
-	D3DXLoadMeshFromX(MODEL_NAME_34, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[33], NULL, &m_nNumMatModel[33], &m_pMeshModel[33]);
-	D3DXLoadMeshFromX(MODEL_NAME_35, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[34], NULL, &m_nNumMatModel[34], &m_pMeshModel[34]);
-	D3DXLoadMeshFromX(MODEL_NAME_36, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[35], NULL, &m_nNumMatModel[35], &m_pMeshModel[35]);
-	D3DXLoadMeshFromX(MODEL_NAME_37, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[36], NULL, &m_nNumMatModel[36], &m_pMeshModel[36]);
-	D3DXLoadMeshFromX(MODEL_NAME_38, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[37], NULL, &m_nNumMatModel[37], &m_pMeshModel[37]);
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
@@ -433,46 +318,6 @@ HRESULT CObject::Load(void)
 
 	//使っているテクスチャ
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_4, &m_pMeshTextures[3]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_5, &m_pMeshTextures[4]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_6, &m_pMeshTextures[5]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_7, &m_pMeshTextures[6]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_8, &m_pMeshTextures[7]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_9, &m_pMeshTextures[8]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_10, &m_pMeshTextures[9]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_11, &m_pMeshTextures[10]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_12, &m_pMeshTextures[11]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_13, &m_pMeshTextures[12]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_14, &m_pMeshTextures[13]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_15, &m_pMeshTextures[14]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_16, &m_pMeshTextures[15]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_17, &m_pMeshTextures[16]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_18, &m_pMeshTextures[17]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_19, &m_pMeshTextures[18]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_20, &m_pMeshTextures[19]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_21, &m_pMeshTextures[20]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_22, &m_pMeshTextures[21]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_23, &m_pMeshTextures[22]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_24, &m_pMeshTextures[23]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_25, &m_pMeshTextures[24]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_26, &m_pMeshTextures[25]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_27, &m_pMeshTextures[26]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_28, &m_pMeshTextures[27]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_29, &m_pMeshTextures[28]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_30, &m_pMeshTextures[29]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_31, &m_pMeshTextures[30]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_32, &m_pMeshTextures[31]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_33, &m_pMeshTextures[32]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_34, &m_pMeshTextures[33]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_35, &m_pMeshTextures[34]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_36, &m_pMeshTextures[35]);//セコマ
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_37, &m_pMeshTextures[36]);//ローソン
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_38, &m_pMeshTextures[37]);//セブン
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_39, &m_pMeshTextures[38]);//ファミマ
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_40, &m_pMeshTextures[39]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_41, &m_pMeshTextures[40]);
 
 	return S_OK;
 }
