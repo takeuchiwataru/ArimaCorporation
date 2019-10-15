@@ -12,9 +12,9 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_MESH_TEXTURE			(3)							//使用するテクスチャの種類
-#define ANGLE						(1.0f / (CORSS/2))			//指定した数文のPIを出す式
-#define MESH_PRIOTITY				(2)							//メッシュフィールドの優先順位
+#define MAX_MESH_TEXTURE			(3)
+#define ANGLE						(1.0f / (CORSS/2))			// 指定した数文のPIを出す式
+#define MESH_PRIOTITY				(2)
 
 //=====================
 //  CSceneの派生クラス
@@ -22,7 +22,7 @@
 class CMesh : public CScene
 {
 public://誰でも扱える
-	CMesh(int nPriority = 3, CScene::OBJTYPE objType = CScene::OBJTYPE_MESH);
+	CMesh();
 	~CMesh();
 	HRESULT Init(void);
 	void Uninit(void);
@@ -35,11 +35,16 @@ public://誰でも扱える
 	void SetPosition(D3DXVECTOR3 pos);
 	void SetMeshInfo(int nMeshX, int nMeshZ, float fMeshTexX, float fMeshTexY, float fMeshDepth, float fMeshWidth);
 	void SetMeshType(int nType) { m_nType = nType; }
-	D3DXVECTOR3 &GetPosition(void) { return m_pos; }
+	D3DXVECTOR3 GetPosition(void) { return m_pos; }
 	void SetVtx(float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ) { m_fVtx0 = fVtx0; m_fVtxMeshX = fVtxMeshX; m_fVtxMeshZ = fVtxMeshZ; m_fVtxMeshXMeshZ = fVtxMeshXMeshZ; }
 	void Nor(void);
 	bool GetHeight(D3DXVECTOR3 &pos);
+	float GetHeightMesh(D3DXVECTOR3 pos);
 	void SetHeight(D3DXVECTOR3 pos, float fValue, float fRange);
+
+	D3DXVECTOR3 GetNor(D3DXVECTOR3 pos);						// 地面の法線を取得
+	float GetInclineAngle(D3DXVECTOR3 pos, float fAngle);		// 傾斜の角度の取得
+	bool OnField(D3DXVECTOR3 pos, float fMaxHeight);	// 現在いる地面かどうかの判定
 
 private://個人でのみ使う
 	LPDIRECT3DTEXTURE9		m_pTexture;							// テクスチャへのポインタ
