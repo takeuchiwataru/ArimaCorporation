@@ -27,6 +27,7 @@
 #include "texture.h"
 #include "gamecamera.h"
 #include "select.h"
+#include "feed.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -93,7 +94,7 @@ CGame::CGame()
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CGame::~CGame(){}
+CGame::~CGame() {}
 
 //=============================================================================
 // 初期化処理
@@ -128,7 +129,7 @@ HRESULT CGame::Init()
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 	CPlayer::LoadModel();	//モデルの読み込み
 
-	//プレイヤーの生成
+							//プレイヤーの生成
 	m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, -300.0f));
 	m_pPlayer->LoadText();
 
@@ -139,6 +140,10 @@ HRESULT CGame::Init()
 
 		if (m_pGameCamera != NULL) { m_pGameCamera->Init(); }
 	}
+
+	CFeed::Load();
+
+	CFeed::Create(D3DXVECTOR3(-17000.0f, 1.0f, 1800.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), 0);
 
 	//===================================
 	//		変数の初期化
@@ -186,6 +191,8 @@ void CGame::Uninit(void)
 	//タイヤのテクスチャ破棄
 	CTire::UnloadTexture();
 
+	CFeed::UnLoad();
+
 	//===================================
 	//	　　クラスの破棄
 	//===================================
@@ -226,7 +233,7 @@ void CGame::Uninit(void)
 		m_pBillBoord->Uninit();
 		m_pBillBoord = NULL;
 	}
-	
+
 	//フェード以外の破棄
 	CScene::NotFadeReleseAll();
 
@@ -274,7 +281,7 @@ void CGame::Update(void)
 
 	if (m_pPause == false)
 	{//開く音
-		//現在の状態を保存
+	 //現在の状態を保存
 		m_NowGameState = GetGameState();
 
 		//カメラの更新処理
@@ -284,7 +291,7 @@ void CGame::Update(void)
 		{
 		case GAMESTATE_NORMAL:	//通常の状態
 
-			//ステージ設定
+								//ステージ設定
 			SetStage();
 
 			break;
@@ -402,7 +409,7 @@ void CGame::SetStage(void)
 		//	ステージ1
 		//=====================================================================
 
-			//マップを読み込む
+		//マップを読み込む
 		TextLoad(6);
 		WallTextLoad(6);
 		MeshTextLoad(6);
@@ -432,7 +439,7 @@ void CGame::TextLoad(int nLoadNumber)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-	//ファイルポインタの初期化処理
+						//ファイルポインタの初期化処理
 	pFile = NULL;
 
 	//ファイルを開く 読み込み
@@ -807,7 +814,7 @@ void CGame::WallTextLoad(int nLoadNumber)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-	//ファイルポインタの初期化処理
+						//ファイルポインタの初期化処理
 	pFile = NULL;
 
 	//ファイルを開く 読み込み

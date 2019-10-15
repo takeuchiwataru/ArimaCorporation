@@ -24,6 +24,7 @@
 #include "tutorial.h"
 #include "gamecamera.h"
 #include "object.h"
+#include "feed.h"
 
 //=============================================================================
 // マクロ定義
@@ -1149,4 +1150,38 @@ void CPlayer::PlaySoundObj(int nType, CSound * pSound)
 
 	//case TYPE_SIGNBOARD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01); break;
 	//}
+}
+
+//=============================================================================
+// 餌との当たり判定
+//=============================================================================
+void CPlayer::CollisionFeed(void)
+{
+	CSound *pSound = CManager::GetSound();
+	CScene *pScene;
+
+	for (int nCntPriority = 2; nCntPriority <= FEED_PRIOTITY; nCntPriority++)
+	{
+		// プライオリティーチェック
+		pScene = CScene::GetTop(nCntPriority);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
+			if (pScene->GetObjType() == OBJTYPE_FEED)
+			{// タイプが障害物だったら
+				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				//if (pFeed->Collision(m_pos, m_pModel[0].GetVtxMax(), m_pModel[0].GetVtxMin(), m_move))
+				//{// 衝突した
+
+
+
+				//}
+			}
+
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+	}
 }

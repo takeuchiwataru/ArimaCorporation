@@ -131,6 +131,7 @@ private:
 	void SetStateSpeed(STATE_SPEED state);
 	void SetStateHandle(STATE_HANDLE state) { m_StateHandle = state; };
 	void CollisionObject(void);
+	void CollisionFeed(void);
 	void CarCalculate(D3DXVECTOR3 * TirePos);
 	void UpdateStateJump(void);
 	void PlaySoundObj(int nType, CSound * pSound);

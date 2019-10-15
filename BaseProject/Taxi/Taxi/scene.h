@@ -45,12 +45,8 @@ public://誰でも扱える
 		OBJTYPE_TIME,			//時間
 		OBJTYPE_SCORE,			//スコア
 		OBJTYPE_TOTALSCORE,		//トータルスコア
-		OBJTYPE_CUSTOMER,		//お客さん
-		OBJTYPE_COMBO,			//コンボ数
-		OBJTYPE_CAR,			//NPC車
-		OBJTYPE_CARPOINT,		//車の動くポイント
-		OBJTYPE_HUMANNPC,		//人NPC
 		OBJTYPE_CYLINDER,		//シリンダー
+		OBJTYPE_FEED,			//餌
 		OBJTYPE_MAX,			//最大数
 	}OBJTYPE;
 
