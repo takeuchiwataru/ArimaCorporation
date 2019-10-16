@@ -32,7 +32,7 @@ CCamera::CCamera()
 //===============================================================================
 //　デストラクタ
 //===============================================================================
-CCamera::~CCamera(){}
+CCamera::~CCamera() {}
 
 //=============================================================================
 // 初期化処理
@@ -44,19 +44,19 @@ HRESULT CCamera::Init(void)
 	m_vecU = D3DXVECTOR3(0.0f, 1.0f, 0.0f);		//法線の向き
 	m_rot = VECTOR_ZERO;						//向き
 	m_fRotDest = 0;
-	m_fCameraAngle = 45.0f;						//角度
+	m_fCameraAngle = 25.0f;						//角度
 
 	return S_OK;
 }
 //=============================================================================
 // 終了処理
 //=============================================================================
-void CCamera::Uninit(void){}
+void CCamera::Uninit(void) {}
 
 //=============================================================================
 // 更新処理
 //=============================================================================
-void CCamera::Update(void){}
+void CCamera::Update(void) {}
 
 //=============================================================================
 //　カメラの生成
@@ -101,7 +101,7 @@ bool CCamera::Clipping(D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax)
 {
 	//変数宣言
 	D3DXVECTOR3 Reference[MAX_POS];
-	D3DXVECTOR3 Pos[VECTOL] = {VECTOR_ZERO, VECTOR_ZERO };
+	D3DXVECTOR3 Pos[VECTOL] = { VECTOR_ZERO, VECTOR_ZERO };
 	D3DXVECTOR3 VecA;
 	D3DXVECTOR3 VecB;
 	bool		bDraw = false;
@@ -138,7 +138,7 @@ bool CCamera::Clipping(D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax)
 			VecB = Reference[nCntPoint] - Pos[nCntVec];				//画角の終点と位置のベクトルを求める			
 			float fCross = (VecA.z * VecB.x) - (VecA.x * VecB.z);	//外積を求める
 
-			//ベクトルより小さいかどうか
+																	//ベクトルより小さいかどうか
 			if (fCross <= 0)
 			{
 				bDraw = true;		//描画状態にする
@@ -189,7 +189,7 @@ bool CCamera::ClippingPos(D3DXVECTOR3 ObjPos)
 		VecB = ObjPos - Pos[nCntVec];							//画角の終点と位置のベクトルを求める			
 		float fCross = (VecA.z * VecB.x) - (VecA.x * VecB.z);	//外積を求める
 
-		//ベクトルより小さいかどうか
+																//ベクトルより小さいかどうか
 		if (fCross <= 0)
 		{
 			bDraw = true;		//描画しない状態にする

@@ -156,6 +156,7 @@
     <ClCompile Include="camerabace.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="fade.cpp" />
+    <ClCompile Include="feed.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gamecamera.cpp" />
     <ClCompile Include="incline.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="camerabace.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="fade.h" />
+    <ClInclude Include="feed.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="gamecamera.h" />
     <ClInclude Include="incline.h" />

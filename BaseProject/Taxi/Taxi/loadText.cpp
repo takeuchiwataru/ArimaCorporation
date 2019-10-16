@@ -40,7 +40,7 @@ CLoadText::CLoadText()
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CLoadText::~CLoadText(){}
+CLoadText::~CLoadText() {}
 
 //=============================================================================
 // 列の読み込み
@@ -151,12 +151,12 @@ CLoadTextMotion * CLoadTextMotion::Create(char * pFileName)
 //=============================================================================
 // コンストラクタ
 //=============================================================================
-CLoadTextMotion::CLoadTextMotion(){}
+CLoadTextMotion::CLoadTextMotion() {}
 
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CLoadTextMotion::~CLoadTextMotion(){}
+CLoadTextMotion::~CLoadTextMotion() {}
 
 //=============================================================================
 // 初期化処理
@@ -424,8 +424,8 @@ void CLoadTextMotion::Uninit(void)
 	{
 		if (m_ModelInfo.paFileName[nCntModel] == NULL) { continue; }
 
-			delete[] m_ModelInfo.paFileName[nCntModel];
-			m_ModelInfo.paFileName[nCntModel] = NULL;
+		delete[] m_ModelInfo.paFileName[nCntModel];
+		m_ModelInfo.paFileName[nCntModel] = NULL;
 	}
 	if (m_ModelInfo.paFileName != NULL)	//ファイルポインタ
 	{
@@ -485,12 +485,12 @@ CLoadTextPlayer * CLoadTextPlayer::Create(char * pFileName)
 //=============================================================================
 // コンストラクタ
 //=============================================================================
-CLoadTextPlayer::CLoadTextPlayer(){}
+CLoadTextPlayer::CLoadTextPlayer() {}
 
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CLoadTextPlayer::~CLoadTextPlayer(){}
+CLoadTextPlayer::~CLoadTextPlayer() {}
 
 //=============================================================================
 // 初期化処理
@@ -501,26 +501,26 @@ HRESULT CLoadTextPlayer::Init(void)
 	m_pStrCur = NULL;			//文字列の先頭へのポインタ
 	m_aLine[256] = {};			//文字列読み込み用（一行分）
 	m_aStrCur[256] = {};		//文字列抜き出し用
-	//CPlayer::PLAYER_INFO * pPlayerInfo = NULL;
+								//CPlayer::PLAYER_INFO * pPlayerInfo = NULL;
 	CManager::MODE mode = CManager::GetMode();
 
 	//プレイヤー情報の初期化
-	m_PlayerInfo.fAccel = 1.0f;				//加速値
-	m_PlayerInfo.fBraks = 0.00f;			//減速値
+	m_PlayerInfo.fAccel = 1.0f;				//加速値（前進）
+	m_PlayerInfo.fBraks = 0.00f;			//加速値（後進）
+	m_PlayerInfo.fDown = 0.0f;				//減速値
 	m_PlayerInfo.fAddRot = 0.00f;			//加える回転値
 	m_PlayerInfo.fDistance = 0.0f;			//距離
-	m_PlayerInfo.fWindy = 0.0f;				//風圧
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
 
-	//プレイヤーの情報を取得する
-	//if (mode == CManager::MODE_GAME)
-	//{//ゲーム
-	//	pPlayerInfo = CGame::GetPlayer()->GetPlayerInfoPoint();	//プレイヤーの情報を取得
-	//}
-	//else if (mode == CManager::MODE_TUTORIAL)
-	//{//チュートリアル
-	//	pPlayerInfo = CTutorial::GetPlayer()->GetPlayerInfoPoint();	//プレイヤーの情報を取得
-	//}
+											//プレイヤーの情報を取得する
+											//if (mode == CManager::MODE_GAME)
+											//{//ゲーム
+											//	pPlayerInfo = CGame::GetPlayer()->GetPlayerInfoPoint();	//プレイヤーの情報を取得
+											//}
+											//else if (mode == CManager::MODE_TUTORIAL)
+											//{//チュートリアル
+											//	pPlayerInfo = CTutorial::GetPlayer()->GetPlayerInfoPoint();	//プレイヤーの情報を取得
+											//}
 
 	FILE *pFile;
 
@@ -557,15 +557,15 @@ HRESULT CLoadTextPlayer::Init(void)
 				m_pStrCur = AddChar(m_pStrCur, &m_aStrCur[0], 8);
 				m_PlayerInfo.fBraks = (float)atof(m_aStrCur);
 			}
+			else if (memcmp(m_aLine, "DOWN = ", 7) == 0)
+			{
+				m_pStrCur = AddChar(m_pStrCur, &m_aStrCur[0], 8);
+				m_PlayerInfo.fDown = (float)atof(m_aStrCur);
+			}
 			else if (memcmp(m_aLine, "ADDROT = ", 9) == 0)
 			{
 				m_pStrCur = AddChar(m_pStrCur, &m_aStrCur[0], 9);
 				m_PlayerInfo.fAddRot = (float)atof(m_aStrCur);
-			}
-			else if (memcmp(m_aLine, "WINDY = ", 8) == 0)
-			{
-				m_pStrCur = AddChar(m_pStrCur, &m_aStrCur[0], 8);
-				m_PlayerInfo.fWindy = (float)atof(m_aStrCur);
 			}
 		}
 		fclose(pFile);	//読み込みを終了する
@@ -585,4 +585,4 @@ HRESULT CLoadTextPlayer::Init(void)
 //=============================================================================
 // 終了処理
 //=============================================================================
-void CLoadTextPlayer::Uninit(void){}
+void CLoadTextPlayer::Uninit(void) {}

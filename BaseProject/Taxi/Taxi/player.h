@@ -65,10 +65,10 @@ public:
 	//テキスト情報
 	typedef struct
 	{
-		float fAccel;			//加速値
-		float fBraks;			//減速値
+		float fAccel;			//加速値（前進）
+		float fBraks;			//加速値（後進）
+		float fDown;			//減速値
 		float fAddRot;			//加える回転値
-		float fWindy;			//風圧
 		float fDistance;		//移動距離
 		float nCountTime;		//時間の計算
 		D3DXVECTOR3 FirstPos;	//初期位置
@@ -127,6 +127,7 @@ private:
 	void DebugProc(void);
 	void CreateTire(void);
 	void UpdateShake(void);
+	void UpdateField(void);
 	void SetState(STATE state);
 	void SetStateSpeed(STATE_SPEED state);
 	void SetStateHandle(STATE_HANDLE state) { m_StateHandle = state; };
@@ -140,7 +141,7 @@ private:
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
-	//メンバ変数
+											//メンバ変数
 	static int	m_nMaxMotion;							// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;		// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;			// テクスチャ

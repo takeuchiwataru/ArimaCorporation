@@ -14,10 +14,10 @@
 //===============================================================================
 //　マクロ定義
 //===============================================================================
-#define MOVE_CAMERA		(290.0f)							//カメラの移動量
+#define MOVE_CAMERA		(500.0f)							//カメラの移動量
 #define MOVE_ANGLE		(0.06f)								//カメラ角度の移動量
 #define WINDY			(0.4f)								//風圧
-#define HIGHT_V			(100.0f)							//視点の高さ
+#define HIGHT_V			(130.0f)							//視点の高さ
 #define HIGHT_R			(60.0f)								//注視点の高さ
 #define PUTON_DISTANCE	(D3DXVECTOR3(150.0f, 0.0f, 150.0f))	//乗車状態のカメラ距離
 #define ADD_ANGLE		(0.04f)								//角度の加算
@@ -27,12 +27,12 @@
 //===============================================================================
 //　コンストラクタ
 //===============================================================================
-CGameCamera::CGameCamera(){}
+CGameCamera::CGameCamera() {}
 
 //===============================================================================
 //　デストラクタ
 //===============================================================================
-CGameCamera::~CGameCamera(){}
+CGameCamera::~CGameCamera() {}
 
 //===============================================================================
 //　初期化処理
@@ -143,7 +143,7 @@ void CGameCamera::DrawReset(void)
 		if (pScene->GetObjType() == CScene::OBJTYPE_OBJECT)
 		{//タイプが障害物だった
 			CObject *pObject = (CObject*)pScene;
-			
+
 			if (pObject->GetDraw() == false)
 			{//もう一度描画判定をする
 				pObject->SetDraw(Clipping(pObject->GetVtxMin(), pObject->GetVtxMax()));

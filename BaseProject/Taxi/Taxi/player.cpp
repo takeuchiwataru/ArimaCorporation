@@ -135,7 +135,7 @@ void CPlayer::LoadModel(void)
 	m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
 	m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
 
-	//モデル情報を取得
+																		//モデル情報を取得
 	CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
 	m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
 	m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
@@ -146,7 +146,7 @@ void CPlayer::LoadModel(void)
 		m_pModel = CModel::Create(ModelInfo.pOfSetPos[nCntParts], &ModelInfo.paFileName[nCntParts][0]);
 
 		//テクスチャの割当て
-		if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
+		//if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
 	}
 
 	//モデルの親設定
@@ -205,11 +205,11 @@ HRESULT CPlayer::Init(void)
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
 	m_PlayerInfo.nCountTime = 0;			//カウンター
-	m_PlayerInfo.fAccel = 1.0f;				//加速値
-	m_PlayerInfo.fBraks = 0.00f;			//減速値
+	m_PlayerInfo.fAccel = 1.0f;				//加速値（前進）
+	m_PlayerInfo.fBraks = 0.00f;			//加速値（後進）
+	m_PlayerInfo.fDown = 0.0f;				//減速値
 	m_PlayerInfo.fAddRot = 0.00f;			//加える回転値
 	m_PlayerInfo.fDistance = 0.0f;			//距離
-	m_PlayerInfo.fWindy = 0.0f;				//風圧
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
 	m_bJump = false;						//ジャンプ状態
 	m_bControl = true;						//コントローラーフラグ
@@ -231,7 +231,7 @@ HRESULT CPlayer::Init(void)
 		m_pTire[nCntTire] = NULL;
 	}
 
-	CreateTire();			//タイヤの生成
+	//CreateTire();			//タイヤの生成
 
 	if (m_pMotion == NULL)	//モーションの生成
 	{
@@ -247,7 +247,7 @@ HRESULT CPlayer::Init(void)
 			m_pMotion->SetMotion(m_pMotionInfo);	//モーション情報の取得
 			m_pMotion->SetMaxMotion(m_nMaxMotion);	//モーションの最大数の取得
 
-			//初期化処理
+													//初期化処理
 			m_pMotion->Init();
 		}
 	}
@@ -314,47 +314,37 @@ void CPlayer::Update(void)
 		SetStateHandle(HANDLE_MAX);
 	}
 
-	//タイヤの更新処理
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
+	/*if (m_pos.y < 0.0f)
 	{
-		if (m_pTire[nCntTire] == NULL) { continue; }
-
-		if ((nCntTire % 2) == 0)
-		{
-			m_pTire[nCntTire]->Update(nCntTire, GRAVITY_FRONT);
-		}
-		else
-		{
-			m_pTire[nCntTire]->Update(nCntTire, GRAVITY_BACK);
-		}
-
-		TirePos[nCntTire] = m_pTire[nCntTire]->GetWorldPos();
-	}
-
-	CarCalculate(TirePos);	// 車体の高さ・角度設定
+		m_pos.y = 0.0f;
+		m_move.y = 0.0f;
+	}*/
 
 	//タイムアップ状態なら以降は更新しない
 	//if (CTime::GetTime() == 0 && CManager::MODE_GAME == CManager::GetMode()) { return; }
 
 	UpdateMove();			// 移動処理
-	/*UpdateStateJump();		// ジャンプ状態の更新処理
-	RiverInfluence();		// 川による影響
 
-	CollisionObject();		// オブジェクトとの当たり判定
-	UpdateShake();			//車の揺れの処理
-	//CollisitionWall();	// 壁との当たり判定
-	UpdateSmoke(TirePos);	//煙の更新処理
-	UpdateGrass(TirePos);	//草エフェクトの更新処理
-	*/
-	/*m_nCntCombo++;
+	UpdateField();
 
-	// コンボ数
-	if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
-	{	// NULLチェック & フレームが0の場合
-		m_nCntCombo = 0;
-		m_pCombo->Uninit();
-		m_pCombo = NULL;
-	}*/
+							/*UpdateStateJump();		// ジャンプ状態の更新処理
+							RiverInfluence();		// 川による影響
+
+							CollisionObject();		// オブジェクトとの当たり判定
+							UpdateShake();			//車の揺れの処理
+							//CollisitionWall();	// 壁との当たり判定
+							UpdateSmoke(TirePos);	//煙の更新処理
+							UpdateGrass(TirePos);	//草エフェクトの更新処理
+							*/
+							/*m_nCntCombo++;
+
+							// コンボ数
+							if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
+							{	// NULLチェック & フレームが0の場合
+							m_nCntCombo = 0;
+							m_pCombo->Uninit();
+							m_pCombo = NULL;
+							}*/
 
 	DebugProc();		// デバック表示
 }
@@ -373,7 +363,7 @@ void CPlayer::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-	// ワールドマトリックスの初期化
+												// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -409,7 +399,7 @@ void CPlayer::ControlKey(void)
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CXInput * pInputJoypad = CManager::GetXInput();				//ジョイパットの取得
 
-	//前進後退の設定
+																//前進後退の設定
 	if (m_bDirive)
 	{
 		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
@@ -448,18 +438,49 @@ void CPlayer::ControlKey(void)
 	}
 
 	//アクセル
-	if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+	if (
+		(pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
 		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
-		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true) ||
-		(pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true))
+	{//減速状態
+		SetStateSpeed(STATE_SPEED_BRAKS);
+	}
+	else if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
 		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
 	else
-	{//減速状態
-		SetStateSpeed(STATE_SPEED_DOWN);
+	{
+		//停止判定
+		D3DXVECTOR3 fDiffuse = m_pos - m_OldPos;
+
+		if (fDiffuse.x < 0.10f && fDiffuse.x > -0.10f)
+		{
+			if (fDiffuse.z < 0.10f && fDiffuse.z > -0.10f)
+			{
+				SetStateSpeed(STATE_SPEED_STOP);
+			}
+			else
+			{
+				SetStateSpeed(STATE_SPEED_DOWN);
+			}
+		}
+		else
+		{
+			SetStateSpeed(STATE_SPEED_DOWN);
+		}
+	}
+
+	// ジャンプ
+	if (m_bJump == false)
+	{// ジャンプしていない
+		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true)
+		{// ジャンプキー
+			m_bJump = true;
+			m_move.y += 7.5f;
+		}
 	}
 
 	CSound *pSound = CManager::GetSound();
@@ -481,99 +502,103 @@ void CPlayer::UpdateMove(void)
 	RemakeAngle(&m_rot.y);
 
 
+	float fSpeed = 0.0f;
 	//状態ごとの更新処理
 	switch (m_StateSpeed)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-			CDebugProc::Print("初速加速あり\n");
-			//速度を上げる
-			m_PlayerInfo.nCountTime++;
-			if (m_move.x < 3.0f && m_move.z < 3.0f &&m_move.x > -3.0f && m_move.z > -3.0f)
-			{
-				m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.03f;
-				CDebugProc::Print("初速UP状態 [1段階]\n");
-			}
-			else if (m_move.x < 6.0f && m_move.z < 6.0f &&m_move.x > -6.0f && m_move.z > -6.0f)
-			{
-				m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.04f;
-				CDebugProc::Print("初速UP状態 [2段階]\n");
-			}
-			else if (m_move.x < 9.0f && m_move.z < 9.0f &&m_move.x > -9.0f && m_move.z > -9.0f)
-			{
-				m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.065f;
-				CDebugProc::Print("初速UP状態 [3段階]\n");
-			}
+		/*CDebugProc::Print("初速加速あり\n");
+		//速度を上げる
+		m_PlayerInfo.nCountTime++;
+		if (m_move.x < 3.0f && m_move.z < 3.0f &&m_move.x > -3.0f && m_move.z > -3.0f)
+		{
+		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.03f;
+		CDebugProc::Print("初速UP状態 [1段階]\n");
+		}
+		else if (m_move.x < 6.0f && m_move.z < 6.0f &&m_move.x > -6.0f && m_move.z > -6.0f)
+		{
+		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.04f;
+		CDebugProc::Print("初速UP状態 [2段階]\n");
+		}
+		else if (m_move.x < 9.0f && m_move.z < 9.0f &&m_move.x > -9.0f && m_move.z > -9.0f)
+		{
+		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.065f;
+		CDebugProc::Print("初速UP状態 [3段階]\n");
+		}
 
-			//加速値を求める
-			m_PlayerInfo.fAccel = (m_fMaxSpeed / ACCLE_TIME) * m_PlayerInfo.nCountTime;
+		//加速値を求める
+		m_PlayerInfo.fAccel = (m_fMaxSpeed / ACCLE_TIME) * m_PlayerInfo.nCountTime;
 
-			//減速させる
-			if (m_state == STATE_DRIVE)
-			{
-				if (m_PlayerInfo.fAccel > m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
-			}
-			else if (m_state == STATE_REVERSE)
-			{
-				if (m_PlayerInfo.fAccel < m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
-			}
+		//減速させる
+		if (m_state == STATE_DRIVE)
+		{
+		if (m_PlayerInfo.fAccel > m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
+		}
+		else if (m_state == STATE_REVERSE)
+		{
+		if (m_PlayerInfo.fAccel < m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
+		}*/
 
+		fSpeed = m_PlayerInfo.fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
 
 		//進行方向の設定
-		m_move.x += sinf(m_rot.y) * (m_PlayerInfo.fAccel);
-		m_move.z += cosf(m_rot.y) * (m_PlayerInfo.fAccel);
+		m_move.x += sinf(m_rot.y) * (fSpeed);
+		m_move.z += cosf(m_rot.y) * (fSpeed);
 		break;
 
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		//速度を下げる
-		m_PlayerInfo.fAccel -= m_PlayerInfo.fBraks;
+		//m_PlayerInfo.fAccel -= m_PlayerInfo.fBraks;
 
-		if (m_state == STATE_DRIVE)
+		/*if (m_state == STATE_DRIVE)
 		{
-			if (m_PlayerInfo.fAccel < 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
+		if (m_PlayerInfo.fAccel < 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
 		}
 		else
 		{
-			if (m_PlayerInfo.fAccel > 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
-		}
+		if (m_PlayerInfo.fAccel > 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
+		}*/
+
+		fSpeed = m_PlayerInfo.fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
 
 		//進行方向の設定
-		m_move.x += sinf(m_rot.y) * m_PlayerInfo.fAccel;
-		m_move.z += cosf(m_rot.y) * m_PlayerInfo.fAccel;
+		m_move.x += sinf(m_rot.y) * fSpeed;
+		m_move.z += cosf(m_rot.y) * fSpeed;
 
 		//揺れを無効にする
 		m_bShake = false;
 		break;
-
-	case STATE_SPEED_DOWN:  //減速状態
+	case STATE_SPEED_DOWN: //ダウン状態
 		m_PlayerInfo.nCountTime = 0;
 		break;
 	}
+	m_PlayerInfo.nCountTime++;
 
 	CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
-	CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x , m_move.y , m_move.z);
+	CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
 
 	//ハンドルの状態更新
 	if (m_StateHandle == HANDLE_LEFT)
 	{
-		m_rot.y -= m_PlayerInfo.fAddRot;
-		m_rot.z -= SHAKE_Z;
+		if (m_StateSpeed != STATE_SPEED_STOP)
+			m_rot.y -= m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
-		m_rot.y += m_PlayerInfo.fAddRot;
-		m_rot.z += SHAKE_Z;
+		if (m_StateSpeed != STATE_SPEED_STOP)
+			m_rot.y += m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
 	}
 
 	// 重力
-	if (m_bShake == true)
+	//if (m_bShake == true)
 	{
 		m_move.y -= cosf(0) * 0.4f;
 	}
@@ -584,64 +609,52 @@ void CPlayer::UpdateMove(void)
 	m_pos.z += m_move.z;
 
 	//減速
-	m_PlayerInfo.fAccel += (0.0f - m_PlayerInfo.fAccel) * m_PlayerInfo.fWindy;
 	if (!m_bJump)
 	{
-		m_move.x += (0.0f - m_move.x) * m_PlayerInfo.fWindy;
-		m_move.z += (0.0f - m_move.z) * m_PlayerInfo.fWindy;
-	}
-
-	//停止判定
-	D3DXVECTOR3 fDiffuse = m_pos - m_OldPos;
-
-	if (fDiffuse.x < 0.10f && fDiffuse.x > -0.10f)
-	{
-		if (fDiffuse.z < 0.10f && fDiffuse.z > -0.10f)
-		{
-			SetStateSpeed(STATE_SPEED_STOP);
-		}
+		m_move.x += (0.0f - m_move.x) * m_PlayerInfo.fDown;
+		m_move.z += (0.0f - m_move.z) * m_PlayerInfo.fDown;
 	}
 
 	//煙の表示
 	/*if ((fDiffuse.x < 1.5f) && (fDiffuse.x > -1.5f))
 	{
-		if ((fDiffuse.z < 1.5f) && (fDiffuse.z > -1.5f))
-		{
-			m_bSmoke = false;
-			m_bGrassEffect = false;		//草エフェクト非表示
-		}
-		else
-		{
-			m_bSmoke = true;
-		}
+	if ((fDiffuse.z < 1.5f) && (fDiffuse.z > -1.5f))
+	{
+	m_bSmoke = false;
+	m_bGrassEffect = false;		//草エフェクト非表示
 	}
 	else
 	{
-		m_bSmoke = true;
+	m_bSmoke = true;
+	}
+	}
+	else
+	{
+	m_bSmoke = true;
 	}
 
 	//お客さんを乗せるための停止判定
 	if ((fDiffuse.x < 1.0f) && (fDiffuse.x > -1.0f))
 	{
-		if ((fDiffuse.z < 1.0f) && (fDiffuse.z > -1.0f))
-		{
-			m_bCustomrStop = true;
-		}
-		else
-		{
-			m_bCustomrStop = false;
-		}
+	if ((fDiffuse.z < 1.0f) && (fDiffuse.z > -1.0f))
+	{
+	m_bCustomrStop = true;
 	}
 	else
 	{
-		m_bCustomrStop = false;
+	m_bCustomrStop = false;
+	}
+	}
+	else
+	{
+	m_bCustomrStop = false;
 	}*/
 
-	if ((m_StateSpeed == STATE_SPEED_BRAKS))
+	/*if ((m_StateSpeed == STATE_SPEED_BRAKS))
 	{
-		//角度を変える
-		m_rot.x += SHAKE_BRAK;
-	}
+	//角度を変える
+	m_rot.x += SHAKE_BRAK;
+	}*/
 }
 
 //=============================================================================
@@ -670,6 +683,53 @@ void CPlayer::UpdateShake(void)
 }
 
 //=============================================================================
+// プレイヤーの高さ処理
+//=============================================================================
+void CPlayer::UpdateField(void)
+{
+	CScene *pScene = CScene::GetTop(MESH_PRIOTITY);
+
+	//NULLチェック
+	while (pScene != NULL)
+	{
+		//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+		CScene *pSceneNext = pScene->GetNext();
+
+		if (pScene->GetObjType() == CScene::OBJTYPE_GROUND)
+		{//タイプが地面だったら
+			CMeshField *pField = (CMeshField*)pScene;
+
+			if (pField->OnField(m_pos, m_fvtxMaxY))
+			{// 傾斜の計算
+				float fHight = pField->GetHeightMesh(m_pos);
+
+				//if (m_pos.y <= fHight)
+				if (m_bJump == false || (m_bJump == true && m_pos.y < fHight))
+				{
+					m_pos.y = fHight;					//地面の高さを取得
+					m_move.y = 0.0f;					//移動量を初期化する
+
+					//ジャンプ中かどうか
+					//bool bJumpFlag = pPlayer->GetJump();
+					//if (bJumpFlag)
+					//{
+					//	pPlayer->GetPlayerInfoPoint()->nCountTime -= (int)std::round(pPlayer->GetPlayerInfoPoint()->nCountTime * 0.05f);
+					//}
+
+					//ジャンプの状態設定
+					m_bJump = false;
+					//m_pIncline->SetJumpFlag(false);
+
+					break;
+				}
+			}
+		}
+		//Nextに次のSceneを入れる
+		pScene = pSceneNext;
+	}
+}
+
+//=============================================================================
 // 状態の設定
 //=============================================================================
 void CPlayer::SetState(CPlayer::STATE state)
@@ -677,9 +737,9 @@ void CPlayer::SetState(CPlayer::STATE state)
 	//値の反転
 	if (m_state != state)
 	{
-		m_PlayerInfo.fAccel *= -0.5f;
-		m_PlayerInfo.fBraks *= -1;
-		m_fMaxSpeed *= -1;
+		//m_PlayerInfo.fAccel *= -0.5f;
+		//m_PlayerInfo.fBraks *= -1;
+		//m_fMaxSpeed *= -1;
 
 		CSound *pSound = CManager::GetSound();
 
@@ -712,19 +772,19 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 
 		CSound *pSound = CManager::GetSound();
 
-		if (STATE_SPEED_ACCEL == state && STATE_DRIVE == m_state)
+		/*if (STATE_SPEED_ACCEL == state && STATE_DRIVE == m_state)
 		{// アクセル音
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_ACCEL);
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_ACCEL);
 		}
 		else if (STATE_SPEED_BRAKS == state)
 		{// ブレーキ音
-			if (m_move.x >= 0.1f || m_move.x <= -0.1f || m_move.z >= 0.1f || m_move.z <= -0.1f)
-			{
-				pSound->PlaySound(CSound::SOUND_LABEL_SE_BRAKING);
-				pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
-			}
+		if (m_move.x >= 0.1f || m_move.x <= -0.1f || m_move.z >= 0.1f || m_move.z <= -0.1f)
+		{
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_BRAKING);
+		pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
 		}
+		}*/
 	}
 
 	//状態の設定
@@ -770,10 +830,10 @@ void CPlayer::LoadText(void)
 	if (m_pText == NULL) { m_pText = CLoadTextPlayer::Create(FAILE_NAME); }	//プレイヤーの情報を読み込む
 	m_PlayerInfo = m_pText->GetPlayerInfo();								//読み込んだ情報を取得する
 
-	//プレイヤー情報を設定する
+																			//プレイヤー情報を設定する
 	m_pos = m_PlayerInfo.FirstPos;
-	m_fMaxSpeed = m_PlayerInfo.fAccel;	//アクセル最大値の取得
-	m_PlayerInfo.fAccel = 0.0f;
+	//m_fMaxSpeed = m_PlayerInfo.fAccel;	//アクセル最大値の取得
+	//m_PlayerInfo.fAccel = 0.0f;
 }
 
 //=============================================================================
@@ -786,11 +846,11 @@ void CPlayer::CollisionObject(void)
 
 	//吹っ飛ば差ないオブジェクト番号の登録
 	/*int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
-														 TYPE_BILL02, TYPE_TVBILL, TYPE_FLOWER, TYPE_TANUKI,
-														 TYPE_OCLOCK, TYPE_REDBILL, TYPE_TREE02,  TYPE_CORN2,
-														 TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
-														 TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL,
-														 TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD , TYPE_TAPIOCA, TYPE_HOSPITAL };*/
+	TYPE_BILL02, TYPE_TVBILL, TYPE_FLOWER, TYPE_TANUKI,
+	TYPE_OCLOCK, TYPE_REDBILL, TYPE_TREE02,  TYPE_CORN2,
+	TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
+	TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL,
+	TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD , TYPE_TAPIOCA, TYPE_HOSPITAL };*/
 
 	int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { 0 };	// 仮
 	bool bType = false;	//タイプのフラグ
@@ -823,8 +883,8 @@ void CPlayer::CollisionObject(void)
 						{// 指定した障害物だったら吹き飛ばす
 							if (!m_bJump) { m_move = pObject->BlowOff(m_pos, m_move, m_fMass); }		// オブジェクトを吹き飛ばす
 
-							//音の再生処理
-							//PlaySoundObj(nType, pSound);
+																										//音の再生処理
+																										//PlaySoundObj(nType, pSound);
 						}
 						if (nType == 30 || nType == 33)
 						{// 噴水 || 消火栓
@@ -906,10 +966,10 @@ void CPlayer::CarCalculate(D3DXVECTOR3 * TirePos)
 	bool bDecisionAngle = false;
 
 	//タイヤの高さの合計値を求める
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
+	/*for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
 	{
-		fTireHight += TirePos[nCntTire].y - m_pTire[0]->TIRE_HIGHT;
-	}
+	fTireHight += TirePos[nCntTire].y - m_pTire[0]->TIRE_HIGHT;
+	}*/
 
 	//車体の高さを求める
 	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
@@ -987,8 +1047,8 @@ void CPlayer::UpdateStateJump(void)
 	if (m_bJump)
 	{//ジャンプ状態の時間を加算
 		m_nCountJumpTime++;
-
-		//X軸の角度制限
+		
+		/*//X軸の角度制限
 		if (m_rot.x > 0.5f)
 		{
 			m_rot.x = 0.5f;
@@ -1006,7 +1066,7 @@ void CPlayer::UpdateStateJump(void)
 		else if (m_rot.z < -0.5f)
 		{
 			m_rot.z = -0.5f;
-		}
+		}*/
 		return;
 	}
 	m_nCountJumpTime = 0;
@@ -1078,13 +1138,10 @@ void CPlayer::DebugProc(void)
 	//位置表示
 	CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
 
-	//タイヤの位置
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		CDebugProc::Print("タイヤ[ %d ] : X %.2f, Y %.2f, Z %.2f\n", nCntTire, m_pTire[nCntTire]->GetPos().x, m_pTire[nCntTire]->GetPos().y, m_pTire[nCntTire]->GetPos().z);
-	}
-
 	CDebugProc::Print("ジャンプ：%s\n", m_bJump ? "〇" : "×");
+
+	CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
+
 }
 
 //=============================================================================
@@ -1097,56 +1154,56 @@ void CPlayer::PlaySoundObj(int nType, CSound * pSound)
 	/*case TYPE_PHONEBOX: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_STEAL); break;
 	case TYPE_CARDBORD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX); break;
 	case TYPE_CORN:
-		pSound->SetVolume(CSound::SOUND_LABEL_SE_SMALLBOX, 0.5f);
-		pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX);
-		break;
+	pSound->SetVolume(CSound::SOUND_LABEL_SE_SMALLBOX, 0.5f);
+	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX);
+	break;
 	case TYPE_LEAF:
-		
-		break;
+
+	break;
 	case TYPE_FENCE:*/
-		//if ((m_nCountSound % 5) == 0) { m_nCountSound = 0; }
+	//if ((m_nCountSound % 5) == 0) { m_nCountSound = 0; }
 
-		//if (m_nCountSound == 0)
-		//{//フェンス00
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		//}
-		//else if (m_nCountSound == 1)
-		//{//フェンス01
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		//}
-		//else if (m_nCountSound == 2)
-		//{//フェンス02
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		//}
-		//else if (m_nCountSound == 3)
-		//{//フェンス02
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		//}
-		//else if (m_nCountSound == 4)
-		//{//フェンス02
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-		//}
+	//if (m_nCountSound == 0)
+	//{//フェンス00
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+	//}
+	//else if (m_nCountSound == 1)
+	//{//フェンス01
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+	//}
+	//else if (m_nCountSound == 2)
+	//{//フェンス02
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+	//}
+	//else if (m_nCountSound == 3)
+	//{//フェンス02
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+	//}
+	//else if (m_nCountSound == 4)
+	//{//フェンス02
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
+	//}
 
-		//m_nCountSound++;	//カウンターの加算
-		//break;
-		
+	//m_nCountSound++;	//カウンターの加算
+	//break;
+
 	//case TYPE_BENCH:
-		//if ((m_nCountWood % 2) == 0) { m_nCountWood = 0; }	//カウンターをリセットする
+	//if ((m_nCountWood % 2) == 0) { m_nCountWood = 0; }	//カウンターをリセットする
 
-		////音の再生
-		//if (m_nCountWood == 0)
-		//{
-		//	pSound->SetVolume(CSound::SOUND_LABEL_SE_WOOD00, 2.0f);
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD00);
-		//}
-		//else if (m_nCountWood)
-		//{
-		//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01);
-		//}
+	////音の再生
+	//if (m_nCountWood == 0)
+	//{
+	//	pSound->SetVolume(CSound::SOUND_LABEL_SE_WOOD00, 2.0f);
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD00);
+	//}
+	//else if (m_nCountWood)
+	//{
+	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01);
+	//}
 
-		////カウンターの加算
-		//m_nCountWood++;
-		//break;
+	////カウンターの加算
+	//m_nCountWood++;
+	//break;
 
 	//case TYPE_SIGNBOARD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01); break;
 	//}
@@ -1172,12 +1229,12 @@ void CPlayer::CollisionFeed(void)
 			{// タイプが障害物だったら
 				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				//if (pFeed->Collision(m_pos, m_pModel[0].GetVtxMax(), m_pModel[0].GetVtxMin(), m_move))
-				//{// 衝突した
+												//if (pFeed->Collision(m_pos, m_pModel[0].GetVtxMax(), m_pModel[0].GetVtxMin(), m_move))
+												//{// 衝突した
 
 
 
-				//}
+												//}
 			}
 
 			// Nextに次のSceneを入れる
