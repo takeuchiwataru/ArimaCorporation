@@ -28,6 +28,7 @@
 #include "gamecamera.h"
 #include "select.h"
 #include "feed.h"
+#include "egg.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -145,8 +146,11 @@ HRESULT CGame::Init()
 	}
 
 	CFeed::Load();
+	CEgg::Load();
 
-	CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), 0);
+	CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
+	CFeed::Create(D3DXVECTOR3(100.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
+	CFeed::Create(D3DXVECTOR3(200.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
 
 	//===================================
 	//		変数の初期化
@@ -195,6 +199,7 @@ void CGame::Uninit(void)
 	CTire::UnloadTexture();
 
 	CFeed::UnLoad();
+	CEgg::UnLoad();
 
 	//===================================
 	//	　　クラスの破棄

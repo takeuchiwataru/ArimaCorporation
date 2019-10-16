@@ -25,6 +25,7 @@
 #include "gamecamera.h"
 #include "object.h"
 #include "feed.h"
+#include "egg.h"
 
 //=============================================================================
 // マクロ定義
@@ -44,6 +45,9 @@
 #define DECELERATION	(0.5f)										//減速の割合
 #define START_ENGINE	(200)										//エンジン音の再生時間
 #define START_GEARCHANGE (300)										//スタート時のギア切替時間
+#define EGG_SCALE		(0.5f)										//卵の大きさ
+#define MAX_EGG			(3)											//卵の最大数
+#define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
 
 //車体の角度
 #define SHAKE_X			(0.007f)									//X軸の揺れ
@@ -224,6 +228,7 @@ HRESULT CPlayer::Init(void)
 	m_bShake = true;
 	m_nCntFlag = 0;
 	m_bDirive = true;
+	m_nNumEgg = 0;
 
 	//タイヤのポインタを初期化
 	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
@@ -326,6 +331,10 @@ void CPlayer::Update(void)
 	UpdateMove();			// 移動処理
 
 	UpdateField();
+
+	CollisionFeed();		// 餌の当たり判定
+
+	ChaseEgg();	// 卵がついてくる処理
 
 							/*UpdateStateJump();		// ジャンプ状態の更新処理
 							RiverInfluence();		// 川による影響
@@ -1214,6 +1223,8 @@ void CPlayer::PlaySoundObj(int nType, CSound * pSound)
 //=============================================================================
 void CPlayer::CollisionFeed(void)
 {
+	if (m_nNumEgg >= MAX_EGG) { return; }
+
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
 
@@ -1229,14 +1240,88 @@ void CPlayer::CollisionFeed(void)
 			{// タイプが障害物だったら
 				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-												//if (pFeed->Collision(m_pos, m_pModel[0].GetVtxMax(), m_pModel[0].GetVtxMin(), m_move))
-												//{// 衝突した
-
-
-
-												//}
+				if (pFeed->CollisionFeed(&m_pos, &m_OldPos))
+				{// 衝突した
+					EggAppear(pFeed);	// 卵出現
+					pFeed->Uninit();	// 餌削除
+					m_nNumEgg++;
+				}
 			}
 
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+	}
+}
+
+//=============================================================================
+// 卵の出現処理
+//=============================================================================
+void CPlayer::EggAppear(CFeed *pFeed)
+{
+	if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ATTACK)
+	{// 攻撃の卵生成
+		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ATTACK);
+	}
+	else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
+	{// 妨害の卵生成
+		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ANNOY);
+	}
+	else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
+	{// 加速の卵生成
+		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_SPEED);
+	}
+}
+
+//=============================================================================
+// 卵がついてくる処理
+//=============================================================================
+void CPlayer::ChaseEgg(void)
+{
+	if (m_nNumEgg <= 0) { return; }
+
+	int nCntEgg = 0;
+
+	CScene *pScene;
+
+	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
+	{
+		// プライオリティーチェック
+		pScene = CScene::GetTop(nCntPriority);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
+			if (pScene->GetObjType() == OBJTYPE_EGG)
+			{// タイプが卵だったら
+				CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				if (nCntEgg == 0)
+				{
+					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+						m_pos.y,
+						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+
+					pEgg->SetRot(m_rot);
+				}
+				else if (nCntEgg == 1)
+				{
+					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
+						m_pos.y,
+						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
+
+					pEgg->SetRot(m_rot);
+				}
+				else if (nCntEgg == 2)
+				{
+					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
+						m_pos.y,
+						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
+					pEgg->SetRot(m_rot);
+				}
+
+				nCntEgg++;
+			}
 			// Nextに次のSceneを入れる
 			pScene = pSceneNext;
 		}

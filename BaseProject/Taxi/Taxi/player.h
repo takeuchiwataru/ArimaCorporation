@@ -20,6 +20,7 @@
 #define MAX_PARTS	(7)		//読み込むパーツ数
 #define MAX_LIFE	(15)	//ライフ
 #define MAX_TIRE	(4)		//タイヤの最大数
+#define MAX_EGG		(3)		//卵の最大数
 
 //=============================================================================
 // 前方宣言
@@ -30,6 +31,7 @@ class CTire;
 class CLoadEffect;
 class CCombo;
 class CSound;
+class CFeed;
 
 //=============================================================================
 // プレイヤークラス
@@ -136,6 +138,8 @@ private:
 	void CarCalculate(D3DXVECTOR3 * TirePos);
 	void UpdateStateJump(void);
 	void PlaySoundObj(int nType, CSound * pSound);
+	void EggAppear(CFeed *pFeed);
+	void ChaseEgg(void);
 
 	static CModel *		m_pModel;		//パーツモデルのポインタ
 	static int				m_nMaxModel;	//読み込むモデルの最大数
@@ -175,5 +179,6 @@ private:
 	bool						  m_bShake;				//揺れのオンオフ
 	bool						  m_bDirive;			//前進、後退の操作フラグ
 	int							  m_nCntFlag;
+	int							  m_nNumEgg;
 };
 #endif

@@ -47,6 +47,7 @@ public://誰でも扱える
 		OBJTYPE_TOTALSCORE,		//トータルスコア
 		OBJTYPE_CYLINDER,		//シリンダー
 		OBJTYPE_FEED,			//餌
+		OBJTYPE_EGG,			//卵
 		OBJTYPE_MAX,			//最大数
 	}OBJTYPE;
 

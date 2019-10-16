@@ -155,6 +155,7 @@
     <ClCompile Include="billboord.cpp" />
     <ClCompile Include="camerabace.cpp" />
     <ClCompile Include="debugproc.cpp" />
+    <ClCompile Include="egg.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="feed.cpp" />
     <ClCompile Include="game.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="billboord.h" />
     <ClInclude Include="camerabace.h" />
     <ClInclude Include="debugproc.h" />
+    <ClInclude Include="egg.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="feed.h" />
     <ClInclude Include="game.h" />
