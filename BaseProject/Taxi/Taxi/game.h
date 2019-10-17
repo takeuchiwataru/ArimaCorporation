@@ -21,6 +21,9 @@
 #define MAX_POINT		(10)
 #define MAX_SCORE_UI	(6)
 
+#define MAX_PLAYER		(4)
+#define MAX_CHARCTER	(8)
+
 //*****************************************************************************
 // 前方宣言
 //*****************************************************************************
@@ -39,12 +42,23 @@ class CLogo;
 class CLoadTextMotion;
 class CGameCamera;
 
+class CGameCharSelect;
+
 //=====================
 // 基本クラス
 //=====================
 class CGame
 {
 public:
+	typedef enum
+	{
+		GAMEMODE_NONE = 0,
+		GAMEMODE_CHARSELECT,				// キャラ選択
+		GAMEMODE_COURSESELECT,				// コース選択
+		GAMEMODE_PLAY,						// プレイヤー
+		GAMEMODE_MAX						// 最大数
+	}GAMEMODE;
+
 	typedef enum
 	{
 		GAMESTATE_NONE = 0,					//何もしていない状態
@@ -67,15 +81,10 @@ public:
 	static bool GetHelp(void) { return m_bHelp; }
 	static GAMESTATE GetGameState(void) { return m_gameState; }
 	static CPlayer *&GetPlayer(void) { return m_pPlayer; }
-	static CPolygon3D *GetPolygon3D(void) { return m_pPolygon3D; }
-	static CModel *GetModel(void) { return m_pModel; }
-	static CMeshField *GetMeshField(void) { return m_pMeshField; }
-	static CObject *Get3DObject(void) { return m_pObject; }
-	static CBillBoord *GetBillboord(void) { return m_pBillBoord; }
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
 	static CGameCamera * GetGameCamera(void) { return m_pGameCamera; }			//ゲームカメラの取得
 	static int GetGameCounter(void) { return m_nGameCounter; }					//ゲームのカウンター
-	static CLogo * GetScoreUI(int nNum) { return m_pScoreUI[nNum]; }						//スコア関係のUIの取得
+	void SetGameMode(GAMEMODE gameMode);
 	void SetStage(void);
 
 	//---------------------------------
@@ -144,26 +153,21 @@ private:
 		bool				bLoop;				// ループするかどうか
 	}Npc;
 
+	static GAMEMODE m_gameMode;					//ゲームモード
+
+	static CGameCharSelect *m_pGameCharSelect;	// ゲーム（キャラ選択）
+
 	static GAMESTATE m_gameState;				//ゲーム状態
 	GAMESTATE m_NowGameState;					//現在のゲーム状況
 	int m_nCounterGameState;					//状態カウンタ
 	static CPlayer *m_pPlayer;					//プレイヤーのポインタ
-	static CNumber *m_pNumber;					//数字のポインタ
 	static CPause *m_pPause;					//ポーズのポインタ
-	static CPolygon3D *m_pPolygon3D;			//３Dポリゴンのポインタ
-	static CModel *m_pModel;					//モデルのポインタ
-	static CMeshField *m_pMeshField;			//メッシュフィールドのポインタ
-	static CObject *m_pObject;					//オブジェクトのポインタ
-	static CBillBoord *m_pBillBoord;			//ビルボードのポインタ
-	static CWall *m_pWall;						//壁のポインタ
-	static CShadow *m_pShadow;					//影のポインタ
 	static CGameCamera * m_pGameCamera;			//カメラのポインタ
 	static bool m_bPause;						//現在ポーズかポーズじゃないか
 	static bool m_bHelp;						//現在ヘルプかヘルプじゃないか
 	static int	m_nCntSetStage;					// ステージセットカウンタ
 	static CLoadTextMotion * m_pPlayerMotion;	//プレイヤーのモーション読み込み
 	static int m_nGameCounter;					//ゲームのカウンター
-	static CLogo *m_pScoreUI[MAX_SCORE_UI];		//ロゴへのポインタ スコアUIに関係している物
 
 	int m_nSetObjectNum;						//オブジェクトを置いた数
 	int m_nSetMeshFieldNum;						//メッシュフィールドを置いた数

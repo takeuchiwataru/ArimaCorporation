@@ -17,7 +17,6 @@
 #include "model.h"
 #include "motion.h"
 #include "loadText.h"
-#include "tire.h"
 #include "wall.h"
 #include "incline.h"
 #include "sound.h"
@@ -48,6 +47,12 @@
 #define EGG_SCALE		(0.5f)										//卵の大きさ
 #define MAX_EGG			(3)											//卵の最大数
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
+
+// プレイヤー情報
+#define PLAYER_ACCEL	(1.0f)										//加速値（前進）
+#define PLAYER_BRAKS	(-0.25f)									//加速値（後進）
+#define PLAYER_DOWN		(0.055f)									//減速度
+#define PLAYER_ADDROT	(0.015f)										//回転量
 
 //車体の角度
 #define SHAKE_X			(0.007f)									//X軸の揺れ
@@ -209,10 +214,10 @@ HRESULT CPlayer::Init(void)
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
 	m_PlayerInfo.nCountTime = 0;			//カウンター
-	m_PlayerInfo.fAccel = 1.0f;				//加速値（前進）
-	m_PlayerInfo.fBraks = 0.00f;			//加速値（後進）
-	m_PlayerInfo.fDown = 0.0f;				//減速値
-	m_PlayerInfo.fAddRot = 0.00f;			//加える回転値
+	m_PlayerInfo.fAccel = PLAYER_ACCEL;		//加速値（前進）
+	m_PlayerInfo.fBraks = PLAYER_BRAKS;		//加速値（後進）
+	m_PlayerInfo.fDown = PLAYER_DOWN;		//減速値
+	m_PlayerInfo.fAddRot = PLAYER_ADDROT;	//加える回転値
 	m_PlayerInfo.fDistance = 0.0f;			//距離
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
 	m_bJump = false;						//ジャンプ状態
@@ -229,14 +234,6 @@ HRESULT CPlayer::Init(void)
 	m_nCntFlag = 0;
 	m_bDirive = true;
 	m_nNumEgg = 0;
-
-	//タイヤのポインタを初期化
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		m_pTire[nCntTire] = NULL;
-	}
-
-	//CreateTire();			//タイヤの生成
 
 	if (m_pMotion == NULL)	//モーションの生成
 	{
@@ -274,17 +271,6 @@ void CPlayer::Uninit(void)
 		m_pMotion->Uninit();
 		delete m_pMotion;
 		m_pMotion = NULL;
-	}
-
-	//タイヤモデルの破棄
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		if (m_pTire[nCntTire] != NULL)
-		{
-			m_pTire[nCntTire]->Uninit();
-			delete m_pTire[nCntTire];
-			m_pTire[nCntTire] = NULL;
-		}
 	}
 
 	//テキストの破棄
@@ -391,12 +377,6 @@ void CPlayer::Draw(void)
 	{
 		//描画する
 		m_pModel->Draw(1.0f);
-	}
-
-	//タイヤの描画
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		if (m_pTire[nCntTire] != NULL) { m_pTire[nCntTire]->Draw(1.0); }
 	}
 }
 
@@ -809,29 +789,6 @@ void CPlayer::Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size)
 }
 
 //=============================================================================
-// タイヤの生成
-//=============================================================================
-void CPlayer::CreateTire(void)
-{
-	//タイヤの位置を設定
-	D3DXVECTOR3 TirePos[MAX_TIRE];
-
-	TirePos[LEFT_FRONT] = LEFT_FRONT_POS;
-	TirePos[LEFT_BACK] = LEFT_BACK_POS;
-	TirePos[RIGHT_FRONT] = RIGHT_FRONT_POS;
-	TirePos[RIGHT_BACK] = RIGHT_BACK_POS;
-
-	//タイヤの生成
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		m_pTire[nCntTire] = NULL;
-		m_pTire[nCntTire] = CTire::Create(TirePos[nCntTire]);
-
-		if (m_pTire[nCntTire] != NULL) { m_pTire[nCntTire]->SetParent(m_pModel); }	//親子関係の設定
-	}
-}
-
-//=============================================================================
 // テキストの読み込み
 //=============================================================================
 void CPlayer::LoadText(void)
@@ -973,24 +930,6 @@ void CPlayer::CarCalculate(D3DXVECTOR3 * TirePos)
 	float fHight = 0.0f;
 	float fTireHight = 0.0f;
 	bool bDecisionAngle = false;
-
-	//タイヤの高さの合計値を求める
-	/*for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-	fTireHight += TirePos[nCntTire].y - m_pTire[0]->TIRE_HIGHT;
-	}*/
-
-	//車体の高さを求める
-	for (int nCntTire = 0; nCntTire < MAX_TIRE; nCntTire++)
-	{
-		if (true == m_pTire[nCntTire]->GetLand())
-		{
-			fHight = fTireHight / (float)MAX_TIRE;
-			m_pos.y = fHight;
-			bDecisionAngle = true;
-			break;
-		}
-	}
 
 	//車体の角度を求める
 	if (!bDecisionAngle) { return; }
@@ -1284,46 +1223,26 @@ void CPlayer::ChaseEgg(void)
 
 	CScene *pScene;
 
-	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
-	{
-		// プライオリティーチェック
-		pScene = CScene::GetTop(nCntPriority);
-		while (pScene != NULL)
-		{// プライオリティー内のリスト構造を最後まで見る
-			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+	// プライオリティーチェック
+	pScene = CScene::GetTop(3);
+	while (pScene != NULL)
+	{// プライオリティー内のリスト構造を最後まで見る
+		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
 
-			if (pScene->GetObjType() == OBJTYPE_EGG)
-			{// タイプが卵だったら
-				CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
+		if (pScene->GetObjType() == OBJTYPE_EGG)
+		{// タイプが卵だったら
+			CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (nCntEgg == 0)
-				{
-					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE) + m_pos.x,
-						m_pos.y,
-						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+			pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
+				m_pos.y,
+				(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
+			pEgg->SetRot(m_rot);
 
-					pEgg->SetRot(m_rot);
-				}
-				else if (nCntEgg == 1)
-				{
-					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
-						m_pos.y,
-						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
+			nCntEgg++;
 
-					pEgg->SetRot(m_rot);
-				}
-				else if (nCntEgg == 2)
-				{
-					pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
-						m_pos.y,
-						(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
-					pEgg->SetRot(m_rot);
-				}
-
-				nCntEgg++;
-			}
-			// Nextに次のSceneを入れる
-			pScene = pSceneNext;
+			if (nCntEgg == MAX_EGG) break;
 		}
+		// Nextに次のSceneを入れる
+		pScene = pSceneNext;
 	}
 }

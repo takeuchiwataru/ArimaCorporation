@@ -20,7 +20,6 @@
 #include "shadow.h"
 #include "resultcamera.h"
 #include "loadText.h"
-#include "tire.h"
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -71,9 +70,6 @@ HRESULT CResult::Init()
 	//===================================
 	//フェードのテクスチャの読み込み
 	CFade::Load();
-
-	//タイヤのテクスチャ読み込み
-	CTire::LoadTexture();
 
 	// リザルトプレイヤーの読み込み
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
@@ -127,9 +123,6 @@ void CResult::Uninit(void)
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
-
-	//タイヤのテクスチャ破棄
-	CTire::UnloadTexture();
 
 	//メッシュフィールドテクスチャの破棄
 	m_pMeshField->UnLoad();

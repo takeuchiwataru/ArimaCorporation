@@ -16,7 +16,6 @@
 #include "gamecamera.h"
 #include "player.h"
 #include "loadText.h"
-#include "tire.h"
 #include "logo.h"
 #include "object.h"
 #include "loadText.h"
@@ -134,7 +133,6 @@ HRESULT CTutorial::Init()
 	//--------------------
 	CFade::Load();					//フェードテクスチャ
 	CMeshField::Load();				//メッシュフィールドテクスチャ
-	CTire::LoadTexture();			//タイヤテクスチャ
 	CObject::Load();				//オブジェクトテクスチャ
 	CShadow::Load();				//影のテクスチャ
 	CWall::Load();					//壁の読み込み
@@ -217,7 +215,6 @@ void CTutorial::Uninit(void)
 	//-------------------
 	CFade::UnLoad();					//フェードテクスチャ
 	CMeshField::UnLoad();				//メッシュフィールドテクスチャ
-	CTire::UnloadTexture();				//タイヤテクスチャ
 	CPlayer::UnloadModel();				//プレイヤーモデル
 	CObject::UnLoad();					//オブジェクトのテクスチャの破棄
 	CShadow::UnLoad();					//影テクスチャ

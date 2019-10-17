@@ -171,6 +171,7 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 			m_pTexture->Load();
 		}
 	}
+
 	//ƒ‚[ƒh‚Ìİ’è
 	SetMode(m_mode);
 

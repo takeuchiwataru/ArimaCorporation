@@ -27,7 +27,6 @@
 //=============================================================================
 class CModel;
 class CLoadTextPlayer;
-class CTire;
 class CLoadEffect;
 class CCombo;
 class CSound;
@@ -127,7 +126,6 @@ private:
 	void UpdateMove(void);
 	void ControlKey(void);
 	void DebugProc(void);
-	void CreateTire(void);
 	void UpdateShake(void);
 	void UpdateField(void);
 	void SetState(STATE state);
@@ -164,7 +162,6 @@ private:
 	STATE_HANDLE				  m_StateHandle;		// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;			// プレイヤーの情報
 	CLoadTextPlayer *			  m_pText;				// プレイヤーの情報読み込み
-	CTire *						  m_pTire[MAX_TIRE];	// タイヤのポインタ
 	bool						  m_bJump;				//  ジャンプフラグ
 	bool						  m_bControl;			// コントローラーの使用状態
 	int							  m_nCountJumpTime;		// ジャンプ状態の時間をカウントする

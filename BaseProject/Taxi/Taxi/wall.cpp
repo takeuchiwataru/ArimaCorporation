@@ -17,18 +17,6 @@
 //=============================================================================
 #define WALL_TEX_1	"data\\TEXTURE\\wall\\wall000.jpg"			// テクスチャの名前
 #define WALL_TEX_2	"data\\TEXTURE\\wall\\wall001.jpg"			// テクスチャの名前
-#define WALL_TEX_3	"data\\TEXTURE\\wall\\field03.jpg"			// テクスチャの名前
-#define WALL_TEX_4	"data\\TEXTURE\\wall\\rock_003.jpg"			// テクスチャの名前
-#define WALL_TEX_5	"data\\TEXTURE\\wall\\soil.jpg"				// テクスチャの名前
-#define WALL_TEX_6	"data\\TEXTURE\\wall\\scarp02.jpg"			// テクスチャの名前
-#define WALL_TEX_7	"data\\TEXTURE\\wall\\wallRock.jpg"			// テクスチャの名前
-#define WALL_TEX_8	"data\\TEXTURE\\wall\\Black.jpg"			// テクスチャの名前
-#define WALL_TEX_9	"data\\TEXTURE\\wall\\wall000.png"			// テクスチャの名前
-#define WALL_TEX_10	"data\\TEXTURE\\mesh\\flooa001.jpg"			// 読み込むテクスチャファイル名
-#define WALL_TEX_11	"data\\TEXTURE\\wall\\stairs.png"			// テクスチャの名前
-#define WALL_TEX_12	"data\\TEXTURE\\modeltex\\ビル200正面.png"		// テクスチャの名前
-#define WALL_TEX_13	"data\\TEXTURE\\modeltex\\ビル400正面.png"		// テクスチャの名前
-#define WALL_TEX_14	"data\\TEXTURE\\modeltex\\ビル600正面.png"		// テクスチャの名前
 
 //=============================================================================
 // 静的メンバ変数
@@ -243,19 +231,7 @@ HRESULT CWall::Load(void)
 	// テクスチャ生成
 	D3DXCreateTextureFromFile(pDevice, WALL_TEX_1, &m_pTexture[0]);
 	D3DXCreateTextureFromFile(pDevice, WALL_TEX_2, &m_pTexture[1]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_3, &m_pTexture[2]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_4, &m_pTexture[3]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_5, &m_pTexture[4]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_6, &m_pTexture[5]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_7, &m_pTexture[6]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_8, &m_pTexture[7]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_9, &m_pTexture[8]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_10, &m_pTexture[9]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_11, &m_pTexture[10]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_12, &m_pTexture[11]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_13, &m_pTexture[12]);
-	D3DXCreateTextureFromFile(pDevice, WALL_TEX_14, &m_pTexture[13]);
-
+	
 	return S_OK;
 }
 

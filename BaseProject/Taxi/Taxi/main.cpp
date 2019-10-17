@@ -110,7 +110,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// ウインドウの表示
 		ShowWindow(hWnd, nCmdShow);
 		//マウスポインター非表示
-		ShowCursor(FALSE);
+		//ShowCursor(FALSE);
 		UpdateWindow(hWnd);
 
 		// メッセージループ

@@ -8,7 +8,7 @@
 #----------------------------------------------------
 #　メッシュフィールドの設置数
 #----------------------------------------------------
-MESHFIELD_SETNUM = 18
+MESHFIELD_SETNUM = 19
 
 #----------------------------------------------------
 #　メッシュフィールドの設置情報
@@ -281,5 +281,20 @@ MESHFIELD_START
 	VTX2_HEIGHT = 0.00
 	VTX3_HEIGHT = -200.00
 	POS = 2500.00 500.00 18500.00
+MESHFIELD_END
+
+MESHFIELD_START
+	TEXTURETYPE = 0
+	X_DIVIDE = 1
+	Z_DIVIDE = 1
+	X_TEXUV = 200.0
+	Y_TEXUV = 200.0
+	X_LENGTH = 100000.00
+	Z_LENGTH = 100000.00
+	VTX0_HEIGHT = 0.00
+	VTX1_HEIGHT = 0.00
+	VTX2_HEIGHT = 0.00
+	VTX3_HEIGHT = 0.00
+	POS = -50000.00 -80.00 70000.00
 MESHFIELD_END
 

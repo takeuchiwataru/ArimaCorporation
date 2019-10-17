@@ -23,12 +23,12 @@
 #include "wall.h"
 #include "shadow.h"
 #include "loadText.h"
-#include "tire.h"
 #include "texture.h"
 #include "gamecamera.h"
 #include "select.h"
 #include "feed.h"
 #include "egg.h"
+#include "gameCharSelect.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -56,23 +56,17 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
+CGameCharSelect *CGame::m_pGameCharSelect = NULL;	// ゲーム（キャラ選択）
+
 CPlayer *CGame::m_pPlayer = NULL;
-CNumber *CGame::m_pNumber = NULL;
-CBillBoord *CGame::m_pBillBoord = NULL;
-CPolygon3D *CGame::m_pPolygon3D = NULL;
-CMeshField *CGame::m_pMeshField = NULL;
-CObject *CGame::m_pObject = NULL;
 CPause *CGame::m_pPause = NULL;
-CModel *CGame::m_pModel = NULL;
-CWall *CGame::m_pWall = NULL;
-CShadow *CGame::m_pShadow = NULL;
 CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
 CGameCamera * CGame::m_pGameCamera = NULL;
-CLogo *CGame::m_pScoreUI[MAX_SCORE_UI] = {};
 
 bool CGame::m_bHelp = false;
 bool CGame::m_bPause = false;
-CGame::GAMESTATE CGame::m_gameState = GAMESTATE_NONE;
+CGame::GAMEMODE CGame::m_gameMode = CGame::GAMEMODE_NONE;
+CGame::GAMESTATE CGame::m_gameState = CGame::GAMESTATE_NONE;
 int	CGame::m_nCntSetStage = 0;								// ステージセットカウンタ
 
 int CGame::m_nGameCounter = 0;
@@ -85,6 +79,7 @@ bool CGame::m_bDrawUI = false;
 //=============================================================================
 CGame::CGame()
 {
+	m_gameMode = GAMEMODE_NONE;
 	m_gameState = GAMESTATE_NONE;
 	m_nCounterGameState = 0;
 	m_NowGameState = GAMESTATE_NONE;
@@ -109,56 +104,33 @@ HRESULT CGame::Init()
 	CFade::Load();
 
 	//メッシュフィールドのテクスチャの読み込み
-	m_pMeshField->Load();
+	CMeshField::Load();
 
 	//ビルボードテクスチャの読み込み
-	m_pBillBoord->Load();
+	CBillBoord::Load();
 
 	//壁のテクスチャの読み込み
-	m_pWall->Load();
+	CWall::Load();
 
 	//影のテクスチャ読み込み
-	m_pShadow->Load();
+	CShadow::Load();
 
 	//オブジェクトのテクスチャの読み込み
-	m_pObject->Load();
-
-	//タイヤのテクスチャ読み込み
-	CTire::LoadTexture();
-
-	//===================================
-	//		Create
-	//===================================
-
-	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-	CPlayer::LoadModel();	//モデルの読み込み
-
-	//プレイヤーの生成
-	m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, -300.0f));
-	m_pPlayer->LoadText();
-
-	//ゲームカメラの生成
-	if (m_pGameCamera == NULL)
-	{
-		m_pGameCamera = new CGameCamera;
-
-		if (m_pGameCamera != NULL) { m_pGameCamera->Init(); }
-	}
+	CObject::Load();
 
 	CFeed::Load();
 	CEgg::Load();
 
-	CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
-	CFeed::Create(D3DXVECTOR3(100.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
-	CFeed::Create(D3DXVECTOR3(200.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
-
 	//===================================
 	//		変数の初期化
 	//===================================
+	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
 	m_bPause = false;					//ポーズを初期化
 	m_nGameCounter = 0;					//カウンターの初期化
+
+	SetGameMode(m_gameMode);
 
 	return S_OK;
 }
@@ -178,68 +150,30 @@ void CGame::Uninit(void)
 	//	　　UnLoadの破棄する場所
 	//===================================
 	//メッシュフィールドテクスチャの破棄
-	m_pMeshField->UnLoad();
+	CMeshField::UnLoad();
 
 	//フェードのテクスチャの破棄
 	CFade::UnLoad();
 
 	//ビルボードテクスチャの破棄
-	m_pBillBoord->UnLoad();
+	CBillBoord::UnLoad();
 
 	//オブジェクトのテクスチャの破棄
-	m_pObject->UnLoad();
+	CObject::UnLoad();
 
 	//壁のテクスチャの破棄
-	m_pWall->UnLoad();
+	CWall::UnLoad();
 
 	//影のテクスチャの破棄
-	m_pShadow->UnLoad();
-
-	//タイヤのテクスチャ破棄
-	CTire::UnloadTexture();
+	CShadow::UnLoad();
 
 	CFeed::UnLoad();
 	CEgg::UnLoad();
 
-	//===================================
-	//	　　クラスの破棄
-	//===================================
-	//メッシュフィールドの破棄
-	if (m_pMeshField != NULL)
-	{
-		m_pMeshField->Uninit();
-		m_pMeshField = NULL;
-	}
-
-	// UIの破棄
-	for (int nCnt = 0; nCnt < MAX_SCORE_UI; nCnt++)
-	{
-		if (m_pScoreUI[nCnt] != NULL)
-		{
-			m_pScoreUI[nCnt]->Uninit();
-			m_pScoreUI[nCnt] = NULL;
-		}
-	}
-
-	// オブジェクトの破棄
-	if (m_pObject != NULL)
-	{
-		m_pObject->Uninit();
-		m_pObject = NULL;
-	}
-
-	// 壁の破棄
-	if (m_pWall != NULL)
-	{
-		m_pWall->Uninit();
-		m_pWall = NULL;
-	}
-
-	// ビルボードの破棄
-	if (m_pBillBoord != NULL)
-	{
-		m_pBillBoord->Uninit();
-		m_pBillBoord = NULL;
+	if (m_pGameCharSelect != NULL)
+	{// NULL以外
+		m_pGameCharSelect->Uninit();
+		m_pGameCharSelect = NULL;
 	}
 
 	//フェード以外の破棄
@@ -273,96 +207,112 @@ void CGame::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CXInput *pCInputJoypad = CManager::GetXInput();
 
-	//	カウンター進める
-	m_nGameCounter++;
-
-	//サウンドの情報
-	CSound *pSound = CManager::GetSound();
-
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+	switch (m_gameMode)
 	{
-		//m_bDrawUI = m_bDrawUI ? false : true;
+	case GAMEMODE_CHARSELECT:
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		//if (m_nGameCounter == 10)
+			SetGameMode(GAMEMODE_PLAY);
+		break;
+	case GAMEMODE_COURSESELECT:
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+			SetGameMode(GAMEMODE_PLAY);
+		break;
+	case GAMEMODE_PLAY:
+		//サウンドの情報
+		CSound *pSound = CManager::GetSound();
 
-		//ポーズの選択の決定音
-		CFade::Create(CManager::MODE_RESULT);
-	}
-
-	if (m_pPause == false)
-	{//開く音
-	 //現在の状態を保存
-		m_NowGameState = GetGameState();
-
-		//カメラの更新処理
-		if (m_pGameCamera != NULL) { m_pGameCamera->Update(); }
-
-		switch (m_NowGameState)
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 		{
-		case GAMESTATE_NORMAL:	//通常の状態
+			//m_bDrawUI = m_bDrawUI ? false : true;
 
-								//ステージ設定
-			SetStage();
-
-			break;
-		case GAMESTATE_CLEAR:	//ゲームをクリアした状態
-			m_nCounterGameState++;
-
-			if (m_nCounterGameState >= 60)
-			{//画面（モード）の設定
-				CFade::Create(CManager::MODE_RESULT);
+			//ポーズの選択の決定音
+			CFade::Create(CManager::MODE_RESULT);
+			//if (m_nGameCounter == 10)
+			{
+				//SetGameMode(GAMEMODE_CHARSELECT);
+				return;
 			}
-			break;
-		case GAMESTATE_OVER:	//ゲームで負けたときの状態
-			m_nCounterGameState++;
-
-			if (m_nCounterGameState >= 60)
-			{//画面（モード）の設定
-				CFade::Create(CManager::MODE_RESULT);
-			}
-			break;
 		}
-	}
 
-	//ポーズの処理
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true || pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4))
-	{//Pキーが押されたら
-		int nType = 0;
-		if (pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4)) { nType = 1; }
-		m_bPause = m_bPause ? false : true;
+		if (m_pPause == false)
+		{//開く音
+			//現在の状態を保存
+			m_NowGameState = GetGameState();
 
-		switch (m_bPause)
-		{
-		case true:
-			if (m_pPause == NULL)
+			//カメラの更新処理
+			if (m_pGameCamera != NULL) { m_pGameCamera->Update(); }
+
+			switch (m_NowGameState)
 			{
-				//ポーズを開く音
-				pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
+			case GAMESTATE_NORMAL:	//通常の状態
 
-				//ポーズの生成
-				m_pPause = CPause::Create();
-				m_pPause->SetTexType(nType);
+				break;
+			case GAMESTATE_CLEAR:	//ゲームをクリアした状態
+				m_nCounterGameState++;
 
-				//ポーズとフェードだけ回す
-				CScene::SetUpdatePri(7);
+				if (m_nCounterGameState >= 60)
+				{//画面（モード）の設定
+					CFade::Create(CManager::MODE_RESULT);
+				}
+				break;
+			case GAMESTATE_OVER:	//ゲームで負けたときの状態
+				m_nCounterGameState++;
+
+				if (m_nCounterGameState >= 60)
+				{//画面（モード）の設定
+					CFade::Create(CManager::MODE_RESULT);
+				}
+				break;
 			}
-			break;
-		case false:
-			if (m_pPause != NULL)
+		}
+
+		//ポーズの処理
+		/*if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true || pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4))
+		{//Pキーが押されたら
+			int nType = 0;
+			if (pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4)) { nType = 1; }
+			m_bPause = m_bPause ? false : true;
+
+			switch (m_bPause)
 			{
-				if (CPause::GetbPause() == false)
+			case true:
+				if (m_pPause == NULL)
 				{
-					//ポーズを閉じる音
-					pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+					//ポーズを開く音
+					pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
 
-					//ポーズを削除
-					m_pPause->Uninit();
-					m_pPause = NULL;
+					//ポーズの生成
+					m_pPause = CPause::Create();
+					m_pPause->SetTexType(nType);
 
-					//アップデート順番をすべて回す
-					CScene::SetUpdatePri(0);
+					//ポーズとフェードだけ回す
+					CScene::SetUpdatePri(7);
+				}
+				break;
+			case false:
+				if (m_pPause != NULL)
+				{
+					if (CPause::GetbPause() == false)
+					{
+						//ポーズを閉じる音
+						pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+
+						//ポーズを削除
+						m_pPause->Uninit();
+						m_pPause = NULL;
+
+						//アップデート順番をすべて回す
+						CScene::SetUpdatePri(0);
+					}
 				}
 			}
-		}
+		}*/
+		break;
 	}
+
+	//	カウンター進める
+	m_nGameCounter++;
 }
 
 //=============================================================================
@@ -404,6 +354,53 @@ void CGame::SetPause(bool bPause)
 }
 
 //=============================================================================
+// ゲームモード設定
+//=============================================================================
+void CGame::SetGameMode(GAMEMODE gameMode)
+{
+	switch (m_gameMode)
+	{// ゲームモード
+	case GAMEMODE_CHARSELECT:		// キャラ選択
+		if (m_pGameCharSelect != NULL)
+		{// NULL以外
+			m_pGameCharSelect->Uninit();
+			m_pGameCharSelect = NULL;
+		}
+
+		break;
+	case GAMEMODE_COURSESELECT:		// コース選択
+
+		break;
+	case GAMEMODE_PLAY:				// プレイ
+		//フェード以外の破棄
+		CScene::NotFadeReleseAll();
+		break;
+	}
+
+	// ゲームモードを変更
+	m_gameMode = gameMode;
+
+	switch (m_gameMode)
+	{// ゲームモード変更後
+	case GAMEMODE_CHARSELECT:		// キャラ選択
+		if (m_pGameCharSelect == NULL)
+		{// NULL
+			m_pGameCharSelect = CGameCharSelect::Create();
+		}
+
+		break;
+	case GAMEMODE_COURSESELECT:		// コース選択
+
+		break;
+	case GAMEMODE_PLAY:				// プレイ
+		SetStage();
+		break;
+	}
+
+	m_nGameCounter = 0;
+}
+
+//=============================================================================
 // ステージ設定
 //=============================================================================
 void CGame::SetStage(void)
@@ -411,7 +408,7 @@ void CGame::SetStage(void)
 	//サウンドのポインタ
 	CSound *pSound = CManager::GetSound();
 
-	if (m_nCntSetStage == 0)
+	//if (m_nCntSetStage == 0)
 	{
 		//=====================================================================
 		//	ステージ1
@@ -422,23 +419,45 @@ void CGame::SetStage(void)
 		WallTextLoad(6);
 		MeshTextLoad(6);
 
+		//===================================
+		//		Create
+		//===================================
+
+		if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
+		CPlayer::LoadModel();	//モデルの読み込み
+
+		//プレイヤーの生成
+		m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+
+		//ゲームカメラの生成
+		if (m_pGameCamera == NULL)
+		{
+			m_pGameCamera = new CGameCamera;
+
+			if (m_pGameCamera != NULL) { m_pGameCamera->Init(); }
+		}
+
 		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
 		{
 			//オブジェクトの生成
-			m_pObject = CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
+			CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
 		}
 		for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
 		{
 			//フィールドの生成
-			m_pMeshField = CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
+			CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
 				m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
 				m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3, m_Mesh[nCount].m_nTexType, 0);
 		}
 		for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
 		{
 			//壁の生成
-			m_pWall = CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
+			CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
 		}
+
+		CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
+		CFeed::Create(D3DXVECTOR3(100.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
+		CFeed::Create(D3DXVECTOR3(200.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
 
 		m_nCntSetStage = 1;
 	}

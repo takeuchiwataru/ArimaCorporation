@@ -524,7 +524,7 @@ HRESULT CLoadTextPlayer::Init(void)
 
 	FILE *pFile;
 
-	pFile = fopen(m_pLoadTextFileName, "r");	//テキストの読み込み
+	pFile = fopen("data/TEXT/Player/PlayerState.txt", "r");	//テキストの読み込み
 
 	if (pFile != NULL)
 	{
@@ -572,7 +572,7 @@ HRESULT CLoadTextPlayer::Init(void)
 	}
 	else
 	{
-		MessageBox(NULL, TEXT("pFileがNULLです"), TEXT("CLoadTextLoadMotion::Init()"), MB_OK);
+		MessageBox(NULL, TEXT("pFileがNULLです"), TEXT("CLoadTextPlayer::Init()"), MB_OK);
 	}
 
 	//初期化する
