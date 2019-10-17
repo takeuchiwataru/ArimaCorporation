@@ -57,6 +57,8 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 {
 	m_scale = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	// 大きさ
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fHeight = 0.0f;
 }
 //===============================================================================
 //　デストラクタ
@@ -120,6 +122,9 @@ HRESULT CEgg::Init(void)
 
 	//変数の初期化
 	m_pObjBill = NULL;
+	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fHeight = 0.0f;
+	m_bJump = false;
 	return S_OK;
 }
 
@@ -144,7 +149,15 @@ void CEgg::Update(void)
 	CPlayer *pPlayer = NULL;
 	pPlayer = CGame::GetPlayer();
 
-	CModel3D::Update();
+	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
+
+	D3DXVECTOR3 pos = CModel3D::GetPosition();
+
+	m_move.y -= cosf(0) * 0.4f;
+	m_fHeight += m_move.y;
+
+	CModel3D::SetMove(m_move);
+	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight, pos.z));
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -209,11 +222,11 @@ HRESULT CEgg::Load(void)
 	DWORD sizeFVF;		//頂点フォーマットのサイズ
 	BYTE *pVtxBuff;		//頂点バッファへのポインタ
 
-	//モデルの最大値・最小値を取得する
+						//モデルの最大値・最小値を取得する
 	m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
 	m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-																	//頂点数を取得
+														//頂点数を取得
 	nNumVtx = m_pMeshModel->GetNumVertices();
 
 	//頂点フォーマットのサイズを取得
@@ -337,4 +350,66 @@ bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	CModel3D::SetPosition(ModelPos);
 
 	return bHit;
+}
+
+//=============================================================================
+// 高さ判定
+//=============================================================================
+float CEgg::SetHeight(void)
+{
+	float fHeight = 0.0f;
+
+	CScene *pScene = CScene::GetTop(MESH_PRIOTITY);
+
+	D3DXVECTOR3 pos = CModel3D::GetPosition();
+
+	//NULLチェック
+	while (pScene != NULL)
+	{
+		//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+		CScene *pSceneNext = pScene->GetNext();
+
+		if (pScene->GetObjType() == CScene::OBJTYPE_GROUND)
+		{//タイプが地面だったら
+			CMeshField *pField = (CMeshField*)pScene;
+
+			if (pField->OnField(pos, 0.0f))
+			{// 傾斜の計算
+				fHeight = pField->GetHeightMesh(CModel3D::GetPosition());
+
+				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
+				{
+					m_fHeight = fHeight;					//地面の高さを取得
+					m_move.y = 0.0f;					//移動量を初期化する
+
+														//ジャンプの状態設定
+					m_bJump = false;
+
+					CModel3D::SetMove(m_move);
+					CModel3D::SetPosition(D3DXVECTOR3(pos.x, fHeight, pos.z));
+
+					break;
+				}
+			}
+		}
+		//Nextに次のSceneを入れる
+		pScene = pSceneNext;
+	}
+
+	return fHeight;
+}
+
+//=============================================================================
+// ジャンプ
+//=============================================================================
+void CEgg::Jump(void)
+{
+	// ジャンプ
+	if (m_bJump == false)
+	{// ジャンプしていない
+		m_bJump = true;
+		m_move.y += 5.5f;
+	}
+
+	CModel3D::SetMove(m_move);
 }

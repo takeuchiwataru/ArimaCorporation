@@ -30,7 +30,7 @@ public://誰でも扱える
 	void Update(void);
 	void Draw(void);
 	void TextSave(void);
-	static CMeshField *Create(D3DXVECTOR3 pos, int nMeshX, int nMeshZ, float fMeshXUV, float fMeshYUV, float fMeshWidth, float fMeshDepth,float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ, int nTexTypeint,int nMeshType);
+	static CMeshField *Create(D3DXVECTOR3 pos, int nMeshX, int nMeshZ, float fMeshXUV, float fMeshYUV, float fMeshWidth, float fMeshDepth, float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ, float fVtxSide0, float fVtxSide1, float fVtxSide2, float fVtxSide3, int nTexTypeint, int nMeshType);
 	static void CreateMesh(void);
 
 private://個人でのみ使う
@@ -57,5 +57,9 @@ private://個人でのみ使う
 	float							m_fVtxHeight_No1;				//頂点番号1を操作
 	float							m_fVtxHeight_No2;				//頂点番号2を操作
 	float							m_fVtxHeight_No3;				//頂点番号3を操作
+	float							m_fVtxSide_No0;					//頂点番号0を操作
+	float							m_fVtxSide_No1;					//頂点番号1を操作
+	float							m_fVtxSide_No2;					//頂点番号2を操作
+	float							m_fVtxSide_No3;					//頂点番号3を操作
 };
 #endif

@@ -11,9 +11,6 @@
 #include "input.h"
 #include "fade.h"
 #include "sound.h"
-#include "background.h"
-#include "texture.h"
-#include "logo.h"
 #include "ranking.h"
 //*****************************************************************************
 // マクロ定義
@@ -63,21 +60,11 @@ CTitle::~CTitle()
 //=============================================================================
 HRESULT CTitle::Init()
 {
-	srand((unsigned int)time(0));		// ランダムのやつ
 	//===================================
 	//		 Loadの読み込み場所
 	//===================================
 	//フェードのテクスチャの読み込み
 	CFade::Load();
-
-	CBackGround::Create(CTexture::TYPE_BACKGROUND000);
-
-	// タイトルロゴの生成
-	CLogo::Create(TITLE_POS, TITLE_SIZE, CTexture::TYPE_TITLELOGO000, 0, CLogo::TYPE_LOGO);
-	CLogo::Create(LOGO_POS, LOGO_SIZE, CTexture::TYPE_TITLELOGO001, 0, CLogo::TYPE_LOGO);
-
-	// Press Start Enterの生成
-	CLogo::Create(PRESS_POS, PRESS_SIZE, CTexture::TYPE_TITLE_PRESS, 0, CLogo::TYPE_LOGO);
 
 	//	変数の初期化
 	m_nTitleCounter = 0;
@@ -105,7 +92,7 @@ void CTitle::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CXInput *pCInputJoypad = CManager::GetXInput();
+	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 	CInputMouse *pCInputMouse = CManager::GetInputMouse();
 
 	//サウンドの情報
@@ -114,22 +101,10 @@ void CTitle::Update(void)
 	//フェードのポイント
 	CFade::FADE pFade = CFade::GetFade();
 
-
 	//	タイトルのカウンター加算
 	m_nTitleCounter++;
 
-	/*if (m_nTitleCounter > 480)
-	{
-		if (pFade == CFade::FADE_NONE)
-		{
-			CRanking::Reset();
-			//ポーズの選択の決定音
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLE_ENTER);
-			CFade::Create(CManager::MODE_RANKING);
-		}
-	}*/
-
-	if (pCInputJoypad->GetAnyButton() == true || pCInputKeyBoard->GetKeyboardAny(1) == true || pCInputMouse->GetMouseTrigger(0) == true)
+	if (pXpad->GetALL(1, 0) == true || pCInputKeyBoard->GetKeyboardAny(1) == true || pCInputMouse->GetMouseTrigger(0) == true)
 	{//タイトルからゲームへ
 	 //フェードが始まったら
 		if (pFade == CFade::FADE_NONE)
@@ -139,8 +114,6 @@ void CTitle::Update(void)
 			CFade::Create(CManager::MODE_GAME);
 		}
 	}
-
-	//SeasoneEffectUpdata();	// 季節エフェクトの更新
 }
 //=============================================================================
 // 描画処理

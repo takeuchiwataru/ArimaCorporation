@@ -90,6 +90,10 @@ private:
 		float				m_fVtxHeight_No1;				// 頂点番号1を操作
 		float				m_fVtxHeight_No2;				// 頂点番号2を操作
 		float				m_fVtxHeight_No3;				// 頂点番号3を操作
+		float				m_fVtxSide_No0;					// 頂点番号0を操作
+		float				m_fVtxSide_No1;					// 頂点番号1を操作
+		float				m_fVtxSide_No2;					// 頂点番号2を操作
+		float				m_fVtxSide_No3;					// 頂点番号3を操作
 		D3DXVECTOR3			m_pos;							// 位置
 	}Mesh;
 

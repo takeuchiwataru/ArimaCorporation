@@ -86,14 +86,6 @@ private:
 	void MeshFildCreate(void);	//メッシュフィールドの生成
 	void ObjectCreate(void);	//オブジェクトの生成
 	void CreateLine(void);		//文章の生成
-	void UpdateStart(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//スタート状態更新処理
-	void UpdateAccel(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//アクセル
-	void UpdateBrek(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//ブレーキ
-	void UpdateRightHandle(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);	//右ハンドル
-	void UpdateLeftHandle(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);		//左ハンドル
-	void UpdateBack(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//後退
-	void UpdateFront(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);			//前進
-	void UpdateDown(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad);		//降車したら
 	void UpdateEnd(void);		//終了
 	void ChangeLine(void);		//文章の変更
 	void UpdateFade(void);		//フェード

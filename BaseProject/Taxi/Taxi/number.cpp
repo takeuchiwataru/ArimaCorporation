@@ -8,7 +8,6 @@
 #include "manager.h"
 #include "renderer.h"
 #include "scene2D.h"
-#include "texture.h"
 //=============================================================================
 //	静的メンバ変数
 //=============================================================================
@@ -133,7 +132,7 @@ void CNumber::Draw(void)
 	pDevice->SetFVF(FVF_VERTEX_2D);
 
 	// テクスチャ設定
-	pDevice->SetTexture(0, *CTexture::GetTexture(CTexture::TYPE_TIME_NUMBER + m_nType));
+	pDevice->SetTexture(0, NULL);
 
 	// ポリゴン描画
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);

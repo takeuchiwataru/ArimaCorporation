@@ -50,11 +50,12 @@ public://誰でも扱える
 	void Draw(void);
 	static FADE GetFade(void) { return m_fade; }
 	static CFade *Create(CManager::MODE modeNext);
+	static CFade *Create(CGame::GAMEMODE modeNext);
 
 private:
 	static LPDIRECT3DTEXTURE9 m_pTexture[MAX_TEXTURE];	//共有テクスチャのポインタ
 	static FADE				  m_fade;					//フェード状態
-	static CManager::MODE	  m_modeNext;				//次のモード
+	static int				  m_nModeNext;				//次のモード
 	static MODEFADE			  m_modegame;				//フェードのモード
 	D3DXCOLOR				  m_colorFade;				//フェード色
 	D3DXVECTOR2				  m_Size;					//サイズ

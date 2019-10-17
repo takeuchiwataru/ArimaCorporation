@@ -18,7 +18,6 @@
 #include "game.h"
 #include "title.h"
 #include "result.h"
-#include "texture.h"
 #include "ranking.h"
 #include "select.h"
 
@@ -26,7 +25,6 @@
 // 前方宣言
 //*****************************************************************************
 class CTutorial;
-class CXInput;
 
 //=====================
 //  基本クラス
@@ -57,10 +55,9 @@ public://誰でも扱える
 	static CInputKeyBoard *GetInput(void) { return m_pInputKeyBoard; }
 	static CInputMouse *GetInputMouse(void) { return m_pInputMouse; }
 	static CInputJoypad *GetInputJoyPad(void) { return m_pJoyPad; }
-	static CXInput *GetXInput(void) { return m_pXInput; }
+	static CInputXPad *GetXInput(void) { return m_pXPad; }
 	//static CCamera *GetCamera(void) { return m_pCamera; }
 	static CSound *GetSound(void) { return m_pSound; }
-	static CTexture *GetTexture(void) { return m_pTexture; }
 	static bool GetInputFlag(void) { return m_bInput; }
 	static void SetInputFlag(bool bInput) { m_bInput = bInput; }
 
@@ -71,14 +68,13 @@ private://個人でのみ使う
 	static CInputKeyBoard *m_pInputKeyBoard;
 	static CInputMouse *m_pInputMouse;
 	static CInputJoypad *m_pJoyPad;
-	static CXInput	*m_pXInput;
+	static CInputXPad	*m_pXPad;
 	//static CCamera *m_pCamera;
 	static CLight *m_pLight;
 	static CDebugProc *m_pDebugProc;
 	static CGame *m_pGame;
 	static CTitle *m_pTitle;
 	static CResult *m_pResult;
-	static CTexture *m_pTexture;
 	static CRanking *m_pRanking;
 	static CSelect	*m_pSelect;
 	static CTutorial * m_pTutorial;

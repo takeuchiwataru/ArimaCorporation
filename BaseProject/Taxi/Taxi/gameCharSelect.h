@@ -9,6 +9,7 @@
 
 #include "main.h"
 #include "game.h"
+#include "scene.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -22,9 +23,9 @@ class CScene2D;
 //=====================
 // 基本クラス
 //=====================
-class CGameCharSelect
+class CGameCharSelect : public CScene
 {// ゲーム（キャラ選択）
-public:	
+public:
 	CGameCharSelect();						//コンストラクタ
 	~CGameCharSelect();						//デストラクタ
 
@@ -36,7 +37,7 @@ public:
 	void Uninit(void);						//終了処理
 	void Update(void);						//更新処理
 	void Draw(void);						//描画処理
-	
+
 private:
 	CScene2D *m_pPlayerBG[MAX_PLAYER];
 	CScene2D *m_pCharacter[MAX_CHARCTER];

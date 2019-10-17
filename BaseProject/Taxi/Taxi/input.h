@@ -19,6 +19,8 @@
 #define REPEAT_TRIGGER		(6)					// リピート情報を起動するフレームの間隔
 #define	NUM_BUTTON_MAX		(32)				// キーの最大数
 
+#define INPUT_DEADZONE		( 0.24f * FLOAT(0x7FFF) )  // Default to 24% of the +/- 32767 range.   This is a reasonable default value but can be altered if needed.
+
 //=====================
 //	   基本クラス
 //=====================
@@ -166,98 +168,69 @@ protected:
 //*****************************************************************************
 //     XInputクラスの定義
 //*****************************************************************************
-class CXInput
-{
-public:     // 誰でもアクセス可能
-#define MIN_GAMEPAD_LEFT_THUMB_X  (25000)   // 左スティックの横方向の入力を受け付ける軸の最小値
-#define MIN_GAMEPAD_LEFT_THUMB_Y  (25000)   // 左スティックの縦方向の入力を受け付ける軸の最小値
+class CInputXPad
+{// Xパッド
+public:
+	const static int m_CONTROLLER = 4;			// コントローラの最大数
+	const static int m_STICKMAX = 32767;		// コントローラの最大数
+	const static int m_STICKMIN = -32768;		// コントローラの最大数
 
-#define MIN_GAMEPAD_RIGHT_THUMB_X (25000)   // 右スティックの横方向の入力を受け付ける軸の最小値
-#define MIN_GAMEPAD_RIGHT_THUMB_Y (25000)   // 右スティックの縦方向の入力を受け付ける軸の最小値
-
-#define MIN_GAMEPAD_LEFT_TRIGGER  (130)     // LTボタンの入力を受け付ける値の最小値
-#define MIN_GAMEPAD_RIGHT_TRIGGER (130)     // RTボタンの入力を受け付ける値の最小値
 	typedef enum
-	{
-		XIJS_BUTTON_0,     // 十字キー上入力
-		XIJS_BUTTON_1,     // 十字キー下入力
-		XIJS_BUTTON_2,     // 十字キー左入力
-		XIJS_BUTTON_3,     // 十字キー右入力
-		XIJS_BUTTON_4,     // STARTボタン
-		XIJS_BUTTON_5,     // BACKボタン
-		XIJS_BUTTON_6,     // 左スティック押し込み入力
-		XIJS_BUTTON_7,     // 右スティック押し込み入力
-		XIJS_BUTTON_8,     // LBボタン
-		XIJS_BUTTON_9,     // RBボタン
-		XIJS_BUTTON_10,    // Aボタン
-		XIJS_BUTTON_11,    // Bボタン
-		XIJS_BUTTON_12,    // Xボタン
-		XIJS_BUTTON_13,    // Yボタン
-		XIJS_BUTTON_14,    // LTボタン
-		XIJS_BUTTON_15,    // RTボタン
-		XIJS_BUTTON_16,    // 左スティック上入力
-		XIJS_BUTTON_17,    // 左スティック下入力
-		XIJS_BUTTON_18,    // 左スティック左入力
-		XIJS_BUTTON_19,    // 左スティック右入力
-		XIJS_BUTTON_20,    // 右スティック上入力
-		XIJS_BUTTON_21,    // 右スティック下入力
-		XIJS_BUTTON_22,    // 右スティック左入力
-		XIJS_BUTTON_23,    // 右スティック右入力
+	{// ボタン以外のタイプ
+		XPADOTHER_BUTTON = 0,					// ボタン
+		XPADOTHER_TRIGGER_LEFT,					// Lトリガー
+		XPADOTHER_TRIGGER_RIGHT,				// Rトリガー
+		XPADOTHER_STICK_L_UP,					// Lスティック上
+		XPADOTHER_STICK_L_LEFT,					// Lスティック左
+		XPADOTHER_STICK_L_RIGHT,				// Lスティック右
+		XPADOTHER_STICK_L_DOWN,					// Lスティック下
+		XPADOTHER_STICK_R_UP,					// Rスティック上
+		XPADOTHER_STICK_R_LEFT,					// Rスティック左
+		XPADOTHER_STICK_R_RIGHT,				// Rスティック右
+		XPADOTHER_STICK_R_DOWN,					// Rスティック下
+		XPADOTHER_MAX
+	}XPADOTHER;
 
-						   // 以下割り当てなし
-						   XIJS_BUTTON_24,
-						   XIJS_BUTTON_25,
-						   XIJS_BUTTON_26,
-						   XIJS_BUTTON_27,
-						   XIJS_BUTTON_28,
-						   XIJS_BUTTON_29,
-						   XIJS_BUTTON_30,
-						   XIJS_BUTTON_31,
-						   XIJS_BUTTON_MAX,
-	}XIJS_BUTTON;
-
-	CXInput();
-	~CXInput();
-	HRESULT Init(void);
-	void Uninit(void);
-	void Update(void);
-
-	static CXInput *Create(void);
-
-	BYTE GetLeftTrigger(void) { return m_bLeftTrigger; };
-	BYTE GetRightTrigger(void) { return m_bRightTrigger; };
-	float GetLeftAxiz(void) { return atan2f(m_sThumbLX, m_sThumbLY); };
-	float GetRightAxiz(void) { return atan2f(m_sThumbRX, m_sThumbRY); };
-	SHORT GetThumbLX(void) { return m_sThumbLX; };
-	SHORT GetThumbLY(void) { return m_sThumbLY; };
-	SHORT GetThumbRX(void) { return m_sThumbRX; };
-	SHORT GetThumbRY(void) { return m_sThumbRY; };
-
-	bool GetPress(XIJS_BUTTON Button) { return (m_aGamePadState[Button] & 0x80) ? true : false; };
-	bool GetTrigger(XIJS_BUTTON Button) { return (m_aGamePadStateTrigger[Button] & 0x80) ? true : false; };
-	bool GetRelease(XIJS_BUTTON Button) { return (m_aGamePadStateRelease[Button] & 0x80) ? true : false; };
-	bool GetRepeat(XIJS_BUTTON Button) { return (m_aGamePadStateRepeat[Button] & 0x80) ? true : false; };
-	bool GetAnyButton(void);
-
-private:    // このクラスだけがアクセス可能
 	typedef struct
-	{
-		XINPUT_STATE m_State;     // ゲームパッドの状態
-		bool m_bConnected;        // 接続されたかどうか
+	{// XINPUTコントローラー
+		XINPUT_STATE state;		// 情報
+		bool bConnected;		// 入力有無
 	}CONTROLER_STATE;
 
-	CONTROLER_STATE m_aGamePad;												// ゲームパッドの情報
-	DWORD           m_wButtons;												// ボタンの状態
-	BYTE            m_bLeftTrigger;											// LTボタンの状態
-	BYTE            m_bRightTrigger;										// RTボタンの状態
-	SHORT           m_sThumbLX;									// 左スティックのX軸
-	SHORT           m_sThumbLY;									// 左スティックのY軸
-	SHORT           m_sThumbRX;									// 右スティックのX軸
-	SHORT           m_sThumbRY;									// 右スティックのY軸
-	BYTE            m_aGamePadState[XIJS_BUTTON_MAX];			// ゲームパッドの入力情報(プレス情報)
-	BYTE            m_aGamePadStateTrigger[XIJS_BUTTON_MAX];	// ゲームパッドの入力情報(トリガー情報)
-	BYTE            m_aGamePadStateRelease[XIJS_BUTTON_MAX];	// ゲームパッドの入力情報(リリース情報)
-	BYTE            m_aGamePadStateRepeat[XIJS_BUTTON_MAX];		// ゲームパッドの入力情報(リピート情報)
-	DWORD           m_aGamePadCounter[XIJS_BUTTON_MAX];			// ゲームパッドの入力されてる間を数えるカウンター
+	CInputXPad();										// コンストラクタ
+	virtual ~CInputXPad();								// デストラクタ
+
+	HRESULT Init(HINSTANCE hInstance, HWND hWnd);		// 初期化処理
+	void Uninit(void);									// 終了処理
+	void Update(void);									// 更新処理
+
+	static int GetInputNum(void);						// 入力数取得
+
+	bool GetALL(int nType, int nIdxPad);				// オール
+	bool GetPress(int nButton, int nIdxPad);			// プレス
+	bool GetPress(XPADOTHER nButton, int nIdxPad);		// プレス（その他）
+	bool GetTrigger(int nButton, int nIdxPad);			// トリガー
+	bool GetTrigger(XPADOTHER nButton, int nIdxPad);	// トリガー（その他）
+	bool GetRelease(int nButton, int nIdxPad);			// リリース
+	bool GetRelease(XPADOTHER nButton, int nIdxPad);	// リリース（その他）
+
+	bool GetStick(int nLR, int nIdxPad);				// スティック
+	D3DXVECTOR2 GetStickNum(int nLR, int nIdxPad);		// スティック数値
+	float GetStickRot(int nLR, int nIdxPad);			// スティック向き
+	D3DXVECTOR2 GetStickMove(int nLR, int nIdxPad);		// スティック移動量
+
+private:
+	HRESULT UpdateControllerState(void);				// コントローラ入力数更新
+	static int		m_nInputNum;						// コントローラ入力数
+
+	CONTROLER_STATE m_Controllers[m_CONTROLLER];		// コントローラ
+	bool			m_bDeadZoneOn;						// スティック
+
+	WORD m_aJoyStatePress[m_CONTROLLER][XPADOTHER_MAX];		// プレス	
+	WORD m_aJoyStateTrigger[m_CONTROLLER][XPADOTHER_MAX];	// トリガー
+	WORD m_aJoyStateRelease[m_CONTROLLER][XPADOTHER_MAX];	// リリース
+
+	float m_LStickRot[m_CONTROLLER];					// Lスティック向き
+	float m_RStickRot[m_CONTROLLER];					// Rスティック向き
 };
 #endif

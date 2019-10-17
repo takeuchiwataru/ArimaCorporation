@@ -10,7 +10,6 @@
 #include "manager.h"
 #include "renderer.h"
 #include "input.h"
-#include "texture.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -42,7 +41,7 @@
 //*****************************************************************************
 LPDIRECT3DTEXTURE9 CFade::m_pTexture[MAX_TEXTURE] = {};
 CFade::FADE CFade::m_fade = CFade::FADE_NONE;
-CManager::MODE CFade::m_modeNext = CManager::MODE_TITLE;
+int CFade::m_nModeNext = CManager::MODE_TITLE;
 CFade::MODEFADE CFade::m_modegame = CFade::MODEFADE_NONE;
 CGame *CFade::m_pGame = NULL;
 //===============================================================================
@@ -98,33 +97,6 @@ HRESULT CFade::Init()
 
 	//位置の設定
 	CScene2D::SetVtxPos(&VtxPos[0]);
-
-	//ロード画像の表示
-	if (m_pNowLoading == NULL)
-	{
-		m_pNowLoading = new CScene2D(7, CScene::OBJTYPE_FADE);
-
-		if (m_pNowLoading != NULL)
-		{
-			m_pNowLoading->Init();
-			m_pNowLoading->SetPosSize(LOAD_POS, LOAD_SIZE);
-			m_pNowLoading->BindTexture(*CTexture::GetTexture((int)CTexture::TYPE_FADE_NOWLOADING));	//テクスチャの割当て
-		}
-	}
-
-	//アニメーション画像の表示
-	if (m_pAnim == NULL)
-	{
-		m_pAnim = new CScene2D(7, CScene::OBJTYPE_FADE);
-
-		if (m_pAnim != NULL)
-		{
-			m_pAnim->Init();
-			m_pAnim->SetPosSize(ANIM_POS, ANIM_SIZE);
-			m_pAnim->BindTexture(*CTexture::GetTexture((int)CTexture::TYPE_FADE_ANIM));	//テクスチャの割当て
-			m_pAnim->SetUVWidth(ANIM_UV, m_nAnimNum);
-		}
-	}
 
 	return S_OK;
 }
@@ -185,7 +157,11 @@ void CFade::Update(void)
 				if (m_modegame == MODEFADE_MODE)
 				{
 					//モード設定
-					CManager::SetMode(m_modeNext);
+					CManager::SetMode((CManager::MODE)m_nModeNext);
+				}
+				else if (m_modegame == MODEFADE_GAME)
+				{
+					CGame::SetGameModeNext((CGame::GAMEMODE)m_nModeNext);
 				}
 
 				//UpdateAllを戻す！
@@ -260,10 +236,39 @@ CFade * CFade::Create(CManager::MODE modeNext)
 				//オブジェクトクラスの生成
 				pFade->Init();
 
-				m_modeNext = modeNext;
+				m_nModeNext = modeNext;
 
 				//フェードのモード
 				m_modegame = MODEFADE_MODE;
+
+				m_fade = FADE_OUT;
+			}
+		}
+	}
+
+	return pFade;
+}
+CFade * CFade::Create(CGame::GAMEMODE modeNext)
+{
+	CFade *pFade = NULL;
+
+	if (m_fade == FADE_NONE)
+	{
+		//NULLチェック
+		if (pFade == NULL)
+		{//メモリの動的確保
+
+			pFade = new CFade;
+
+			if (pFade != NULL)
+			{
+				//オブジェクトクラスの生成
+				pFade->Init();
+
+				m_nModeNext = modeNext;
+
+				//フェードのモード
+				m_modegame = MODEFADE_GAME;
 
 				m_fade = FADE_OUT;
 			}

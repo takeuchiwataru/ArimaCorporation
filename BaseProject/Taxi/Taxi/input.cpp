@@ -763,276 +763,379 @@ bool CInputJoypad::GetJoyPadAny(int nNumber)
 //*****************************************************************************
 //    XInputの処理
 //*****************************************************************************
+int CInputXPad::m_nInputNum = 0;
+
 //=============================================================================
-// 生成処理
+// コンストラクタ									(public)	*** CInputXPad ***
 //=============================================================================
-CXInput *CXInput::Create(void)
+CInputXPad::CInputXPad()
 {
-	CXInput *pXInput = NULL;
-
-	if (pXInput == NULL)
-	{// メモリの確保をする
-		pXInput = new CXInput;
-
-		pXInput->Init();
+	// 初期値設定
+	for (int nCntCont = 0; nCntCont < m_CONTROLLER; nCntCont++)
+	{// コントローラー数カウント
+		m_LStickRot[nCntCont] = 0.0f;		// Lスティック
+		m_RStickRot[nCntCont] = 0.0f;		// Rスティック
 	}
 
-	return pXInput;
+	m_nInputNum = 0;						// 入力数
 }
 
 //=============================================================================
-// コンストラクタ
+// デストラクタ									(public)	*** CInputXPad ***
 //=============================================================================
-CXInput::CXInput()
+CInputXPad::~CInputXPad()
 {
-	// 各種値のクリア
-	for (int nCntButton = 0; nCntButton < XIJS_BUTTON_MAX; nCntButton++)
-	{// ボタンの数だけ繰り返し
-		m_aGamePadState[nCntButton] = 0x00;			// プレス情報
-		m_aGamePadStateTrigger[nCntButton] = 0x00;	// トリガー情報
-		m_aGamePadStateRelease[nCntButton] = 0x00;	// リリース情報
-		m_aGamePadStateRepeat[nCntButton] = 0x00;	// リピート情報
-		m_aGamePadCounter[nCntButton] = 0;			// 入力カウンター
-	}
-	m_aGamePad.m_bConnected = false;				// 接続の状態
-	m_aGamePad.m_State.Gamepad.wButtons = 0;		// ボタンのビット情報
-	m_aGamePad.m_State.Gamepad.bLeftTrigger = 0;	// LTボタンの状態
-	m_aGamePad.m_State.Gamepad.bRightTrigger = 0;	// RTボタンの状態
-	m_aGamePad.m_State.Gamepad.sThumbLX = 0;		// 左スティックのX軸
-	m_aGamePad.m_State.Gamepad.sThumbLY = 0;		// 左スティックのY軸
-	m_aGamePad.m_State.Gamepad.sThumbRX = 0;		// 右スティックのX軸
-	m_aGamePad.m_State.Gamepad.sThumbRY = 0;		// 右スティックのY軸
 
-	m_bLeftTrigger = 0;								// LTボタンの状態
-	m_bRightTrigger = 0;							// RTボタンの状態
-	m_sThumbLX = 0;									// 左スティックのX軸の値
-	m_sThumbLY = 0;									// 左スティックのY軸の値
-	m_sThumbRX = 0;									// 右スティックのX軸の値
-	m_sThumbRY = 0;									// 右スティックのY軸の値
-	m_wButtons = 0;									// ボタンの状態
 }
 
 //=============================================================================
-//    デストラクタ
+// 初期化処理									(public)	*** CInputXPad ***
 //=============================================================================
-CXInput::~CXInput()
+HRESULT CInputXPad::Init(HINSTANCE hInstance, HWND hWnd)
 {
-}
-
-//=============================================================================
-//    初期化処理
-//=============================================================================
-HRESULT CXInput::Init(void)
-{
-	// ゲームパッドのクリア
-	ZeroMemory(&m_aGamePad, sizeof(CONTROLER_STATE));
+	// コントローラーの初期化
+	ZeroMemory(m_Controllers, sizeof(CONTROLER_STATE) * m_CONTROLLER);
 
 	return S_OK;
 }
 
 //=============================================================================
-//    終了処理
+// 終了処理										(public)	*** CInputXPad ***
 //=============================================================================
-void CXInput::Uninit(void)
+void CInputXPad::Uninit(void)
 {
-	// ゲームパッドの開放
-	XInputEnable(false);
+
 }
 
 //=============================================================================
-//    更新処理
+// 更新処理										(public)	*** CInputXPad ***
 //=============================================================================
-void CXInput::Update(void)
+void CInputXPad::Update(void)
 {
-	DWORD dwResult;                             // ゲームパッドが取得できたかどうか
-	BYTE aGamePadState[XIJS_BUTTON_MAX] = {};   // ゲームパッドのボタン入力情報
+	UpdateControllerState();	// 途中入力
 
-	 // ゲームパッドの状態を取得
-	dwResult = XInputGetState(0, &m_aGamePad.m_State);
+	for (DWORD nCntCont = 0; nCntCont < m_CONTROLLER; nCntCont++)
+	{// コントローラーカウント
+		if (m_Controllers[nCntCont].bConnected == true)
+		{// 接続されていたら
+			if (m_bDeadZoneOn == true)
+			{// スティック
+			 // Zero value if thumbsticks are within the dead zone
+				if ((m_Controllers[nCntCont].state.Gamepad.sThumbLX < INPUT_DEADZONE &&
+					m_Controllers[nCntCont].state.Gamepad.sThumbLX > -INPUT_DEADZONE) &&
+					(m_Controllers[nCntCont].state.Gamepad.sThumbLY < INPUT_DEADZONE &&
+						m_Controllers[nCntCont].state.Gamepad.sThumbLY > -INPUT_DEADZONE))
+				{
+					m_Controllers[nCntCont].state.Gamepad.sThumbLX = 0;
+					m_Controllers[nCntCont].state.Gamepad.sThumbLY = 0;
+				}
+				//m_Controllers[nCntCont].state.Gamepad.wButtons
+				if ((m_Controllers[nCntCont].state.Gamepad.sThumbRX < INPUT_DEADZONE &&
+					m_Controllers[nCntCont].state.Gamepad.sThumbRX > -INPUT_DEADZONE) &&
+					(m_Controllers[nCntCont].state.Gamepad.sThumbRY < INPUT_DEADZONE &&
+						m_Controllers[nCntCont].state.Gamepad.sThumbRY > -INPUT_DEADZONE))
+				{
+					m_Controllers[nCntCont].state.Gamepad.sThumbRX = 0;
+					m_Controllers[nCntCont].state.Gamepad.sThumbRY = 0;
+				}
+			}
 
-	if (dwResult == ERROR_SUCCESS)
-	{// 状態取得に成功した
-		 // 状態を格納する
-		m_aGamePad.m_bConnected = true;									// 接続された状態にする
-		m_wButtons = m_aGamePad.m_State.Gamepad.wButtons;				// ボタンのビット情報を取得
-		m_bLeftTrigger = m_aGamePad.m_State.Gamepad.bLeftTrigger;		// LTボタンの状態を取得
-		m_bRightTrigger = m_aGamePad.m_State.Gamepad.bRightTrigger;		// RTボタンの状態を取得
-		m_sThumbLX = m_aGamePad.m_State.Gamepad.sThumbLX;				// 左スティックのX軸を取得
-		m_sThumbLY = m_aGamePad.m_State.Gamepad.sThumbLY;				// 左スティックのY軸を取得
-		m_sThumbRX = m_aGamePad.m_State.Gamepad.sThumbRX;				// 右スティックのX軸を取得
-		m_sThumbRY = m_aGamePad.m_State.Gamepad.sThumbRY;				// 右スティックのY軸を取得
+			WORD wButtons = 0;		// XINPUTコントローラーの入力情報
 
-		// 入力の状態を取得する
-		// ボタン
-		DWORD wButtons = m_wButtons;				// ボタンのビット情報
-		if (wButtons >= XINPUT_GAMEPAD_Y)
-		{// Yボタンが押されている
-			aGamePadState[XIJS_BUTTON_13] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_Y;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_X)
-		{// Xボタンが押されている
-			aGamePadState[XIJS_BUTTON_12] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_X;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_B)
-		{// Bボタンが押されている
-			aGamePadState[XIJS_BUTTON_11] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_B;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_A)
-		{// Aボタンが押されている
-			aGamePadState[XIJS_BUTTON_10] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_A;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_RIGHT_SHOULDER)
-		{// RBボタンが押されている
-			aGamePadState[XIJS_BUTTON_9] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_RIGHT_SHOULDER;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_LEFT_SHOULDER)
-		{// LBボタンが押されている
-			aGamePadState[XIJS_BUTTON_8] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_LEFT_SHOULDER;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_RIGHT_THUMB)
-		{// 右スティックが押し込まれている
-			aGamePadState[XIJS_BUTTON_7] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_RIGHT_THUMB;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_LEFT_THUMB)
-		{// 右スティックが押し込まれている
-			aGamePadState[XIJS_BUTTON_6] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_LEFT_THUMB;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_BACK)
-		{// BACKボタンが押されている
-			aGamePadState[XIJS_BUTTON_5] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_BACK;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_START)
-		{// BACKボタンが押されている
-			aGamePadState[XIJS_BUTTON_4] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_START;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_DPAD_RIGHT)
-		{// 十字キーの右が押されている
-			aGamePadState[XIJS_BUTTON_3] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_DPAD_RIGHT;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_DPAD_LEFT)
-		{// 十字キーの左が押されている
-			aGamePadState[XIJS_BUTTON_2] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_DPAD_LEFT;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_DPAD_DOWN)
-		{// 十字キーの下が押されている
-			aGamePadState[XIJS_BUTTON_1] = 0x80;	// 入力を起動
-			wButtons -= XINPUT_GAMEPAD_DPAD_DOWN;
-		}
-		if (wButtons >= XINPUT_GAMEPAD_DPAD_UP)
-		{// 十字キーの上が押されている
-			aGamePadState[XIJS_BUTTON_0] = 0x80;	// 入力を起動
-		}
-
-		// LTトリガー
-		if (m_bLeftTrigger >= MIN_GAMEPAD_LEFT_TRIGGER)
-		{// LTトリガーが押されている
-			aGamePadState[XIJS_BUTTON_14] = 0x80;	// 入力を起動する
-		}
-		// RTトリガー
-		if (m_bRightTrigger >= MIN_GAMEPAD_RIGHT_TRIGGER)
-		{// LRトリガーが押されている
-			aGamePadState[XIJS_BUTTON_15] = 0x80;	// 入力を起動する
-		}
-
-		// 左スティック
-		if (m_sThumbLX >= MIN_GAMEPAD_LEFT_THUMB_X)
-		{// 左スティックが右に倒された
-			aGamePadState[XIJS_BUTTON_19] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbLX <= -MIN_GAMEPAD_LEFT_THUMB_X)
-		{// 左スティックが左に倒された
-			aGamePadState[XIJS_BUTTON_18] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbLY >= MIN_GAMEPAD_LEFT_THUMB_Y)
-		{// 左スティックが上に倒された
-			aGamePadState[XIJS_BUTTON_16] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbLY <= -MIN_GAMEPAD_LEFT_THUMB_Y)
-		{// 左スティックが下に倒された
-			aGamePadState[XIJS_BUTTON_17] = 0x80;	// 入力を起動する
-		}
-
-		// 右スティック
-		if (m_sThumbRX >= MIN_GAMEPAD_LEFT_THUMB_X)
-		{// 右スティックが右に倒された
-			aGamePadState[XIJS_BUTTON_23] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbRX <= -MIN_GAMEPAD_LEFT_THUMB_X)
-		{// 右スティックが左に倒された
-			aGamePadState[XIJS_BUTTON_22] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbRY >= MIN_GAMEPAD_LEFT_THUMB_Y)
-		{// 右スティックが上に倒された
-			aGamePadState[XIJS_BUTTON_20] = 0x80;	// 入力を起動する
-		}
-		if (m_sThumbRY <= -MIN_GAMEPAD_LEFT_THUMB_Y)
-		{// 右スティックが下に倒された
-			aGamePadState[XIJS_BUTTON_21] = 0x80;	// 入力を起動する
-		}
-
-		// ボタンの状態を格納する
-		for (int nCntButton = 0; nCntButton < XIJS_BUTTON_MAX; nCntButton++)
-		{// ボタンの数だけ繰り返し
-			m_aGamePadStateTrigger[nCntButton] = (m_aGamePadState[nCntButton] ^ aGamePadState[nCntButton]) & aGamePadState[nCntButton];		// ボタンの入力情報(トリガー情報)保存
-			m_aGamePadStateRelease[nCntButton] = (m_aGamePadState[nCntButton] ^ aGamePadState[nCntButton]) & m_aGamePadState[nCntButton];	// ボタンの入力情報(リリース情報)保存
-			if (aGamePadState[nCntButton] == 0x80)
-			{// ボタンが入力されている
-				m_aGamePadCounter[nCntButton]++;	// カウンターを進める
-				if (m_aGamePadCounter[nCntButton] >= REPEAT_FRAME || 1 == m_aGamePadCounter[nCntButton])
-				{// 20フレーム分ボタンが押されている
-					if (0 == m_aGamePadCounter[nCntButton] % REPEAT_TRIGGER || 1 == m_aGamePadCounter[nCntButton])
-					{// 3フレームごと
-						m_aGamePadStateRepeat[nCntButton] = 0x80;	// ボタンの入力情報(リピート情報)を起動
-					}
+			for (int nCount = 0; nCount < XPADOTHER_MAX; nCount++)
+			{// 入力情報カウント
+				switch (nCount)
+				{
+				case 0:		// ボタン
+					wButtons = m_Controllers[nCntCont].state.Gamepad.wButtons;
+					break;
+				case 1:		// 左トリガー
+					wButtons = m_Controllers[nCntCont].state.Gamepad.bLeftTrigger;
+					break;
+				case 2:		// 右トリガー
+					wButtons = m_Controllers[nCntCont].state.Gamepad.bRightTrigger;
+					break;
+				case 3:		// 左スティック上
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbLY > m_STICKMAX * 0.1f)
+						wButtons = 0x80;
 					else
-					{// それ以外のフレーム
-						m_aGamePadStateRepeat[nCntButton] = 0;		// ボタンの入力情報(リピート情報)を一時停止
-					}
+						wButtons = 0;
+					break;
+				case 4:		// 左スティック左
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbLX < m_STICKMIN * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 5:		// 左スティック右
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbLX > m_STICKMAX * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 6:		// 左スティック下
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbLY < m_STICKMIN * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 7:		// 右スティック上
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbRY > m_STICKMAX * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 8:		// 右スティック左
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbRX < m_STICKMIN * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 9:		// 右スティック右
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbRX > m_STICKMAX * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				case 10:		// 右スティック下
+					if (m_Controllers[nCntCont].state.Gamepad.sThumbRY < m_STICKMIN * 0.1f)
+						wButtons = 0x80;
+					else
+						wButtons = 0;
+					break;
+				}
+
+				// スティック向き
+				m_LStickRot[nCntCont] = atan2f((float)m_Controllers[nCntCont].state.Gamepad.sThumbLX, (float)m_Controllers[nCntCont].state.Gamepad.sThumbLY);
+				m_RStickRot[nCntCont] = atan2f((float)m_Controllers[nCntCont].state.Gamepad.sThumbRX, (float)m_Controllers[nCntCont].state.Gamepad.sThumbRY);
+
+				// ジョイパッドの入力情報
+				m_aJoyStateTrigger[nCntCont][nCount] = (m_aJoyStatePress[nCntCont][nCount] ^ wButtons) & wButtons;
+				m_aJoyStateRelease[nCntCont][nCount] = (m_aJoyStatePress[nCntCont][nCount] ^ wButtons) & m_aJoyStatePress[nCntCont][nCount];
+				m_aJoyStatePress[nCntCont][nCount] = wButtons;
+			}
+		}
+	}
+}
+
+//=============================================================================
+// Xパッドの入力情報(入力確認)を取得				(private)	*** CInputXPad ***
+//=============================================================================
+HRESULT CInputXPad::UpdateControllerState(void)
+{
+	DWORD dwResult;
+	m_nInputNum = 0;
+	for (DWORD nCntCont = 0; nCntCont < m_CONTROLLER; nCntCont++)
+	{
+		// Simply get the state of the controller from XInput.
+		dwResult = XInputGetState(nCntCont, &m_Controllers[nCntCont].state);
+
+		if (dwResult == ERROR_SUCCESS)
+		{
+			m_Controllers[nCntCont].bConnected = true;
+			m_nInputNum++;
+		}
+		else
+		{
+			m_Controllers[nCntCont].bConnected = false;
+		}
+	}
+
+	return S_OK;
+}
+//=============================================================================
+// Xパッドの入力情報(入力数情報)を取得				(private)	*** CInputXPad ***
+//=============================================================================
+int CInputXPad::GetInputNum(void)
+{
+	return m_nInputNum;
+}
+
+//=============================================================================
+// Xパッドの入力情報(オール情報)を取得				(private)	*** CInputXPad ***
+//=============================================================================
+bool CInputXPad::GetALL(int nType, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+	{
+		switch (nType)
+		{
+		case 0:
+			for (int nCount = 0; nCount <= XPADOTHER_TRIGGER_RIGHT; nCount++)
+			{// 入力情報カウント
+				if (nCount == XPADOTHER_TRIGGER_LEFT || nCount == XPADOTHER_TRIGGER_RIGHT)
+				{
+					if (m_aJoyStatePress[nIdxPad][nCount] == 0x80)
+						return true;
 				}
 				else
-				{// 20フレーム以前
-					m_aGamePadStateRepeat[nCntButton] = 0;			// ボタンの入力情報(リピート情報)を一時停止
+				{
+					if (m_aJoyStatePress[nIdxPad][nCount] != 0)
+						return true;
 				}
 			}
-			else
-			{// ゲームパッドのボタンが入力されていない
-				m_aGamePadCounter[nCntButton] = 0;		// カウンターを戻す
-				m_aGamePadStateRepeat[nCntButton] = 0;	// ボタンの入力情報(リピート情報)を停止
+
+			break;
+		case 1:
+			for (int nCount = 0; nCount <= XPADOTHER_TRIGGER_RIGHT; nCount++)
+			{// 入力情報カウント
+				if (nCount == XPADOTHER_TRIGGER_LEFT || nCount == XPADOTHER_TRIGGER_RIGHT)
+				{
+					if (m_aJoyStateTrigger[nIdxPad][nCount] == 0x80)
+						return true;
+				}
+				else
+				{
+					if (m_aJoyStateTrigger[nIdxPad][nCount] != 0)
+						return true;
+				}
 			}
-			m_aGamePadState[nCntButton] = aGamePadState[nCntButton];	// ボタンの入力情報(プレス情報)保存
+
+			break;
+		default:
+			for (int nCount = 0; nCount <= XPADOTHER_TRIGGER_RIGHT; nCount++)
+			{// 入力情報カウント
+				if (nCount == XPADOTHER_TRIGGER_LEFT || nCount == XPADOTHER_TRIGGER_RIGHT)
+				{
+					if (m_aJoyStateRelease[nIdxPad][nCount] == 0x80)
+						return true;
+				}
+				else
+				{
+					if (m_aJoyStateRelease[nIdxPad][nCount] != 0)
+						return true;
+				}
+			}
+
+			break;
 		}
 	}
-	else
-	{// 状態取得に失敗した
-		m_aGamePad.m_bConnected = false;	// 接続されていない状態にする
-	}
+
+	return false;
 }
 
 //=============================================================================
-//    ゲームパッドの入力情報を取得
+// Xパッドの入力情報(プレス情報)を取得				(private)	*** CInputXPad ***
 //=============================================================================
-bool CXInput::GetAnyButton(void)
+bool CInputXPad::GetPress(int nButton, int nIdxPad)
 {
-	for (int nCount = 0; nCount < XIJS_BUTTON_16; nCount++)
-	{// スティック以外のボタンを調べる
-		if (m_aGamePadStateTrigger[nCount] == 0x80)
-		{// 入力された
-			return true;
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStatePress[nIdxPad][0] & nButton) ? true : false;
+	else
+		return false;
+}
+bool CInputXPad::GetPress(XPADOTHER nButton, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStatePress[nIdxPad][nButton] & 0x80) ? true : false;
+	else
+		return false;
+}
+
+//=============================================================================
+// Xパッドの入力情報(トリガー情報)を取得			(private)	*** CInputXPad ***
+//=============================================================================
+bool CInputXPad::GetTrigger(int nButton, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStateTrigger[nIdxPad][0] & nButton) ? true : false;
+	else
+		return false;
+}
+bool CInputXPad::GetTrigger(XPADOTHER nButton, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStateTrigger[nIdxPad][nButton] & 0x80) ? true : false;
+	else
+		return false;
+}
+
+//=============================================================================
+// Xパッドの入力情報(リリース情報)を取得			(private)	*** CInputXPad ***
+//=============================================================================
+bool CInputXPad::GetRelease(int nButton, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStateRelease[nIdxPad][0] & nButton) ? true : false;
+	else
+		return false;
+}
+bool CInputXPad::GetRelease(XPADOTHER nButton, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+		return (m_aJoyStateRelease[nIdxPad][nButton] & 0x80) ? true : false;
+	else
+		return false;
+}
+
+//=============================================================================
+// Xパッドの入力情報(スティック情報)を取得			(private)	*** CInputXPad ***
+//=============================================================================
+bool CInputXPad::GetStick(int nLR, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+	{
+		if (nLR == 0)
+		{
+			for (int nCntStick = XPADOTHER_STICK_L_UP; nCntStick <= XPADOTHER_STICK_L_DOWN; nCntStick++)
+				if (m_aJoyStatePress[nIdxPad][nCntStick] == 0x80)
+					return true;
+		}
+		else
+		{
+			for (int nCntStick = XPADOTHER_STICK_R_UP; nCntStick <= XPADOTHER_STICK_R_DOWN; nCntStick++)
+				if (m_aJoyStatePress[nIdxPad][nCntStick] == 0x80)
+					return true;
 		}
 	}
 
-	// 入力されたボタンがなかった
 	return false;
+}
+
+//=============================================================================
+// Xパッドの入力情報(スティック数値情報)を取得		(private)	*** CInputXPad ***
+//=============================================================================
+D3DXVECTOR2 CInputXPad::GetStickNum(int nLR, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+	{
+		if (nLR == 0)
+			return D3DXVECTOR2(m_Controllers[nIdxPad].state.Gamepad.sThumbLX, m_Controllers[nIdxPad].state.Gamepad.sThumbLY);
+		else
+			return D3DXVECTOR2(m_Controllers[nIdxPad].state.Gamepad.sThumbRX, m_Controllers[nIdxPad].state.Gamepad.sThumbRY);
+	}
+
+	return D3DXVECTOR2(0, 0);
+}
+
+//=============================================================================
+// Xパッドの入力情報(スティック向き情報)を取得		(private)	*** CInputXPad ***
+//=============================================================================
+float CInputXPad::GetStickRot(int nLR, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+	{
+		if (nLR == 0)
+			return m_LStickRot[nIdxPad];
+		else
+			return m_RStickRot[nIdxPad];
+	}
+
+	return 0.0f;
+}
+
+//=============================================================================
+// Xパッドの入力情報(スティック移動量情報)を取得	(private)	*** CInputXPad ***
+//=============================================================================
+D3DXVECTOR2 CInputXPad::GetStickMove(int nLR, int nIdxPad)
+{
+	if (m_Controllers[nIdxPad].bConnected)
+	{
+		if (nLR == 0)
+			return D3DXVECTOR2(m_Controllers[nIdxPad].state.Gamepad.sThumbLX, m_Controllers[nIdxPad].state.Gamepad.sThumbLY);
+		else
+			return D3DXVECTOR2(m_Controllers[nIdxPad].state.Gamepad.sThumbRX, m_Controllers[nIdxPad].state.Gamepad.sThumbRY);
+	}
+
+	return D3DXVECTOR2(0.0f, 0.0f);
 }

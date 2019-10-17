@@ -98,9 +98,11 @@ HRESULT CResult::Init()
 	for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
 	{
 		//フィールドの生成
-		m_pMeshField = CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
+		CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
 			m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
-			m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3, m_Mesh[nCount].m_nTexType, 0);
+			m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
+			m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
+			m_Mesh[nCount].m_nTexType, 0);
 	}
 	if (m_pCamera == NULL)
 	{
@@ -176,7 +178,7 @@ void CResult::Update(void)
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputMouse *pCInputMouse = CManager::GetInputMouse();
-	CXInput *pXinput = CManager::GetXInput();
+	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
 	//サウンドの情報
 	CSound *pSound = CManager::GetSound();
@@ -210,7 +212,7 @@ void CResult::Update(void)
 		m_bPress = true;
 	}*/
 
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) || pXinput->GetAnyButton())
+	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) || pXpad->GetALL(1, 0))
 	{
 		/*if (m_bPress == false) { m_pReport->SetReporh(CReport::TYPE_ALL_DISPLAY); m_bPress = true; }
 		else*/

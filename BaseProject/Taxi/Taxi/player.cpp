@@ -47,6 +47,7 @@
 #define EGG_SCALE		(0.5f)										//卵の大きさ
 #define MAX_EGG			(3)											//卵の最大数
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
+#define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(1.0f)										//加速値（前進）
@@ -80,7 +81,7 @@
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
-CModel * CPlayer::m_pModel = NULL;	//モデルのパーツポインタ
+CModel * CPlayer::m_pModel = NULL;		//モデルのパーツポインタ
 int	CPlayer::m_nMaxModel = 0;
 int CPlayer::m_nMaxParts = 0;
 int CPlayer::m_nMaxMotion = 0;
@@ -204,6 +205,7 @@ HRESULT CPlayer::Init(void)
 	m_OldPos = VECTOR_ZERO;				//前回の座標
 	m_move = VECTOR_ZERO;				//移動
 	m_rot = VECTOR_ZERO;				//向き
+	m_nCntFrame = -1;				//向き
 	m_OldDiffuse = VECTOR_ZERO;				//前回の差分
 	m_MoveMotion = VECTOR_ZERO;				//モーションの移動
 	m_vtxMaxModel = VECTOR_ZERO;			//モデルの頂点最大値
@@ -234,6 +236,21 @@ HRESULT CPlayer::Init(void)
 	m_nCntFlag = 0;
 	m_bDirive = true;
 	m_nNumEgg = 0;
+	m_bJumpSave = false;
+
+	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
+	{
+		m_OldEggRot[nCntEggPos] = VECTOR_ZERO;
+		m_abJump[nCntEggPos] = false;
+	}
+
+	//卵のポインタを初期化
+	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
+	{
+		m_pEgg[nCntEgg] = NULL;
+	}
+
+	//CreateTire();			//タイヤの生成
 
 	if (m_pMotion == NULL)	//モーションの生成
 	{
@@ -273,6 +290,15 @@ void CPlayer::Uninit(void)
 		m_pMotion = NULL;
 	}
 
+	//タイヤモデルの破棄
+	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
+	{
+		if (m_pEgg[nCntEgg] != NULL)
+		{
+			m_pEgg[nCntEgg] = NULL;
+		}
+	}
+
 	//テキストの破棄
 	if (m_pText != NULL)
 	{
@@ -307,8 +333,8 @@ void CPlayer::Update(void)
 
 	/*if (m_pos.y < 0.0f)
 	{
-		m_pos.y = 0.0f;
-		m_move.y = 0.0f;
+	m_pos.y = 0.0f;
+	m_move.y = 0.0f;
 	}*/
 
 	//タイムアップ状態なら以降は更新しない
@@ -322,24 +348,24 @@ void CPlayer::Update(void)
 
 	ChaseEgg();	// 卵がついてくる処理
 
-							/*UpdateStateJump();		// ジャンプ状態の更新処理
-							RiverInfluence();		// 川による影響
+				/*UpdateStateJump();		// ジャンプ状態の更新処理
+				RiverInfluence();		// 川による影響
 
-							CollisionObject();		// オブジェクトとの当たり判定
-							UpdateShake();			//車の揺れの処理
-							//CollisitionWall();	// 壁との当たり判定
-							UpdateSmoke(TirePos);	//煙の更新処理
-							UpdateGrass(TirePos);	//草エフェクトの更新処理
-							*/
-							/*m_nCntCombo++;
+				CollisionObject();		// オブジェクトとの当たり判定
+				UpdateShake();			//車の揺れの処理
+				//CollisitionWall();	// 壁との当たり判定
+				UpdateSmoke(TirePos);	//煙の更新処理
+				UpdateGrass(TirePos);	//草エフェクトの更新処理
+				*/
+				/*m_nCntCombo++;
 
-							// コンボ数
-							if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
-							{	// NULLチェック & フレームが0の場合
-							m_nCntCombo = 0;
-							m_pCombo->Uninit();
-							m_pCombo = NULL;
-							}*/
+				// コンボ数
+				if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
+				{	// NULLチェック & フレームが0の場合
+				m_nCntCombo = 0;
+				m_pCombo->Uninit();
+				m_pCombo = NULL;
+				}*/
 
 	DebugProc();		// デバック表示
 }
@@ -386,20 +412,20 @@ void CPlayer::Draw(void)
 void CPlayer::ControlKey(void)
 {
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
-	CXInput * pInputJoypad = CManager::GetXInput();				//ジョイパットの取得
+	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
 																//前進後退の設定
 	if (m_bDirive)
 	{
-		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
+		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true)) //||
+			//(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, 0) == true) ||
+			//(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, 0) == true))
 		{
 			SetState(STATE_DRIVE);		//前進状態に設定
 		}
-		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
-			(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true))
+		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true))// ||
+			//(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_LEFT, 0) == true) ||
+			//(pXpad->GetPress(XINPUT_GAMEPAD_LEFT_SHOULDER, 0) == true))
 		{
 			SetState(STATE_REVERSE);	//後退状態に設定
 		}
@@ -408,11 +434,11 @@ void CPlayer::ControlKey(void)
 	//向きの設定
 	if (m_StateSpeed != STATE_SPEED_STOP)
 	{
-		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_18))
+		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true))// || pXpad->GetPress(CInputXPad::XPADOTHER_STICK_L_LEFT, 0) == true || pXpad->GetPress(XINPUT_GAMEPAD_DPAD_LEFT, 0) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
 		}
-		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_19))
+		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true))// || pXpad->GetPress(CInputXPad::XPADOTHER_STICK_L_RIGHT, 0) == true || pXpad->GetPress(XINPUT_GAMEPAD_DPAD_RIGHT, 0) == true)
 		{//右ハンドル状態
 			SetStateHandle(HANDLE_RIGHT);
 		}
@@ -427,16 +453,16 @@ void CPlayer::ControlKey(void)
 	}
 
 	//アクセル
-	if (
-		(pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) == true) ||
-		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8) == true))
+	if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true))// ||
+		//(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_LEFT, 0) == true) ||
+		//(pXpad->GetPress(XINPUT_GAMEPAD_LEFT_SHOULDER, 0) == true))
 	{//減速状態
 		SetStateSpeed(STATE_SPEED_BRAKS);
 	}
-	else if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) == true) ||
-		(pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9) == true))
+	else if
+		((pInputKeyboard->GetKeyboardPress(DIK_L) == true))// ||
+		//(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, 0) == true) ||
+		//(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, 0) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -465,20 +491,27 @@ void CPlayer::ControlKey(void)
 	// ジャンプ
 	if (m_bJump == false)
 	{// ジャンプしていない
+		m_bJumpSave = false;
+
 		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true)
 		{// ジャンプキー
+			m_bJumpSave = true;
 			m_bJump = true;
 			m_move.y += 7.5f;
 		}
 	}
+	else
+	{
+		m_bJumpSave = false;
+	}
 
 	CSound *pSound = CManager::GetSound();
 
-	if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
+	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
 	{
-		pSound->SetVolume(CSound::SOUND_LABEL_SE_KLAXON, 1.5f);
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_KLAXON);
-	}
+	pSound->SetVolume(CSound::SOUND_LABEL_SE_KLAXON, 1.5f);
+	pSound->PlaySound(CSound::SOUND_LABEL_SE_KLAXON);
+	}*/
 }
 
 //=============================================================================
@@ -698,14 +731,14 @@ void CPlayer::UpdateField(void)
 					m_pos.y = fHight;					//地面の高さを取得
 					m_move.y = 0.0f;					//移動量を初期化する
 
-					//ジャンプ中かどうか
-					//bool bJumpFlag = pPlayer->GetJump();
-					//if (bJumpFlag)
-					//{
-					//	pPlayer->GetPlayerInfoPoint()->nCountTime -= (int)std::round(pPlayer->GetPlayerInfoPoint()->nCountTime * 0.05f);
-					//}
+														//ジャンプ中かどうか
+														//bool bJumpFlag = pPlayer->GetJump();
+														//if (bJumpFlag)
+														//{
+														//	pPlayer->GetPlayerInfoPoint()->nCountTime -= (int)std::round(pPlayer->GetPlayerInfoPoint()->nCountTime * 0.05f);
+														//}
 
-					//ジャンプの状態設定
+														//ジャンプの状態設定
 					m_bJump = false;
 					//m_pIncline->SetJumpFlag(false);
 
@@ -786,20 +819,6 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 void CPlayer::Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size)
 {
 	m_pos = pos;
-}
-
-//=============================================================================
-// テキストの読み込み
-//=============================================================================
-void CPlayer::LoadText(void)
-{
-	if (m_pText == NULL) { m_pText = CLoadTextPlayer::Create(FAILE_NAME); }	//プレイヤーの情報を読み込む
-	m_PlayerInfo = m_pText->GetPlayerInfo();								//読み込んだ情報を取得する
-
-																			//プレイヤー情報を設定する
-	m_pos = m_PlayerInfo.FirstPos;
-	//m_fMaxSpeed = m_PlayerInfo.fAccel;	//アクセル最大値の取得
-	//m_PlayerInfo.fAccel = 0.0f;
 }
 
 //=============================================================================
@@ -995,25 +1014,25 @@ void CPlayer::UpdateStateJump(void)
 	if (m_bJump)
 	{//ジャンプ状態の時間を加算
 		m_nCountJumpTime++;
-		
+
 		/*//X軸の角度制限
 		if (m_rot.x > 0.5f)
 		{
-			m_rot.x = 0.5f;
+		m_rot.x = 0.5f;
 		}
 		else if (m_rot.x < -0.5f)
 		{
-			m_rot.x = -0.5f;
+		m_rot.x = -0.5f;
 		}
 
 		//Z軸の角度制限
 		if (m_rot.z > 0.5f)
 		{
-			m_rot.z = 0.5f;
+		m_rot.z = 0.5f;
 		}
 		else if (m_rot.z < -0.5f)
 		{
-			m_rot.z = -0.5f;
+		m_rot.z = -0.5f;
 		}*/
 		return;
 	}
@@ -1200,15 +1219,15 @@ void CPlayer::EggAppear(CFeed *pFeed)
 {
 	if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ATTACK)
 	{// 攻撃の卵生成
-		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ATTACK);
+		m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ATTACK);
 	}
 	else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 	{// 妨害の卵生成
-		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ANNOY);
+		m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ANNOY);
 	}
 	else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 	{// 加速の卵生成
-		CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_SPEED);
+		m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_SPEED);
 	}
 }
 
@@ -1217,32 +1236,82 @@ void CPlayer::EggAppear(CFeed *pFeed)
 //=============================================================================
 void CPlayer::ChaseEgg(void)
 {
+	m_nCntFrame++;
+
+	if (m_nCntFrame > MAX_FRAME)
+	{
+		m_nCntFrame = 0;
+	}
+
+	// 前のプレイヤーの角度を保存
+	m_OldEggRot[m_nCntFrame] = m_rot;
+	m_abJump[m_nCntFrame] = m_bJumpSave;
+
 	if (m_nNumEgg <= 0) { return; }
 
-	int nCntEgg = 0;
+	if (m_nNumEgg >= 1)
+	{// 卵が一個の時
+	 // 前の向きを代入
+		int nData = m_nCntFrame - EGG_POS;
 
-	CScene *pScene;
-
-	// プライオリティーチェック
-	pScene = CScene::GetTop(3);
-	while (pScene != NULL)
-	{// プライオリティー内のリスト構造を最後まで見る
-		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
-
-		if (pScene->GetObjType() == OBJTYPE_EGG)
-		{// タイプが卵だったら
-			CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
-
-			pEgg->SetPosition(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.x,
-				m_pos.y,
-				(cosf(m_rot.y + D3DX_PI) * EGG_RANGE * (nCntEgg + 1)) + m_pos.z));
-			pEgg->SetRot(m_rot);
-
-			nCntEgg++;
-
-			if (nCntEgg == MAX_EGG) break;
+		if (nData < 0)
+		{
+			nData += MAX_FRAME + 1;
 		}
-		// Nextに次のSceneを入れる
-		pScene = pSceneNext;
+
+		// 卵の位置設定
+		m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+			m_pEgg[0]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+
+		// 卵の角度設定
+		m_pEgg[0]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pEgg[0]->Jump();
+		}
+	}
+	if (m_nNumEgg >= 2)
+	{// 卵が二個の時
+	 // 二個目
+		int nData = m_nCntFrame - EGG_POS * 2;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME + 1;
+		}
+
+		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+			m_pEgg[1]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
+
+		m_pEgg[1]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pEgg[1]->Jump();
+		}
+	}
+	if (m_nNumEgg >= 3)
+	{
+		// 三個目
+		int nData = m_nCntFrame - EGG_POS * 3;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME + 1;
+		}
+
+		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+			m_pEgg[2]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
+
+		m_pEgg[2]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pEgg[2]->Jump();
+		}
 	}
 }

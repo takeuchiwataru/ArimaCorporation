@@ -18,7 +18,6 @@
 //*****************************************************************************
 // 前方宣言
 //*****************************************************************************
-class CLogo;
 class CScene2D;
 
 //=====================
@@ -50,13 +49,8 @@ private:
 	int				m_nCntAnim;						// アニメーションカウンター
 	int				m_nCntPattern;					// パターンカウンター
 	D3DXVECTOR2		m_nSizeOld[MAX_SELECT_STAGE];	// サイズの保存
-	CLogo			*m_apMenu[MAX_SELECT_STAGE];	// ステージ
-	CLogo			*m_pCircle;						// サークル
-	CLogo			*m_pHuman[MAX_SELECT_STAGE];	// 人
 	CScene2D		*m_pFream;						// フレーム
 	CScene2D		*m_pBg;							// 難易度選択時の背景
-	CLogo			*m_apSelectLevel[MAX_SELECT_NUM];	// 難易度
-	CLogo			*m_apMoney[MAX_SELECT_STAGE];
 	bool			m_bPress;						// 押下時のフラグ
 	bool			m_bSame;						// 同じ場合のフラグ
 	bool			m_bSelectFlag;					// 選択フラグ

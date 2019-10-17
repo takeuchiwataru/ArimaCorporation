@@ -51,6 +51,10 @@ CMeshField::CMeshField()
 	m_fVtxHeight_No1 = 0.0f;
 	m_fVtxHeight_No2 = 0.0f;
 	m_fVtxHeight_No3 = 0.0f;
+	m_fVtxSide_No0 = 0.0f;
+	m_fVtxSide_No1 = 0.0f;
+	m_fVtxSide_No2 = 0.0f;
+	m_fVtxSide_No3 = 0.0f;
 	m_nTexType = 0;
 }
 //===============================================================================
@@ -104,7 +108,7 @@ void CMeshField::Draw(void)
 //===============================================================================
 //　クリエイト
 //===============================================================================
-CMeshField * CMeshField::Create(D3DXVECTOR3 pos,int nMeshX, int nMeshZ, float fMeshXUV, float fMeshYUV, float fMeshWidth, float fMeshDepth, float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ, int nTexType,int nMeshType)
+CMeshField * CMeshField::Create(D3DXVECTOR3 pos, int nMeshX, int nMeshZ, float fMeshXUV, float fMeshYUV, float fMeshWidth, float fMeshDepth, float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ, float fVtxSide0, float fVtxSide1, float fVtxSide2, float fVtxSide3, int nTexType, int nMeshType)
 {
 	CMeshField *pMeshField = NULL;
 
@@ -126,6 +130,8 @@ CMeshField * CMeshField::Create(D3DXVECTOR3 pos,int nMeshX, int nMeshZ, float fM
 			pMeshField->SetMeshInfo(nMeshX, nMeshZ, fMeshXUV, fMeshYUV, fMeshDepth, fMeshWidth);
 			//メッシュの頂点の高さ
 			pMeshField->SetVtx(fVtx0, fVtxMeshX, fVtxMeshZ, fVtxMeshXMeshZ);
+			//メッシュの頂点の幅
+			pMeshField->SetVtxSide(fVtxSide0, fVtxSide1, fVtxSide2, fVtxSide3);
 			//オブジェクトクラスの生成
 			pMeshField->Init();
 			//テクスチャの設定
@@ -142,6 +148,10 @@ CMeshField * CMeshField::Create(D3DXVECTOR3 pos,int nMeshX, int nMeshZ, float fM
 			pMeshField->m_fVtxHeight_No1 = fVtxMeshX;
 			pMeshField->m_fVtxHeight_No2 = fVtxMeshZ;
 			pMeshField->m_fVtxHeight_No3 = fVtxMeshXMeshZ;
+			pMeshField->m_fVtxSide_No0 = fVtxSide0;
+			pMeshField->m_fVtxSide_No1 = fVtxSide1;
+			pMeshField->m_fVtxSide_No2 = fVtxSide2;
+			pMeshField->m_fVtxSide_No3 = fVtxSide3;
 			pMeshField->m_nTexType = nTexType;
 		}
 	}

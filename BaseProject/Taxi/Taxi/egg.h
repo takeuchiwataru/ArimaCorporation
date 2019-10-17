@@ -20,6 +20,7 @@
 // 前方宣言
 //*****************************************************************************
 class CObjBillboad;
+class CPlayer;
 
 //=====================
 //  CModel3Dの派生クラス
@@ -45,6 +46,8 @@ public:
 	void Draw(void);
 	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType);
 	bool CollisionEgg(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
+	float SetHeight(void);
+	void Jump(void);
 
 private:
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
@@ -59,5 +62,8 @@ private:
 	D3DXVECTOR3			m_rot;							// 回転
 	CShadow				*m_pShadow;						// 影のポインタ
 	CObjBillboad *		m_pObjBill;						// オブジェクトビルボードのポインタ
+	float				m_fHeight;
+	D3DXVECTOR3			m_move;
+	bool				m_bJump;				// ジャンプしているかどうか
 };
 #endif

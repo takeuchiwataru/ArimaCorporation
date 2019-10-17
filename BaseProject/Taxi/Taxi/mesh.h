@@ -37,6 +37,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	void SetMeshType(int nType) { m_nType = nType; }
 	D3DXVECTOR3 GetPosition(void) { return m_pos; }
 	void SetVtx(float fVtx0, float fVtxMeshX, float fVtxMeshZ, float fVtxMeshXMeshZ) { m_fVtx0 = fVtx0; m_fVtxMeshX = fVtxMeshX; m_fVtxMeshZ = fVtxMeshZ; m_fVtxMeshXMeshZ = fVtxMeshXMeshZ; }
+	void SetVtxSide(float fVtxSide0, float fVtxSide1, float fVtxSide2, float fVtxSide3) { m_fVtxSide0 = fVtxSide0; m_fVtxSide1 = fVtxSide1; m_fVtxSide2 = fVtxSide2; m_fVtxSide3 = fVtxSide3; }
 	void Nor(void);
 	bool GetHeight(D3DXVECTOR3 &pos);
 	float GetHeightMesh(D3DXVECTOR3 pos);
@@ -64,5 +65,10 @@ private://ŒÂl‚Å‚Ì‚İg‚¤
 	float					m_fVtxMeshX;						// pVtx[MeshX + 1]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
 	float					m_fVtxMeshZ;						// pVtx[MeshZ + 1]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
 	float					m_fVtxMeshXMeshZ;					// pVtx[MeshXZ + 1]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
+	float					m_fVtxSide0;						// pVtx[0]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
+	float					m_fVtxSide1;						// pVtx[0]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
+	float					m_fVtxSide2;						// pVtx[0]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
+	float					m_fVtxSide3;						// pVtx[0]”Ô–Ú‚Ì‚‚³‚ğ•Ï‚¦‚é
+
 };
 #endif

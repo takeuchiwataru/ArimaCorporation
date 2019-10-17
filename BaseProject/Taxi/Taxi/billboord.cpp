@@ -11,7 +11,6 @@
 #include "scene3D.h"
 #include "game.h"
 #include "player.h"
-#include "logo.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -73,14 +72,6 @@ void CBillBoord::Update(void)
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CScene3D::Update();
-
-	if (m_State == BILLBOORD_NONE)
-	{
-		//何もしていない状態
-		BindTexture(m_pTexture[0]);
-		//表示の状態を渡す
-		CLogo::SetLogoState(0,5);
-	}
 }
 //=============================================================================
 // 描画処理

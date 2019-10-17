@@ -21,6 +21,7 @@
 #define MAX_LIFE	(15)	//ライフ
 #define MAX_TIRE	(4)		//タイヤの最大数
 #define MAX_EGG		(3)		//卵の最大数
+#define MAX_FRAME	(60)
 
 //=============================================================================
 // 前方宣言
@@ -31,6 +32,7 @@ class CLoadEffect;
 class CCombo;
 class CSound;
 class CFeed;
+class CEgg;
 
 //=============================================================================
 // プレイヤークラス
@@ -104,7 +106,6 @@ public:
 	STATE GetState(void) { return m_state; };
 
 	void CollisitionWall(void);
-	void LoadText(void);
 
 	void SetControl(bool bControl) { m_bControl = bControl; };
 	bool GetControl(void) { return m_bControl; };
@@ -139,7 +140,7 @@ private:
 	void EggAppear(CFeed *pFeed);
 	void ChaseEgg(void);
 
-	static CModel *		m_pModel;		//パーツモデルのポインタ
+	static CModel *		m_pModel;			//パーツモデルのポインタ
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
@@ -153,6 +154,7 @@ private:
 	D3DXVECTOR3					  m_OldPos;				// 前回の座標
 	D3DXVECTOR3					  m_OldDiffuse;			// 前回の差分
 	D3DXVECTOR3					  m_rot;				// 向き
+	D3DXVECTOR3					  m_OldEggRot[MAX_FRAME];	// 前回の位置
 	D3DXVECTOR3					  m_vtxMaxModel;		// モデルの頂点最大値
 	D3DXVECTOR3					  m_vtxMinModel;		// モデルの頂点最小値
 	D3DXMATRIX					  m_mtxWorld;			// ワールドマトリックス
@@ -162,6 +164,7 @@ private:
 	STATE_HANDLE				  m_StateHandle;		// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;			// プレイヤーの情報
 	CLoadTextPlayer *			  m_pText;				// プレイヤーの情報読み込み
+	CEgg						  *m_pEgg[MAX_EGG];	//卵のポインタ
 	bool						  m_bJump;				//  ジャンプフラグ
 	bool						  m_bControl;			// コントローラーの使用状態
 	int							  m_nCountJumpTime;		// ジャンプ状態の時間をカウントする
@@ -177,5 +180,8 @@ private:
 	bool						  m_bDirive;			//前進、後退の操作フラグ
 	int							  m_nCntFlag;
 	int							  m_nNumEgg;
+	int							  m_nCntFrame;			// 卵のついてくる処理に使う
+	bool						  m_abJump[MAX_FRAME];
+	bool						  m_bJumpSave;
 };
 #endif

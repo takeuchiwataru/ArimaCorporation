@@ -11,12 +11,10 @@
 #include "input.h"
 #include "fade.h"
 #include "sound.h"
-#include "texture.h"
 #include "meshfield.h"
 #include "gamecamera.h"
 #include "player.h"
 #include "loadText.h"
-#include "logo.h"
 #include "object.h"
 #include "loadText.h"
 #include "time.h"
@@ -155,34 +153,6 @@ HRESULT CTutorial::Init()
 
 	//プレイヤーの生成
 	m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, -300.0f));
-	m_pPlayer->LoadText();
-
-	//UIの生成
-	CLogo::Create(FLAM_POS, FLAM_SIZE, CTexture::TYPE_TUTORIAL_FLAM, 0, CLogo::TYPE_LOGO);	//フレーム
-	CLogo::Create(LOGO_POS, LOGO_SIZE, CTexture::TYPE_TUTORIAL_LOGO, 0, CLogo::TYPE_LOGO);	//ロゴ
-	CLogo::Create(ICON_POS, ICON_SIZE, CTexture::TYPE_TUTORIAL_ICON, 0, CLogo::TYPE_LOGO);	//アイコン
-	CLogo::Create(GEAR_POS, GEAR_SIZE, CTexture::TYPE_GEARCHANGE, 0, CLogo::TYPE_LOGO);		//ギア切替
-
-	//キーの入力状態の確認
-	if (m_bInput)
-	{//キーボード
-		m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_KEYBOAD, 0, CLogo::TYPE_LOGO);	//スキップボタン
-		m_pSpace = CLogo::Create(SPACE_POS, SPACE_SIZE, CTexture::TYPE_TUTORIAL_ENTER_KEYBOAD, 0, CLogo::TYPE_LOGO);	//スペースボタン
-	}
-	else
-	{//ゲームパッド
-		m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_PAD, 0, CLogo::TYPE_LOGO);	//スキップボタン
-		m_pSpace = CLogo::Create(X_POS, X_SIZE, CTexture::TYPE_TUTORIAL_ENTER_PAD, 0, CLogo::TYPE_LOGO);	//スペースボタン
-	}
-
-	CLogo::Create(D3DXVECTOR3(1200.0f, 310.0f, 0.0f), D3DXVECTOR2(60.0f, 30.0f), CTexture::TYPE_BOARDING, 0, CLogo::TYPE_LOGO);		// 空車 or 乗車
-
-	m_pScoreUI[0] = CLogo::Create(D3DXVECTOR3(1080.0f, 95.0f, 0.0f), D3DXVECTOR2(160.0f, 25.0f), CTexture::TYPE_FREAME, 0, CLogo::TYPE_LOGO);			// トータルスコアの枠
-	m_pScoreUI[1] = CLogo::Create(D3DXVECTOR3(1080.0f, 155.0f, 0.0f), D3DXVECTOR2(150.0f, 25.0f), CTexture::TYPE_FREAME, 0, CLogo::TYPE_LOGO);			// スコアの枠
-	m_pScoreUI[2] = CLogo::Create(D3DXVECTOR3(1080.0f, 60.0f, 0.0f), D3DXVECTOR2(180.0f, 15.0f), CTexture::TYPE_TOTALSCORELOGO, 0, CLogo::TYPE_LOGO);	// トータルスコア
-	m_pScoreUI[3] = CLogo::Create(D3DXVECTOR3(1080.0f, 120.0f, 0.0f), D3DXVECTOR2(160.0f, 15.0f), CTexture::TYPE_SCORELOGO, 0, CLogo::TYPE_LOGO);		// スコア
-	m_pScoreUI[4] = CLogo::Create(D3DXVECTOR3(950.0f, 95.0f, 0.0f), D3DXVECTOR2(13.0f, 13.0f), CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO);			// \マーク表示(トータルスコア)
-	m_pScoreUI[5] = CLogo::Create(D3DXVECTOR3(958.0f, 155.0f, 0.0f), D3DXVECTOR2(13.0f, 13.0f), CTexture::TYPE_MONEY_TEN, 0, CLogo::TYPE_LOGO);		// \マーク表示(スコア)
 
 	//カメラの生成
 	if (m_pCamera == NULL)
@@ -257,16 +227,6 @@ void CTutorial::Uninit(void)
 		m_pCamera = NULL;
 	}
 
-	// UIの破棄
-	for (int nCnt = 0; nCnt < MAX_SCORE_UI_TUTORIAL; nCnt++)
-	{
-		if (m_pScoreUI[nCnt] != NULL)
-		{
-			m_pScoreUI[nCnt]->Uninit();
-			m_pScoreUI[nCnt] = NULL;
-		}
-	}
-
 	UninitBottun();
 	UninitControlBottun();
 
@@ -290,37 +250,13 @@ void CTutorial::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CXInput *pCInputJoypad = CManager::GetXInput();
+	CInputXPad *pXpad = CManager::GetXInput();
 
-	if (pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4) == true ||
+	if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, 0) == true ||
 		pCInputKeyBoard->GetKeyboardTrigger(DIK_SPACE) == true)
 	{//タイトルからゲームへ
 	 //フェードが始まったら
 		UpdateFade();
-	}
-
-	//状態ごとの更新処理
-	switch (m_type)
-	{
-	case TYPE_START:	//初期状態
-	case TYPE_START1:
-	case TYPE_START2:
-	case TYPE_START3: UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_ACCEL:  UpdateAccel(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_BRAK:	  UpdateBrek(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_LIGHT_HANDLE: UpdateRightHandle(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_LEFT_HAMDLE:	UpdateLeftHandle(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_MIDDLE1:	UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_BACK:		UpdateBack(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_FRONT:	UpdateFront(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_MIDDLE2:	UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_MIDDLE3:
-	case TYPE_MIDDLE4:
-	case TYPE_MIDDLE5:  UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_END:		UpdateDown(pCInputKeyBoard, pCInputJoypad);		break;
-	case TYPE_END1:
-	case TYPE_END2:     UpdateStart(pCInputKeyBoard, pCInputJoypad); break;
-	case TYPE_END3:     UpdateEnd();  break;
 	}
 
 	//カメラの更新
@@ -334,482 +270,6 @@ void CTutorial::Draw(void)
 {
 	//カメラの設定
 	if (m_pCamera != NULL) { m_pCamera->SetCamera(); }
-}
-
-//=============================================================================
-// 初期状態の更新処理
-//=============================================================================
-void CTutorial::UpdateStart(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//時間の可算
-	m_nCountTime++;
-
-	//入力情報
-	if (pInputKeyboad->GetKeyboardTrigger(DIK_RETURN) == true)
-	{//次の画像に変更
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-		//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//キーボード表示に切り替える
-		if (m_bInput == false) { UninitBottun(); }
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_12))
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-							//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//ゲームパッド表示に切り替える
-		if (m_bInput == true) { UninitBottun(); }
-		m_bInput = false;
-	}
-	else if (m_nCountTime % TIME == 0)
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-	}
-
-	//ボタンの生成
-	CreateBottun();
-}
-
-//=============================================================================
-// アクセル状態の更新処理
-//=============================================================================
-void CTutorial::UpdateAccel(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_L_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_R1, 0, CLogo::TYPE_LOGO);
-		}
-	}
-
-	if (pInputKeyboad->GetKeyboardPress(DIK_L) == true)
-	{//次の画像に変更
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % ACCLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == false)
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_15) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_9))
-	{
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % ACCLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == true)
-		{ 
-			UninitBottun(); 
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-
-	//スペースキーの破棄
-	if (m_pSpace != NULL)
-	{
-		m_pSpace->Uninit();
-		m_pSpace = NULL;
-	}
-}
-
-//=============================================================================
-// ブレーキ状態の更新処理
-//=============================================================================
-void CTutorial::UpdateBrek(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_K_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_L1, 0, CLogo::TYPE_LOGO);
-		}
-	}
-
-	if (pInputKeyboad->GetKeyboardPress(DIK_K) == true)
-	{//次の画像に変更
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % BREAK_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_14) || pInputJoypad->GetPress(CXInput::XIJS_BUTTON_8))
-	{
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % BREAK_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == true) 
-		{ 
-			UninitBottun();
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-}
-
-//=============================================================================
-// 右ハンドル状態の更新処理
-//=============================================================================
-void CTutorial::UpdateRightHandle(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_D_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(STICK_POS, STICK_SIZE, CTexture::TYPE_TUTORIAL_RIGHT, 0, CLogo::TYPE_LOGO);
-			m_nAinNum = 0;
-			m_pBotunn->SetUVWidth(0.5f, m_nAinNum);
-
-		}
-	}
-
-	//アニメーションの更新処理
-	UpdateAnim();
-
-	if (pInputKeyboad->GetKeyboardPress(DIK_D) == true)
-	{//次の画像に変更
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % HANDLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_19))
-	{
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % HANDLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-			m_nCountTimeKey = 0;
-		}
-
-		//ゲームパッド表示
-		if (m_bInput == true) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-}
-
-//=============================================================================
-// 左ハンドル状態の更新処理
-//=============================================================================
-void CTutorial::UpdateLeftHandle(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_A_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(STICK_POS, STICK_SIZE, CTexture::TYPE_TUTORIAL_LEFT, 0, CLogo::TYPE_LOGO);
-			m_nAinNum = 0;
-			m_pBotunn->SetUVWidth(0.5f, 0);
-		}
-	}
-
-	//アニメーションの更新処理
-	UpdateAnim();
-
-	if (pInputKeyboad->GetKeyboardPress(DIK_A) == true )
-	{//次の画像に変更
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % HANDLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_18))
-	{
-		m_nCountTime++;
-
-		//一定時間押したら
-		if (m_nCountTime % HANDLE_TIME == 0)
-		{
-			m_nCountTime = 0;
-			ChangeLine();
-			UninitControlBottun();
-		}
-
-		//ゲームパッド表示
-		if (m_bInput == true)
-		{ 
-			UninitBottun(); 
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-}
-
-//=============================================================================
-// 後退状態の更新処理
-//=============================================================================
-void CTutorial::UpdateBack(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//プレイヤーの前進後退の操作が出来るようにする
-	m_pPlayer->SetDrive(true);
-
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_S_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_A_PAD, 0, CLogo::TYPE_LOGO);
-		}
-	}
-
-	if (pInputKeyboad->GetKeyboardTrigger(DIK_S) == true)
-	{//次の画像に変更
-		ChangeLine();
-		UninitControlBottun();
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_10))
-	{
-		ChangeLine();
-		UninitControlBottun();
-
-		//ゲームパッド表示
-		if (m_bInput == true) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-
-	//スペースキーの破棄
-	if (m_pSpace != NULL)
-	{
-		m_pSpace->Uninit();
-		m_pSpace = NULL;
-	}
-}
-
-//=============================================================================
-// 前進状態の更新処理
-//=============================================================================
-void CTutorial::UpdateFront(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//ボタンの生成
-	if (m_pBotunn == NULL)
-	{
-		if (m_bInput)
-		{//キーボード
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_W_KEY, 0, CLogo::TYPE_LOGO);
-		}
-		else
-		{//ゲームパッド
-			m_pBotunn = CLogo::Create(CONTROL_POS, CONTROL_SIZE, CTexture::TYPE_TUTORIAL_B_PAD, 0, CLogo::TYPE_LOGO);
-		}
-	}
-
-	if (pInputKeyboad->GetKeyboardPress(DIK_W) == true)
-	{//次の画像に変更
-		ChangeLine();
-		UninitControlBottun();
-
-		//キーボード表示
-		if (m_bInput == false) 
-		{ 
-			UninitBottun(); 
-			CreateSkip(true);
-		}
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_11))
-	{
-		ChangeLine();
-		UninitControlBottun();
-
-		//キーボード表示
-		if (m_bInput == true) 
-		{ 
-			UninitBottun();
-			CreateSkip(false);
-		}
-		m_bInput = false;
-	}
-}
-
-//=============================================================================
-// 終了状態の更新処理
-//=============================================================================
-void CTutorial::UpdateEnd(void)
-{
-	m_nCountTime++;		//時間の加算
-
-	//一定時間経過後フェード
-	if (m_nCountTime % END_TIME == 0) { UpdateFade(); }
-}
-
-
-//=============================================================================
-// 降車したら
-//=============================================================================
-void CTutorial::UpdateDown(CInputKeyBoard * pInputKeyboad, CXInput * pInputJoypad)
-{
-	//イメージ画像の破棄
-	if (m_pImage != NULL)
-	{
-		m_pImage->Uninit();
-		m_pImage = NULL;
-	}
-
-	//時間の可算
-	m_nCountTime++;
-
-	//入力情報
-	if (pInputKeyboad->GetKeyboardTrigger(DIK_RETURN) == true)
-	{//次の画像に変更
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-							//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//キーボード表示
-		m_bInput = true;
-	}
-	else if (pInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_12))
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-
-							//サウンドの情報
-		CSound *pSound = CManager::GetSound();
-
-		//ポーズの選択の決定音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
-
-		//ゲームパッド表示
-		m_bInput = false;
-	}
-	else if (m_nCountTime % TIME == 0)
-	{
-		m_nCountTime = 0;	//カウンターの初期化
-		ChangeLine();		//ラインの設定
-	}
-
-	//ボタンの生成
-	CreateBottun();
 }
 
 //=============================================================================
@@ -836,19 +296,7 @@ void CTutorial::UpdateFade(void)
 //=============================================================================
 void CTutorial::UninitBottun(void)
 {
-	//スキップキーの破棄
-	if (m_pSkip != NULL)
-	{
-		m_pSkip->Uninit();
-		m_pSkip = NULL;
-	}
-	
-	//エンターキーの破棄
-	if (m_pSpace != NULL)
-	{
-		m_pSpace->Uninit();
-		m_pSpace = NULL;
-	}
+
 }
 
 //=============================================================================
@@ -856,12 +304,7 @@ void CTutorial::UninitBottun(void)
 //=============================================================================
 void CTutorial::UninitControlBottun(void)
 {
-	//ボタンの破棄
-	if (m_pBotunn != NULL)
-	{
-		m_pBotunn->Uninit();
-		m_pBotunn = NULL;
-	}
+
 }
 
 //=============================================================================
@@ -869,16 +312,7 @@ void CTutorial::UninitControlBottun(void)
 //=============================================================================
 void CTutorial::CreateBottun(void)
 {
-		if (m_bInput)
-		{//キーボード
-			if (m_pSpace == NULL) { m_pSpace = CLogo::Create(SPACE_POS, SPACE_SIZE, CTexture::TYPE_TUTORIAL_ENTER_KEYBOAD, 0, CLogo::TYPE_LOGO); }	//スペースボタン
-			if(m_pSkip == NULL){ m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_KEYBOAD, 0, CLogo::TYPE_LOGO); }			//スキップキー
-		}
-		else
-		{//ゲームパッド
-			if (m_pSpace == NULL) { m_pSpace = CLogo::Create(X_POS, X_SIZE, CTexture::TYPE_TUTORIAL_ENTER_PAD, 0, CLogo::TYPE_LOGO); }	//スペースボタン
-			if(m_pSkip == NULL){ m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_PAD, 0, CLogo::TYPE_LOGO); }	//スキップキー
-		}
+
 }
 
 //=============================================================================
@@ -886,17 +320,7 @@ void CTutorial::CreateBottun(void)
 //=============================================================================
 void CTutorial::CreateSkip(bool bInput)
 {
-	if (m_pSkip == NULL)
-	{
-		if (bInput)
-		{
-			m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_KEYBOAD, 0, CLogo::TYPE_LOGO);		//スキップキー
-		}
-		else
-		{
-			m_pSkip = CLogo::Create(SKIP_POS, SKIP_SIZE, CTexture::TYPE_TUTORIAL_SKIP_PAD, 0, CLogo::TYPE_LOGO);	//スキップキー
-		}
-	}
+
 }
 
 //=============================================================================
@@ -904,19 +328,7 @@ void CTutorial::CreateSkip(bool bInput)
 //=============================================================================
 void CTutorial::UpdateAnim(void)
 {
-	if (!m_bInput)
-	{
-		m_nCountTimeKey++;
-
-		if (((m_nCountTimeKey % KEY_TIME) == 0) && (m_pBotunn != NULL))
-		{
-			m_nAinNum++;
-
-			if (m_nAinNum % 2 == 0) { m_nAinNum = 0; }
-			m_pBotunn->SetUVWidth(0.5f, m_nAinNum);
-		}
-
-	}
+	
 }
 
 //=============================================================================
@@ -1171,9 +583,9 @@ void CTutorial::MeshFildCreate(void)
 					}
 					else if (memcmp(pStrcur, "MESHFIELD_END", strlen("MESHFIELD_END")) == 0)
 					{
-						CMeshField::Create(Pos, nWidthDivide, nDepthDivide, fWidthTexUV, fHightTexUV,
+						/*CMeshField::Create(Pos, nWidthDivide, nDepthDivide, fWidthTexUV, fHightTexUV,
 										  fWidrhLength, fDepthLength, fVtxHeight_No0, fVtxHeight_No1, fVtxHeight_No2, fVtxHeight_No3, nTexType, 0);
-						break;
+						*/break;
 					}
 				}
 			}

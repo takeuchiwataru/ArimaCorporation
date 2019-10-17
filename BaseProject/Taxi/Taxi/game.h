@@ -84,6 +84,7 @@ public:
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
 	static CGameCamera * GetGameCamera(void) { return m_pGameCamera; }			//ゲームカメラの取得
 	static int GetGameCounter(void) { return m_nGameCounter; }					//ゲームのカウンター
+	static void SetGameModeNext(GAMEMODE gameModeNext) { m_gameModeNext = gameModeNext; };
 	void SetGameMode(GAMEMODE gameMode);
 	void SetStage(void);
 
@@ -100,6 +101,13 @@ public:
 
 	//ウォークスルー用
 	static bool GetDrawUI(void) { return m_bDrawUI; };
+
+	static void SetCharSelectNum(int *nCharSelectNum)
+	{
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			m_nCharSelectNum[nCntPlayer] = nCharSelectNum[nCntPlayer];
+	}
+	static int *GetCharSelectNum(void) { return m_nCharSelectNum; }
 
 private:
 	//テキストの値を管理する場所
@@ -127,6 +135,10 @@ private:
 		float				m_fVtxHeight_No1;				// 頂点番号1を操作
 		float				m_fVtxHeight_No2;				// 頂点番号2を操作
 		float				m_fVtxHeight_No3;				// 頂点番号3を操作
+		float				m_fVtxSide_No0;					// 頂点番号0を操作
+		float				m_fVtxSide_No1;					// 頂点番号1を操作
+		float				m_fVtxSide_No2;					// 頂点番号2を操作
+		float				m_fVtxSide_No3;					// 頂点番号3を操作
 		D3DXVECTOR3			m_pos;							// 位置
 	}Mesh;
 
@@ -154,6 +166,7 @@ private:
 	}Npc;
 
 	static GAMEMODE m_gameMode;					//ゲームモード
+	static GAMEMODE m_gameModeNext;				//次のゲームモード
 
 	static CGameCharSelect *m_pGameCharSelect;	// ゲーム（キャラ選択）
 
@@ -176,6 +189,7 @@ private:
 	Mesh m_Mesh[MAX_MAP_MESH];					//設置するメッシュフィールドの構造体
 	Wall m_aWall[MAX_MAP_WALL];					//設置する壁の構造体
 
+	static int m_nCharSelectNum[MAX_PLAYER];	// キャラ選択番号
 
 	//ウォークスルー用
 	static bool m_bDrawUI;

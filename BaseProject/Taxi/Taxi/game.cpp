@@ -14,7 +14,6 @@
 #include "input.h"
 #include "fade.h"
 #include "pause.h"
-#include "logo.h"
 #include "sound.h"
 #include "billboord.h"
 #include "meshfield.h"
@@ -23,7 +22,6 @@
 #include "wall.h"
 #include "shadow.h"
 #include "loadText.h"
-#include "texture.h"
 #include "gamecamera.h"
 #include "select.h"
 #include "feed.h"
@@ -62,17 +60,18 @@ CPlayer *CGame::m_pPlayer = NULL;
 CPause *CGame::m_pPause = NULL;
 CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
 CGameCamera * CGame::m_pGameCamera = NULL;
-
 bool CGame::m_bHelp = false;
 bool CGame::m_bPause = false;
 CGame::GAMEMODE CGame::m_gameMode = CGame::GAMEMODE_NONE;
+CGame::GAMEMODE CGame::m_gameModeNext = CGame::GAMEMODE_NONE; 
 CGame::GAMESTATE CGame::m_gameState = CGame::GAMESTATE_NONE;
-int	CGame::m_nCntSetStage = 0;								// ステージセットカウンタ
-
+int	CGame::m_nCntSetStage = 0;
 int CGame::m_nGameCounter = 0;
 
 //ウォークスルー用
 bool CGame::m_bDrawUI = false;
+
+int CGame::m_nCharSelectNum[MAX_PLAYER] = { 0 };	// キャラ選択番号
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -80,6 +79,7 @@ bool CGame::m_bDrawUI = false;
 CGame::CGame()
 {
 	m_gameMode = GAMEMODE_NONE;
+	m_gameModeNext = GAMEMODE_NONE;
 	m_gameState = GAMESTATE_NONE;
 	m_nCounterGameState = 0;
 	m_NowGameState = GAMESTATE_NONE;
@@ -97,34 +97,26 @@ CGame::~CGame() {}
 //=============================================================================
 HRESULT CGame::Init()
 {
-	//===================================
-	//		 Loadの読み込み場所
-	//===================================
-	//フェードのテクスチャの読み込み
-	CFade::Load();
+	//====================================================================
+	//					テクスチャモデルの読み込み場所
+	//====================================================================
 
-	//メッシュフィールドのテクスチャの読み込み
-	CMeshField::Load();
+	CFade::Load();				//フェードのテクスチャの読み込み
+	CMeshField::Load();			//メッシュフィールドのテクスチャの読み込み
+	CBillBoord::Load();			//ビルボードテクスチャの読み込み
+	CWall::Load();				//壁のテクスチャの読み込み
+	CShadow::Load();			//影のテクスチャ読み込み
+	CObject::Load();			//オブジェクトのテクスチャの読み込み
+	CFeed::Load();				//食べ物のテクスチャの読み込み
+	CEgg::Load();				//卵のテクスチャの読み込み
+	m_pPause->Load();			//ポーズのテクスチャの読み込み
 
-	//ビルボードテクスチャの読み込み
-	CBillBoord::Load();
+	//====================================================================
+	//						 必要な変数の初期化
+	//====================================================================
 
-	//壁のテクスチャの読み込み
-	CWall::Load();
-
-	//影のテクスチャ読み込み
-	CShadow::Load();
-
-	//オブジェクトのテクスチャの読み込み
-	CObject::Load();
-
-	CFeed::Load();
-	CEgg::Load();
-
-	//===================================
-	//		変数の初期化
-	//===================================
 	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
+	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
 	m_bPause = false;					//ポーズを初期化
@@ -149,26 +141,15 @@ void CGame::Uninit(void)
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
-	//メッシュフィールドテクスチャの破棄
-	CMeshField::UnLoad();
 
-	//フェードのテクスチャの破棄
-	CFade::UnLoad();
-
-	//ビルボードテクスチャの破棄
-	CBillBoord::UnLoad();
-
-	//オブジェクトのテクスチャの破棄
-	CObject::UnLoad();
-
-	//壁のテクスチャの破棄
-	CWall::UnLoad();
-
-	//影のテクスチャの破棄
-	CShadow::UnLoad();
-
-	CFeed::UnLoad();
-	CEgg::UnLoad();
+	CMeshField::UnLoad();			//メッシュフィールドテクスチャの破棄
+	CFade::UnLoad();				//フェードのテクスチャの破棄
+	CBillBoord::UnLoad();			//ビルボードテクスチャの破棄
+	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
+	CWall::UnLoad();				//壁のテクスチャの破
+	CShadow::UnLoad();				//影のテクスチャの破棄
+	CFeed::UnLoad();				//餌のテクスチャの破棄
+	CEgg::UnLoad();					//卵のテクスチャの破棄
 
 	if (m_pGameCharSelect != NULL)
 	{// NULL以外
@@ -205,18 +186,24 @@ void CGame::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CXInput *pCInputJoypad = CManager::GetXInput();
+	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
+
+	if (m_gameMode != m_gameModeNext)
+	{
+		SetGameMode(m_gameModeNext);
+		return;
+	}
 
 	switch (m_gameMode)
 	{
 	case GAMEMODE_CHARSELECT:
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 		//if (m_nGameCounter == 10)
-			SetGameMode(GAMEMODE_PLAY);
+			CFade::Create(GAMEMODE_PLAY);
 		break;
 	case GAMEMODE_COURSESELECT:
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
-			SetGameMode(GAMEMODE_PLAY);
+			CFade::Create(GAMEMODE_PLAY);
 		break;
 	case GAMEMODE_PLAY:
 		//サウンドの情報
@@ -228,11 +215,6 @@ void CGame::Update(void)
 
 			//ポーズの選択の決定音
 			CFade::Create(CManager::MODE_RESULT);
-			//if (m_nGameCounter == 10)
-			{
-				//SetGameMode(GAMEMODE_CHARSELECT);
-				return;
-			}
 		}
 
 		if (m_pPause == false)
@@ -268,10 +250,9 @@ void CGame::Update(void)
 		}
 
 		//ポーズの処理
-		/*if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true || pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4))
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
 		{//Pキーが押されたら
-			int nType = 0;
-			if (pCInputJoypad->GetTrigger(CXInput::XIJS_BUTTON_4)) { nType = 1; }
+
 			m_bPause = m_bPause ? false : true;
 
 			switch (m_bPause)
@@ -284,30 +265,26 @@ void CGame::Update(void)
 
 					//ポーズの生成
 					m_pPause = CPause::Create();
-					m_pPause->SetTexType(nType);
 
 					//ポーズとフェードだけ回す
-					CScene::SetUpdatePri(7);
+					CScene::SetUpdatePri(7);	
 				}
 				break;
 			case false:
 				if (m_pPause != NULL)
 				{
-					if (CPause::GetbPause() == false)
-					{
-						//ポーズを閉じる音
-						pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+					//ポーズを閉じる音
+					pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
 
-						//ポーズを削除
-						m_pPause->Uninit();
-						m_pPause = NULL;
+					//ポーズを削除
+					m_pPause->Uninit();
+					m_pPause = NULL;
 
-						//アップデート順番をすべて回す
-						CScene::SetUpdatePri(0);
-					}
+					//アップデート順番をすべて回す
+					CScene::SetUpdatePri(0);
 				}
 			}
-		}*/
+		}
 		break;
 	}
 
@@ -388,6 +365,9 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 			m_pGameCharSelect = CGameCharSelect::Create();
 		}
 
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			m_nCharSelectNum[nCntPlayer] = nCntPlayer;			// キャラ選択番号
+
 		break;
 	case GAMEMODE_COURSESELECT:		// コース選択
 
@@ -447,7 +427,9 @@ void CGame::SetStage(void)
 			//フィールドの生成
 			CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
 				m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
-				m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3, m_Mesh[nCount].m_nTexType, 0);
+				m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
+				m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
+				m_Mesh[nCount].m_nTexType, 0);
 		}
 		for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
 		{
@@ -799,6 +781,46 @@ void CGame::MeshTextLoad(int nLoadNumber)
 						strcpy(aStr, pStrcur);
 						//文字列抜き出し
 						m_Mesh[nCntObject].m_fVtxHeight_No3 = (float)atoi(pStrcur);
+					}
+					//１頂点の高さ
+					if (memcmp(pStrcur, "VTX0_SIDE = ", strlen("VTX0_SIDE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("VTX0_SIDE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_Mesh[nCntObject].m_fVtxSide_No0 = (float)atoi(pStrcur);
+					}
+					//２頂点の高さ
+					if (memcmp(pStrcur, "VTX1_SIDE = ", strlen("VTX1_SIDE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("VTX1_SIDE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_Mesh[nCntObject].m_fVtxSide_No1 = (float)atoi(pStrcur);
+					}
+					//３頂点の高さ
+					if (memcmp(pStrcur, "VTX2_SIDE = ", strlen("VTX2_SIDE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("VTX2_SIDE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_Mesh[nCntObject].m_fVtxSide_No2 = (float)atoi(pStrcur);
+					}
+					//４頂点の高さ
+					if (memcmp(pStrcur, "VTX3_SIDE = ", strlen("VTX3_SIDE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("VTX3_SIDE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_Mesh[nCntObject].m_fVtxSide_No3 = (float)atoi(pStrcur);
 					}
 					//POSを読み込み
 					if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)

@@ -125,6 +125,25 @@ HRESULT CMesh::Init(void)
 					pVtx[0].pos.y = m_fVtxMeshXMeshZ;
 				}
 
+				//頂点を幅を変更
+				if (nCntMeshZ == 0 && nCntMeshX == 0)
+				{//左上
+					pVtx[0].pos.x += m_fVtxSide0;
+				}
+				else if (nCntMeshX > 0 && nCntMeshZ == 0 && nCntMeshX == m_nMeshX)
+				{//右上
+					pVtx[0].pos.x += m_fVtxSide1;
+				}
+				//頂点を変更
+				else if (nCntMeshZ == nCntMeshZ && nCntMeshX == 0)
+				{//左下
+					pVtx[0].pos.x += m_fVtxSide2;
+				}
+				else if (nCntMeshX > 0 && nCntMeshZ > 0 && nCntMeshZ == nCntMeshZ && nCntMeshX == m_nMeshX)
+				{//右下
+					pVtx[0].pos.x += m_fVtxSide3;
+				}
+
 				pVtx += 1;
 			}
 		}
@@ -166,10 +185,7 @@ HRESULT CMesh::Init(void)
 	m_pVtxBuff->Unlock();
 
 	//メッシュフィールドのみ法線の計算をする
-	if(m_nType != 1)
-	{//法線の計算
-		CMesh::Nor();
-	}
+	CMesh::Nor();
 
 	WORD *pIdx;		// インデックスデータへのポインタ
 
@@ -272,10 +288,7 @@ void CMesh::Update(void)
 
 	if (pCInputKeyBoard->GetKeyboardPress(DIK_N) == true)
 	{//矢印の上
-		if (m_nType != 1)
-		{//法線の計算
-			CMesh::Nor();
-		}
+		CMesh::Nor();
 	}
 
 	//CDebugProc::Print("m_fVtx0 : %.1f\n", m_fVtx0);

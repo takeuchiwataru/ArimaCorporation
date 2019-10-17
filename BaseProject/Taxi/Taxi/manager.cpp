@@ -15,7 +15,6 @@
 #include "light.h"
 #include "debugproc.h"
 #include "result.h"
-#include "texture.h"
 #include "tutorial.h"
 
 //*****************************************************************************
@@ -34,21 +33,20 @@ CSound *CManager::m_pSound = NULL;
 CInputKeyBoard *CManager::m_pInputKeyBoard = NULL;
 CInputMouse *CManager::m_pInputMouse = NULL;
 CInputJoypad *CManager::m_pJoyPad = NULL;
-CXInput *CManager::m_pXInput = NULL;
+CInputXPad *CManager::m_pXPad = NULL;
 //CCamera *CManager::m_pCamera = NULL;
 CLight *CManager::m_pLight = NULL;
 CDebugProc *CManager::m_pDebugProc = NULL;
 CGame *CManager::m_pGame = NULL;
 CTitle *CManager::m_pTitle = NULL;
 CResult *CManager::m_pResult = NULL;
-CTexture *CManager::m_pTexture = NULL;
 CRanking *CManager::m_pRanking = NULL;
 CSelect  *CManager::m_pSelect = NULL;
 CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -102,7 +100,18 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 	m_pJoyPad = CInputJoypad::Create(hInstance, hWnd);
 
 	// XInputクラスの生成
-	m_pXInput = CXInput::Create();
+	if (m_pXPad == NULL)
+	{
+		m_pXPad = new CInputXPad;
+
+		if (FAILED(m_pXPad->Init(hInstance, hWnd)))
+		{
+			m_pXPad->Uninit();			// 終了処理
+
+			delete m_pXPad;				// メモリ開放
+			m_pXPad = NULL;				// NULL
+		}
+	}
 
 	//NULLチェック
 	if (m_pSound == NULL)
@@ -156,19 +165,6 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 		if (m_pDebugProc != NULL)
 		{
 			m_pDebugProc->Init();
-		}
-	}
-
-	// テクスチャ読み込み
-	if (m_pTexture == NULL)
-	{
-		//デバックフォント
-		m_pTexture = new CTexture;
-
-		//NULLチェック
-		if (m_pTexture != NULL)
-		{
-			m_pTexture->Load();
 		}
 	}
 
@@ -239,15 +235,6 @@ void CManager::Uninit(void)
 	//全ての削除
 	CScene::ReleseAll();
 
-	if (m_pTexture != NULL)
-	{
-		//サウンドの終了処理
-		m_pTexture->Unload();
-		//メモリの解放
-		delete m_pTexture;
-		m_pTexture = NULL;
-	}
-
 	//Sound　NULLチェック
 	if (m_pSound != NULL)
 	{
@@ -298,11 +285,12 @@ void CManager::Uninit(void)
 		m_pJoyPad = NULL;
 	}
 
-	if (m_pXInput != NULL)
+	if (m_pXPad != NULL)
 	{// XInputの破棄
-		m_pXInput->Uninit();
-		delete m_pXInput;
-		m_pXInput = NULL;
+		m_pXPad->Uninit();			// 終了処理
+
+		delete m_pXPad;				// メモリ開放
+		m_pXPad = NULL;				// NULL
 	}
 
 	//カメラの終了処理
@@ -354,7 +342,8 @@ void CManager::Update(void)
 	m_pJoyPad->Update();
 
 	// XInputの更新処理
-	m_pXInput->Update();
+	if (m_pXPad != NULL)
+		m_pXPad->Update();
 
 	//ライトの更新処理
 	m_pLight->Update();
