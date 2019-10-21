@@ -46,7 +46,7 @@ CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
+CManager::MODE CManager::m_mode = CManager::MODE_GAME;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -402,58 +402,8 @@ void CManager::Update(void)
 //=============================================================================
 void CManager::Draw(void)
 {
-	LPDIRECT3DDEVICE9 pDevice;
-
 	// 描画処理
 	m_pRenderer->Draw();
-
-	CManager Manager;
-	pDevice = Manager.GetRenderer()->GetDevice();
-
-	//描画の開始
-	if (SUCCEEDED(pDevice->BeginScene()))
-	{
-		switch (m_mode)
-		{
-		case MODE_TITLE:	//タイトル
-			if (m_pTitle != NULL)
-			{
-				m_pTitle->Draw();
-			}
-			break;
-		case MODE_TUTORIAL:
-			if (m_pTutorial != NULL) { m_pTutorial->Draw(); }
-			break;
-
-		case MODE_GAME:		//ゲーム
-			if (m_pGame != NULL)
-			{
-				m_pGame->Draw();
-			}
-			break;
-
-		case MODE_RESULT:	//リザルト
-			if (m_pResult != NULL)
-			{
-				m_pResult->Draw();
-			}
-			break;
-		case MODE_RANKING:
-			if (m_pRanking != NULL)
-			{
-				m_pRanking->Draw();
-			}
-			break;
-		case MODE_SELECT:
-			if (m_pSelect != NULL)
-			{
-				m_pSelect->Draw();
-			}
-			break;
-		}
-		// 描画の終了
-		pDevice->EndScene();
-	}
 }
 //=============================================================================
 // モードの設定処理

@@ -84,12 +84,12 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CPlayer * Create(const D3DXVECTOR3 pos);
+	static CPlayer * Create(const D3DXVECTOR3 pos, int nPlayerNum = 0, int nControllerNum = 0);
 	static void LoadModel(void);
 	static void UnloadModel(void);
 
-	static D3DXVECTOR3 GetPos(void) { return m_pos; };
-	static void SetPos(D3DXVECTOR3 pos) { m_pos = pos; };
+	D3DXVECTOR3 GetPos(void) { return m_pos; };
+	void SetPos(D3DXVECTOR3 pos) { m_pos = pos; };
 
 	D3DXVECTOR3 GetOldPos(void) { return m_OldPos; };
 
@@ -139,6 +139,7 @@ private:
 	void PlaySoundObj(int nType, CSound * pSound);
 	void EggAppear(CFeed *pFeed);
 	void ChaseEgg(void);
+	void BulletEgg(void);
 
 	static CModel *		m_pModel;			//パーツモデルのポインタ
 	static int				m_nMaxModel;	//読み込むモデルの最大数
@@ -148,7 +149,7 @@ private:
 	static int	m_nMaxMotion;							// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;		// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;			// テクスチャ
-	static D3DXVECTOR3			  m_pos;				// 中心座標
+	D3DXVECTOR3				      m_pos;				// 中心座標
 	D3DXVECTOR3					  m_move;				// 移動
 	D3DXVECTOR3					  m_MoveMotion;			// モーションの移動量
 	D3DXVECTOR3					  m_OldPos;				// 前回の座標
@@ -171,7 +172,9 @@ private:
 	float						  m_fvtxMaxY;			// モデル頂点の最大値（Y）
 	float						  m_fMaxSpeed;			// スピードの最大値
 	float						  m_fMass;				// 質量
+	float						  m_fSpeed;				// 速さ
 	int							  m_nCountTime;			// 時間の加算
+	int							  m_nCountSpeed;		// 時間の加算
 	bool						  m_bCrcleCarIn;		// 車が範囲内に入っているかどうか
 	CLoadEffect *				  m_pLoadEffect;		// ロードエフェクトのポインタ変数
 	int							  m_nCntCombo;
@@ -183,5 +186,9 @@ private:
 	int							  m_nCntFrame;			// 卵のついてくる処理に使う
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
+	bool						  m_bSpeed;
+
+	int							  m_nPlayerNum;			// プレイヤー番号
+	int							  m_nControllerNum;		// コントローラー番号
 };
 #endif

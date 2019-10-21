@@ -46,6 +46,13 @@ HRESULT CCamera::Init(void)
 	m_fRotDest = 0;
 	m_fCameraAngle = 25.0f;						//角度
 
+	m_viewport.X		= 0;								// X開始位置
+	m_viewport.Y		= 0;								// Y開始位置
+	m_viewport.Width	= SCREEN_WIDTH;						// X開始位置からの大きさ
+	m_viewport.Height	= SCREEN_HEIGHT;					// Y開始位置からの大きさ
+	m_viewport.MinZ		= 0.0f;								// 最小
+	m_viewport.MaxZ		= 1.0f;								// 最大
+	
 	return S_OK;
 }
 //=============================================================================
@@ -65,6 +72,9 @@ void CCamera::SetCamera()
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
+	// ビューポート設定
+	pDevice->SetViewport(&m_viewport);
+
 	// プロジェクションマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxProjection);
 
@@ -73,7 +83,7 @@ void CCamera::SetCamera()
 	(
 		&m_mtxProjection,
 		D3DXToRadian(m_fCameraAngle),
-		(float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+		(float)m_viewport.Width / (float)m_viewport.Height,
 		10.0f,
 		30000
 	);
@@ -218,4 +228,17 @@ void CCamera::RemakeAngle(float * pAngle)
 	{
 		*pAngle -= D3DX_PI * 2.0f;
 	}
+}
+
+//=============================================================================
+// ビューポート処理									(public)	*** CCamera ***
+//=============================================================================
+void CCamera::SetViewPort(DWORD X, DWORD Y, DWORD Width, DWORD Height)
+{
+	m_viewport.X = X;		// 位置X
+	m_viewport.Y = Y;		// 位置Y
+	m_viewport.Width = Width;	// サイズX
+	m_viewport.Height = Height;	// サイズY
+	m_viewport.MinZ = 0.0f;		// 最小
+	m_viewport.MaxZ = 1.0f;		// 最大
 }

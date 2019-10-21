@@ -18,8 +18,10 @@
 // マクロ定義
 //*****************************************************************************
 #define MODEL_NAME_1	"data\\MODEL\\壊れるもの\\tree2.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_2	"data\\MODEL\\壊れるもの\\柵.x"			//読み込むテクスチャファイル
 
 #define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\leaf.png"		//読み込むテクスチャファイル
+#define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
@@ -183,8 +185,6 @@ void CObject::Draw(void)
 
 	//位置の初期化
 	D3DXVECTOR3 Modelpos = CModel3D::GetPosition();
-	//プレイヤーの位置情報
-	D3DXVECTOR3 PlayerPos = CGame::GetPlayer()->GetPos();
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 
@@ -251,6 +251,7 @@ HRESULT CObject::Load(void)
 
 	// Xファイルの読み込み
 	D3DXLoadMeshFromX(MODEL_NAME_1, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
+	D3DXLoadMeshFromX(MODEL_NAME_2, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
@@ -318,6 +319,7 @@ HRESULT CObject::Load(void)
 
 	//使っているテクスチャ
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
 
 	return S_OK;
 }
@@ -424,8 +426,6 @@ D3DXVECTOR3 CObject::Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move)
 //===============================================================================
 bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVECTOR3 * pMove)
 {
-	//19以外はこの処理に入らない
-	if (m_nType != 19) return false;
 
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();

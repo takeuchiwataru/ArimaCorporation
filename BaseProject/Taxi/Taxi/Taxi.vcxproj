@@ -155,6 +155,7 @@
     <ClCompile Include="camerabace.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="egg.cpp" />
+    <ClCompile Include="enemy.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="feed.cpp" />
     <ClCompile Include="game.cpp" />
@@ -190,6 +191,7 @@
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="tutorial.cpp" />
+    <ClCompile Include="ui.cpp" />
     <ClCompile Include="wall.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -197,6 +199,7 @@
     <ClInclude Include="camerabace.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="egg.h" />
+    <ClInclude Include="enemy.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="feed.h" />
     <ClInclude Include="game.h" />
@@ -233,6 +236,7 @@
     <ClInclude Include="sound.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="tutorial.h" />
+    <ClInclude Include="ui.h" />
     <ClInclude Include="wall.h" />
   </ItemGroup>
   <ItemGroup>

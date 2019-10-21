@@ -34,7 +34,15 @@ public:
 		EGGTYPE_ANNOY,			// 妨害
 		EGGTYPE_SPEED,			// 加速
 		EGGTYPE_MAX,			//最大数
-	}EGGTYPE;
+	} EGGTYPE;
+
+	typedef enum
+	{// 卵の状態
+		EGGSTATE_NORMAL = 0,	// 通常
+		EGGSTATE_CHASE,			// ついていく
+		EGGSTATE_BULLET,		// 飛んでいく
+		EGGSTATE_MAX,			//最大数
+	} EGGSTATE;
 
 	CEgg();
 	~CEgg();
@@ -47,7 +55,11 @@ public:
 	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType);
 	bool CollisionEgg(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	float SetHeight(void);
+	EGGSTATE GetState(void) { return m_eggState; }
+	void SetState(EGGSTATE state) { m_eggState = state; }
+	EGGTYPE GetType(void) { return m_eggType; }
 	void Jump(void);
+	void Bullet(void);
 
 private:
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
@@ -57,13 +69,16 @@ private:
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
 
-	EGGTYPE				m_eggType;						// 卵の種類
-	D3DXVECTOR3			m_scale;						// 大きさ
-	D3DXVECTOR3			m_rot;							// 回転
-	CShadow				*m_pShadow;						// 影のポインタ
-	CObjBillboad *		m_pObjBill;						// オブジェクトビルボードのポインタ
+	EGGTYPE				m_eggType;				// 卵の種類
+	EGGSTATE			m_eggState;				// 卵の状態
+	D3DXVECTOR3			m_scale;				// 大きさ
+	D3DXVECTOR3			m_rot;					// 回転
+	CShadow				*m_pShadow;				// 影のポインタ
+	CObjBillboad *		m_pObjBill;				// オブジェクトビルボードのポインタ
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
 	bool				m_bJump;				// ジャンプしているかどうか
+	float				m_fDestAngle;			// 目的の角度
+	float				m_fDiffAngle;			// 差分
 };
 #endif

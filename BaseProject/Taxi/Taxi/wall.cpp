@@ -87,8 +87,6 @@ void CWall::Update(void)
 //=============================================================================
 void CWall::Draw(void)
 {
-	//プレイヤーの位置情報
-	D3DXVECTOR3 PlayerPos = CGame::GetPlayer()->GetPos();
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 

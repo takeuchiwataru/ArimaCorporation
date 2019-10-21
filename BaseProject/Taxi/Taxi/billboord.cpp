@@ -82,8 +82,6 @@ void CBillBoord::Draw(void)
 
 	//位置の初期化
 	D3DXVECTOR3 BillPos = CScene3D::GetPosition();
-	//プレイヤーの位置情報
-	D3DXVECTOR3 PlayerPos = CGame::GetPlayer()->GetPos();
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 

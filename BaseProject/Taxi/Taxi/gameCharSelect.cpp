@@ -10,6 +10,7 @@
 #include "scene.h"
 #include "scene2D.h"
 #include "input.h"
+#include "fade.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -22,6 +23,7 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
+LPDIRECT3DTEXTURE9	CGameCharSelect::m_pTexture[CGameCharSelect::TEXTURE_MAX] = { NULL };
 
 //=============================================================================
 // コンストラクタ
@@ -29,7 +31,15 @@
 CGameCharSelect::CGameCharSelect()
 {
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{// プレイヤーカウント
+		m_pPlayerNum[nCntPlayer] = NULL;
 		m_pPlayerBG[nCntPlayer] = NULL;
+		m_pSelect[nCntPlayer] = NULL;
+		m_pEnter[nCntPlayer] = NULL;
+
+		m_bEntry[nCntPlayer] = false;
+		m_bEnter[nCntPlayer] = false;
+	}
 
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
 		m_pCharacter[nCntChar] = NULL;
@@ -44,6 +54,29 @@ CGameCharSelect::~CGameCharSelect() {}
 //=============================================================================
 HRESULT CGameCharSelect::Load(void)
 {
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	for (int nCntTex = 0; nCntTex < TEXTURE_MAX; nCntTex++)
+	{// テクスチャカウント
+		char cName[128] = {};
+
+		switch (nCntTex)
+		{
+		case TEXTURE_FRAME:
+			strcpy(cName, "data/TEXTURE/game/charselect/select_frame.png");
+			break;
+		case TEXTURE_NUMBER:
+			strcpy(cName, "data/TEXTURE/game/charselect/icon.png");
+			break;
+		case TEXTURE_ENTER:
+			strcpy(cName, "data/TEXTURE/game/charselect/enter.png");
+			break;
+		}
+
+		// テクスチャの生成
+		if (m_pTexture[nCntTex] == NULL)
+			D3DXCreateTextureFromFile(pDevice, cName, &m_pTexture[nCntTex]);
+	}
 
 	return S_OK;
 }
@@ -53,7 +86,15 @@ HRESULT CGameCharSelect::Load(void)
 //=============================================================================
 void CGameCharSelect::Unload(void)
 {
-
+	for (int nCntTex = 0; nCntTex < TEXTURE_MAX; nCntTex++)
+	{// テクスチャカウント
+		//テクスチャーの破棄
+		if (m_pTexture[nCntTex] != NULL)
+		{
+			m_pTexture[nCntTex]->Release();
+			m_pTexture[nCntTex] = NULL;
+		}
+	}
 }
 
 //=============================================================================
@@ -80,19 +121,66 @@ CGameCharSelect *CGameCharSelect::Create(void)
 //=============================================================================
 HRESULT CGameCharSelect::Init()
 {
-	// プレイヤー背景
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-	{// プレイヤーカウント
+	{// プレイヤーカウント	
+		// プレイヤー番号
+		if (m_pPlayerNum[nCntPlayer] == NULL)
+		{// NULL
+			m_pPlayerNum[nCntPlayer] = new CScene2D(1, CScene::OBJTYPE_2DPOLYGON);
+			m_pPlayerNum[nCntPlayer]->Init();
+			m_pPlayerNum[nCntPlayer]->SetPosSize(
+				D3DXVECTOR3(
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.18f),
+					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.2f),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.1f, SCREEN_HEIGHT * 0.05f));
+			m_pPlayerNum[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pPlayerNum[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_NUMBER]);
+			m_pPlayerNum[nCntPlayer]->SetTexture(nCntPlayer, 5, 2, 1);
+		}
+		// プレイヤー背景
 		if (m_pPlayerBG[nCntPlayer] == NULL)
 		{// NULL
 			m_pPlayerBG[nCntPlayer] = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
 			m_pPlayerBG[nCntPlayer]->Init();
 			m_pPlayerBG[nCntPlayer]->SetPosSize(
 				D3DXVECTOR3(
-				(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
-					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)), 0.0f),
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
+					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)),
+					0.0f),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.25f, SCREEN_HEIGHT * 0.25f));
-			m_pPlayerBG[nCntPlayer]->SetColor(&D3DXCOLOR((nCntPlayer % 2 == 0 ? 1.0f : 0.0f), (nCntPlayer / 2 % 2 == 1 ? 1.0f : 0.0f), (nCntPlayer % 4 == 1 ? 1.0f : 0.0f), 0.6f));
+			//m_pPlayerBG[nCntPlayer]->SetColor(&D3DXCOLOR((nCntPlayer % 2 == 0 ? 1.0f : 0.0f), (nCntPlayer / 2 % 2 == 1 ? 1.0f : 0.0f), (nCntPlayer % 4 == 1 ? 1.0f : 0.0f), 0.6f));
+			m_pPlayerBG[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_FRAME]);
+		}
+		// 選択
+		if (m_pSelect[nCntPlayer] == NULL)
+		{// NULL
+			m_pSelect[nCntPlayer] = new CScene2D(1, CScene::OBJTYPE_2DPOLYGON);
+			m_pSelect[nCntPlayer]->Init();
+			m_pSelect[nCntPlayer]->SetPosSize(
+				D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.055f + (nCntPlayer % 4 == 0 || nCntPlayer % 4 == 3 ? (SCREEN_WIDTH * 0.055f) * 2.0f : 0.0f)) * (nCntPlayer / 2 % 2 == 0 ? -1.0f : 1.0f)),
+					(SCREEN_HEIGHT * 0.7f) + ((SCREEN_WIDTH * 0.055f) * (nCntPlayer / 4 == 0 ? -1.0f : 1.0f)),
+					0.0f),
+				D3DXVECTOR2(SCREEN_WIDTH * 0.04f, SCREEN_WIDTH * 0.04f));
+			m_pSelect[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pSelect[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_NUMBER]);
+			m_pSelect[nCntPlayer]->SetTexture(nCntPlayer, 5, 1, 1);
+		}
+		// 決定
+		if (m_pEnter[nCntPlayer] == NULL)
+		{// NULL
+			m_pEnter[nCntPlayer] = new CScene2D(1, CScene::OBJTYPE_2DPOLYGON);
+			m_pEnter[nCntPlayer]->Init();
+			m_pEnter[nCntPlayer]->SetPosSize(
+				D3DXVECTOR3(
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
+					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)) + (SCREEN_HEIGHT * 0.18f),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.18f, SCREEN_HEIGHT * 0.05f));
+			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pEnter[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_ENTER]);
+
 		}
 	}
 
@@ -105,14 +193,14 @@ HRESULT CGameCharSelect::Init()
 			m_pCharacter[nCntChar]->Init();
 			m_pCharacter[nCntChar]->SetPosSize(
 				D3DXVECTOR3(
-				(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.045f + (nCntChar % 4 == 0 || nCntChar % 4 == 3 ? (SCREEN_WIDTH * 0.045f) * 2.0f : 0.0f)) * (nCntChar / 2 % 2 == 0 ? -1.0f : 1.0f)),
-					(SCREEN_HEIGHT * 0.8f) + ((SCREEN_WIDTH * 0.045f) * (nCntChar / 4 == 0 ? -1.0f : 1.0f)),
+					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (nCntChar % 4 == 0 || nCntChar % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (nCntChar / 2 % 2 == 0 ? -1.0f : 1.0f)),
+					(SCREEN_HEIGHT * 0.8f) + ((SCREEN_WIDTH * 0.053f) * (nCntChar / 4 == 0 ? -1.0f : 1.0f)),
 					0.0f),
-				D3DXVECTOR2(SCREEN_WIDTH * 0.045f, SCREEN_WIDTH * 0.045f));
-			//m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR((nCntChar % 2 == 0 ? 1.0f : 0.0f), (nCntChar / 2 % 2 == 1 ? 1.0f : 0.0f), (nCntChar % 4 == 1 ? 1.0f : 0.0f), (nCntChar / 4 == 0 ? 1.0f : 0.8f)));
+				D3DXVECTOR2(SCREEN_WIDTH * 0.053f, SCREEN_WIDTH * 0.053f));
 			m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (1.0f / MAX_CHARCTER) * nCntChar));
 		}
 	}
+
 
 	return S_OK;
 }
@@ -122,11 +210,26 @@ HRESULT CGameCharSelect::Init()
 void CGameCharSelect::Uninit(void)
 {
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-	{// プレイヤーカウント
+	{// プレイヤーカウント	
+		if (m_pPlayerNum[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pPlayerNum[nCntPlayer]->Uninit();	// 終了処理
+			m_pPlayerNum[nCntPlayer] = NULL;	// NULLへ
+		}
 		if (m_pPlayerBG[nCntPlayer] != NULL)
 		{// NULL以外
 			m_pPlayerBG[nCntPlayer]->Uninit();	// 終了処理
 			m_pPlayerBG[nCntPlayer] = NULL;		// NULLへ
+		}
+		if (m_pSelect[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pSelect[nCntPlayer]->Uninit();	// 終了処理
+			m_pSelect[nCntPlayer] = NULL;		// NULLへ
+		}
+		if (m_pEnter[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pEnter[nCntPlayer]->Uninit();		// 終了処理
+			m_pEnter[nCntPlayer] = NULL;		// NULLへ
 		}
 	}
 
@@ -153,142 +256,242 @@ void CGameCharSelect::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
+	// プレイヤー最大数取得
+	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
 	int *pnCharSelectNum = CGame::GetCharSelectNum();
 
-	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-	{// プレイヤーカウント
+	if (CFade::GetFade() == CFade::FADE_NONE)
+	{
+		for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
+		{// プレイヤーカウント
+			if (m_bEnter[nCntPlayer] == false)
+			{// 決定していない
+				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_UP, nCntPlayer) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_UP, nCntPlayer) == true)
+				{// 上キー
+					if (pnCharSelectNum[nCntPlayer] / 4 == 1)
+					{// 移動制限
+						// 次の値
+						int nNext = (pnCharSelectNum[nCntPlayer] + 4) % MAX_CHARCTER;
 
+						for (int nCntSelect = 0; nCntSelect < nMaxPlayer; nCntSelect++)
+						{// 選択カウント
+							if (nCntSelect != nCntPlayer)
+							{// 自分以外
+								if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
+									break;
+							}
 
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
-			pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_UP, nCntPlayer) == true ||
-			pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_UP, nCntPlayer) == true)
-		{// 上キー
-			if (pnCharSelectNum[nCntPlayer] / 4 == 1)
-			{// 移動制限
-				// 次の値
-				int nNext = (pnCharSelectNum[nCntPlayer] + 4) % MAX_CHARCTER;
+							if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+								pnCharSelectNum[nCntPlayer] = nNext;
+						}
 
-				for (int nCntSelect = 0; nCntSelect < MAX_PLAYER; nCntSelect++)
-				{// 選択カウント
-					if (nCntSelect != nCntPlayer)
-					{// 自分以外
-						if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
-							break;
-
-						if (nCntSelect == MAX_PLAYER - 1)			// 一致しなかったら更新
-							pnCharSelectNum[nCntPlayer] = nNext;
 					}
 				}
+				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_DOWN, nCntPlayer) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_DOWN, nCntPlayer) == true)
+				{// 下キー
+					if (pnCharSelectNum[nCntPlayer] / 4 == 0)
+					{// 移動制限
+						// 次の値
+						int nNext = (pnCharSelectNum[nCntPlayer] + 4) % MAX_CHARCTER;
 
-			}
-		}
-		else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
-			pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_DOWN, nCntPlayer) == true ||
-			pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_DOWN, nCntPlayer) == true)
-		{// 下キー
-			if (pnCharSelectNum[nCntPlayer] / 4 == 0)
-			{// 移動制限
-				// 次の値
-				int nNext = (pnCharSelectNum[nCntPlayer] + 4) % MAX_CHARCTER;
+						for (int nCntSelect = 0; nCntSelect < nMaxPlayer; nCntSelect++)
+						{// 選択カウント
+							if (nCntSelect != nCntPlayer)
+							{// 自分以外
+								if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
+									break;
+							}
 
-				for (int nCntSelect = 0; nCntSelect < MAX_PLAYER; nCntSelect++)
-				{// 選択カウント
-					if (nCntSelect != nCntPlayer)
-					{// 自分以外
-						if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
-							break;
-
-						if (nCntSelect == MAX_PLAYER - 1)			// 一致しなかったら更新
-							pnCharSelectNum[nCntPlayer] = nNext;
-					}
-				}
-			}
-		}
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true ||
-			pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_LEFT, nCntPlayer) == true ||
-			pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_LEFT, nCntPlayer) == true)
-		{// 左キー
-			if (pnCharSelectNum[nCntPlayer] % 4 != 0)
-			{// 移動制限
-				// 次の値
-				int nNext = pnCharSelectNum[nCntPlayer];
-
-				for (int nCntLine = pnCharSelectNum[nCntPlayer] % 4 - 1; 0 <= nCntLine; nCntLine--)
-				{// ラインカウント
-					nNext = (nNext - 1) % MAX_CHARCTER;
-
-					for (int nCntSelect = 0; nCntSelect < MAX_PLAYER; nCntSelect++)
-					{// 選択カウント
-						if (nCntSelect != nCntPlayer)
-						{// 自分以外
-							if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
-								break;
-
-							if (nCntSelect == MAX_PLAYER - 1)			// 一致しなかったら更新
+							if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
 								pnCharSelectNum[nCntPlayer] = nNext;
 						}
 					}
+				}
+				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true ||
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_LEFT, nCntPlayer) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_LEFT, nCntPlayer) == true)
+				{// 左キー
+					if (pnCharSelectNum[nCntPlayer] % 4 != 0)
+					{// 移動制限
+						// 次の値
+						int nNext = pnCharSelectNum[nCntPlayer];
 
-					if (pnCharSelectNum[nCntPlayer] == nNext)				// 更新した
-						break;
+						for (int nCntLine = pnCharSelectNum[nCntPlayer] % 4 - 1; 0 <= nCntLine; nCntLine--)
+						{// ラインカウント
+							nNext = (nNext - 1) % MAX_CHARCTER;
+
+							for (int nCntSelect = 0; nCntSelect < nMaxPlayer; nCntSelect++)
+							{// 選択カウント
+								if (nCntSelect != nCntPlayer)
+								{// 自分以外
+									if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
+										break;
+								}
+
+								if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+									pnCharSelectNum[nCntPlayer] = nNext;
+							}
+
+							if (pnCharSelectNum[nCntPlayer] == nNext)				// 更新した
+								break;
+						}
+					}
+				}
+				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true ||
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_RIGHT, nCntPlayer) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_RIGHT, nCntPlayer) == true)
+				{// 右キー
+					if (pnCharSelectNum[nCntPlayer] % 4 != (4 - 1))
+					{// 移動制限
+						// 次の値
+						int nNext = pnCharSelectNum[nCntPlayer];
+
+						for (int nCntLine = pnCharSelectNum[nCntPlayer] % 4 + 1; nCntLine < 4; nCntLine++)
+						{// ラインカウント	
+							nNext = (nNext + 1) % MAX_CHARCTER;
+
+							for (int nCntSelect = 0; nCntSelect < nMaxPlayer; nCntSelect++)
+							{// 選択カウント
+								if (nCntSelect != nCntPlayer)
+								{// 自分以外
+									if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
+										break;
+								}
+
+								if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+									pnCharSelectNum[nCntPlayer] = nNext;
+							}
+
+							if (pnCharSelectNum[nCntPlayer] == nNext)				// 更新した
+								break;
+						}
+					}
 				}
 			}
 		}
-		else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true ||
-			pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_RIGHT, nCntPlayer) == true ||
-			pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_RIGHT, nCntPlayer) == true)
-		{// 右キー
-			if (pnCharSelectNum[nCntPlayer] % 4 != (4 - 1))
-			{// 移動制限
-				// 次の値
-				int nNext = pnCharSelectNum[nCntPlayer];
 
-				for (int nCntLine = pnCharSelectNum[nCntPlayer] % 4 + 1; nCntLine < 4; nCntLine++)
-				{// ラインカウント	
-					nNext = (nNext + 1) % MAX_CHARCTER;
-
-					for (int nCntSelect = 0; nCntSelect < MAX_PLAYER; nCntSelect++)
-					{// 選択カウント
-						if (nCntSelect != nCntPlayer)
-						{// 自分以外
-							if (pnCharSelectNum[nCntSelect] == nNext)	// 値が一致
-								break;
-
-							if (nCntSelect == MAX_PLAYER - 1)			// 一致しなかったら更新
-								pnCharSelectNum[nCntPlayer] = nNext;
-						}
-					}
-
-					if (pnCharSelectNum[nCntPlayer] == nNext)				// 更新した
-						break;
-				}
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+		{// プレイヤーカウント
+			if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, nCntPlayer) == true)
+			{// 決定キー
+				if (m_bEntry[nCntPlayer] == true)
+					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
+				else
+					m_bEntry[nCntPlayer] = true;
 			}
+		}
+
+		// デバッグ（各決定）
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_1) == true)
+		{
+			if (m_bEntry[0] == true)
+				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
+			else
+				m_bEntry[0] = true;
+		}
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_2) == true)
+		{
+			if (m_bEntry[1] == true)
+				m_bEnter[1] = (m_bEnter[1] ^ 1 ? true : false);
+			else
+				m_bEntry[1] = true;
+		}
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_3) == true)
+		{
+			if (m_bEntry[2] == true)
+				m_bEnter[2] = (m_bEnter[2] ^ 1 ? true : false);
+			else
+				m_bEntry[2] = true;
+		}
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_4) == true)
+		{
+			if (m_bEntry[3] == true)
+				m_bEnter[3] = (m_bEnter[3] ^ 1 ? true : false);
+			else
+				m_bEntry[3] = true;
 		}
 	}
 
-	// キャラクター
-	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
-	{// キャラカウント
-		if (m_pCharacter[nCntChar] != NULL)
+	int nChackEnter = 0;
+	for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
+	{// プレイヤーカウント
+		// プレイヤー番号
+		if (m_pPlayerNum[nCntPlayer] != NULL)
 		{// NULL以外
-			for (int nCntSelect = 0; nCntSelect < MAX_PLAYER; nCntSelect++)
-			{
-				if (pnCharSelectNum[nCntSelect] == nCntChar)
-				{
-					m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR((nCntSelect % 2 == 0 ? 1.0f : 0.0f), (nCntSelect / 2 % 2 == 1 ? 1.0f : 0.0f), (nCntSelect % 4 == 1 ? 1.0f : 0.0f), (nCntSelect / 4 == 0 ? 1.0f : 0.8f)));
-					break;
-				}
-				else
-				{
-					m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (1.0f / MAX_CHARCTER) * nCntSelect));
-				}
-			}
+			m_pPlayerNum[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 		}
+		// 選択
+		if (m_pSelect[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pSelect[nCntPlayer]->SetPosSize(
+				D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (pnCharSelectNum[nCntPlayer] % 4 == 0 || pnCharSelectNum[nCntPlayer] % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (pnCharSelectNum[nCntPlayer] / 2 % 2 == 0 ? -1.0f : 1.0f)),
+					(SCREEN_HEIGHT * 0.7f) + ((SCREEN_WIDTH * 0.053f) * (pnCharSelectNum[nCntPlayer] / 4 == 0 ? -1.0f : 1.0f)),
+					0.0f),
+				D3DXVECTOR2(SCREEN_WIDTH * 0.04f, SCREEN_WIDTH * 0.04f));
+			m_pSelect[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+		}
+
+		// 決定
+		if (m_pEnter[nCntPlayer] != NULL)
+			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_bEnter[nCntPlayer] == true ? 1.0f : 0.0f)));
+
+		// 決定数チャック
+		if (m_bEnter[nCntPlayer] == true)
+			nChackEnter++;
+
+		// 全員決定
+		if (nChackEnter == nMaxPlayer)
+			CFade::Create(CGame::GAMEMODE_PLAY);
 	}
 
 	// キャラ選択番号設定
 	CGame::SetCharSelectNum(pnCharSelectNum);
+
+	int nEntryNum = 0;
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{// プレイヤーカウント
+		if (m_bEntry[nCntPlayer] == true)
+			nEntryNum++;
+	}
+
+	if (nMaxPlayer != nEntryNum)
+	{// プレイヤー数が変わった
+		nMaxPlayer = nEntryNum;		// プレイヤー数を更新
+
+		for (int nCntPlayer = nMaxPlayer; 0 <= nCntPlayer; nCntPlayer--)
+		{// プレイヤーカウント
+			while(1)
+			{// 同じ番号をなくす
+				bool bCheck = false;
+				for (int nCntCheck = nMaxPlayer; 0 <= nCntCheck; nCntCheck--)
+				{// チェックカウント
+					if (nCntPlayer != nCntCheck)
+					{// 自分以外
+						if (pnCharSelectNum[nCntPlayer] == pnCharSelectNum[nCntCheck])
+						{// 同じ番号があった
+							bCheck = true;
+							break;
+						}
+					}
+				}
+
+				// 番号を変更 or break
+				if (bCheck == true)
+					pnCharSelectNum[nCntPlayer] = (pnCharSelectNum[nCntPlayer] + 1) % MAX_CHARCTER;
+				else
+					break;
+			}
+		}
+	}
+		
+	// プレイヤー最大数設定
+	CGame::SetMaxPlayer(nMaxPlayer);
 }
 
 //=============================================================================

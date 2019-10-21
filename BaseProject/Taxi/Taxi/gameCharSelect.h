@@ -26,6 +26,14 @@ class CScene2D;
 class CGameCharSelect : public CScene
 {// ゲーム（キャラ選択）
 public:
+	typedef enum
+	{
+		TEXTURE_FRAME = 0,
+		TEXTURE_NUMBER,
+		TEXTURE_ENTER,
+		TEXTURE_MAX
+	}TEXTURE;
+
 	CGameCharSelect();						//コンストラクタ
 	~CGameCharSelect();						//デストラクタ
 
@@ -39,8 +47,17 @@ public:
 	void Draw(void);						//描画処理
 
 private:
-	CScene2D *m_pPlayerBG[MAX_PLAYER];
-	CScene2D *m_pCharacter[MAX_CHARCTER];
+	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
+	CScene2D *m_pPlayerNum[MAX_PLAYER];		// プレイヤー番号
+	CScene2D *m_pPlayerBG[MAX_PLAYER];		// プレイヤー背景
+	CScene2D *m_pSelect[MAX_PLAYER];		// 選択
+	CScene2D *m_pEnter[MAX_PLAYER];			// 決定
+
+	bool	m_bEntry[MAX_PLAYER];			// エントリー
+	bool	m_bEnter[MAX_PLAYER];			// 決定したか
+
+
+	CScene2D *m_pCharacter[MAX_CHARCTER];	
 };
 #endif

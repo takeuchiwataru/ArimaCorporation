@@ -98,8 +98,6 @@ void CMeshField::Draw(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	//プレイヤーの位置情報
-	D3DXVECTOR3 PlayerPos = CGame::GetPlayer()->GetPos();
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 

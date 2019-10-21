@@ -27,6 +27,7 @@
 #include "feed.h"
 #include "egg.h"
 #include "gameCharSelect.h"
+#include "enemy.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -56,10 +57,10 @@
 //*****************************************************************************
 CGameCharSelect *CGame::m_pGameCharSelect = NULL;	// ゲーム（キャラ選択）
 
-CPlayer *CGame::m_pPlayer = NULL;
+CPlayer *CGame::m_pPlayer[MAX_PLAYER] = { NULL };
 CPause *CGame::m_pPause = NULL;
 CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
-CGameCamera * CGame::m_pGameCamera = NULL;
+CGameCamera * CGame::m_pGameCamera[MAX_PLAYER] = { NULL };
 bool CGame::m_bHelp = false;
 bool CGame::m_bPause = false;
 CGame::GAMEMODE CGame::m_gameMode = CGame::GAMEMODE_NONE;
@@ -71,6 +72,7 @@ int CGame::m_nGameCounter = 0;
 //ウォークスルー用
 bool CGame::m_bDrawUI = false;
 
+int CGame::m_nMaxPlayer = 0;						// プレイヤー数
 int CGame::m_nCharSelectNum[MAX_PLAYER] = { 0 };	// キャラ選択番号
 
 //=============================================================================
@@ -83,7 +85,6 @@ CGame::CGame()
 	m_gameState = GAMESTATE_NONE;
 	m_nCounterGameState = 0;
 	m_NowGameState = GAMESTATE_NONE;
-	CGame::GetPlayer() = NULL;
 	m_nCntSetStage = 0;
 	m_bPause = false;
 }
@@ -109,7 +110,10 @@ HRESULT CGame::Init()
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
 	CFeed::Load();				//食べ物のテクスチャの読み込み
 	CEgg::Load();				//卵のテクスチャの読み込み
+	CEnemy::Load();				//敵（仮）のテクスチャの読み込み
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
+
+	CGameCharSelect::Load();	// ゲーム（キャラ選択）
 
 	//====================================================================
 	//						 必要な変数の初期化
@@ -122,7 +126,11 @@ HRESULT CGame::Init()
 	m_bPause = false;					//ポーズを初期化
 	m_nGameCounter = 0;					//カウンターの初期化
 
-	SetGameMode(m_gameMode);
+	m_nMaxPlayer = 0;					// プレイヤー数
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+		m_nCharSelectNum[nCntPlayer] = nCntPlayer;		// キャラ選択番号
+
+	SetGameMode(m_gameMode);			// ゲームモード設定
 
 	return S_OK;
 }
@@ -131,13 +139,6 @@ HRESULT CGame::Init()
 //=============================================================================
 void CGame::Uninit(void)
 {
-	//ポーズ削除
-	if (m_pPause != NULL)
-	{
-		m_pPause->Uninit();
-		m_pPause = NULL;
-	}
-
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
@@ -150,15 +151,26 @@ void CGame::Uninit(void)
 	CShadow::UnLoad();				//影のテクスチャの破棄
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
+	CEnemy::UnLoad();				//敵のテクスチャの破棄
 
+	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
+
+	//プレイヤーモデルの破棄
+	CPlayer::UnloadModel();
+
+	//ポーズ削除
+	if (m_pPause != NULL)
+	{// NULL以外
+		m_pPause->Uninit();
+		m_pPause = NULL;
+	}
+
+	// ゲーム（キャラ選択）
 	if (m_pGameCharSelect != NULL)
 	{// NULL以外
 		m_pGameCharSelect->Uninit();
 		m_pGameCharSelect = NULL;
 	}
-
-	//フェード以外の破棄
-	CScene::NotFadeReleseAll();
 
 	//プレイヤーのモーションの破棄
 	if (m_pPlayerMotion != NULL)
@@ -168,16 +180,25 @@ void CGame::Uninit(void)
 		m_pPlayerMotion = NULL;
 	}
 
-	//プレイヤーモデルの破棄
-	CPlayer::UnloadModel();
-
 	//カメラの破棄
-	if (m_pGameCamera != NULL)
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
-		m_pGameCamera->Uninit();
-		delete m_pGameCamera;
-		m_pGameCamera = NULL;
+		if (m_pPlayer[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pPlayer[nCntPlayer]->Uninit();
+			m_pPlayer[nCntPlayer] = NULL;
+		}
+
+		if (m_pGameCamera[nCntPlayer] != NULL)
+		{
+			m_pGameCamera[nCntPlayer]->Uninit();
+			delete m_pGameCamera[nCntPlayer];
+			m_pGameCamera[nCntPlayer] = NULL;
+		}
 	}
+
+	//フェード以外の破棄
+	CScene::NotFadeReleseAll();
 }
 //=============================================================================
 // 更新処理
@@ -197,9 +218,8 @@ void CGame::Update(void)
 	switch (m_gameMode)
 	{
 	case GAMEMODE_CHARSELECT:
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
-		//if (m_nGameCounter == 10)
-			CFade::Create(GAMEMODE_PLAY);
+		//if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		//	CFade::Create(GAMEMODE_PLAY);
 		break;
 	case GAMEMODE_COURSESELECT:
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
@@ -223,7 +243,10 @@ void CGame::Update(void)
 			m_NowGameState = GetGameState();
 
 			//カメラの更新処理
-			if (m_pGameCamera != NULL) { m_pGameCamera->Update(); }
+			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			{
+				if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->Update(); }
+			}
 
 			switch (m_NowGameState)
 			{
@@ -297,8 +320,38 @@ void CGame::Update(void)
 //=============================================================================
 void CGame::Draw(void)
 {
-	//カメラの設定
-	if (m_pGameCamera != NULL) { m_pGameCamera->SetCamera(); }
+	if (m_gameMode == GAMEMODE_PLAY)
+	{// プレイ
+		// バックバッファ＆Ｚバッファのクリア
+		CManager::GetRenderer()->GetDevice()->Clear(0,
+			NULL,
+			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
+			D3DCOLOR_RGBA(157, 184, 224, 255),
+			1.0f,
+			0);
+
+		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+		{
+			//カメラの設定
+			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
+
+			//全ての描画
+			CScene::DrawAll();
+		}
+	}
+	else
+	{// その他
+		// バックバッファ＆Ｚバッファのクリア
+		CManager::GetRenderer()->GetDevice()->Clear(0,
+			NULL,
+			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
+			D3DCOLOR_RGBA(157, 184, 224, 255),
+			1.0f,
+			0);
+
+		//全ての描画
+		CScene::DrawAll();
+	}
 }
 
 //=============================================================================
@@ -406,15 +459,36 @@ void CGame::SetStage(void)
 		if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 		CPlayer::LoadModel();	//モデルの読み込み
 
-		//プレイヤーの生成
-		m_pPlayer = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+		{// プレイヤーカウント
+			//プレイヤーの生成
+			if (m_pPlayer[nCntPlayer] == NULL)
+				m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(-150.0f + (100.0f * nCntPlayer), 0.0f, (-50.0f * nCntPlayer)), nCntPlayer, nCntPlayer);
 
-		//ゲームカメラの生成
-		if (m_pGameCamera == NULL)
-		{
-			m_pGameCamera = new CGameCamera;
+			if (m_pPlayer[nCntPlayer] != NULL)
+			{// NULL以外
+				//ゲームカメラの生成
+				if (m_pGameCamera[nCntPlayer] == NULL)
+				{// NULL
+					m_pGameCamera[nCntPlayer] = new CGameCamera;
 
-			if (m_pGameCamera != NULL) { m_pGameCamera->Init(); }
+					if (m_pGameCamera[nCntPlayer] != NULL)
+					{// NULL以外
+						// 初期化処理
+						m_pGameCamera[nCntPlayer]->Init();
+
+						// 追従プレイヤー設定
+						m_pGameCamera[nCntPlayer]->SetPlayer(m_pPlayer[nCntPlayer]);
+						// ビューポート設定
+						m_pGameCamera[nCntPlayer]->SetViewPort(
+							(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) % 2)), 
+							(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) / 2)), 
+							(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
+							(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
+						);
+					}
+				}
+			}
 		}
 
 		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
@@ -440,6 +514,8 @@ void CGame::SetStage(void)
 		CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
 		CFeed::Create(D3DXVECTOR3(100.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
 		CFeed::Create(D3DXVECTOR3(200.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
+
+		CEnemy::Create(D3DXVECTOR3(-300.0f, 1.0f, 1500.0f));
 
 		m_nCntSetStage = 1;
 	}
