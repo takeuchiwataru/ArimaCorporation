@@ -12,6 +12,8 @@
 #include "fade.h"
 #include "sound.h"
 #include "ranking.h"
+#include "ui.h"
+
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -63,8 +65,14 @@ HRESULT CTitle::Init()
 	//===================================
 	//		 Loadの読み込み場所
 	//===================================
-	//フェードのテクスチャの読み込み
-	CFade::Load();
+	CFade::Load();		//フェードのテクスチャの読み込み
+	CUi::Load();		//UIのテクスチャの読み込み
+
+	//===================================
+	//		    UI生成の場所
+	//===================================
+	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 120.0f, 0.0f), D3DXVECTOR2(500.0f, 180.0f), 0);	//タイトルロゴ
+	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 270.0f, 0.0f), D3DXVECTOR2(250.0f, 50.0f), 1);	//エンター指示
 
 	//	変数の初期化
 	m_nTitleCounter = 0;
@@ -79,8 +87,8 @@ void CTitle::Uninit(void)
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
-	//フェードのテクスチャの破棄
-	CFade::UnLoad();
+	CFade::UnLoad();	//フェードのテクスチャの破棄
+	CUi::UnLoad();		//UIのテクスチャの破棄
 
 	//フェード以外削除
 	CScene::NotFadeReleseAll();
@@ -120,5 +128,14 @@ void CTitle::Update(void)
 //=============================================================================
 void CTitle::Draw(void)
 {
+	// バックバッファ＆Ｚバッファのクリア
+	CManager::GetRenderer()->GetDevice()->Clear(0,
+		NULL,
+		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
+		D3DCOLOR_RGBA(157, 184, 224, 255),
+		1.0f,
+		0);
 
+	//全ての描画
+	CScene::DrawAll();
 }

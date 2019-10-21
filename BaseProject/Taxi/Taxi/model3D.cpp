@@ -130,7 +130,7 @@ void CModel3D::Update(void)
 	//ゲームモードならクリッピングの処理
 	if (CManager::MODE_GAME == mode)
 	{
-		SetDraw(CGame::GetGameCamera()->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
+		//SetDraw(CGame::GetGameCamera()->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
 	}
 	else if (CManager::MODE_TUTORIAL == mode)
 	{
@@ -754,7 +754,7 @@ bool CModel3D::LengthJudgment(void)
 	bool bReturn = false;	//処理続行フラグ
 
 	//距離を求める
-	D3DXVECTOR3 PlayerPos = CGame::GetPlayer()->GetPos();
+	D3DXVECTOR3 PlayerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);// CGame::GetPlayer()->GetPos();
 	D3DXVECTOR3 Distance = PlayerPos - m_Pos;
 	m_fLength = sqrtf((Distance.x * Distance.x) + (Distance.z * Distance.z));
 

@@ -29,7 +29,7 @@ public:
 	HRESULT Init();							// 初期化処理
 	void	Uninit(void);					// 終了処理
 	void	Update(void);					// 更新処理
-	void	Draw(void);						// 描画処理
+	static void	Draw(void);						// 描画処理
 
 private:
 	int					m_nFrame;			// 季節のカウンター

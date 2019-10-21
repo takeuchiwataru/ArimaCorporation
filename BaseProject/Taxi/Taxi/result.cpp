@@ -217,14 +217,14 @@ void CResult::Update(void)
 		/*if (m_bPress == false) { m_pReport->SetReporh(CReport::TYPE_ALL_DISPLAY); m_bPress = true; }
 		else*/
 		{
-			CFade::Create(CManager::MODE_RANKING);
+			CFade::Create(CManager::MODE_TITLE);
 		}
 	}
 	m_nSetCnt++;
 
 	if (m_nCntTime == FADE_OUT_TIME)
 	{//9秒後に何もしてない場合戻る
-		CFade::Create(CManager::MODE_RANKING);
+		CFade::Create(CManager::MODE_TITLE);
 	}
 
 	m_nCntTime++;
@@ -234,7 +234,18 @@ void CResult::Update(void)
 //=============================================================================
 void CResult::Draw(void)
 {
+	// バックバッファ＆Ｚバッファのクリア
+	CManager::GetRenderer()->GetDevice()->Clear(0,
+		NULL,
+		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
+		D3DCOLOR_RGBA(157, 184, 224, 255),
+		1.0f,
+		0);
+
 	if (m_pCamera != NULL) { m_pCamera->SetCamera(); }
+
+	//全ての描画
+	CScene::DrawAll();
 }
 //===============================================================================
 // オブジェクトのロード

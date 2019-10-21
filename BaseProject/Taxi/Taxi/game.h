@@ -74,15 +74,20 @@ public:
 	HRESULT Init();							//初期化処理
 	void Uninit(void);						//終了処理
 	void Update(void);						//更新処理
-	void Draw(void);						//描画処理
+	static void Draw(void);					//描画処理
 	static void SetGameState(GAMESTATE state) { m_gameState = state; }
 	static void SetPause(bool bPause);
 	static bool GetPause(void) { return m_bPause; }
 	static bool GetHelp(void) { return m_bHelp; }
 	static GAMESTATE GetGameState(void) { return m_gameState; }
-	static CPlayer *&GetPlayer(void) { return m_pPlayer; }
+	static CPlayer **GetPlayer(void) { return m_pPlayer; }
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
-	static CGameCamera * GetGameCamera(void) { return m_pGameCamera; }			//ゲームカメラの取得
+	static CGameCamera * GetGameCamera(int nNum) 
+	{ if (0 <= nNum && nNum < MAX_PLAYER) 
+		return m_pGameCamera[nNum];
+	  else 
+		  return NULL; }			//ゲームカメラの取得
+
 	static int GetGameCounter(void) { return m_nGameCounter; }					//ゲームのカウンター
 	static void SetGameModeNext(GAMEMODE gameModeNext) { m_gameModeNext = gameModeNext; };
 	void SetGameMode(GAMEMODE gameMode);
@@ -102,6 +107,11 @@ public:
 	//ウォークスルー用
 	static bool GetDrawUI(void) { return m_bDrawUI; };
 
+	// プレイヤー最大数
+	static void SetMaxPlayer(int nMaxPlayer) { m_nMaxPlayer = nMaxPlayer; }
+	static int GetMaxPlayer(void) { return m_nMaxPlayer; }
+
+	// キャラ選択番号
 	static void SetCharSelectNum(int *nCharSelectNum)
 	{
 		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
@@ -173,9 +183,9 @@ private:
 	static GAMESTATE m_gameState;				//ゲーム状態
 	GAMESTATE m_NowGameState;					//現在のゲーム状況
 	int m_nCounterGameState;					//状態カウンタ
-	static CPlayer *m_pPlayer;					//プレイヤーのポインタ
+	static CPlayer *m_pPlayer[MAX_PLAYER];		//プレイヤーのポインタ
 	static CPause *m_pPause;					//ポーズのポインタ
-	static CGameCamera * m_pGameCamera;			//カメラのポインタ
+	static CGameCamera * m_pGameCamera[MAX_PLAYER];//カメラのポインタ
 	static bool m_bPause;						//現在ポーズかポーズじゃないか
 	static bool m_bHelp;						//現在ヘルプかヘルプじゃないか
 	static int	m_nCntSetStage;					// ステージセットカウンタ
@@ -189,6 +199,7 @@ private:
 	Mesh m_Mesh[MAX_MAP_MESH];					//設置するメッシュフィールドの構造体
 	Wall m_aWall[MAX_MAP_WALL];					//設置する壁の構造体
 
+	static int m_nMaxPlayer;					// プレイヤー数
 	static int m_nCharSelectNum[MAX_PLAYER];	// キャラ選択番号
 
 	//ウォークスルー用

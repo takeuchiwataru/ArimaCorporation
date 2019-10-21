@@ -32,14 +32,17 @@ public:
 	D3DXMATRIX GetViewMatrix(void) { return m_mtxView; }				//ビューマトリックスの取得
 	D3DXMATRIX GetProjectionMatrix(void) { return m_mtxProjection; }	//プロジェクションマトリックスの取得
 
+	// ビューポート設定
+	void SetViewPort(DWORD X, DWORD Y, DWORD Width, DWORD Height);
+
 protected:
-	D3DXVECTOR3 m_posV;				//視点
-	D3DXVECTOR3 m_posR;				//注視点
-	D3DXVECTOR3 m_posVDest;			//目的の視点
-	D3DXVECTOR3 m_posRDest;			//目的の注視点
-	D3DXVECTOR3 m_rot;				//カメラの向きを入れる
-	float		m_fCameraAngle;		//角度
-	float		m_fRotDest;			//目的の角度
+	D3DXVECTOR3		m_posV;				//視点
+	D3DXVECTOR3		m_posR;				//注視点
+	D3DXVECTOR3		m_posVDest;			//目的の視点
+	D3DXVECTOR3		m_posRDest;			//目的の注視点
+	D3DXVECTOR3		m_rot;				//カメラの向きを入れる
+	float			m_fCameraAngle;		//角度
+	float			m_fRotDest;			//目的の角度
 
 	void RemakeAngle(float * pAngle);
 	
@@ -47,9 +50,11 @@ protected:
 	const D3DXVECTOR3 VECTOR_ZERO = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
 private:
-	D3DXVECTOR3 m_vecU;				//上方向ベクトル
-	D3DXMATRIX	m_mtxProjection;	//プロジェクションマトリックス
-	D3DXMATRIX	m_mtxView;			//ビューマトリックス
+	D3DXVECTOR3		m_vecU;				//上方向ベクトル
+	D3DXMATRIX		m_mtxProjection;	//プロジェクションマトリックス
+	D3DXMATRIX		m_mtxView;			//ビューマトリックス
+	D3DVIEWPORT9	m_viewport;			// ビューポート
+
 };
 
 #endif

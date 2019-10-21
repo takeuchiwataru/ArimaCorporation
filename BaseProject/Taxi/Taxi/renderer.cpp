@@ -217,8 +217,23 @@ void CRenderer::Draw(void)
 	// Direct3D‚É‚æ‚é•`‰æ‚ÌŠJŽn
 	if (SUCCEEDED(m_pD3DDevice->BeginScene()))
 	{
-		//‘S‚Ä‚Ì•`‰æ
-		CScene::DrawAll();
+		D3DVIEWPORT9 viewport;
+		m_pD3DDevice->GetViewport(&viewport);
+
+		switch (CManager::GetMode())
+		{
+		case CManager::MODE_TITLE:
+			CTitle::Draw();
+			break;
+		case CManager::MODE_GAME:
+			CGame::Draw();
+			break;
+		case CManager::MODE_RESULT:
+			CResult::Draw();
+			break;
+		}
+
+		m_pD3DDevice->SetViewport(&viewport);
 
 #ifdef _DEBUG
 		int nFps = GetFps();
