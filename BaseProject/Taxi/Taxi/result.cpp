@@ -23,11 +23,11 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define TEXT_OBJECTNAME1		"data\\TEXT\\ステージ6\\objecy.txt"			// 読み込むテキストファイル
-#define TEXT_MESHFIELDNAME1		"data\\TEXT\\ステージ6\\meshfield.txt"		// 読み込むテキストファイル
-#define TEXT_WALLNAME			"data\\TEXT\\リザルトマップ\\wall.txt"		// 読み込むテキストファイル
-#define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"			// プレイヤーのモーションファイル
-#define FADE_OUT_TIME			(60  * 13)				// フェードするまでの時間
+#define TEXT_OBJECTNAME1		"data\\TEXT\\ゲームマップ\\objecy.txt"			// 読み込むテキストファイル
+#define TEXT_MESHFIELDNAME1		"data\\TEXT\\ゲームマップ\\meshfield.txt"		// 読み込むテキストファイル
+#define TEXT_WALLNAME			"data\\TEXT\\ゲームマップ\\wall.txt"			// 読み込むテキストファイル
+#define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"				// プレイヤーのモーションファイル
+#define FADE_OUT_TIME			(60  * 13)										// フェードするまでの時間
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************

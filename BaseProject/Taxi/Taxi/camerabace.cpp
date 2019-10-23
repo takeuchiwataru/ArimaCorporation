@@ -85,7 +85,7 @@ void CCamera::SetCamera()
 		D3DXToRadian(m_fCameraAngle),
 		(float)m_viewport.Width / (float)m_viewport.Height,
 		10.0f,
-		30000
+		30000.0f
 	);
 
 	// プロジェクションマトリックスの設定

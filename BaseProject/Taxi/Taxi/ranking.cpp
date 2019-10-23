@@ -83,7 +83,7 @@ void CRanking::Update(void)
 		if (pFade == CFade::FADE_NONE)
 		{
 			//ポーズの選択の決定音
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLE_ENTER);
+			//pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLE_ENTER);
 			CFade::Create(CManager::MODE_TITLE);
 		}
 	}

@@ -17,11 +17,13 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MODEL_NAME_1	"data\\MODEL\\壊れるもの\\tree2.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_2	"data\\MODEL\\壊れるもの\\柵.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_1	"data\\MODEL\\Object\\tree2.x"		//読み込むテクスチャファイル
+#define MODEL_NAME_2	"data\\MODEL\\Object\\柵.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"		//読み込むテクスチャファイル
 
 #define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\leaf.png"		//読み込むテクスチャファイル
 #define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル
+#define TEXTURE_NAME_3	"data\\TEXTURE\\modeltex\\bender.jpg"	//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
@@ -67,7 +69,7 @@ CObject::CObject() : CModel3D(OBJECT_PRIOTITY, CScene::OBJTYPE_OBJECT)
 //===============================================================================
 //　デストラクタ
 //===============================================================================
-CObject::~CObject(){}
+CObject::~CObject() {}
 
 //=============================================================================
 // 初期化処理
@@ -137,7 +139,7 @@ HRESULT CObject::Init(void)
 
 		for (int nCntType = 0; nCntType < HIGHT_OBJ_NUM; nCntType++)
 		{// 高いオブジェクトのタイプかどうかの判定
-			if(m_nType == anHightObjType[nCntType])
+			if (m_nType == anHightObjType[nCntType])
 			{
 				CModel3D::SetHightObj(true);
 				break;
@@ -179,7 +181,7 @@ void CObject::Update(void)
 //=============================================================================
 void CObject::Draw(void)
 {
-	if (m_nType == 19) { return; }
+	if (m_nType == 2) { return; }
 
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
@@ -214,7 +216,7 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 		{
 			// 種類の設定
 			pObject->BindModel(m_pMeshModel[nObjectType], m_pBuffMatModel[nObjectType], m_nNumMatModel[nObjectType], m_pMeshTextures[nTexType],
-							   m_LoadVtxMaxModel[nObjectType], m_LoadVtxMinModel[nObjectType]);
+				m_LoadVtxMaxModel[nObjectType], m_LoadVtxMinModel[nObjectType]);
 			// オブジェクトごとの設定用タイプ
 			pObject->m_nType = nObjectType;
 			// サイズを代入
@@ -252,6 +254,7 @@ HRESULT CObject::Load(void)
 	// Xファイルの読み込み
 	D3DXLoadMeshFromX(MODEL_NAME_1, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
 	D3DXLoadMeshFromX(MODEL_NAME_2, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
+	D3DXLoadMeshFromX(MODEL_NAME_3, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
@@ -263,13 +266,13 @@ HRESULT CObject::Load(void)
 	DWORD sizeFVF;		//頂点フォーマットのサイズ
 	BYTE *pVtxBuff;		//頂点バッファへのポインタ
 
-	//モデルの最大値・最小値を取得する
+						//モデルの最大値・最小値を取得する
 	for (int nCntModel = 0; nCntModel < MAX_OBJECT; nCntModel++)
 	{
 		m_LoadVtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
 		m_LoadVtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-		//頂点数を取得
+																			//頂点数を取得
 		nNumVtx = m_pMeshModel[nCntModel]->GetNumVertices();
 
 		//頂点フォーマットのサイズを取得
@@ -282,7 +285,7 @@ HRESULT CObject::Load(void)
 		{
 			D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-			//最大値
+															//最大値
 			if (vtx.x > m_LoadVtxMaxModel[nCntModel].x)
 			{
 				m_LoadVtxMaxModel[nCntModel].x = vtx.x;
@@ -320,6 +323,7 @@ HRESULT CObject::Load(void)
 	//使っているテクスチャ
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
 
 	return S_OK;
 }
@@ -389,7 +393,7 @@ D3DXVECTOR3 CObject::Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move)
 	D3DXVECTOR3 posObj = CModel3D::GetPosition();	// 位置の取得
 	D3DXVECTOR3 vec = pos - posObj;					// 自分から相手方向へのベクトル
 
-	// ベクトルの長さを求める
+													// ベクトルの長さを求める
 	float fLengthVec = D3DXVec3Length(&vec);		// 自分から相手方向へのベクトルの長さ
 	float fLengthMove = D3DXVec3Length(&move);		// 相手の移動量の長さ
 
@@ -426,7 +430,6 @@ D3DXVECTOR3 CObject::Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move)
 //===============================================================================
 bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVECTOR3 * pMove)
 {
-
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 
@@ -448,7 +451,7 @@ bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVEC
 		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
 		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-		// 移動量の保持
+																				// 移動量の保持
 		if (ModelMove.x == 0.0f) ModelMove.x = m_ModelMove.x;
 		if (ModelMove.y == 0.0f) ModelMove.y = m_ModelMove.y;
 		if (ModelMove.z == 0.0f) ModelMove.z = m_ModelMove.z;

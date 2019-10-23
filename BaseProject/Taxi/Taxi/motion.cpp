@@ -116,7 +116,7 @@ int CMotion::Update(void)
 		m_nCountMotion == 1)
 	{
 		CSound * pSound = CManager::GetSound();
-		pSound->PlaySoundA(CSound::SOUND_LABEL_SE_KICK);
+		//pSound->PlaySoundA(CSound::SOUND_LABEL_SE_KICK);
 	}
 
 	//ƒtƒŒ[ƒ€”»’è
