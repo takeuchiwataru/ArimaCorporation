@@ -14,6 +14,7 @@
 #include "shadow.h"
 #include "tutorial.h"
 #include "egg.h"
+#include "feed.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -64,6 +65,21 @@ CEnemy::CEnemy() : CModel3D(ENEMY_PRIOTITY, CScene::OBJTYPE_ENEMY)
 	m_nCntMove = 0;
 	m_nCntDamage = 0;
 	m_fSpeed = 0.0f;
+	m_nNumEgg = 0;
+	m_nCntFrame = 0;
+	m_nCountSpeed = 0;
+
+	//卵のポインタを初期化
+	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
+	{
+		m_pEgg[nCntEgg] = NULL;
+	}
+
+	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
+	{
+		m_OldEggRot[nCntEggPos] = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+		m_abJump[nCntEggPos] = false;
+	}
 }
 //===============================================================================
 //　デストラクタ
@@ -130,6 +146,25 @@ HRESULT CEnemy::Init(void)
 	m_nCntMove = 0;
 	m_nCntDamage = 0;
 	m_fSpeed = 0.0f;
+	m_State = ENEMYSTATE_NORMAL;
+	m_nNumEgg = 0;
+	m_nCountSpeed = 0;
+	m_nCntFrame = -1;
+	m_bJumpSave = false;
+	m_bDamage = false;
+
+	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
+	{
+		m_OldEggRot[nCntEggPos] = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+		m_abJump[nCntEggPos] = false;
+	}
+
+	//卵のポインタを初期化
+	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
+	{
+		m_pEgg[nCntEgg] = NULL;
+	}
+
 	return S_OK;
 }
 
@@ -150,11 +185,20 @@ void CEnemy::Uninit(void)
 //=============================================================================
 void CEnemy::Update(void)
 {
+	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;
 
-	// 卵との当たり判定
-	CollisionEgg();
+	CollisionFeed();		// 餌の当たり判定
+
+	CollisionEgg();			// 卵との当たり判定
+
+	ChaseEgg();	// 卵がついてくる処理
+
+	if (pInputKeyboard->GetKeyboardTrigger(DIK_NUMPAD5) == true)
+	{// 弾発射
+		BulletEgg();
+	}
 
 	switch (m_State)
 	{
@@ -167,30 +211,55 @@ void CEnemy::Update(void)
 		break;
 
 	case ENEMYSTATE_SPEEDUP:
-		m_fSpeed = 5.0f;
 		break;
 
 	case ENEMYSTATE_DAMAGE:
-
 		m_fSpeed = 0.0f;
+		break;
+	}
 
+	if (m_State == ENEMYSTATE_SPEEDUP)
+	{// スピードアイテムを使ったとき
+		m_nCountSpeed++;
+
+		if (m_nCountSpeed > SPEEDUP_TIME)
+		{
+			m_State = ENEMYSTATE_NORMAL;
+			m_nCountSpeed = 0;
+		}
+	}
+
+	if (m_bDamage == true)
+	{
 		m_nCntDamage++;
 
-		if (m_nCntDamage > DAMAGE_TIME)
+		int nDamageTime = 0;	// 状態が変わる時間の長さ
+
+		if (m_State == ENEMYSTATE_DAMAGE)
+		{// 攻撃を食らったとき
+			nDamageTime = DAMAGE_TIME;
+		}
+		else if (m_State == ENEMYSTATE_SPEEDDOWN)
+		{// スピードダウンを食らったとき
+			nDamageTime = SPEEDDOWN_TIME;
+		}
+
+		if (m_nCntDamage > nDamageTime)
 		{
 			m_State = ENEMYSTATE_NORMAL;
 			m_nCntDamage = 0;
+
+			m_bDamage = false;
 		}
-		break;
 	}
 
 	m_nCntMove++;
 
-	m_move.x = m_fSpeed;
+	m_move.z = m_fSpeed;
 
 	if (m_nCntMove >= 120)
 	{
-		m_move.x *= -1.0f;
+		m_move.z *= -1.0f;
 	}
 
 	if (m_nCntMove >= 240)
@@ -198,11 +267,12 @@ void CEnemy::Update(void)
 		m_nCntMove = 0;
 	}
 
+	m_pos.z += m_move.z;
 	m_pos.x += m_move.x;
 
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(m_pos);
-	
+
 	//距離の取得
 	float fLength = CModel3D::GetLength();
 
@@ -335,6 +405,199 @@ void CEnemy::UnLoad(void)
 		m_pMeshTextures = NULL;
 	}
 }
+//=============================================================================
+// 餌との当たり判定
+//=============================================================================
+void CEnemy::CollisionFeed(void)
+{
+	if (m_nNumEgg >= MAX_EGG) { return; }
+
+	CSound *pSound = CManager::GetSound();
+	CScene *pScene;
+
+	for (int nCntPriority = 2; nCntPriority <= FEED_PRIOTITY; nCntPriority++)
+	{
+		// プライオリティーチェック
+		pScene = CScene::GetTop(nCntPriority);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
+			if (pScene->GetObjType() == OBJTYPE_FEED)
+			{// タイプが障害物だったら
+				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				if (pFeed->CollisionFeed(&m_pos, &m_posOld))
+				{// 衝突した
+					EggAppear(pFeed);	// 卵出現
+					pFeed->Uninit();	// 餌削除
+					m_nNumEgg++;
+				}
+			}
+
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+	}
+}
+
+
+//=============================================================================
+// 卵の出現処理
+//=============================================================================
+void CEnemy::EggAppear(CFeed *pFeed)
+{
+	if (m_pEgg[m_nNumEgg] == NULL)
+	{
+		if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ATTACK)
+		{// 攻撃の卵生成
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_ATTACK,
+				CEgg::BULLETTYPE_ENEMY);
+		}
+		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
+		{// 妨害の卵生成
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_ANNOY,
+				CEgg::BULLETTYPE_ENEMY);
+		}
+		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
+		{// 加速の卵生成
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_SPEED,
+				CEgg::BULLETTYPE_ENEMY);
+		}
+	}
+
+	m_pEgg[m_nNumEgg]->SetState(CEgg::EGGSTATE_CHASE);
+}
+
+//=============================================================================
+// 卵がついてくる処理
+//=============================================================================
+void CEnemy::ChaseEgg(void)
+{
+	m_nCntFrame++;
+
+	if (m_nCntFrame >= MAX_FRAME)
+	{
+		m_nCntFrame = 0;
+	}
+
+	// 前のプレイヤーの角度を保存
+	m_OldEggRot[m_nCntFrame] = m_rot;
+	m_abJump[m_nCntFrame] = m_bJumpSave;
+
+	if (m_nNumEgg <= 0) { return; }
+
+	if (m_nNumEgg >= 1)
+	{// 卵が一個の時
+		if (m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+		{
+			// 前の向きを代入
+			int nData = m_nCntFrame - EGG_POS;
+
+			if (nData < 0)
+			{
+				nData += MAX_FRAME;
+			}
+
+			// 卵の位置設定
+			m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+				m_pEgg[0]->SetHeight(),
+				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+
+			// 卵の角度設定
+			m_pEgg[0]->SetRot(m_OldEggRot[nData]);
+
+			if (m_abJump[nData] == true)
+			{
+				m_pEgg[0]->Jump();
+			}
+
+			CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
+		}
+	}
+	if (m_nNumEgg >= 2)
+	{// 卵が二個の時
+	 // 二個目
+		int nData = m_nCntFrame - EGG_POS * 2;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME;
+		}
+
+		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+			m_pEgg[1]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
+
+		m_pEgg[1]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pEgg[1]->Jump();
+		}
+	}
+	if (m_nNumEgg >= 3)
+	{
+		// 三個目
+		int nData = m_nCntFrame - EGG_POS * 3;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME;
+		}
+
+		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+			m_pEgg[2]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
+
+		m_pEgg[2]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pEgg[2]->Jump();
+		}
+	}
+}
+
+//=============================================================================
+// 卵発射処理
+//=============================================================================
+void CEnemy::BulletEgg(void)
+{
+	if (m_nNumEgg > 0)
+	{// 卵を持っているとき
+		if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
+
+			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
+
+			m_nNumEgg--;	// 所持数を減らす
+
+			if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
+			{
+				m_State = ENEMYSTATE_SPEEDUP;
+				m_fSpeed += SPEED * 2;
+
+				m_pEgg[0]->Uninit();
+				m_pEgg[0] = NULL;
+			}
+
+			// 情報入れ替え
+			m_pEgg[0] = m_pEgg[1];
+			m_pEgg[1] = m_pEgg[2];
+			m_pEgg[2] = NULL;
+		}
+	}
+}
 
 //=============================================================================
 // 卵との当たり判定
@@ -356,25 +619,30 @@ void CEnemy::CollisionEgg(void)
 			{// タイプが障害物だったら
 				CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET || pEgg->GetState() == CEgg::EGGSTATE_CHASE)
+				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET)
 				{
-					if (pEgg->CollisionEgg(&m_pos, &m_posOld))
+					if (pEgg->CollisionEgg(&m_pos, &m_posOld) == true && pEgg->GetBulletType() != CEgg::BULLETTYPE_ENEMY)
 					{// 衝突した
 						switch (pEgg->GetType())
 						{
-						// 攻撃
+							// 攻撃
 						case CEgg::EGGTYPE_ATTACK:
-							if (m_State != ENEMYSTATE_DAMAGE)
+							// ダメージ状態にする
+							if (m_bDamage == false)
 							{
-								// ダメージ状態にする
+								m_bDamage = true;
 								m_State = ENEMYSTATE_DAMAGE;
 							}
 							pEgg->Uninit();	// 卵削除
 							break;
 
-						// 減速
+							// 減速
 						case CEgg::EGGTYPE_ANNOY:
-							m_State = ENEMYSTATE_SPEEDDOWN;
+							if (m_bDamage == false)
+							{
+								m_bDamage = true;
+								m_State = ENEMYSTATE_SPEEDDOWN;
+							}
 							pEgg->Uninit();	// 卵削除
 							break;
 						}

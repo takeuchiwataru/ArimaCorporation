@@ -48,7 +48,7 @@
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
-#define SPEED			(5.0f)										// 加速する量
+#define SPEEDDOWN		(0.95f)										// 減速させる値
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(1.0f)										//加速値（前進）
@@ -242,7 +242,9 @@ HRESULT CPlayer::Init(void)
 	m_bDirive = true;
 	m_nNumEgg = 0;
 	m_bJumpSave = false;
-	m_bSpeed = false;
+	m_nCntDamage = 0;
+	m_bDamage = false;
+	m_State = PLAYERSTATE_NORMAL;
 
 	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
 	{
@@ -255,8 +257,6 @@ HRESULT CPlayer::Init(void)
 	{
 		m_pEgg[nCntEgg] = NULL;
 	}
-
-	//CreateTire();			//タイヤの生成
 
 	if (m_pMotion == NULL)	//モーションの生成
 	{
@@ -352,8 +352,9 @@ void CPlayer::Update(void)
 
 	CollisionFeed();		// 餌の当たり判定
 
+	CollisionEgg();			// 卵との当たり判定
+
 	ChaseEgg();	// 卵がついてくる処理
-	BulletEgg();
 
 	/*UpdateStateJump();		// ジャンプ状態の更新処理
 	RiverInfluence();		// 川による影響
@@ -484,7 +485,7 @@ void CPlayer::ControlKey(void)
 			{
 				SetStateSpeed(STATE_SPEED_STOP);
 
-				if (m_bSpeed == true)
+				if (m_State == PLAYERSTATE_SPEEDUP)
 				{// スピードアイテムを使ったとき
 				 //進行方向の設定
 					m_move.x += sinf(m_rot.y) * (m_fSpeed);
@@ -519,6 +520,11 @@ void CPlayer::ControlKey(void)
 		m_bJumpSave = false;
 	}
 
+	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true)
+	{// 弾発射
+		BulletEgg();
+	}
+
 	CSound *pSound = CManager::GetSound();
 
 	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
@@ -537,13 +543,13 @@ void CPlayer::UpdateMove(void)
 
 	RemakeAngle(&m_rot.y);
 
-	if (m_bSpeed == true)
+	if (m_State == PLAYERSTATE_SPEEDUP)
 	{// スピードアイテムを使ったとき
 		m_nCountSpeed++;
 
 		if (m_nCountSpeed > SPEEDUP_TIME)
 		{
-			m_bSpeed = false;
+			m_State = PLAYERSTATE_NORMAL;
 			m_nCountSpeed = 0;
 		}
 	}
@@ -556,39 +562,8 @@ void CPlayer::UpdateMove(void)
 							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		/*CDebugProc::Print("初速加速あり\n");
-		//速度を上げる
-		m_PlayerInfo.nCountTime++;
-		if (m_move.x < 3.0f && m_move.z < 3.0f &&m_move.x > -3.0f && m_move.z > -3.0f)
-		{
-		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.03f;
-		CDebugProc::Print("初速UP状態 [1段階]\n");
-		}
-		else if (m_move.x < 6.0f && m_move.z < 6.0f &&m_move.x > -6.0f && m_move.z > -6.0f)
-		{
-		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.04f;
-		CDebugProc::Print("初速UP状態 [2段階]\n");
-		}
-		else if (m_move.x < 9.0f && m_move.z < 9.0f &&m_move.x > -9.0f && m_move.z > -9.0f)
-		{
-		m_PlayerInfo.nCountTime = m_PlayerInfo.nCountTime*1.065f;
-		CDebugProc::Print("初速UP状態 [3段階]\n");
-		}
 
-		//加速値を求める
-		m_PlayerInfo.fAccel = (m_fMaxSpeed / ACCLE_TIME) * m_PlayerInfo.nCountTime;
-
-		//減速させる
-		if (m_state == STATE_DRIVE)
-		{
-		if (m_PlayerInfo.fAccel > m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
-		}
-		else if (m_state == STATE_REVERSE)
-		{
-		if (m_PlayerInfo.fAccel < m_fMaxSpeed) { m_PlayerInfo.fAccel = m_fMaxSpeed; }
-		}*/
-
-		if (m_bSpeed == false)
+		if (m_State == PLAYERSTATE_NORMAL)
 		{
 			m_fSpeed = m_PlayerInfo.fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
 		}
@@ -603,18 +578,6 @@ void CPlayer::UpdateMove(void)
 							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		//速度を下げる
-		//m_PlayerInfo.fAccel -= m_PlayerInfo.fBraks;
-
-		/*if (m_state == STATE_DRIVE)
-		{
-		if (m_PlayerInfo.fAccel < 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
-		}
-		else
-		{
-		if (m_PlayerInfo.fAccel > 0.0f) { m_PlayerInfo.fAccel = 0.0f; }
-		}*/
-
 		m_fSpeed = m_PlayerInfo.fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
 
 		//進行方向の設定
@@ -627,7 +590,7 @@ void CPlayer::UpdateMove(void)
 	case STATE_SPEED_DOWN: //ダウン状態
 		m_PlayerInfo.nCountTime = 0;
 
-		if (m_bSpeed == true)
+		if (m_State == PLAYERSTATE_SPEEDUP)
 		{// スピードアイテムを使ったとき
 		 //進行方向の設定
 			m_move.x += sinf(m_rot.y) * (m_fSpeed);
@@ -635,6 +598,54 @@ void CPlayer::UpdateMove(void)
 		}
 
 		break;
+	}
+
+	switch (m_State)
+	{// 弾を食らったとき
+	case PLAYERSTATE_NORMAL:
+		break;
+
+	case PLAYERSTATE_SPEEDDOWN:
+		//進行方向の設定
+		m_move.x *= SPEEDDOWN;
+		m_move.z *= SPEEDDOWN;
+
+		break;
+
+	case PLAYERSTATE_DAMAGE:
+
+		m_fSpeed = 0.0f;
+
+		//進行方向の設定
+		m_move.x = sinf(m_rot.y) * (m_fSpeed);
+		m_move.z = cosf(m_rot.y) * (m_fSpeed);
+
+		m_PlayerInfo.nCountTime = 0;
+		break;
+	}
+
+	if (m_bDamage == true)
+	{
+		m_nCntDamage++;
+
+		int nDamageTime = 0;	// 状態が変わる時間の長さ
+
+		if (m_State == PLAYERSTATE_DAMAGE)
+		{// 攻撃を食らったとき
+			nDamageTime = DAMAGE_TIME;
+		}
+		else if (m_State == PLAYERSTATE_SPEEDDOWN)
+		{// スピードダウンを食らったとき
+			nDamageTime = SPEEDDOWN_TIME;
+		}
+
+		if (m_nCntDamage > nDamageTime)
+		{
+			m_State = PLAYERSTATE_NORMAL;
+			m_nCntDamage = 0;
+
+			m_bDamage = false;
+		}
 	}
 
 	m_PlayerInfo.nCountTime++;
@@ -1225,15 +1236,27 @@ void CPlayer::EggAppear(CFeed *pFeed)
 	{
 		if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ATTACK)
 		{// 攻撃の卵生成
-			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ATTACK);
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_ATTACK,
+				CEgg::BULLETTYPE_PLAYER);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 		{// 妨害の卵生成
-			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_ANNOY);
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_ANNOY,
+				CEgg::BULLETTYPE_PLAYER);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 		{// 加速の卵生成
-			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos, D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE), CEgg::EGGTYPE_SPEED);
+			m_pEgg[m_nNumEgg] = CEgg::Create(m_pos,
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
+				CEgg::EGGTYPE_SPEED,
+				CEgg::BULLETTYPE_PLAYER);
 		}
 	}
 
@@ -1337,29 +1360,80 @@ void CPlayer::BulletEgg(void)
 	{// 卵を持っているとき
 		if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
-			CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
-			CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
+			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 
-			if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true || pXpad->GetTrigger(XINPUT_GAMEPAD_B, m_nControllerNum) == true)
-			{// 弾発射
-				m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
+			m_nNumEgg--;	// 所持数を減らす
 
-				m_nNumEgg--;	// 所持数を減らす
+			if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
+			{
+				m_State = PLAYERSTATE_SPEEDUP;
+				m_fSpeed += SPEED;
 
-				if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
-				{
-					m_fSpeed += SPEED;
-
-					m_bSpeed = true;
-
-					m_pEgg[0]->Uninit();
-				}
-
-				// 情報入れ替え
-				m_pEgg[0] = m_pEgg[1];
-				m_pEgg[1] = m_pEgg[2];
-				m_pEgg[2] = NULL;
+				m_pEgg[0]->Uninit();
+				m_pEgg[0] = NULL;
 			}
+
+			// 情報入れ替え
+			m_pEgg[0] = m_pEgg[1];
+			m_pEgg[1] = m_pEgg[2];
+			m_pEgg[2] = NULL;
+		}
+	}
+}
+
+//=============================================================================
+// 卵との当たり判定
+//=============================================================================
+void CPlayer::CollisionEgg(void)
+{
+	CSound *pSound = CManager::GetSound();
+	CScene *pScene;
+
+	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
+	{
+		// プライオリティーチェック
+		pScene = CScene::GetTop(nCntPriority);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
+			if (pScene->GetObjType() == OBJTYPE_EGG)
+			{// タイプが障害物だったら
+				CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET)
+				{
+					if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true && pEgg->GetBulletType() != CEgg::BULLETTYPE_PLAYER)
+					{// 衝突した
+						switch (pEgg->GetType())
+						{
+							// 攻撃
+						case CEgg::EGGTYPE_ATTACK:
+							// ダメージ状態にする
+							if (m_bDamage == false)
+							{
+								m_bDamage = true;
+								m_State = PLAYERSTATE_DAMAGE;
+							}
+							pEgg->Uninit();	// 卵削除
+							break;
+
+							// 減速
+						case CEgg::EGGTYPE_ANNOY:
+							if (m_bDamage == false)
+							{
+								m_bDamage = true;
+								m_State = PLAYERSTATE_SPEEDDOWN;
+							}
+							pEgg->Uninit();	// 卵削除
+							break;
+						}
+					}
+				}
+			}
+
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
 		}
 	}
 }
