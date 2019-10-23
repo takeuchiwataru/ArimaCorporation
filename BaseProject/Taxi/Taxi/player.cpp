@@ -45,7 +45,6 @@
 #define START_ENGINE	(200)										//エンジン音の再生時間
 #define START_GEARCHANGE (300)										//スタート時のギア切替時間
 #define EGG_SCALE		(10.0f)										//卵の大きさ
-#define MAX_EGG			(3)											//卵の最大数
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
@@ -508,7 +507,7 @@ void CPlayer::ControlKey(void)
 	{// ジャンプしていない
 		m_bJumpSave = false;
 
-		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true || pXpad->GetPress(XINPUT_GAMEPAD_A, m_nControllerNum) == true)
+		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true || pXpad->GetTrigger(XINPUT_GAMEPAD_A, m_nControllerNum) == true)
 		{// ジャンプキー
 			m_bJumpSave = true;
 			m_bJump = true;
@@ -640,8 +639,8 @@ void CPlayer::UpdateMove(void)
 
 	m_PlayerInfo.nCountTime++;
 
-	CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
-	CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
+	//CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
+	//CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
 
 	//ハンドルの状態更新
 	if (m_StateHandle == HANDLE_LEFT)
@@ -888,8 +887,8 @@ void CPlayer::CollisionObject(void)
 			{// タイプが障害物だったら
 				CObject *pObject = (CObject*)pScene;	// オブジェクトクラスのポインタ変数にする
 				int nType = pObject->GetType();			// 障害物の種類を取得
-
-				//pObject->CollisionObject(&m_pos, &m_OldPos, &m_move);
+				//当たり判定用のオブジェクトにのみ当たる
+				if (nType == 2) { pObject->CollisionObject(&m_pos, &m_OldPos, &m_move); }
 			}
 
 			// Nextに次のSceneを入れる
@@ -898,14 +897,14 @@ void CPlayer::CollisionObject(void)
 	}
 
 	//デバック表示
-	if (m_bCrcleCarIn == true)
+	/*if (m_bCrcleCarIn == true)
 	{
 		CDebugProc::Print("入っている\n");
 	}
 	else if (m_bCrcleCarIn == false)
 	{
 		CDebugProc::Print("入っていない\n");
-	}
+	}*/
 }
 
 //=============================================================================
@@ -1092,7 +1091,7 @@ void CPlayer::RemakeAngle(float * pAngle)
 void CPlayer::DebugProc(void)
 {
 	//状態の表示
-	if (m_state == STATE_DRIVE)
+	/*if (m_state == STATE_DRIVE)
 	{
 		CDebugProc::Print("状態 : STATE_DRIVE\n");
 	}
@@ -1106,13 +1105,13 @@ void CPlayer::DebugProc(void)
 	{
 		CDebugProc::Print("停止状態\n");
 	}
-
+	*/
 	//位置表示
 	CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
 
 	CDebugProc::Print("ジャンプ：%s\n", m_bJump ? "〇" : "×");
 
-	CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
+	//CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
 
 }
 
@@ -1341,7 +1340,7 @@ void CPlayer::BulletEgg(void)
 			CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 			CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
-			if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true)
+			if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true || pXpad->GetTrigger(XINPUT_GAMEPAD_B, m_nControllerNum) == true)
 			{// 弾発射
 				m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 

@@ -260,16 +260,20 @@ void CGameCharSelect::Update(void)
 	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
 	int *pnCharSelectNum = CGame::GetCharSelectNum();
+	// コントローラー番号取得
+	int *pnControllerNum = CGame::GetControllerNum();
+
+	int nPlayerNum = nMaxPlayer;
 
 	if (CFade::GetFade() == CFade::FADE_NONE)
-	{
+	{// 使用していない
 		for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
 		{// プレイヤーカウント
 			if (m_bEnter[nCntPlayer] == false)
 			{// 決定していない
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
-					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_UP, nCntPlayer) == true ||
-					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_UP, nCntPlayer) == true)
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_UP, pnControllerNum[nCntPlayer]) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_UP, pnControllerNum[nCntPlayer]) == true)
 				{// 上キー
 					if (pnCharSelectNum[nCntPlayer] / 4 == 1)
 					{// 移動制限
@@ -284,15 +288,15 @@ void CGameCharSelect::Update(void)
 									break;
 							}
 
-							if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+							if (nCntSelect == (nMaxPlayer - 1))			// 一致しなかったら更新
 								pnCharSelectNum[nCntPlayer] = nNext;
 						}
 
 					}
 				}
 				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
-					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_DOWN, nCntPlayer) == true ||
-					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_DOWN, nCntPlayer) == true)
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_DOWN, pnControllerNum[nCntPlayer]) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_DOWN, pnControllerNum[nCntPlayer]) == true)
 				{// 下キー
 					if (pnCharSelectNum[nCntPlayer] / 4 == 0)
 					{// 移動制限
@@ -307,14 +311,14 @@ void CGameCharSelect::Update(void)
 									break;
 							}
 
-							if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+							if (nCntSelect == (nMaxPlayer - 1))			// 一致しなかったら更新
 								pnCharSelectNum[nCntPlayer] = nNext;
 						}
 					}
 				}
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true ||
-					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_LEFT, nCntPlayer) == true ||
-					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_LEFT, nCntPlayer) == true)
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_LEFT, pnControllerNum[nCntPlayer]) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_LEFT, pnControllerNum[nCntPlayer]) == true)
 				{// 左キー
 					if (pnCharSelectNum[nCntPlayer] % 4 != 0)
 					{// 移動制限
@@ -333,7 +337,7 @@ void CGameCharSelect::Update(void)
 										break;
 								}
 
-								if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+								if (nCntSelect == (nMaxPlayer - 1))			// 一致しなかったら更新
 									pnCharSelectNum[nCntPlayer] = nNext;
 							}
 
@@ -343,8 +347,8 @@ void CGameCharSelect::Update(void)
 					}
 				}
 				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true ||
-					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_RIGHT, nCntPlayer) == true ||
-					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_RIGHT, nCntPlayer) == true)
+					pXpad->GetTrigger(CInputXPad::XPADOTHER_STICK_L_RIGHT, pnControllerNum[nCntPlayer]) == true ||
+					pXpad->GetTrigger(XINPUT_GAMEPAD_DPAD_RIGHT, pnControllerNum[nCntPlayer]) == true)
 				{// 右キー
 					if (pnCharSelectNum[nCntPlayer] % 4 != (4 - 1))
 					{// 移動制限
@@ -363,7 +367,7 @@ void CGameCharSelect::Update(void)
 										break;
 								}
 
-								if (nCntSelect == nMaxPlayer - 1)			// 一致しなかったら更新
+								if (nCntSelect == (nMaxPlayer - 1))			// 一致しなかったら更新
 									pnCharSelectNum[nCntPlayer] = nNext;
 							}
 
@@ -373,16 +377,34 @@ void CGameCharSelect::Update(void)
 					}
 				}
 			}
+
+			if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, pnControllerNum[nCntPlayer]) == true)
+			{// 決定キー
+				if (m_bEntry[nCntPlayer] == true)
+					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
+			}
 		}
 
 		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 		{// プレイヤーカウント
-			if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, nCntPlayer) == true)
-			{// 決定キー
-				if (m_bEntry[nCntPlayer] == true)
-					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
-				else
-					m_bEntry[nCntPlayer] = true;
+			bool bSet = false;	// コントローラーチェック用
+
+			// 使用していないコントローラーがチェック
+			for (int nCntCheck = 0; nCntCheck < nMaxPlayer; nCntCheck++)
+				if (pnControllerNum[nCntCheck] == nCntPlayer)
+					bSet = true;
+
+			if (bSet == false)
+			{// 使用していない
+				if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, nCntPlayer) == true)
+				{// 決定キー
+					if (m_bEntry[nPlayerNum] == false)
+					{
+						m_bEntry[nPlayerNum] = true;
+						pnControllerNum[nPlayerNum] = nCntPlayer;
+						nPlayerNum = nPlayerNum + (nPlayerNum < (MAX_PLAYER - 1) ? 1 : 0);
+					}
+				}
 			}
 		}
 
@@ -450,9 +472,6 @@ void CGameCharSelect::Update(void)
 			CFade::Create(CGame::GAMEMODE_PLAY);
 	}
 
-	// キャラ選択番号設定
-	CGame::SetCharSelectNum(pnCharSelectNum);
-
 	int nEntryNum = 0;
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{// プレイヤーカウント
@@ -464,12 +483,12 @@ void CGameCharSelect::Update(void)
 	{// プレイヤー数が変わった
 		nMaxPlayer = nEntryNum;		// プレイヤー数を更新
 
-		for (int nCntPlayer = nMaxPlayer; 0 <= nCntPlayer; nCntPlayer--)
+		for (int nCntPlayer = (nMaxPlayer - 1); 0 <= nCntPlayer; nCntPlayer--)
 		{// プレイヤーカウント
 			while(1)
 			{// 同じ番号をなくす
 				bool bCheck = false;
-				for (int nCntCheck = nMaxPlayer; 0 <= nCntCheck; nCntCheck--)
+				for (int nCntCheck = (nMaxPlayer - 1); 0 <= nCntCheck; nCntCheck--)
 				{// チェックカウント
 					if (nCntPlayer != nCntCheck)
 					{// 自分以外
@@ -487,11 +506,37 @@ void CGameCharSelect::Update(void)
 				else
 					break;
 			}
+
+			while (1)
+			{// 同じ番号をなくす
+				bool bCheck = false;
+				for (int nCntCheck = (nMaxPlayer - 1); 0 <= nCntCheck; nCntCheck--)
+				{// チェックカウント
+					if (nCntPlayer != nCntCheck)
+					{// 自分以外
+						if (pnControllerNum[nCntPlayer] == pnControllerNum[nCntCheck])
+						{// 同じ番号があった
+							bCheck = true;
+							break;
+						}
+					}
+				}
+
+				// 番号を変更 or break
+				if (bCheck == true)
+					pnControllerNum[nCntPlayer] = (pnControllerNum[nCntPlayer] + 1) % MAX_PLAYER;
+				else
+					break;
+			}
 		}
 	}
 		
 	// プレイヤー最大数設定
 	CGame::SetMaxPlayer(nMaxPlayer);
+	// キャラ選択番号設定
+	CGame::SetCharSelectNum(pnCharSelectNum);
+	// コントローラー設定
+	CGame::SetControllerNum(pnControllerNum);
 }
 
 //=============================================================================
