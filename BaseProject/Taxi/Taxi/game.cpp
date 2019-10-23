@@ -33,21 +33,11 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define TEXT_OBJECTNAME1		"data\\TEXT\\ステージ6\\objecy.txt"			// 読み込むテキストファイル
-#define TEXT_MESHFIELDNAME1		"data\\TEXT\\ステージ6\\meshfield.txt"		// 読み込むテキストファイル
-#define TEXT_WALLNAME1			"data\\TEXT\\ステージ6\\wall.txt"			// 読み込むテキストファイル
+#define TEXT_OBJECTNAME1		"data\\TEXT\\ゲームマップ\\objecy.txt"			// 読み込むテキストファイル
+#define TEXT_MESHFIELDNAME1		"data\\TEXT\\ゲームマップ\\meshfield.txt"		// 読み込むテキストファイル
+#define TEXT_WALLNAME1			"data\\TEXT\\ゲームマップ\\wall.txt"			// 読み込むテキストファイル
 #define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"			// プレイヤーのモーションファイル
-#define TEXT_BOY_MOTION			"data\\TEXT\\お客さん\\motion_boy.txt"		// 男性モーションファイル
-#define TEXT_GIRL_MOTION		"data\\TEXT\\お客さん\\motion_girl.txt"		// 女性モーションファイル
-#define TEXT_CUSTOMER_SUMMER	"data\\TEXT\\お客さん\\Summer2.txt"			// お客さんの情報（夏）
-#define TEXT_CUSTOMER_HARD		"data\\TEXT\\お客さん\\Summer.txt"			// お客さんの情報 (ハード)
-#define TEXT_HUMAN_NPC			"data\\TEXT\\HumanNPC.txt"					// 人NPCの情報
 #define VECTOR_ZERO				(D3DXVECTOR3(0.0f, 0.0f, 0.0f))
-#define TEXT_POINTNAME1			"data\\TEXT\\ステージ6\\point.txt"			// 車のポイント情報
-#define TEXT_ROUTENAME1			"data\\TEXT\\ステージ6\\route.txt"			// 車のルート情報
-#define TEXT_EFFECT				"data\\TEXT\\particle.txt"					// エフェクト情報
-#define TEXT_EFFECT_TOOL		"data\\TEXT\\Particle.txt"					// エフェクト情報
-#define TEXT_OBJBILL			"data\\TEXT\\ステージ6\\objbillboad.txt"	// オブジェクトビルボード情報
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -362,7 +352,7 @@ void CGame::Update(void)
 				if (m_pPause == NULL)
 				{
 					//ポーズを開く音
-					pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
+					//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
 
 					//ポーズの生成
 					m_pPause = CPause::Create();
@@ -375,7 +365,7 @@ void CGame::Update(void)
 				if (m_pPause != NULL)
 				{
 					//ポーズを閉じる音
-					pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+					//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
 
 					//ポーズを削除
 					m_pPause->Uninit();

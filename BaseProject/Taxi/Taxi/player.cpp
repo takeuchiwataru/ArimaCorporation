@@ -802,14 +802,14 @@ void CPlayer::SetState(CPlayer::STATE state)
 
 		if (STATE_REVERSE == state)
 		{// ƒoƒbƒN‰¹
-			pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
+			//pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
+			//pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
 		}
 		else if (STATE_DRIVE == state)
 		{
-			pSound->StopSound(CSound::SOUND_LABEL_SE_BACK);
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
-			pSound->PlaySoundA(CSound::SOUND_LABEL_SE_ACCEL);
+			//pSound->StopSound(CSound::SOUND_LABEL_SE_BACK);
+			//pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
+			//pSound->PlaySoundA(CSound::SOUND_LABEL_SE_ACCEL);
 		}
 	}
 

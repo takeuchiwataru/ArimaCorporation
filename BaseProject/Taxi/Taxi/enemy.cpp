@@ -18,10 +18,6 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FEED_NAME_000	"data\\MODEL\\cone.x"			// 読み込むモデルファイル
-#define FEED_NAME_001	"data\\MODEL\\Apple.x"			// 読み込むモデルファイル
-#define FEED_NAME_002	"data\\MODEL\\Banana.x"			// 読み込むモデルファイル
-
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define PLAYER_HEIGHT			(100.0f)	// プレイヤーの背の高さ
@@ -245,7 +241,7 @@ HRESULT CEnemy::Load(void)
 	D3DXMATERIAL *pMat;
 
 	// Xファイルの読み込み
-	D3DXLoadMeshFromX("data\\MODEL\\box.x", D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel, NULL, &m_nNumMatModel, &m_pMeshModel);
+	D3DXLoadMeshFromX("data\\MODEL\\Enemy\\box.x", D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel, NULL, &m_nNumMatModel, &m_pMeshModel);
 
 	//マテリアル情報からテクスチャの取得
 	pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
