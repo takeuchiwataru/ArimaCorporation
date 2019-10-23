@@ -206,7 +206,7 @@ void CPause::Update(void)
 	{//矢印キーの上を押したとき
 
 		//ポーズの選択肢移動音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
+		//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
 
 		// 頂点カラー設定
 		pVtx[m_SelectNum * 4 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
@@ -221,7 +221,7 @@ void CPause::Update(void)
 	{//矢印キーの下を押したとき
 
 		//ポーズの選択し移動音
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
+		//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
 
 		// 頂点カラー設定
 		pVtx[m_SelectNum * 4 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
@@ -278,7 +278,7 @@ void CPause::Update(void)
 		if (pFade == CFade::FADE_NONE)
 		{
 			//ポーズの選択の決定音
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
+			//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_SELECT);
 		}
 	}
 }

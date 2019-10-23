@@ -17,9 +17,9 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MODEL_NAME_1	"data\\MODEL\\壊れるもの\\tree2.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_2	"data\\MODEL\\壊れるもの\\柵.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_3	"data\\MODEL\\当たり判定用\\box.x"		//読み込むテクスチャファイル
+#define MODEL_NAME_1	"data\\MODEL\\Object\\tree2.x"		//読み込むテクスチャファイル
+#define MODEL_NAME_2	"data\\MODEL\\Object\\柵.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"		//読み込むテクスチャファイル
 
 #define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\leaf.png"		//読み込むテクスチャファイル
 #define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル

@@ -46,7 +46,7 @@ CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -493,8 +493,8 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pTutorial->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.5f);
-				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
+				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.5f);
+				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
 			}
 		}
 		break;
@@ -506,34 +506,11 @@ void CManager::SetMode(MODE mode)
 
 			if (m_pGame != NULL)
 			{
-				int nData = rand() % 5;
 				m_pGame->Init();
 				m_pSound->StopSound();
-				if (nData == 0)
-				{//	BGM　＃1
-					m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME000, 0.2f);
-					m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME000);
-				}
-				else if (nData == 1)
-				{// BGM #2
-					m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME001, 0.8f);
-					m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME001);
-				}
-				else if (nData == 2)
-				{// BGM #3
-					m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME002, 0.4f);
-					m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME002);
-				}
-				else if (nData == 3)
-				{// BGM #3]
-					m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME003, 0.8f);
-					m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME003);
-				}
-				else
-				{// BGM それ以外
-					m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME000, 0.2f);
-					m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME000);
-				}
+				//	BGM　＃1
+				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME000, 0.2f);
+				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME000);
 			}
 		}
 		break;
@@ -547,9 +524,9 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pResult->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.8f);
+				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.8f);
 
-				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
+				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
 			}
 		}
 		break;
@@ -562,9 +539,9 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pRanking->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.8f);
+				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.8f);
 
-				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
+				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
 			}
 		}
 		break;
@@ -578,8 +555,8 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pSelect->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_SELECT, 1.1f);
-				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_SELECT);
+				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_SELECT, 1.1f);
+				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_SELECT);
 			}
 		}
 	}

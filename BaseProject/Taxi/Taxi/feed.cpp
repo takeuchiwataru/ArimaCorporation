@@ -17,9 +17,9 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FEED_NAME_000	"data\\MODEL\\cone.x"			// 読み込むモデルファイル
-#define FEED_NAME_001	"data\\MODEL\\Apple.x"			// 読み込むモデルファイル
-#define FEED_NAME_002	"data\\MODEL\\Banana.x"			// 読み込むモデルファイル
+#define FEED_NAME_000	"data\\MODEL\\Item\\cone.x"			// 読み込むモデルファイル
+#define FEED_NAME_001	"data\\MODEL\\Item\\Apple.x"			// 読み込むモデルファイル
+#define FEED_NAME_002	"data\\MODEL\\Item\\Banana.x"			// 読み込むモデルファイル
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
