@@ -20,6 +20,13 @@
 class CUi : public CScene2D
 {
 public://誰でも扱える
+	typedef enum
+	{
+		UI_TITLE_LOGO = 0,		//タイトルロゴ
+		UI_PRESS_BUTTON,		//プレスボタン指示
+		UI_MAX					//最大数
+	}UI;
+
 	CUi();
 	~CUi();
 	static HRESULT Load(void);
@@ -28,12 +35,15 @@ public://誰でも扱える
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CUi *Create(D3DXVECTOR3 pos, D3DXVECTOR2 size,int nType);
+	static CUi *Create(D3DXVECTOR3 pos, D3DXVECTOR2 size, CUi::UI m_Ui);
+	void UiMovement(void);
 
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[MAX_TEXTURE];	//共有テクスチャのポインタ
 	static int					m_nNextType;				//状態を貰うときのタイプ
 	static int					m_nNextFont;				//状態の文字
+	static UI					m_Ui;						//UIの種類
+	float						m_fAlpha;					//透明度
 	int							m_nStateType;				//状態を貰うときのタイプ
 	int							m_nStateFont;				//状態の文字
 	int							m_nType;					//種類

@@ -71,8 +71,8 @@ HRESULT CTitle::Init()
 	//===================================
 	//		    UI生成の場所
 	//===================================
-	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 120.0f, 0.0f), D3DXVECTOR2(500.0f, 180.0f), 0);	//タイトルロゴ
-	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 270.0f, 0.0f), D3DXVECTOR2(250.0f, 50.0f), 1);	//エンター指示
+	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 120.0f, 0.0f), D3DXVECTOR2(0.0f, 0.0f), CUi::UI_TITLE_LOGO);	//タイトルロゴ
+	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 270.0f, 0.0f), D3DXVECTOR2(250.0f, 50.0f), CUi::UI_PRESS_BUTTON);	//エンター指示
 
 	//	変数の初期化
 	m_nTitleCounter = 0;

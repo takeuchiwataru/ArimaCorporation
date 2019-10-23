@@ -43,6 +43,7 @@ class CLoadTextMotion;
 class CGameCamera;
 
 class CGameCharSelect;
+class CGamePlay;
 
 //=====================
 // 基本クラス
@@ -119,6 +120,16 @@ public:
 	}
 	static int *GetCharSelectNum(void) { return m_nCharSelectNum; }
 
+	// コントローラー番号
+	static void SetControllerNum(int *nControllerNum)
+	{
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			m_nControllerNum[nCntPlayer] = nControllerNum[nCntPlayer];
+	}
+	static int *GetControllerNum(void) { return m_nControllerNum; }
+
+	static int *GetRanking(void) { return m_nRanking; }
+
 private:
 	//テキストの値を管理する場所
 	typedef struct
@@ -179,6 +190,7 @@ private:
 	static GAMEMODE m_gameModeNext;				//次のゲームモード
 
 	static CGameCharSelect *m_pGameCharSelect;	// ゲーム（キャラ選択）
+	static CGamePlay*m_pGamePlay;				// ゲーム（プレイ）
 
 	static GAMESTATE m_gameState;				//ゲーム状態
 	GAMESTATE m_NowGameState;					//現在のゲーム状況
@@ -201,6 +213,11 @@ private:
 
 	static int m_nMaxPlayer;					// プレイヤー数
 	static int m_nCharSelectNum[MAX_PLAYER];	// キャラ選択番号
+
+	static int m_nControllerNum[MAX_PLAYER];	// コントローラー番号
+
+	static int m_nRanking[MAX_PLAYER];			// ランキング
+	static bool m_bGoul[MAX_PLAYER];			// ゴール判定
 
 	//ウォークスルー用
 	static bool m_bDrawUI;

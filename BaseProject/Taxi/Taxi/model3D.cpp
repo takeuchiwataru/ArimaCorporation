@@ -134,7 +134,7 @@ void CModel3D::Update(void)
 	}
 	else if (CManager::MODE_TUTORIAL == mode)
 	{
-		SetDraw(CTutorial::GetCamera()->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
+		//SetDraw(CTutorial::GetCamera()->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
 	}
 
 	if (m_bBlow)

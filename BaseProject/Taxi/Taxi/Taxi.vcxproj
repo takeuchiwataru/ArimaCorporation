@@ -161,6 +161,7 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gamecamera.cpp" />
     <ClCompile Include="gameCharSelect.cpp" />
+    <ClCompile Include="gamePlay.cpp" />
     <ClCompile Include="incline.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="light.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="game.h" />
     <ClInclude Include="gamecamera.h" />
     <ClInclude Include="gameCharSelect.h" />
+    <ClInclude Include="gamePlay.h" />
     <ClInclude Include="incline.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="light.h" />
