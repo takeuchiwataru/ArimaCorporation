@@ -25,6 +25,7 @@
 #include "object.h"
 #include "feed.h"
 #include "egg.h"
+#include "billboord.h"
 
 //=============================================================================
 // マクロ定義
@@ -111,7 +112,10 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, int nPlayerNum, int nController
 //=============================================================================
 // コンストラクタ
 //=============================================================================
-CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER) {}
+CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER) 
+{
+	m_pPlayerNum = NULL;
+}
 
 //=============================================================================
 // デストラクタ
@@ -215,7 +219,7 @@ HRESULT CPlayer::Init(void)
 	m_vtxMinModel = VECTOR_ZERO;			//モデルの頂点最小値
 	m_pMotion = NULL;						//モーションポインタ
 	m_pText = NULL;							//プレイヤーのテキストポインタ
-	m_state = STATE_DRIVE;					//状態設定
+	m_MoveState = STATE_DRIVE;					//状態設定
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
 	m_PlayerInfo.nCountTime = 0;			//カウンター
@@ -245,6 +249,13 @@ HRESULT CPlayer::Init(void)
 	m_nCntDamage = 0;
 	m_bDamage = false;
 	m_State = PLAYERSTATE_NORMAL;
+
+	m_nPlayerNum = 0;				// プレイヤー番号
+	m_nControllerNum = 0;			// コントローラー番号
+
+	// プレイヤー番号（追従）
+	if (m_pPlayerNum == NULL)
+		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 80.0f, 0.0f), D3DXVECTOR2(25.0f, 25.0f), 0);
 
 	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
 	{
@@ -288,6 +299,12 @@ HRESULT CPlayer::Init(void)
 //=============================================================================
 void CPlayer::Uninit(void)
 {
+	if (m_pPlayerNum != NULL)
+	{
+		m_pPlayerNum->Uninit();
+		m_pPlayerNum = NULL;
+	}
+
 	//モーションの破棄
 	if (m_pMotion != NULL)
 	{
@@ -335,13 +352,8 @@ void CPlayer::Update(void)
 	else
 	{//ハンドルを握っていない状態にする
 		SetStateHandle(HANDLE_MAX);
+		SetStateSpeed(STATE_SPEED_DOWN);
 	}
-
-	/*if (m_pos.y < 0.0f)
-	{
-	m_pos.y = 0.0f;
-	m_move.y = 0.0f;
-	}*/
 
 	//タイムアップ状態なら以降は更新しない
 	//if (CTime::GetTime() == 0 && CManager::MODE_GAME == CManager::GetMode()) { return; }
@@ -374,6 +386,12 @@ void CPlayer::Update(void)
 	m_pCombo->Uninit();
 	m_pCombo = NULL;
 	}*/
+
+	if (m_pPlayerNum != NULL)
+	{
+		m_pPlayerNum->SetPosSize(m_pos + D3DXVECTOR3(0.0f, 80.0f, 0.0f), D3DXVECTOR2(25.0f, 25.0f));
+		m_pPlayerNum->SetTexture(m_nPlayerNum, 5, 1, 1);
+	}
 
 	DebugProc();		// デバック表示
 }
@@ -419,6 +437,7 @@ void CPlayer::Draw(void)
 //=============================================================================
 void CPlayer::ControlKey(void)
 {
+	CSound *pSound = CManager::GetSound();
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
@@ -470,7 +489,7 @@ void CPlayer::ControlKey(void)
 	else if
 		((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, m_nControllerNum) == true) ||
-			(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
+		(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -503,6 +522,13 @@ void CPlayer::ControlKey(void)
 		}
 	}
 
+	if (m_StateSpeed == STATE_SPEED_ACCEL)
+	{
+		//走る音
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_RAN, 3.0f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_RAN);
+	}
+
 	// ジャンプ
 	if (m_bJump == false)
 	{// ジャンプしていない
@@ -525,8 +551,6 @@ void CPlayer::ControlKey(void)
 		BulletEgg();
 	}
 
-	CSound *pSound = CManager::GetSound();
-
 	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
 	{
 	pSound->SetVolume(CSound::SOUND_LABEL_SE_KLAXON, 1.5f);
@@ -539,6 +563,8 @@ void CPlayer::ControlKey(void)
 //=============================================================================
 void CPlayer::UpdateMove(void)
 {
+	CSound *pSound = CManager::GetSound();
+
 	m_OldPos = m_pos;	//前回の位置を保存する
 
 	RemakeAngle(&m_rot.y);
@@ -559,9 +585,8 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
-
 
 		if (m_State == PLAYERSTATE_NORMAL)
 		{
@@ -610,6 +635,10 @@ void CPlayer::UpdateMove(void)
 		m_move.x *= SPEEDDOWN;
 		m_move.z *= SPEEDDOWN;
 
+		//スピードダウンの音
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_SPEEDDOWN, 2.0f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_SPEEDDOWN);
+
 		break;
 
 	case PLAYERSTATE_DAMAGE:
@@ -657,12 +686,16 @@ void CPlayer::UpdateMove(void)
 	if (m_StateHandle == HANDLE_LEFT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
+		{
 			m_rot.y -= m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
+		{
 			m_rot.y += m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+		}
 	}
 
 	// 重力
@@ -738,7 +771,7 @@ void CPlayer::UpdateShake(void)
 	{//車体を揺らす
 		m_rot.x += SHAKE_X;
 
-		if (((m_nCntShake % 24) == 0) && (m_state != STATE_SPEED_STOP))
+		if (((m_nCntShake % 24) == 0) && (m_MoveState != STATE_SPEED_STOP))
 		{
 			int nRand = rand() % 5;
 
@@ -803,7 +836,7 @@ void CPlayer::UpdateField(void)
 void CPlayer::SetState(CPlayer::STATE state)
 {
 	//値の反転
-	if (m_state != state)
+	if (m_MoveState != state)
 	{
 		//m_PlayerInfo.fAccel *= -0.5f;
 		//m_PlayerInfo.fBraks *= -1;
@@ -825,7 +858,7 @@ void CPlayer::SetState(CPlayer::STATE state)
 	}
 
 	//状態の設定
-	m_state = state;
+	m_MoveState = state;
 }
 
 //=============================================================================
@@ -840,7 +873,7 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 
 		CSound *pSound = CManager::GetSound();
 
-		/*if (STATE_SPEED_ACCEL == state && STATE_DRIVE == m_state)
+		/*if (STATE_SPEED_ACCEL == state && STATE_DRIVE == m_MoveState)
 		{// アクセル音
 		pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
 		pSound->PlaySound(CSound::SOUND_LABEL_SE_ACCEL);
@@ -1102,7 +1135,7 @@ void CPlayer::RemakeAngle(float * pAngle)
 void CPlayer::DebugProc(void)
 {
 	//状態の表示
-	/*if (m_state == STATE_DRIVE)
+	/*if (m_MoveState == STATE_DRIVE)
 	{
 		CDebugProc::Print("状態 : STATE_DRIVE\n");
 	}
@@ -1263,6 +1296,7 @@ void CPlayer::EggAppear(CFeed *pFeed)
 	m_pEgg[m_nNumEgg]->SetState(CEgg::EGGSTATE_CHASE);
 }
 
+
 //=============================================================================
 // 卵がついてくる処理
 //=============================================================================
@@ -1380,6 +1414,7 @@ void CPlayer::BulletEgg(void)
 		}
 	}
 }
+
 
 //=============================================================================
 // 卵との当たり判定

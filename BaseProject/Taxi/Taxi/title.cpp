@@ -117,8 +117,11 @@ void CTitle::Update(void)
 	 //フェードが始まったら
 		if (pFade == CFade::FADE_NONE)
 		{
-			//ポーズの選択の決定音
-			//pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLE_ENTER);
+			//タイトルの選択の音量
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_TITLEFADE, 0.5f);
+			//タイトルの選択の決定音
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLEFADE);
+
 			CFade::Create(CManager::MODE_GAME);
 		}
 	}
@@ -128,8 +131,10 @@ void CTitle::Update(void)
 //=============================================================================
 void CTitle::Draw(void)
 {
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
 	// バックバッファ＆Ｚバッファのクリア
-	CManager::GetRenderer()->GetDevice()->Clear(0,
+	pDevice->Clear(0,
 		NULL,
 		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
 		D3DCOLOR_RGBA(157, 184, 224, 255),

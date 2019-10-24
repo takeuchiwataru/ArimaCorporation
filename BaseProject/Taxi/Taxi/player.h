@@ -22,6 +22,7 @@
 #define MAX_TIRE	(4)		//タイヤの最大数
 #define MAX_EGG		(3)		//卵の最大数
 #define MAX_FRAME	(60)
+
 #define DAMAGE_TIME	(60)		// ダメージを食らっている時間
 #define SPEEDUP_TIME	(60)	// 加速している時間
 #define SPEEDDOWN_TIME	(300)	// 減速している時間
@@ -37,6 +38,7 @@ class CCombo;
 class CSound;
 class CFeed;
 class CEgg;
+class CBillBoord;
 
 //=============================================================================
 // プレイヤークラス
@@ -116,7 +118,7 @@ public:
 	PLAYER_INFO * GetPlayerInfoPoint(void) { return &m_PlayerInfo; };
 	STATE_SPEED GetStateSpeed(void) { return m_StateSpeed; };
 	STATE_HANDLE GetStateHandle(void) { return m_StateHandle; };
-	STATE GetState(void) { return m_state; };
+	STATE GetState(void) { return m_MoveState; };
 
 	void CollisitionWall(void);
 	void CollisionEgg(void);
@@ -159,8 +161,8 @@ private:
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
-											//メンバ変数
-	static int	m_nMaxMotion;							// モーションの最大数
+	//メンバ変数
+	static int					  m_nMaxMotion;			// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;		// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;			// テクスチャ
 	D3DXVECTOR3				      m_pos;				// 中心座標
@@ -174,7 +176,7 @@ private:
 	D3DXVECTOR3					  m_vtxMinModel;		// モデルの頂点最小値
 	D3DXMATRIX					  m_mtxWorld;			// ワールドマトリックス
 	CMotion *					  m_pMotion;			// モーションのポインタ
-	STATE						  m_state;				// 状態設定
+	STATE						  m_MoveState;			// 状態設定
 	STATE_SPEED					  m_StateSpeed;			// スピードの状態
 	STATE_HANDLE				  m_StateHandle;		// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;			// プレイヤーの情報
@@ -200,10 +202,13 @@ private:
 	int							  m_nCntFrame;			// 卵のついてくる処理に使う
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
+
 	bool						  m_bDamage;
 	PLAYERSTATE					  m_State;
 	int							  m_nCntDamage;
 	int							  m_nPlayerNum;			// プレイヤー番号
 	int							  m_nControllerNum;		// コントローラー番号
+
+	CBillBoord					  *m_pPlayerNum;		// プレイヤー番号（追従）
 };
 #endif

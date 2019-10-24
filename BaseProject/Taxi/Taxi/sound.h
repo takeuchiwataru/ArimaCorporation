@@ -25,7 +25,27 @@ class CSound
 public:
 	typedef enum
 	{
-		SOUND_LABEL_BGM_TITLE = 0,		// タイトルのBGM
+		//==========================
+		//           BGM
+		//==========================	
+		SOUND_LABEL_BGM_TITLE = 0,			//タイトルの曲
+		SOUND_LABEL_BGM_CHARACTERSERECT,	//キャラクター選択の曲
+		SOUND_LABEL_BGM_GAME,				//ゲームの曲
+		SOUND_LABEL_BGM_RANKING,			//ランキングの曲
+
+		//==========================
+		//            SE
+		//==========================
+		SOUND_LABEL_SE_CHARACTERSERECT,		//キャラクター選択音
+		SOUND_LABEL_SE_STARTCOUNT,			//スタートカウント
+		SOUND_LABEL_SE_SPEEDDOWN,			//スピードダウン
+		SOUND_LABEL_SE_TITLEFADE,			//タイトル決定音
+		SOUND_LABEL_SE_DAMAGE,				//ダメージ
+		SOUND_LABEL_SE_HITKICK,				//殴る蹴る
+		SOUND_LABEL_SE_ATTACKWARNING,		//攻撃警告
+		SOUND_LABEL_SE_RAN,					//走る
+		SOUND_LABEL_SE_EGGBREAK,			//卵が割れる
+		SOUND_LABEL_SE_EGGLAY,				//卵が産まれる
 
 		SOUND_LABEL_MAX
 	}SOUND_LABEL;
@@ -42,6 +62,7 @@ public:
 
 	float GetVolume(SOUND_LABEL label);						// 音量の取得
 	void SetVolume(SOUND_LABEL label, float fVolume);		// 音量の設定
+	void SetFrequency(SOUND_LABEL label, float fRatio);		// 音声の周波数の取得
 
 private:
 	typedef struct
@@ -60,8 +81,27 @@ private:
 	SOUNDPARAM m_aSoundParam[SOUND_LABEL_MAX] =
 	{
 		//-1はループ　　0は単発
-		//BGM一覧
-		{ "data/SOUND/BGM/TitleBGM.wav", -1 }
+		//==========================
+		//           BGM
+		//==========================
+		{ "data/SOUND/BGM/Title_BGM.wav", -1 },
+		{ "data/SOUND/BGM/CharacterSerect_BGM.wav", -1 },
+		{ "data/SOUND/BGM/Game_BGM.wav", -1 },
+		{ "data/SOUND/BGM/Ranking_BGM.wav", -1 },
+
+		//==========================
+		//            SE
+		//==========================
+		{ "data/SOUND/SE/CharacterSerect_SE.wav", 0 },
+		{ "data/SOUND/SE/StartCount_SE.wav", 0 },
+		{ "data/SOUND/SE/SpeedDown_SE.wav", 0 },
+		{ "data/SOUND/SE/TitleSerect_SE.wav", 0 },
+		{ "data/SOUND/SE/Damage_SE.wav", 0 },
+		{ "data/SOUND/SE/HitKick_SE.wav", 0 },
+		{ "data/SOUND/SE/AttackWarning_SE.wav", 0 },
+		{ "data/SOUND/SE/Ran_SE.wav", 0 },
+		{ "data/SOUND/SE/EggBreak_SE.wav", 0 },
+		{ "data/SOUND/SE/EggLay_SE.wav", 0 }
 	};
 };
 

@@ -255,7 +255,8 @@ void CGameCharSelect::Update(void)
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
-
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+	
 	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
@@ -381,7 +382,13 @@ void CGameCharSelect::Update(void)
 			if (pXpad->GetTrigger(XINPUT_GAMEPAD_START, pnControllerNum[nCntPlayer]) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
+				{
 					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
+
+					//決定音の設定
+					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+					pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
+				}
 			}
 		}
 
@@ -461,11 +468,14 @@ void CGameCharSelect::Update(void)
 
 		// 決定
 		if (m_pEnter[nCntPlayer] != NULL)
+		{
 			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_bEnter[nCntPlayer] == true ? 1.0f : 0.0f)));
-
+		}
 		// 決定数チャック
 		if (m_bEnter[nCntPlayer] == true)
+		{
 			nChackEnter++;
+		}
 
 		// 全員決定
 		if (nChackEnter == nMaxPlayer)

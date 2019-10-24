@@ -61,6 +61,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	static void NotFadeReleseAll(void);
 	static void UpdateAll(void);
 	static void DrawAll(void);
+	static void Draw2D(void);
 	void SetObjType(OBJTYPE ObjType);
 	static CScene *&GetTop(int nPriority);
 	CScene *&GetNext(void) { return m_pNext; }

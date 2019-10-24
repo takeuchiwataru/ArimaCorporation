@@ -326,7 +326,7 @@ HRESULT CEnemy::Load(void)
 	m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
 	m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-																	//頂点数を取得
+														//頂点数を取得
 	nNumVtx = m_pMeshModel->GetNumVertices();
 
 	//頂点フォーマットのサイズを取得

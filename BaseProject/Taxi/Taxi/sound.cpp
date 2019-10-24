@@ -389,6 +389,7 @@ float CSound::GetVolume(SOUND_LABEL label)
 {
 	float fVolume;
 	m_apSourceVoice[label]->GetVolume(&fVolume);	// 指定したサウンドの音量の取得
+	
 	return fVolume;
 }
 
@@ -398,4 +399,12 @@ float CSound::GetVolume(SOUND_LABEL label)
 void CSound::SetVolume(SOUND_LABEL label, float fVolume)
 {
 	m_apSourceVoice[label]->SetVolume(fVolume);		// 指定したサウンドの音量の設定
+}
+
+//=============================================================================
+// 周波数の設定
+//=============================================================================
+void CSound::SetFrequency(SOUND_LABEL label, float fRatio)
+{
+	m_apSourceVoice[label]->SetFrequencyRatio(fRatio);	//指定したサウンドの周波数の設定
 }

@@ -15,6 +15,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define COUNT_DOWN	(3)
 
 //*****************************************************************************
 // 前方宣言
@@ -29,7 +30,10 @@ class CGamePlay : public CScene
 public:
 	typedef enum
 	{
-		TEXTURE_RANK = 0,
+		TEXTURE_NO_3 = 0,
+		TEXTURE_NO_2,
+		TEXTURE_NO_1,
+		TEXTURE_RANK,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -48,8 +52,10 @@ public:
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
+	CScene2D *m_pCountDown[COUNT_DOWN];		// カウントダウン
 	CScene2D *m_pRanking[MAX_PLAYER];		// ランキング
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];	// アイテム
+	CScene2D *m_pGoul[MAX_PLAYER];			// ゴール
 
 };
 #endif
