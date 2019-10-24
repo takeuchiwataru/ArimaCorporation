@@ -133,7 +133,7 @@ HRESULT CGame::Init()
 
 	// デバッグ用
 	if (m_gameMode == GAMEMODE_PLAY)
-		m_nMaxPlayer = 2;
+		m_nMaxPlayer = 4;
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
 
@@ -590,6 +590,8 @@ void CGame::SetStage(void)
 //===============================================================================
 void CGame::Ranking(void)
 {
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+
 	// 距離を測る
 	float fLenght[MAX_PLAYER] = { 0.0f };	// 距離
 	int	nGoulNum = 0;						// ゴール数
@@ -610,6 +612,10 @@ void CGame::Ranking(void)
 
 					// 入力しない
 					m_pPlayer[nCntPlayer]->SetControl(false);
+
+					//決定音の設定
+					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+					pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
 
 					nGoulNum++;		// ゴール数カウント
 				}

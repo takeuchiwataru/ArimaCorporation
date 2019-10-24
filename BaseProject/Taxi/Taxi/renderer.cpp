@@ -236,10 +236,10 @@ void CRenderer::Draw(void)
 		m_pD3DDevice->SetViewport(&viewport);
 
 #ifdef _DEBUG
-		int nFps = GetFps();
-		CDebugProc::Draw();	
-
-		CDebugProc::Print("FPS %d\n", nFps);
+		//int nFps = GetFps();
+		//CDebugProc::Draw();	
+		//
+		//CDebugProc::Print("FPS %d\n", nFps);
 #endif
 		// Direct3D‚É‚æ‚é•`‰æ‚ÌI—¹
 		m_pD3DDevice->EndScene();

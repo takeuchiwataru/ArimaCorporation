@@ -30,10 +30,9 @@ class CGamePlay : public CScene
 public:
 	typedef enum
 	{
-		TEXTURE_NO_3 = 0,
-		TEXTURE_NO_2,
-		TEXTURE_NO_1,
+		TEXTURE_COUNT = 0,
 		TEXTURE_RANK,
+		TEXTURE_GOUL,
 		TEXTURE_MAX
 	}TEXTURE;
 

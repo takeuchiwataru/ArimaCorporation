@@ -522,12 +522,12 @@ void CPlayer::ControlKey(void)
 		}
 	}
 
-	if (m_StateSpeed == STATE_SPEED_ACCEL)
-	{
-		//‘–‚é‰¹
-		pSound->SetVolume(CSound::SOUND_LABEL_SE_RAN, 3.0f);
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_RAN);
-	}
+	//if (m_StateSpeed == STATE_SPEED_ACCEL)
+	//{
+	//	//‘–‚é‰¹
+	//	pSound->SetVolume(CSound::SOUND_LABEL_SE_RAN, 3.0f);
+	//	pSound->PlaySound(CSound::SOUND_LABEL_SE_RAN);
+	//}
 
 	// ƒWƒƒƒ“ƒv
 	if (m_bJump == false)

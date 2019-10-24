@@ -62,6 +62,9 @@ HRESULT CGameCharSelect::Load(void)
 
 		switch (nCntTex)
 		{
+		case TEXTURE_CHAR:
+			strcpy(cName, "data/TEXTURE/game/charselect/char.png");
+			break;
 		case TEXTURE_FRAME:
 			strcpy(cName, "data/TEXTURE/game/charselect/select_frame.png");
 			break;
@@ -196,8 +199,9 @@ HRESULT CGameCharSelect::Init()
 					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (nCntChar % 4 == 0 || nCntChar % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (nCntChar / 2 % 2 == 0 ? -1.0f : 1.0f)),
 					(SCREEN_HEIGHT * 0.8f) + ((SCREEN_WIDTH * 0.053f) * (nCntChar / 4 == 0 ? -1.0f : 1.0f)),
 					0.0f),
-				D3DXVECTOR2(SCREEN_WIDTH * 0.053f, SCREEN_WIDTH * 0.053f));
-			m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (1.0f / MAX_CHARCTER) * nCntChar));
+				D3DXVECTOR2(SCREEN_WIDTH * 0.05f, SCREEN_WIDTH * 0.05f));
+			m_pCharacter[nCntChar]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+			m_pCharacter[nCntChar]->BindTexture(m_pTexture[TEXTURE_CHAR]);
 		}
 	}
 
@@ -419,28 +423,52 @@ void CGameCharSelect::Update(void)
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_1) == true)
 		{
 			if (m_bEntry[0] == true)
+			{
 				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
+
+				//Œˆ’è‰¹‚ÌÝ’è
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
+			}
 			else
 				m_bEntry[0] = true;
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_2) == true)
 		{
 			if (m_bEntry[1] == true)
+			{
 				m_bEnter[1] = (m_bEnter[1] ^ 1 ? true : false);
+
+				//Œˆ’è‰¹‚ÌÝ’è
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
+			}
 			else
 				m_bEntry[1] = true;
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_3) == true)
 		{
 			if (m_bEntry[2] == true)
+			{
 				m_bEnter[2] = (m_bEnter[2] ^ 1 ? true : false);
+
+				//Œˆ’è‰¹‚ÌÝ’è
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
+			}
 			else
 				m_bEntry[2] = true;
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_4) == true)
 		{
 			if (m_bEntry[3] == true)
+			{
 				m_bEnter[3] = (m_bEnter[3] ^ 1 ? true : false);
+
+				//Œˆ’è‰¹‚ÌÝ’è
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
+				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
+			}
 			else
 				m_bEntry[3] = true;
 		}

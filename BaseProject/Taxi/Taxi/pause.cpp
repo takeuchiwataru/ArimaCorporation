@@ -16,10 +16,10 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define TEXTURE_NAME_0			"data\\TEXTURE\\pause\\pause.png"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_1			"data\\TEXTURE\\pause\\pause000.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_2			"data\\TEXTURE\\pause\\pause001.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_3			"data\\TEXTURE\\pause\\pause002.jpg"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_0			"data\\TEXTURE\\pause\\pause_icon.png"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_1			"data\\TEXTURE\\pause\\pause000.png"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_2			"data\\TEXTURE\\pause\\pause001.png"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_3			"data\\TEXTURE\\pause\\pause002.png"	//読み込むテクスチャファイル
 #define MAX_PAUSE				(128)									//ポーズの最大数
 #define PAUSE_POS_X				(0)										//ポーズの左上X座標
 #define PAUSE_POS_Y				(0)										//ポーズの左上Y座標

@@ -28,7 +28,8 @@ class CGameCharSelect : public CScene
 public:
 	typedef enum
 	{
-		TEXTURE_FRAME = 0,
+		TEXTURE_CHAR = 0,
+		TEXTURE_FRAME,
 		TEXTURE_NUMBER,
 		TEXTURE_ENTER,
 		TEXTURE_MAX

@@ -15,13 +15,15 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define COUNTDOWN_SIZE		(SCREEN_HEIGHT * 0.1f)										// 1P時のランキングの大きさ
-#define RANKING_SIZE_1P		(0.13f)														// 1P時のランキングの大きさ
-#define RANKING_SIZE_4P		(0.07f)														// 4P時のランキングの大きさ
+#define COUNTDOWN_SIZE		(SCREEN_HEIGHT * 0.12f)										// カウントダウンの大きさ
+#define RANKING_SIZE_1P_X	(0.13f)														// 1P時のランキングの大きさX
+#define RANKING_SIZE_1P_Y	(0.09f)														// 1P時のランキングの大きさY
+#define RANKING_SIZE_4P_X	(0.07f)														// 4P時のランキングの大きさX
+#define RANKING_SIZE_4P_Y	(0.05f)														// 4P時のランキングの大きさY
 #define ITEM_SIZE_1P		(0.11f)														// 1P時のアイテムの大きさ
 #define ITEM_SIZE_4P		(0.06f)														// 4P時のアイテムの大きさ
-#define GOUL_SIZE_2P		(D3DXVECTOR2(SCREEN_WIDTH * 0.15f, SCREEN_WIDTH * 0.05f))	// 2P時のゴールの大きさ
-#define GOUL_SIZE_4P		(D3DXVECTOR2(SCREEN_WIDTH * 0.09f, SCREEN_WIDTH * 0.03f))	// 4P時のゴールの大きさ
+#define GOUL_SIZE_2P		(D3DXVECTOR2(SCREEN_WIDTH * 0.20f, SCREEN_WIDTH * 0.07f))	// 2P時のゴールの大きさ
+#define GOUL_SIZE_4P		(D3DXVECTOR2(SCREEN_WIDTH * 0.15f, SCREEN_WIDTH * 0.05f))	// 4P時のゴールの大きさ
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -72,17 +74,14 @@ HRESULT CGamePlay::Load(void)
 
 		switch (nCntTex)
 		{
-		case TEXTURE_NO_3:
-			strcpy(cName, "data/TEXTURE/game/play/0.png");
-			break;
-		case TEXTURE_NO_2:
-			strcpy(cName, "data/TEXTURE/game/play/1.png");
-			break;
-		case TEXTURE_NO_1:
-			strcpy(cName, "data/TEXTURE/game/play/2.png");
+		case TEXTURE_COUNT:
+			strcpy(cName, "data/TEXTURE/game/play/count.png");
 			break;
 		case TEXTURE_RANK:
 			strcpy(cName, "data/TEXTURE/game/play/rank.png");
+			break;
+		case TEXTURE_GOUL:
+			strcpy(cName, "data/TEXTURE/game/play/finish.png");
 			break;
 		}
 
@@ -151,8 +150,8 @@ HRESULT CGamePlay::Init()
 				D3DXVECTOR2(
 					COUNTDOWN_SIZE,
 					COUNTDOWN_SIZE));
-			m_pCountDown[nCntDown]->BindTexture(m_pTexture[(TEXTURE)(TEXTURE_NO_3 + nCntDown)]);
-			//m_pCountDown[nCntDown]->SetTexture(nCntDown, 3, 1, 1);
+			m_pCountDown[nCntDown]->BindTexture(m_pTexture[(TEXTURE)(TEXTURE_COUNT)]);
+			m_pCountDown[nCntDown]->SetTexture(nCntDown, 3, 1, 1);
 			m_pCountDown[nCntDown]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		}
 	}
@@ -177,13 +176,13 @@ HRESULT CGamePlay::Init()
 				//	SCREEN_HEIGHT * ((nMaxPlayer - 1) / 2 == 0 ? RANKING_SIZE_2P : RANKING_SIZE_4P)));
 				D3DXVECTOR3(
 					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
-					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P : RANKING_SIZE_4P))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntPlayer % 2 == 0 ? -1.0f : 1.0f))),
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_X : RANKING_SIZE_4P_X))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntPlayer % 2 == 0 ? -1.0f : 1.0f))),
 					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) + ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
-					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P : RANKING_SIZE_4P))),
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_Y : RANKING_SIZE_4P_Y))),
 					0.0f),
 				D3DXVECTOR2(
-					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P : RANKING_SIZE_4P),
-					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P : RANKING_SIZE_4P)));
+					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_X : RANKING_SIZE_4P_X),
+					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_Y * 0.8f : RANKING_SIZE_4P_Y * 0.8f)));
 			m_pRanking[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_RANK]);
 			m_pRanking[nCntPlayer]->SetTexture(nCntPlayer, 8, 1, 1);
 		}
@@ -228,10 +227,10 @@ HRESULT CGamePlay::Init()
 			m_pGoul[nCntPlayer]->SetPosSize(
 				D3DXVECTOR3(
 					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
-					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) - (SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.18f : 0.1f)),
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))),
 					0.0f),
 					((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P : GOUL_SIZE_4P));
-			//m_pGoul[nCntPlayer]->BindTexture(m_pTexture[(TEXTURE)(TEXTURE_NO_3 + nCntDown)]);
+			m_pGoul[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_GOUL]);
 			//m_pGoul[nCntPlayer]->SetTexture(nCntDown, 3, 1, 1);
 			m_pGoul[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		}
@@ -300,10 +299,10 @@ void CGamePlay::Update(void)
 		{// NULL以外
 			m_pCountDown[(nCounter / 60)]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 
-			if (nCounter % 60 == 0)
+			if (nCounter / 60 == 0 && nCounter % 60 == 0)
 			{
 				//ゲーム開始のカウントダウン
-				pSound->SetVolume(CSound::SOUND_LABEL_SE_STARTCOUNT, 0.6f);
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_STARTCOUNT, 1.0f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_STARTCOUNT);
 			}
 		}
