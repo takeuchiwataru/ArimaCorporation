@@ -437,6 +437,7 @@ void CPlayer::Draw(void)
 //=============================================================================
 void CPlayer::ControlKey(void)
 {
+	CSound *pSound = CManager::GetSound();
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
@@ -488,7 +489,7 @@ void CPlayer::ControlKey(void)
 	else if
 		((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, m_nControllerNum) == true) ||
-			(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
+		(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -521,6 +522,13 @@ void CPlayer::ControlKey(void)
 		}
 	}
 
+	if (m_StateSpeed == STATE_SPEED_ACCEL)
+	{
+		//走る音
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_RAN, 3.0f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_RAN);
+	}
+
 	// ジャンプ
 	if (m_bJump == false)
 	{// ジャンプしていない
@@ -543,8 +551,6 @@ void CPlayer::ControlKey(void)
 		BulletEgg();
 	}
 
-	CSound *pSound = CManager::GetSound();
-
 	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
 	{
 	pSound->SetVolume(CSound::SOUND_LABEL_SE_KLAXON, 1.5f);
@@ -557,6 +563,8 @@ void CPlayer::ControlKey(void)
 //=============================================================================
 void CPlayer::UpdateMove(void)
 {
+	CSound *pSound = CManager::GetSound();
+
 	m_OldPos = m_pos;	//前回の位置を保存する
 
 	RemakeAngle(&m_rot.y);
@@ -577,7 +585,7 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL)
@@ -627,6 +635,10 @@ void CPlayer::UpdateMove(void)
 		m_move.x *= SPEEDDOWN;
 		m_move.z *= SPEEDDOWN;
 
+		//スピードダウンの音
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_SPEEDDOWN, 2.0f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_SPEEDDOWN);
+
 		break;
 
 	case PLAYERSTATE_DAMAGE:
@@ -674,12 +686,16 @@ void CPlayer::UpdateMove(void)
 	if (m_StateHandle == HANDLE_LEFT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
+		{
 			m_rot.y -= m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
+		{
 			m_rot.y += m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+		}
 	}
 
 	// 重力

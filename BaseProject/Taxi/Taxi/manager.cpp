@@ -46,7 +46,7 @@ CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -477,7 +477,7 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pTitle->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_TITLE, 0.7f);
+				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_TITLE, 1.0f);
 
 				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_TITLE);
 			}
@@ -493,8 +493,8 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pTutorial->Init();
 				m_pSound->StopSound();
-				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.5f);
-				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
+				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME, 0.5f);
+				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME);
 			}
 		}
 		break;
@@ -507,10 +507,6 @@ void CManager::SetMode(MODE mode)
 			if (m_pGame != NULL)
 			{
 				m_pGame->Init();
-				m_pSound->StopSound();
-				//	BGM　＃1
-				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME000, 0.2f);
-				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME000);
 			}
 		}
 		break;

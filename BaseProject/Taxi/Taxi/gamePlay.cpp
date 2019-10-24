@@ -291,12 +291,21 @@ void CGamePlay::Update(void)
 	int nCounter = nGameCounter - (300 - 180);
 	bool *pbGoul = CGame::GetGoul();
 
+	CSound *pSound = CManager::GetSound();
+
 	// カウントダウン
 	if ((300 - 180) <= nGameCounter && nGameCounter < 300)
 	{
 		if (m_pCountDown[(nCounter / 60)] != NULL)
 		{// NULL以外
 			m_pCountDown[(nCounter / 60)]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+			if (nCounter % 60 == 0)
+			{
+				//ゲーム開始のカウントダウン
+				pSound->SetVolume(CSound::SOUND_LABEL_SE_STARTCOUNT, 0.6f);
+				pSound->PlaySound(CSound::SOUND_LABEL_SE_STARTCOUNT);
+			}
 		}
 	}
 	else

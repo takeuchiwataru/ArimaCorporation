@@ -220,7 +220,8 @@ void CGame::Update(void)
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
-
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+	
 	if (m_gameMode != m_gameModeNext)
 	{
 		SetGameMode(m_gameModeNext);
@@ -236,10 +237,9 @@ void CGame::Update(void)
 	case GAMEMODE_COURSESELECT:
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 			CFade::Create(GAMEMODE_PLAY);
+
 		break;
 	case GAMEMODE_PLAY:
-		//サウンドの情報
-		CSound *pSound = CManager::GetSound();
 
 		if (m_pPause == false)
 		{//開く音
@@ -415,6 +415,8 @@ void CGame::SetPause(bool bPause)
 //=============================================================================
 void CGame::SetGameMode(GAMEMODE gameMode)
 {
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+
 	switch (m_gameMode)
 	{// ゲームモード
 	case GAMEMODE_CHARSELECT:		// キャラ選択
@@ -446,6 +448,11 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 	switch (m_gameMode)
 	{// ゲームモード変更後
 	case GAMEMODE_CHARSELECT:		// キャラ選択
+		pSound->StopSound();
+		//キャラクターセレクトの曲
+		pSound->SetVolume(CSound::SOUND_LABEL_BGM_CHARACTERSERECT, 0.3f);
+		pSound->PlaySound(CSound::SOUND_LABEL_BGM_CHARACTERSERECT);
+
 		if (m_pGameCharSelect == NULL)
 			m_pGameCharSelect = CGameCharSelect::Create();
 
@@ -457,6 +464,11 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 
 		break;
 	case GAMEMODE_PLAY:				// プレイ
+		pSound->StopSound();
+		//タイトルの曲
+		pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME, 0.4f);
+		pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME);
+
 		if (m_pGamePlay == NULL)
 			m_pGamePlay = CGamePlay::Create();
 
