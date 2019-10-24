@@ -10,6 +10,8 @@
 #include "model3D.h"
 #include "camerabace.h"
 #include "shadow.h"
+#include "egg.h"
+#include "player.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -46,6 +48,10 @@ public:
 	void Draw(void);
 	static CEnemy *Create(D3DXVECTOR3 pos);
 	void CollisionEgg(void);
+	void CollisionFeed(void);
+	void EggAppear(CFeed *pFeed);
+	void ChaseEgg(void);
+	void BulletEgg(void);
 
 private:
 	static LPD3DXMESH	m_pMeshModel;		//メッシュ情報へのポインタ
@@ -57,15 +63,23 @@ private:
 
 	D3DXVECTOR3			m_scale;						// 大きさ
 	D3DXVECTOR3			m_rot;							// 回転
+	D3DXVECTOR3			m_OldEggRot[MAX_FRAME];			// 前回の位置
 	D3DXVECTOR3			m_move;							// 移動量
 	D3DXVECTOR3			m_pos;							// 位置
 	D3DXVECTOR3			m_posOld;						// 前回の位置
 	CShadow				*m_pShadow;						// 影のポインタ
 	CObjBillboad *		m_pObjBill;						// オブジェクトビルボードのポインタ
+	CEgg				*m_pEgg[MAX_EGG];	//卵のポインタ
 	int					m_nCntMove;
 	int					m_nCntDamage;
 	ENEMYSTATE			m_State;
 	float				m_fSpeed;
 	bool				m_bSpeedDown;
+	bool				m_abJump[MAX_FRAME];
+	bool				m_bJumpSave;
+	bool				m_bDamage;
+	int					m_nNumEgg;
+	int					m_nCountSpeed;		// 時間の加算
+	int					m_nCntFrame;			// 卵のついてくる処理に使う
 };
 #endif

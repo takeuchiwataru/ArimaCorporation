@@ -73,7 +73,7 @@ CEgg::~CEgg() {}
 //===============================================================================
 //　生成
 //===============================================================================
-CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType)
+CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType)
 {
 	CEgg *pEgg = NULL;
 
@@ -94,6 +94,8 @@ CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE
 			pEgg->SetScale(scale);
 			// 卵の種類を代入
 			pEgg->m_eggType = eggType;
+			// 弾の種類を代入
+			pEgg->m_bulletType = bulletType;
 			// オブジェクトクラスの生成
 			pEgg->Init();
 			// 位置を代入
@@ -157,7 +159,13 @@ void CEgg::Update(void)
 
 	if (m_eggState == EGGSTATE_BULLET)
 	{
-		m_fHeight = SetHeight();
+		float fHeight = 0.0f;
+
+		if (m_eggType == EGGTYPE_ATTACK)
+		{
+			fHeight = 30.0f;
+		}
+		m_fHeight = SetHeight() + fHeight;
 		Bullet();
 	}
 	else
@@ -430,53 +438,113 @@ void CEgg::Jump(void)
 //=============================================================================
 void CEgg::Bullet(void)
 {
-	CScene *pScene = CScene::GetTop(ENEMY_PRIOTITY);
-
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
-	m_rot = CModel3D::GetRot();
-
-	//NULLチェック
-	while (pScene != NULL)
+	if (m_bulletType == BULLETTYPE_PLAYER)
 	{
-		//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-		CScene *pSceneNext = pScene->GetNext();
+		CScene *pScene = CScene::GetTop(ENEMY_PRIOTITY);
 
-		if (pScene->GetObjType() == CScene::OBJTYPE_ENEMY && m_eggType == EGGTYPE_ATTACK)
-		{//タイプが敵だったら
-			CEnemy *pEnemy = (CEnemy*)pScene;
+		D3DXVECTOR3 pos = CModel3D::GetPosition();
+		m_rot = CModel3D::GetRot();
 
-			// 目的の角度
-			m_fDestAngle = atan2f(pEnemy->GetPosition().x - pos.x, pEnemy->GetPosition().z - pos.z);
+		//NULLチェック
+		while (pScene != NULL)
+		{
+			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+			CScene *pSceneNext = pScene->GetNext();
 
-			// 差分
-			m_fDiffAngle = m_fDestAngle - m_rot.y;
+			if (pScene->GetObjType() == CScene::OBJTYPE_ENEMY && m_eggType == EGGTYPE_ATTACK)
+			{//タイプが敵だったら
+				CEnemy *pEnemy = (CEnemy*)pScene;
 
-			if (m_fDiffAngle > D3DX_PI)
-			{
-				m_fDiffAngle -= D3DX_PI * 2.0f;
+				// 目的の角度
+				m_fDestAngle = atan2f(pEnemy->GetPosition().x - pos.x, pEnemy->GetPosition().z - pos.z);
+
+				// 差分
+				//m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
+				m_fDiffAngle = m_fDestAngle - m_rot.y;
+
+				if (m_fDiffAngle > D3DX_PI)
+				{
+					m_fDiffAngle -= D3DX_PI * 2.0f;
+				}
+				if (m_fDiffAngle < -D3DX_PI)
+				{
+					m_fDiffAngle += D3DX_PI * 2.0f;
+				}
+
+				m_rot.y += m_fDiffAngle * 0.05f;
+
+				if (m_rot.y > D3DX_PI)
+				{
+					m_rot.y -= D3DX_PI * 2.0f;
+				}
+				if (m_rot.y < -D3DX_PI)
+				{
+					m_rot.y += D3DX_PI * 2.0f;
+				}
+
+				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+				m_move.x = sinf(m_rot.y) * EGG_SPEED;
+				m_move.z = cosf(m_rot.y) * EGG_SPEED;
+
+				m_rot.x = D3DX_PI * 0.5f;
 			}
-			if (m_fDiffAngle < -D3DX_PI)
-			{
-				m_fDiffAngle += D3DX_PI * 2.0f;
-			}
-
-			m_rot.y += m_fDiffAngle * 0.05f;
-
-			if (m_rot.y > D3DX_PI)
-			{
-				m_rot.y -= D3DX_PI * 2.0f;
-			}
-			if (m_rot.y < -D3DX_PI)
-			{
-				m_rot.y += D3DX_PI * 2.0f;
-			}
-
-			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-			m_move.x = sinf(m_rot.y) * EGG_SPEED;
-			m_move.z = cosf(m_rot.y) * EGG_SPEED;
+			//Nextに次のSceneを入れる
+			pScene = pSceneNext;
 		}
-		//Nextに次のSceneを入れる
-		pScene = pSceneNext;
+		CModel3D::SetRot(m_rot);
 	}
-	CModel3D::SetRot(m_rot);
+	else if (m_bulletType == BULLETTYPE_ENEMY)
+	{
+		CScene *pScene = CScene::GetTop(3);
+
+		D3DXVECTOR3 pos = CModel3D::GetPosition();
+		m_rot = CModel3D::GetRot();
+
+		//NULLチェック
+		while (pScene != NULL)
+		{
+			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+			CScene *pSceneNext = pScene->GetNext();
+
+			if (pScene->GetObjType() == CScene::OBJTYPE_PLAYER && m_eggType == EGGTYPE_ATTACK)
+			{//タイプが敵だったら
+				CPlayer *pPlayer = (CPlayer*)pScene;
+
+				// 目的の角度
+				m_fDestAngle = atan2f(pPlayer->GetPos().x - pos.x, pPlayer->GetPos().z - pos.z);
+
+				// 差分
+				m_fDiffAngle = m_fDestAngle - m_rot.y;
+
+				if (m_fDiffAngle > D3DX_PI)
+				{
+					m_fDiffAngle -= D3DX_PI * 2.0f;
+				}
+				if (m_fDiffAngle < -D3DX_PI)
+				{
+					m_fDiffAngle += D3DX_PI * 2.0f;
+				}
+
+				m_rot.y += m_fDiffAngle * 0.05f;
+
+				if (m_rot.y > D3DX_PI)
+				{
+					m_rot.y -= D3DX_PI * 2.0f;
+				}
+				if (m_rot.y < -D3DX_PI)
+				{
+					m_rot.y += D3DX_PI * 2.0f;
+				}
+
+				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+				m_move.x = sinf(m_rot.y) * EGG_SPEED;
+				m_move.z = cosf(m_rot.y) * EGG_SPEED;
+
+				m_rot.x = D3DX_PI * 0.5f;
+			}
+			//Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+		CModel3D::SetRot(m_rot);
+	}
 }

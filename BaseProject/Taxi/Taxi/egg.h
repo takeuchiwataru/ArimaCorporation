@@ -15,6 +15,11 @@
 // マクロ定義
 //*****************************************************************************
 #define EGG_PRIOTITY				(3)
+#define EGG_SCALE		(10.0f)										//卵の大きさ
+#define EGG_RANGE		(50.0f)										// 卵とキャラクターの距離
+#define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
+#define SPEED			(2.0f)										// 加速する量
+#define MAX_EGG		(3)		//卵の最大数
 
 //*****************************************************************************
 // 前方宣言
@@ -44,6 +49,14 @@ public:
 		EGGSTATE_MAX,			//最大数
 	} EGGSTATE;
 
+	typedef enum
+	{// 卵の状態
+		BULLETTYPE_NONE = 0,
+		BULLETTYPE_PLAYER,
+		BULLETTYPE_ENEMY,
+		BULLETTYPE_MAX,
+	} BULLETTYPE;
+
 	CEgg();
 	~CEgg();
 	static HRESULT Load(void);
@@ -52,12 +65,13 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType);
+	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType);
 	bool CollisionEgg(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	float SetHeight(void);
 	EGGSTATE GetState(void) { return m_eggState; }
 	void SetState(EGGSTATE state) { m_eggState = state; }
 	EGGTYPE GetType(void) { return m_eggType; }
+	BULLETTYPE GetBulletType(void) { return m_bulletType; }
 	void Jump(void);
 	void Bullet(void);
 
@@ -69,6 +83,7 @@ private:
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
 
+	BULLETTYPE			m_bulletType;			// 弾の種類
 	EGGTYPE				m_eggType;				// 卵の種類
 	EGGSTATE			m_eggState;				// 卵の状態
 	D3DXVECTOR3			m_scale;				// 大きさ
