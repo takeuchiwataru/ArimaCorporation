@@ -82,11 +82,21 @@ void CBillBoord::Draw(void)
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 
+	// Zライト
+	pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+	pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+	pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+
 	pDevice->SetRenderState(D3DRS_LIGHTING, false);
 
 	CScene3D::Draw();
 
 	pDevice->SetRenderState(D3DRS_LIGHTING, true);
+
+	// Zライト
+	pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+	pDevice->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+	pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 }
 //===============================================================================
 //　クリエイト

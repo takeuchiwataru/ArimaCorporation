@@ -477,7 +477,7 @@ void CManager::SetMode(MODE mode)
 			{
 				m_pTitle->Init();
 				m_pSound->StopSound();
-				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_TITLE, 1.0f);
+				m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_TITLE, 2.8f);
 
 				m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_TITLE);
 			}
