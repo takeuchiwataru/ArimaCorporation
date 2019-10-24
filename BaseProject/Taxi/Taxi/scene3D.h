@@ -13,7 +13,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_BILLBOORD_TEX		(3)
+#define MAX_BILLBOORD_TEX		(1)
 
 //=====================
 //  CSceneの派生クラス
@@ -50,6 +50,7 @@ public://誰でも扱える
 	static CScene3D *Create();
 	void SetTypeNumber(TYPE Type) { m_Type = Type; }
 	void SetTexType(int Type) { m_TexType = Type; }
+	void SetTexture(int PatternAnim, int X, int Y, int nNum);
 	void SetMove(D3DXVECTOR3 move) { m_Move = move; }
 	void SetPosition(D3DXVECTOR3 pos) { m_pos = pos; }
 	void SetMatrix(D3DXMATRIX mtx) { m_mtxWorld = mtx; }

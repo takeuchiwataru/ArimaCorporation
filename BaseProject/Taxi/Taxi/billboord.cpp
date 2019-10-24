@@ -15,10 +15,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define BILL_TEXTURE_NAME_1		"data\\TEXTURE\\State\\none.png"			//読み込むテクスチャファイル
-#define BILL_TEXTURE_NAME_2		"data\\TEXTURE\\State\\exclamation.png"		//読み込むテクスチャファイル
-#define BILL_TEXTURE_NAME_3		"data\\TEXTURE\\State\\attack.png"			//読み込むテクスチャファイル
-#define BILL_TEXTURE_NAME_4		"data\\TEXTURE\\State\\qusetion.png"		//読み込むテクスチャファイル
+#define BILL_TEXTURE_NAME_1		"data\\TEXTURE\\game\\charselect\\icon.png"			//読み込むテクスチャファイル
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -32,7 +29,7 @@ LPDIRECT3DTEXTURE9	CBillBoord::m_pTexture[MAX_BILLBOORD_TEX] = {};
 //===============================================================================
 //　デフォルトコンストラクタ
 //===============================================================================
-CBillBoord::CBillBoord() : CScene3D(3, CScene::OBJTYPE_BILLBOORD)
+CBillBoord::CBillBoord() : CScene3D(4, CScene::OBJTYPE_BILLBOORD)
 {
 	m_pVtxBuff = NULL;
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -85,7 +82,11 @@ void CBillBoord::Draw(void)
 	//ゲームの情報
 	CManager::MODE pMode = CManager::GetMode();
 
+	pDevice->SetRenderState(D3DRS_LIGHTING, false);
+
 	CScene3D::Draw();
+
+	pDevice->SetRenderState(D3DRS_LIGHTING, true);
 }
 //===============================================================================
 //　クリエイト
@@ -124,9 +125,6 @@ HRESULT CBillBoord::Load(void)
 
 	// テクスチャの生成
 	D3DXCreateTextureFromFile(pDevice, BILL_TEXTURE_NAME_1, &m_pTexture[0]);
-	D3DXCreateTextureFromFile(pDevice, BILL_TEXTURE_NAME_2, &m_pTexture[1]);
-	D3DXCreateTextureFromFile(pDevice, BILL_TEXTURE_NAME_3, &m_pTexture[2]);
-	D3DXCreateTextureFromFile(pDevice, BILL_TEXTURE_NAME_4, &m_pTexture[3]);
 
 	return S_OK;
 }

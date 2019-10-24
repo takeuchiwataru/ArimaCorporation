@@ -263,78 +263,28 @@ void CGame::Update(void)
 			switch (m_NowGameState)
 			{
 			case GAMESTATE_NORMAL:	//通常の状態
-			{
-				// 距離を測る
-				float fLenght[MAX_PLAYER] = { 0.0f };
-				for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
-				{// プレイヤーカウント
-					if (m_pPlayer[nCntPlayer] != NULL)
-					{// NULL以外
-						// 位置取得
-						D3DXVECTOR3 pos = m_pPlayer[nCntPlayer]->GetPos();
-						fLenght[nCntPlayer] = 26000.0f - pos.z;
-						if (fLenght[nCntPlayer] < 0.0f)
-						{// ゴールについた
-							fLenght[nCntPlayer] = 0.0f;
-							m_bGoul[nCntPlayer] = true;
-							
-							pos.z = 26000.0f;
-							m_pPlayer[nCntPlayer]->SetPos(pos);
-						}
-					}
-
-					m_nRanking[nCntPlayer] = nCntPlayer;
-				}
-
-				int nRanking[MAX_PLAYER] = { 0, 1, 2, 3 };
-				for (int nCntCheck = 0; nCntCheck < m_nMaxPlayer - 1; nCntCheck++)
+				if (m_nGameCounter < 300)
 				{
-					for (int nCount = nCntCheck; nCount < m_nMaxPlayer; nCount++)
-					{
-						if (fLenght[nCount] < fLenght[nCntCheck])
-						{
-							float fData = fLenght[nCount];
-							fLenght[nCount] = fLenght[nCntCheck];
-							fLenght[nCntCheck] = fData;
-
-							int nNum = nRanking[nCount];
-							nRanking[nCount] = nRanking[nCntCheck];
-							nRanking[nCntCheck] = nNum;
-						}
-					}
+					for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+						if (m_pPlayer[nCntPlayer] != NULL)
+							m_pPlayer[nCntPlayer]->SetControl(false);
 				}
-
-				int nCheck = 0;
-				for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+				else if (m_nGameCounter == 300)
 				{
-					m_nRanking[nRanking[nCntPlayer]] = nCntPlayer;
-					CDebugProc::Print("ランキング : %d\n", m_nRanking[nCntPlayer]);				
-
-					if (m_bGoul[nCntPlayer] == true)
-						nCheck++;
-
-					if (nCheck == m_nMaxPlayer)
-					{
-						CFade::Create(CManager::MODE_RESULT);
-						return;
-					}
+					for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+						if (m_pPlayer[nCntPlayer] != NULL)
+							m_pPlayer[nCntPlayer]->SetControl(true);
 				}
-			}
+				
+				Ranking();
+				
 				break;
-			case GAMESTATE_CLEAR:	//ゲームをクリアした状態
+			case GAMESTATE_END:			//ゲーム終了状態
 				m_nCounterGameState++;
 
-				if (m_nCounterGameState >= 60)
+				if (180 < m_nCounterGameState)
 				{//画面（モード）の設定
-					CFade::Create(CManager::MODE_RESULT);
-				}
-				break;
-			case GAMESTATE_OVER:	//ゲームで負けたときの状態
-				m_nCounterGameState++;
-
-				if (m_nCounterGameState >= 60)
-				{//画面（モード）の設定
-					CFade::Create(CManager::MODE_RESULT);
+					CFade::Create(CManager::MODE_TITLE);
 				}
 				break;
 			}
@@ -343,7 +293,6 @@ void CGame::Update(void)
 		//ポーズの処理
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
 		{//Pキーが押されたら
-
 			m_bPause = m_bPause ? false : true;
 
 			switch (m_bPause)
@@ -388,10 +337,15 @@ void CGame::Update(void)
 //=============================================================================
 void CGame::Draw(void)
 {
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
 	if (m_gameMode == GAMEMODE_PLAY)
 	{// プレイ
+		D3DVIEWPORT9 viewport;
+		pDevice->GetViewport(&viewport);	// ビューポート取得
+
 		// バックバッファ＆Ｚバッファのクリア
-		CManager::GetRenderer()->GetDevice()->Clear(0,
+		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
 			D3DCOLOR_RGBA(157, 184, 224, 255),
@@ -399,18 +353,23 @@ void CGame::Draw(void)
 			0);
 
 		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
-		{
+		{// プレイヤーカウント
 			//カメラの設定
 			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
 
 			//全ての描画
 			CScene::DrawAll();
 		}
+
+		pDevice->SetViewport(&viewport);	// ビューポート設定
+
+		//２Dの描画
+		CScene::Draw2D();
 	}
 	else
 	{// その他
 		// バックバッファ＆Ｚバッファのクリア
-		CManager::GetRenderer()->GetDevice()->Clear(0,
+		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
 			D3DCOLOR_RGBA(157, 184, 224, 255),
@@ -466,7 +425,7 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		}
 
 		break;
-	case GAMEMODE_COURSESELECT:		// コース選択
+	case GAMEMODE_COURSESELECT:		// コース選択		
 
 		break;
 	case GAMEMODE_PLAY:				// プレイ
@@ -611,6 +570,74 @@ void CGame::SetStage(void)
 		CEnemy::Create(D3DXVECTOR3(-300.0f, 1.0f, 1500.0f));
 
 		m_nCntSetStage = 1;
+	}
+}
+
+//===============================================================================
+// ランキング
+//===============================================================================
+void CGame::Ranking(void)
+{
+	// 距離を測る
+	float fLenght[MAX_PLAYER] = { 0.0f };	// 距離
+	int	nGoulNum = 0;						// ゴール数
+
+	for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+	{// プレイヤーカウント
+		if (m_pPlayer[nCntPlayer] != NULL)
+		{// NULL以外
+			// 位置取得
+			D3DXVECTOR3 pos = m_pPlayer[nCntPlayer]->GetPos();
+			if (m_bGoul[nCntPlayer] == false)
+			{// ゴールしていない
+				fLenght[nCntPlayer] = 26000.0f - pos.z;
+				if (fLenght[nCntPlayer] < 0.0f)
+				{// ゴールについた
+					fLenght[nCntPlayer] = 0.0f;
+					m_bGoul[nCntPlayer] = true;
+
+					// 入力しない
+					m_pPlayer[nCntPlayer]->SetControl(false);
+
+					nGoulNum++;		// ゴール数カウント
+				}
+			}
+			else
+			{// ゴールした
+				nGoulNum++;			// ゴール数カウント
+			}
+			// 位置設定
+			m_pPlayer[nCntPlayer]->SetPos(pos);
+		}
+	}
+
+	for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+	{// プレイヤーカウント
+		if (m_bGoul[nCntPlayer] == false)
+		{// ゴールしていない
+			int nRank = 0;
+			for (int nCntCheck = 0; nCntCheck < m_nMaxPlayer; nCntCheck++)
+			{// チェックカウント
+				if (nCntPlayer != nCntCheck)
+				{// 自分以外
+					if (m_bGoul[nCntPlayer] == false && m_bGoul[nCntCheck] == false)
+					{// ゴールしていない
+						if (fLenght[nCntCheck] < fLenght[nCntPlayer])	// 自分より前は何人いるか
+							nRank++;	// カウント
+					}
+				}
+			}
+			// 前にいた人数 + ゴール済みの人数
+			m_nRanking[nCntPlayer] = nRank + nGoulNum;
+		}
+		CDebugProc::Print("ランキング : %d\n", m_nRanking[nCntPlayer]);
+	}
+
+
+	if (nGoulNum == m_nMaxPlayer)
+	{// 全てゴールした
+		SetGameState(GAMESTATE_END);
+		return;
 	}
 }
 
