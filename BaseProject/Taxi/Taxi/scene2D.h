@@ -21,7 +21,7 @@
 class CScene2D : public CScene
 {
 public://’N‚Å‚àˆµ‚¦‚é
-	CScene2D(int nPriorityv = 3, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON);
+	CScene2D(int nPriorityv = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON);
 	~CScene2D();
 	HRESULT Init(void);
 	void Uninit(void);
