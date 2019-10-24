@@ -35,7 +35,7 @@ class CCarBase;
 class CModel;
 class CMeshField;
 class CPolygon3D;
-class CBillBoord;
+class CBillboord;
 class CWall;
 class CShadow;
 class CLogo;
@@ -93,6 +93,7 @@ public:
 	static void SetGameModeNext(GAMEMODE gameModeNext) { m_gameModeNext = gameModeNext; };
 	void SetGameMode(GAMEMODE gameMode);
 	void SetStage(void);
+	void Ranking(void);
 
 	//---------------------------------
 	//ファイルを読み込む
@@ -128,7 +129,12 @@ public:
 	}
 	static int *GetControllerNum(void) { return m_nControllerNum; }
 
+	// ランキング
+	static int GetRanking(int nPlayerNum) { return m_nRanking[nPlayerNum]; }
 	static int *GetRanking(void) { return m_nRanking; }
+
+	// ゴール
+	static bool *GetGoul(void) { return m_bGoul; }
 
 private:
 	//テキストの値を管理する場所

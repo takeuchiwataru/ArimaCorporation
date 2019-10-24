@@ -173,6 +173,37 @@ void CScene::DrawAll(void)
 
 	CDebugProc::Print("描画数 : %d", nCnt);
 }
+void CScene::Draw2D(void)
+{
+	CScene *pScene;
+	int nCnt = 0;
+
+	for (int nPriority = 5; nPriority < NUM_PRIORITY; nPriority++)
+	{
+		pScene = m_pTop[nPriority];
+
+		while (pScene != NULL)
+		{//先頭がNULLではない限り回る
+		 //UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+			CScene *pSceneNext = pScene->m_pNext;
+
+			if (pScene->m_bDraw == true)
+			{
+				pScene->Draw();
+
+				if (pScene->GetObjType() == OBJTYPE_OBJECT)
+				{
+					nCnt++;
+				}
+			}
+
+			//Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+	}
+
+	CDebugProc::Print("描画数 : %d", nCnt);
+}
 //===============================================================================
 //	単体の削除 死亡フラグをたてる
 //===============================================================================

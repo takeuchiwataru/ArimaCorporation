@@ -234,8 +234,10 @@ void CResult::Update(void)
 //=============================================================================
 void CResult::Draw(void)
 {
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
 	// バックバッファ＆Ｚバッファのクリア
-	CManager::GetRenderer()->GetDevice()->Clear(0,
+	pDevice->Clear(0,
 		NULL,
 		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
 		D3DCOLOR_RGBA(157, 184, 224, 255),

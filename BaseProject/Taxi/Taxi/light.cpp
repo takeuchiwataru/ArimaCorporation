@@ -55,10 +55,14 @@ HRESULT CLight::Init(HINSTANCE hInstance, HWND hWnd)
 	m_Light[1].Diffuse = D3DXCOLOR(0.65f, 0.65f, 0.65f, 1.0f);
 	m_Light[2].Diffuse = D3DXCOLOR(0.15f, 0.15f, 0.15f, 1.0f);*/
 
-	//// ライトの拡散光を設定1.0f デバック用
-	m_Light[0].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light[1].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light[2].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	////// ライトの拡散光を設定1.0f デバック用
+	//m_Light[0].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	//m_Light[1].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	//m_Light[2].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+
+	m_Light[0].Diffuse = D3DXCOLOR(2.0f, 2.0f, 2.0f, 1.0f);
+	m_Light[1].Diffuse = D3DXCOLOR(2.0f, 2.0f, 2.0f, 1.0f);
+	m_Light[2].Diffuse = D3DXCOLOR(2.0f, 2.0f, 2.0f, 1.0f);
 
 	// ライトをクリアする
 	ZeroMemory(&m_Light, sizeof(D3DLIGHT9));

@@ -350,6 +350,26 @@ void CScene3D::SetUV(D3DXVECTOR2 *uv)
 	//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
 }
+//=============================================================================
+// アニメーションの処理
+//=============================================================================
+void CScene3D::SetTexture(int PatternAnim, int X, int Y, int nNum)
+{
+	VERTEX_3D *pVtx;//頂点情報へのポインタ
+
+	//頂点バッファをロックし、頂点データへのポインタを取得
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
+
+	//テクスチャ設定
+	pVtx[0].tex = D3DXVECTOR2((PatternAnim % X) * (1.0f / X) * (1 * nNum), (PatternAnim / X) * (1.0f / Y));
+	pVtx[1].tex = D3DXVECTOR2((PatternAnim % X) * (1.0f / X) + (1.0f / X), (PatternAnim / X) * (1.0f / Y));
+	pVtx[2].tex = D3DXVECTOR2((PatternAnim % X) * (1.0f / X) * (1 * nNum), (PatternAnim / X) * (1.0f / Y) + (1.0f / Y));
+	pVtx[3].tex = D3DXVECTOR2((PatternAnim % X) * (1.0f / X) + (1.0f / X), (PatternAnim / X) * (1.0f / Y) + (1.0f / Y));
+
+	//頂点バッファをアンロックする
+	m_pVtxBuff->Unlock();
+}
+
 //===============================================================================
 // テクスチャの法線設定
 //===============================================================================
