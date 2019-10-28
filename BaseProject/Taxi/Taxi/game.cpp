@@ -133,7 +133,7 @@ HRESULT CGame::Init()
 
 	// デバッグ用
 	if (m_gameMode == GAMEMODE_PLAY)
-		m_nMaxPlayer = 4;
+		m_nMaxPlayer = 1;
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
 

@@ -46,7 +46,7 @@ CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
+CManager::MODE CManager::m_mode = CManager::MODE_GAME;
 
 //===============================================================================
 //　デフォルトコンストラクタ

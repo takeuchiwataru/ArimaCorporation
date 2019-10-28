@@ -15,6 +15,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define MAX_LINE	(2)
 #define COUNT_DOWN	(3)
 
 //*****************************************************************************
@@ -51,6 +52,7 @@ public:
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
+	CScene2D *m_pLine[MAX_LINE];			// 線
 	CScene2D *m_pCountDown[COUNT_DOWN];		// カウントダウン
 	CScene2D *m_pRanking[MAX_PLAYER];		// ランキング
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];	// アイテム

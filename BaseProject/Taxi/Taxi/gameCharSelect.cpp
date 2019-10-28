@@ -41,6 +41,8 @@ CGameCharSelect::CGameCharSelect()
 		m_bEnter[nCntPlayer] = false;
 	}
 
+	m_nEntryCounter = 0;				// エントリーカウント
+
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
 		m_pCharacter[nCntChar] = NULL;
 }
@@ -72,7 +74,7 @@ HRESULT CGameCharSelect::Load(void)
 			strcpy(cName, "data/TEXTURE/game/charselect/icon.png");
 			break;
 		case TEXTURE_ENTER:
-			strcpy(cName, "data/TEXTURE/game/charselect/enter.png");
+			strcpy(cName, "data/TEXTURE/game/charselect/characterselect.png");
 			break;
 		}
 
@@ -181,8 +183,9 @@ HRESULT CGameCharSelect::Init()
 					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)) + (SCREEN_HEIGHT * 0.18f),
 					0.0f),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.18f, SCREEN_HEIGHT * 0.05f));
-			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 			m_pEnter[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_ENTER]);
+			m_pEnter[nCntPlayer]->SetTexture(1, 1, 2, 2);
 
 		}
 	}
@@ -431,7 +434,9 @@ void CGameCharSelect::Update(void)
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
 			}
 			else
+			{
 				m_bEntry[0] = true;
+			}
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_2) == true)
 		{
@@ -444,7 +449,9 @@ void CGameCharSelect::Update(void)
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
 			}
 			else
+			{
 				m_bEntry[1] = true;
+			}
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_3) == true)
 		{
@@ -457,7 +464,9 @@ void CGameCharSelect::Update(void)
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
 			}
 			else
+			{
 				m_bEntry[2] = true;
+			}
 		}
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_4) == true)
 		{
@@ -470,7 +479,9 @@ void CGameCharSelect::Update(void)
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
 			}
 			else
+			{
 				m_bEntry[3] = true;
+			}
 		}
 	}
 
@@ -494,15 +505,25 @@ void CGameCharSelect::Update(void)
 			m_pSelect[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 		}
 
-		// 決定
-		if (m_pEnter[nCntPlayer] != NULL)
-		{
-			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_bEnter[nCntPlayer] == true ? 1.0f : 0.0f)));
-		}
 		// 決定数チャック
 		if (m_bEnter[nCntPlayer] == true)
-		{
+		{// 決定
 			nChackEnter++;
+
+			// 決定
+			if (m_pEnter[nCntPlayer] != NULL)
+			{
+				m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+				m_pEnter[nCntPlayer]->SetTexture(0, 1, 2, 2);
+			}
+		}
+		else
+		{// 選択中
+				// 決定
+			if (m_pEnter[nCntPlayer] != NULL)
+			{
+				m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			}
 		}
 
 		// 全員決定
@@ -515,6 +536,30 @@ void CGameCharSelect::Update(void)
 	{// プレイヤーカウント
 		if (m_bEntry[nCntPlayer] == true)
 			nEntryNum++;
+	}
+
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{// プレイヤーカウント
+		// 決定
+		if (nEntryNum <= nCntPlayer)
+		{
+			if (m_pEnter[nCntPlayer] != NULL)
+			{
+				int nCount = (m_nEntryCounter % 60);
+				if (nCount < 20)
+				{
+					if (nCount < 10)
+						m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - ((1.0f / 10.0f) * nCount)));
+					else
+						m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, ((1.0f / 10.0f) * (nCount - 10))));
+				}
+				else
+				{
+					m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+				}
+				m_pEnter[nCntPlayer]->SetTexture(1, 1, 2, 2);
+			}
+		}
 	}
 
 	if (nMaxPlayer != nEntryNum)
@@ -575,6 +620,8 @@ void CGameCharSelect::Update(void)
 	CGame::SetCharSelectNum(pnCharSelectNum);
 	// コントローラー設定
 	CGame::SetControllerNum(pnControllerNum);
+
+	m_nEntryCounter++;		// カウント
 }
 
 //=============================================================================

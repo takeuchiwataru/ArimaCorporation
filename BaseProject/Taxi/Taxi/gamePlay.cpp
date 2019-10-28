@@ -39,6 +39,11 @@ LPDIRECT3DTEXTURE9	CGamePlay::m_pTexture[CGamePlay::TEXTURE_MAX] = { NULL };
 //=============================================================================
 CGamePlay::CGamePlay()
 {
+	for (int nCntLine = 0; nCntLine < MAX_LINE; nCntLine++)
+	{// 線カウント
+		m_pLine[nCntLine] = NULL;					// 線
+	}
+
 	for (int nCntDown = 0; nCntDown < COUNT_DOWN; nCntDown++)
 	{// ダウンカウント
 		m_pCountDown[nCntDown] = NULL;				// カウントダウン
@@ -53,7 +58,7 @@ CGamePlay::CGamePlay()
 			m_pItem[nCntPlayer][nCntItem] = NULL;	// アイテム
 		}
 
-		m_pGoul[nCntPlayer] = NULL;				// ランキング
+		m_pGoul[nCntPlayer] = NULL;					// ランキング
 	}
 }
 //=============================================================================
@@ -135,6 +140,29 @@ HRESULT CGamePlay::Init()
 {
 	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
+
+	if (1 < nMaxPlayer)
+	{// 2人以上
+		for (int nCntLine = 0; nCntLine < ((nMaxPlayer - 1) / 2 == 0 ? 1 : MAX_LINE); nCntLine++)
+		{// 線カウント
+			if (m_pLine[nCntLine] == NULL)
+			{// NULL以外
+				D3DXVECTOR2 size = D3DXVECTOR2(0.0f, 0.0f);
+
+				if (nCntLine == 0)
+					size = D3DXVECTOR2((SCREEN_WIDTH * 0.5f), (SCREEN_WIDTH * 0.0006f));
+				else
+					size = D3DXVECTOR2((SCREEN_WIDTH * 0.0006f), (SCREEN_HEIGHT * 0.5f));
+
+				m_pLine[nCntLine] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+				m_pLine[nCntLine]->Init();
+				m_pLine[nCntLine]->SetPosSize(
+					D3DXVECTOR3((SCREEN_WIDTH * 0.5f), (SCREEN_HEIGHT * 0.5f), 0.0f),
+					size);
+				m_pLine[nCntLine]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f));
+			}
+		}
+	}
 
 	for (int nCntDown = 0; nCntDown < COUNT_DOWN; nCntDown++)
 	{// ダウンカウント
@@ -243,6 +271,15 @@ HRESULT CGamePlay::Init()
 //=============================================================================
 void CGamePlay::Uninit(void)
 {
+	for (int nCntLine = 0; nCntLine < MAX_LINE; nCntLine++)
+	{// 線カウント
+		if (m_pLine[nCntLine] != NULL)
+		{// NULL以外
+			m_pLine[nCntLine]->Uninit();
+			m_pLine[nCntLine] = NULL;
+		}
+	}
+
 	for (int nCntDown = 0; nCntDown < COUNT_DOWN; nCntDown++)
 	{// ダウンカウント
 		if (m_pCountDown[nCntDown] != NULL)

@@ -58,6 +58,7 @@ private:
 	bool	m_bEntry[MAX_PLAYER];			// エントリー
 	bool	m_bEnter[MAX_PLAYER];			// 決定したか
 
+	int		m_nEntryCounter;				// エントリーカウント
 
 	CScene2D *m_pCharacter[MAX_CHARCTER];	
 };
