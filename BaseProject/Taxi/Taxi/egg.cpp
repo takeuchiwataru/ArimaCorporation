@@ -64,6 +64,8 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 	m_fDestAngle = 0.0f;
 	m_fDiffAngle = 0.0f;
 	m_fHeight = 0.0f;
+	m_nRank = 0;
+	m_nNumPlayer = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -73,7 +75,7 @@ CEgg::~CEgg() {}
 //===============================================================================
 //　生成
 //===============================================================================
-CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType)
+CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType, int nNumPlayer)
 {
 	CEgg *pEgg = NULL;
 
@@ -102,6 +104,8 @@ CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE
 			pEgg->SetPosition(pos);
 			// 回転を反映
 			pEgg->SetRot(rot);
+			// 何位の卵か
+			pEgg->m_nNumPlayer = nNumPlayer;
 		}
 	}
 
@@ -135,6 +139,8 @@ HRESULT CEgg::Init(void)
 	m_fDiffAngle = 0.0f;
 	m_bJump = false;
 	m_eggState = EGGSTATE_NORMAL;
+	m_nRank = 0;
+	m_nNumPlayer = 0;
 	return S_OK;
 }
 
@@ -440,26 +446,73 @@ void CEgg::Bullet(void)
 {
 	if (m_bulletType == BULLETTYPE_PLAYER)
 	{
-		CScene *pScene = CScene::GetTop(ENEMY_PRIOTITY);
+		//CScene *pScene = CScene::GetTop(ENEMY_PRIOTITY);
 
-		D3DXVECTOR3 pos = CModel3D::GetPosition();
-		m_rot = CModel3D::GetRot();
+		//D3DXVECTOR3 pos = CModel3D::GetPosition();
+		//m_rot = CModel3D::GetRot();
 
-		//NULLチェック
-		while (pScene != NULL)
-		{
-			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-			CScene *pSceneNext = pScene->GetNext();
+		////NULLチェック
+		//while (pScene != NULL)
+		//{
+		//	//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+		//	CScene *pSceneNext = pScene->GetNext();
 
-			if (pScene->GetObjType() == CScene::OBJTYPE_ENEMY && m_eggType == EGGTYPE_ATTACK)
-			{//タイプが敵だったら
-				CEnemy *pEnemy = (CEnemy*)pScene;
+		//	if (pScene->GetObjType() == CScene::OBJTYPE_ENEMY && m_eggType == EGGTYPE_ATTACK)
+		//	{//タイプが敵だったら
+		//		CEnemy *pEnemy = (CEnemy*)pScene;
 
+		//		// 目的の角度
+		//		m_fDestAngle = atan2f(pEnemy->GetPosition().x - pos.x, pEnemy->GetPosition().z - pos.z);
+
+		//		// 差分
+		//		//m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
+		//		m_fDiffAngle = m_fDestAngle - m_rot.y;
+
+		//		if (m_fDiffAngle > D3DX_PI)
+		//		{
+		//			m_fDiffAngle -= D3DX_PI * 2.0f;
+		//		}
+		//		if (m_fDiffAngle < -D3DX_PI)
+		//		{
+		//			m_fDiffAngle += D3DX_PI * 2.0f;
+		//		}
+
+		//		m_rot.y += m_fDiffAngle * 0.05f;
+
+		//		if (m_rot.y > D3DX_PI)
+		//		{
+		//			m_rot.y -= D3DX_PI * 2.0f;
+		//		}
+		//		if (m_rot.y < -D3DX_PI)
+		//		{
+		//			m_rot.y += D3DX_PI * 2.0f;
+		//		}
+
+		//		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+		//		m_move.x = sinf(m_rot.y) * EGG_SPEED;
+		//		m_move.z = cosf(m_rot.y) * EGG_SPEED;
+
+		//		m_rot.x = D3DX_PI * 0.5f;
+		//	}
+		//	//Nextに次のSceneを入れる
+		//	pScene = pSceneNext;
+		//}
+		//CModel3D::SetRot(m_rot);
+
+		if (m_eggType == EGGTYPE_ATTACK)
+		{//タイプが敵だったら
+		 // 1つ前のプレイヤーに飛んでいく
+			CPlayer **pPlayer = CGame::GetPlayer();
+			D3DXVECTOR3 pos = CModel3D::GetPosition();
+
+			int nRank = m_nRank - 1;
+
+			if (nRank >= 0)
+			{
 				// 目的の角度
-				m_fDestAngle = atan2f(pEnemy->GetPosition().x - pos.x, pEnemy->GetPosition().z - pos.z);
+				m_fDestAngle = atan2f(pPlayer[nRank]->GetPos().x - pos.x, pPlayer[nRank]->GetPos().z - pos.z);
 
 				// 差分
-				//m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
 				m_fDiffAngle = m_fDestAngle - m_rot.y;
 
 				if (m_fDiffAngle > D3DX_PI)
@@ -471,7 +524,7 @@ void CEgg::Bullet(void)
 					m_fDiffAngle += D3DX_PI * 2.0f;
 				}
 
-				m_rot.y += m_fDiffAngle * 0.05f;
+				m_rot.y += m_fDiffAngle * 0.5f;
 
 				if (m_rot.y > D3DX_PI)
 				{
@@ -481,17 +534,17 @@ void CEgg::Bullet(void)
 				{
 					m_rot.y += D3DX_PI * 2.0f;
 				}
-
-				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-				m_move.x = sinf(m_rot.y) * EGG_SPEED;
-				m_move.z = cosf(m_rot.y) * EGG_SPEED;
-
-				m_rot.x = D3DX_PI * 0.5f;
 			}
-			//Nextに次のSceneを入れる
-			pScene = pSceneNext;
+
+
+			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+			m_move.x = sinf(m_rot.y) * EGG_SPEED;
+			m_move.z = cosf(m_rot.y) * EGG_SPEED;
+
+			m_rot.x = D3DX_PI * 0.5f;
+
+			CModel3D::SetRot(m_rot);
 		}
-		CModel3D::SetRot(m_rot);
 	}
 	else if (m_bulletType == BULLETTYPE_ENEMY)
 	{

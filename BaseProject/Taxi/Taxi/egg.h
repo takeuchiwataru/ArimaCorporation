@@ -65,13 +65,16 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType);
+	static CEgg *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE eggType, BULLETTYPE bulletType, int nNumPlayer);
 	bool CollisionEgg(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	float SetHeight(void);
 	EGGSTATE GetState(void) { return m_eggState; }
 	void SetState(EGGSTATE state) { m_eggState = state; }
 	EGGTYPE GetType(void) { return m_eggType; }
 	BULLETTYPE GetBulletType(void) { return m_bulletType; }
+	int GetNumPlayer(void) { return m_nNumPlayer; }
+	void SetRank(int nRank) { m_nRank = nRank; }
+	int GetRank(void) { return m_nRank; }
 	void Jump(void);
 	void Bullet(void);
 
@@ -95,5 +98,7 @@ private:
 	bool				m_bJump;				// ジャンプしているかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
+	int					m_nRank;				// 向かっていく順位
+	int					m_nNumPlayer;			// プレイヤー何が持っている卵か
 };
 #endif

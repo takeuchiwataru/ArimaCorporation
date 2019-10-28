@@ -1246,11 +1246,14 @@ void CPlayer::CollisionFeed(void)
 			{// タイプが障害物だったら
 				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pFeed->CollisionFeed(&m_pos, &m_OldPos))
-				{// 衝突した
-					EggAppear(pFeed);	// 卵出現
-					pFeed->Uninit();	// 餌削除
-					m_nNumEgg++;
+				if (pFeed->GetDeath() != true)
+				{
+					if (pFeed->CollisionFeed(&m_pos, &m_OldPos))
+					{// 衝突した
+						EggAppear(pFeed);	// 卵出現
+						pFeed->Uninit();	// 餌削除
+						m_nNumEgg++;
+					}
 				}
 			}
 
@@ -1273,7 +1276,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_ATTACK,
-				CEgg::BULLETTYPE_PLAYER);
+				CEgg::BULLETTYPE_PLAYER,
+				m_nPlayerNum);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 		{// 妨害の卵生成
@@ -1281,7 +1285,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_ANNOY,
-				CEgg::BULLETTYPE_PLAYER);
+				CEgg::BULLETTYPE_PLAYER,
+				m_nPlayerNum);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 		{// 加速の卵生成
@@ -1289,7 +1294,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_SPEED,
-				CEgg::BULLETTYPE_PLAYER);
+				CEgg::BULLETTYPE_PLAYER,
+				m_nPlayerNum);
 		}
 	}
 
@@ -1395,6 +1401,7 @@ void CPlayer::BulletEgg(void)
 		if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
+			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
 
 			m_nNumEgg--;	// 所持数を減らす
 
@@ -1438,30 +1445,33 @@ void CPlayer::CollisionEgg(void)
 
 				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET)
 				{
-					if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true && pEgg->GetBulletType() != CEgg::BULLETTYPE_PLAYER)
-					{// 衝突した
-						switch (pEgg->GetType())
-						{
-							// 攻撃
-						case CEgg::EGGTYPE_ATTACK:
-							// ダメージ状態にする
-							if (m_bDamage == false)
+					if (pEgg->GetRank() != m_nPlayerNum)
+					{
+						if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
+						{// 衝突した
+							switch (pEgg->GetType())
 							{
-								m_bDamage = true;
-								m_State = PLAYERSTATE_DAMAGE;
-							}
-							pEgg->Uninit();	// 卵削除
-							break;
+								// 攻撃
+							case CEgg::EGGTYPE_ATTACK:
+								// ダメージ状態にする
+								if (m_bDamage == false)
+								{
+									m_bDamage = true;
+									m_State = PLAYERSTATE_DAMAGE;
+								}
+								pEgg->Uninit();	// 卵削除
+								break;
 
-							// 減速
-						case CEgg::EGGTYPE_ANNOY:
-							if (m_bDamage == false)
-							{
-								m_bDamage = true;
-								m_State = PLAYERSTATE_SPEEDDOWN;
+								// 減速
+							case CEgg::EGGTYPE_ANNOY:
+								if (m_bDamage == false)
+								{
+									m_bDamage = true;
+									m_State = PLAYERSTATE_SPEEDDOWN;
+								}
+								pEgg->Uninit();	// 卵削除
+								break;
 							}
-							pEgg->Uninit();	// 卵削除
-							break;
 						}
 					}
 				}

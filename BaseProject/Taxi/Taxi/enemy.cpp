@@ -455,7 +455,8 @@ void CEnemy::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_ATTACK,
-				CEgg::BULLETTYPE_ENEMY);
+				CEgg::BULLETTYPE_ENEMY,
+				0);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 		{// ñWäQÇÃóëê∂ê¨
@@ -463,7 +464,8 @@ void CEnemy::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_ANNOY,
-				CEgg::BULLETTYPE_ENEMY);
+				CEgg::BULLETTYPE_ENEMY,
+				0);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 		{// â¡ë¨ÇÃóëê∂ê¨
@@ -471,7 +473,8 @@ void CEnemy::EggAppear(CFeed *pFeed)
 				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				D3DXVECTOR3(EGG_SCALE, EGG_SCALE, EGG_SCALE),
 				CEgg::EGGTYPE_SPEED,
-				CEgg::BULLETTYPE_ENEMY);
+				CEgg::BULLETTYPE_ENEMY,
+				0);
 		}
 	}
 
