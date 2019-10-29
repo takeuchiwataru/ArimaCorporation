@@ -48,6 +48,7 @@ public://誰でも扱える
 		OBJTYPE_CYLINDER,		//シリンダー
 		OBJTYPE_FEED,			//餌
 		OBJTYPE_EGG,			//卵
+		OBJTYPE_CHICK,			//ひよこ
 		OBJTYPE_MAX,			//最大数
 	}OBJTYPE;
 

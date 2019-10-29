@@ -38,6 +38,7 @@ class CCombo;
 class CSound;
 class CFeed;
 class CEgg;
+class CChick;
 class CBillBoord;
 
 //=============================================================================
@@ -154,6 +155,7 @@ private:
 	void UpdateStateJump(void);
 	void PlaySoundObj(int nType, CSound * pSound);
 	void EggAppear(CFeed *pFeed);
+	void ChickAppear(void);
 	void ChaseEgg(void);
 	void BulletEgg(void);
 
@@ -161,7 +163,7 @@ private:
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
-	//メンバ変数
+											//メンバ変数
 	static int					  m_nMaxMotion;			// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;		// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;			// テクスチャ
@@ -181,7 +183,8 @@ private:
 	STATE_HANDLE				  m_StateHandle;		// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;			// プレイヤーの情報
 	CLoadTextPlayer *			  m_pText;				// プレイヤーの情報読み込み
-	CEgg						  *m_pEgg[MAX_EGG];	//卵のポインタ
+	CEgg						  *m_pEgg[MAX_EGG];		//卵のポインタ
+	CChick						  *m_pChick[MAX_EGG];	//ひよこのポインタ
 	bool						  m_bJump;				//  ジャンプフラグ
 	bool						  m_bControl;			// コントローラーの使用状態
 	int							  m_nCountJumpTime;		// ジャンプ状態の時間をカウントする
@@ -199,6 +202,7 @@ private:
 	bool						  m_bDirive;			//前進、後退の操作フラグ
 	int							  m_nCntFlag;
 	int							  m_nNumEgg;
+	int							  m_nNumChick;
 	int							  m_nCntFrame;			// 卵のついてくる処理に使う
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;

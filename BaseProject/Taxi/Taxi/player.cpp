@@ -26,6 +26,7 @@
 #include "feed.h"
 #include "egg.h"
 #include "billboord.h"
+#include "chick.h"
 
 //=============================================================================
 // マクロ定義
@@ -112,7 +113,7 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, int nPlayerNum, int nController
 //=============================================================================
 // コンストラクタ
 //=============================================================================
-CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER) 
+CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER)
 {
 	m_pPlayerNum = NULL;
 }
@@ -245,6 +246,7 @@ HRESULT CPlayer::Init(void)
 	m_nCntFlag = 0;
 	m_bDirive = true;
 	m_nNumEgg = 0;
+	m_nNumChick = 0;
 	m_bJumpSave = false;
 	m_nCntDamage = 0;
 	m_bDamage = false;
@@ -253,7 +255,7 @@ HRESULT CPlayer::Init(void)
 	m_nPlayerNum = 0;				// プレイヤー番号
 	m_nControllerNum = 0;			// コントローラー番号
 
-	// プレイヤー番号（追従）
+									// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
 		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 80.0f, 0.0f), D3DXVECTOR2(25.0f, 25.0f), 0);
 
@@ -267,6 +269,7 @@ HRESULT CPlayer::Init(void)
 	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
 	{
 		m_pEgg[nCntEgg] = NULL;
+		m_pChick[nCntEgg] = NULL;
 	}
 
 	if (m_pMotion == NULL)	//モーションの生成
@@ -320,6 +323,11 @@ void CPlayer::Uninit(void)
 		{
 			m_pEgg[nCntEgg] = NULL;
 		}
+
+		if (m_pChick[nCntEgg] != NULL)
+		{
+			m_pChick[nCntEgg] = NULL;
+		}
 	}
 
 	//テキストの破棄
@@ -368,24 +376,24 @@ void CPlayer::Update(void)
 
 	ChaseEgg();	// 卵がついてくる処理
 
-	/*UpdateStateJump();		// ジャンプ状態の更新処理
-	RiverInfluence();		// 川による影響
-	*/
+				/*UpdateStateJump();		// ジャンプ状態の更新処理
+				RiverInfluence();		// 川による影響
+				*/
 	CollisionObject();		// オブジェクトとの当たり判定
-	/*UpdateShake();			//車の揺れの処理
-	//CollisitionWall();	// 壁との当たり判定
-	UpdateSmoke(TirePos);	//煙の更新処理
-	UpdateGrass(TirePos);	//草エフェクトの更新処理
-	*/
-	/*m_nCntCombo++;
+							/*UpdateShake();			//車の揺れの処理
+							//CollisitionWall();	// 壁との当たり判定
+							UpdateSmoke(TirePos);	//煙の更新処理
+							UpdateGrass(TirePos);	//草エフェクトの更新処理
+							*/
+							/*m_nCntCombo++;
 
-	// コンボ数
-	if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
-	{	// NULLチェック & フレームが0の場合
-	m_nCntCombo = 0;
-	m_pCombo->Uninit();
-	m_pCombo = NULL;
-	}*/
+							// コンボ数
+							if (m_pCombo != NULL && m_pCombo->GetFream() == 0)
+							{	// NULLチェック & フレームが0の場合
+							m_nCntCombo = 0;
+							m_pCombo->Uninit();
+							m_pCombo = NULL;
+							}*/
 
 	if (m_pPlayerNum != NULL)
 	{
@@ -489,7 +497,7 @@ void CPlayer::ControlKey(void)
 	else if
 		((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, m_nControllerNum) == true) ||
-		(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
+			(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -551,6 +559,8 @@ void CPlayer::ControlKey(void)
 		BulletEgg();
 	}
 
+	ChickAppear();
+
 	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
 	{
 	pSound->SetVolume(CSound::SOUND_LABEL_SE_KLAXON, 1.5f);
@@ -585,7 +595,7 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL)
@@ -846,8 +856,8 @@ void CPlayer::SetState(CPlayer::STATE state)
 
 		if (STATE_REVERSE == state)
 		{// バック音
-			//pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
-			//pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
+		 //pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
+		 //pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
 		}
 		else if (STATE_DRIVE == state)
 		{
@@ -931,7 +941,7 @@ void CPlayer::CollisionObject(void)
 			{// タイプが障害物だったら
 				CObject *pObject = (CObject*)pScene;	// オブジェクトクラスのポインタ変数にする
 				int nType = pObject->GetType();			// 障害物の種類を取得
-				//当たり判定用のオブジェクトにのみ当たる
+														//当たり判定用のオブジェクトにのみ当たる
 				if (nType == 2) { pObject->CollisionObject(&m_pos, &m_OldPos, &m_move); }
 			}
 
@@ -943,11 +953,11 @@ void CPlayer::CollisionObject(void)
 	//デバック表示
 	/*if (m_bCrcleCarIn == true)
 	{
-		CDebugProc::Print("入っている\n");
+	CDebugProc::Print("入っている\n");
 	}
 	else if (m_bCrcleCarIn == false)
 	{
-		CDebugProc::Print("入っていない\n");
+	CDebugProc::Print("入っていない\n");
 	}*/
 }
 
@@ -1137,17 +1147,17 @@ void CPlayer::DebugProc(void)
 	//状態の表示
 	/*if (m_MoveState == STATE_DRIVE)
 	{
-		CDebugProc::Print("状態 : STATE_DRIVE\n");
+	CDebugProc::Print("状態 : STATE_DRIVE\n");
 	}
 	else
 	{
-		CDebugProc::Print("状態 : STATE_REVERSE\n");
+	CDebugProc::Print("状態 : STATE_REVERSE\n");
 	}
 
 	//走行状態の標示
 	if (m_StateSpeed == STATE_SPEED_STOP)
 	{
-		CDebugProc::Print("停止状態\n");
+	CDebugProc::Print("停止状態\n");
 	}
 	*/
 	//位置表示
@@ -1229,7 +1239,7 @@ void CPlayer::PlaySoundObj(int nType, CSound * pSound)
 //=============================================================================
 void CPlayer::CollisionFeed(void)
 {
-	if (m_nNumEgg >= MAX_EGG) { return; }
+	if (m_nNumEgg + m_nNumChick >= MAX_EGG) { return; }
 
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
@@ -1319,7 +1329,7 @@ void CPlayer::ChaseEgg(void)
 	m_OldEggRot[m_nCntFrame] = m_rot;
 	m_abJump[m_nCntFrame] = m_bJumpSave;
 
-	if (m_nNumEgg <= 0) { return; }
+	if (m_nNumEgg + m_nNumChick <= 0) { return; }
 
 	if (m_nNumEgg >= 1)
 	{// 卵が一個の時
@@ -1334,9 +1344,9 @@ void CPlayer::ChaseEgg(void)
 			}
 
 			// 卵の位置設定
-			m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+			m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.x,
 				m_pEgg[0]->SetHeight(),
-				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.z));
 
 			// 卵の角度設定
 			m_pEgg[0]->SetRot(m_OldEggRot[nData]);
@@ -1357,9 +1367,9 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME + 1;
 		}
 
-		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.x,
 			m_pEgg[1]->SetHeight(),
-			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.z));
 
 		m_pEgg[1]->SetRot(m_OldEggRot[nData]);
 
@@ -1378,15 +1388,42 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME + 1;
 		}
 
-		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.x,
 			m_pEgg[2]->SetHeight(),
-			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.z));
 
 		m_pEgg[2]->SetRot(m_OldEggRot[nData]);
 
 		if (m_abJump[nData] == true)
 		{
 			m_pEgg[2]->Jump();
+		}
+	}
+
+	if (m_nNumChick >= 1)
+	{// 卵が一個の時
+		if (m_pChick[0]->GetState() == CChick::STATE_CHASE)
+		{
+			// 前の向きを代入
+			int nData = m_nCntFrame - EGG_POS;
+
+			if (nData < 0)
+			{
+				nData += MAX_FRAME + 1;
+			}
+
+			// 卵の位置設定
+			m_pChick[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+				m_pChick[0]->SetHeight() + 15.0f,
+				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+
+			// 卵の角度設定
+			m_pChick[0]->SetRot(m_OldEggRot[nData]);
+
+			if (m_abJump[nData] == true)
+			{
+				m_pChick[0]->Jump();
+			}
 		}
 	}
 }
@@ -1445,7 +1482,7 @@ void CPlayer::CollisionEgg(void)
 
 				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET)
 				{
-					if (pEgg->GetRank() != m_nPlayerNum)
+					if (pEgg->GetRank() != CGame::GetRanking(m_nPlayerNum))
 					{
 						if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
 						{// 衝突した
@@ -1481,4 +1518,38 @@ void CPlayer::CollisionEgg(void)
 			pScene = pSceneNext;
 		}
 	}
+}
+
+//=============================================================================
+// ひよこの出現処理
+//=============================================================================
+void CPlayer::ChickAppear(void)
+{
+	/*if (m_pEgg[0] != NULL)
+	{
+	if (m_pEgg[0]->GetHatchingTimer() > HATCHING_TIME)
+	{
+	m_pEgg[0]->SetHatchingTimer(0);
+
+	if (m_pEgg[0] != NULL)
+	{
+	m_pChick[m_nNumChick] = CChick::Create(m_pos,
+	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+	D3DXVECTOR3(2.0f, 2.0f, 2.0f),
+	CChick::TYPE_ATTACK,
+	CChick::BULLETTYPE_PLAYER,
+	m_nPlayerNum);
+
+	m_pEgg[m_nNumChick]->Uninit();
+	m_pEgg[m_nNumChick] = NULL;
+	m_pEgg[m_nNumChick] = m_pEgg[m_nNumChick + 1];
+	m_pEgg[m_nNumChick + 1] = NULL;
+	m_nNumEgg--;
+
+	m_pChick[m_nNumChick]->SetState(CChick::STATE_CHASE);
+
+	m_nNumChick++;
+	}
+	}
+	}*/
 }

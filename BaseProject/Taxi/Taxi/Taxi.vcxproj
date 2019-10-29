@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="billboord.cpp" />
     <ClCompile Include="camerabace.cpp" />
+    <ClCompile Include="chick.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="egg.cpp" />
     <ClCompile Include="enemy.cpp" />
@@ -198,6 +199,7 @@
   <ItemGroup>
     <ClInclude Include="billboord.h" />
     <ClInclude Include="camerabace.h" />
+    <ClInclude Include="chick.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="egg.h" />
     <ClInclude Include="enemy.h" />

@@ -27,7 +27,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 
-#define EGG_SPEED				(8.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(25.0f)		// 卵が飛んでくスピード
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -66,6 +66,7 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 	m_fHeight = 0.0f;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
+	m_nHatchingTimer = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -141,6 +142,7 @@ HRESULT CEgg::Init(void)
 	m_eggState = EGGSTATE_NORMAL;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
+	m_nHatchingTimer = 0;
 	return S_OK;
 }
 
@@ -162,6 +164,8 @@ void CEgg::Uninit(void)
 void CEgg::Update(void)
 {
 	D3DXVECTOR3 pos = CModel3D::GetPosition();
+
+	m_nHatchingTimer++;
 
 	if (m_eggState == EGGSTATE_BULLET)
 	{
@@ -185,6 +189,8 @@ void CEgg::Update(void)
 
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight, pos.z));
+
+	CDebugProc::Print("%d\n", m_nRank);
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -506,11 +512,22 @@ void CEgg::Bullet(void)
 			D3DXVECTOR3 pos = CModel3D::GetPosition();
 
 			int nRank = m_nRank - 1;
+			int nCntChar = 0;
 
 			if (nRank >= 0)
 			{
+				for (nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
+				{// ひとつ前の順位のやつを見つける
+					int nData = CGame::GetRanking(nCntChar);
+
+					if (nRank == nData)
+					{
+						break;
+					}
+				}
+
 				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer[nRank]->GetPos().x - pos.x, pPlayer[nRank]->GetPos().z - pos.z);
+				m_fDestAngle = atan2f(pPlayer[nCntChar]->GetPos().x - pos.x, pPlayer[nCntChar]->GetPos().z - pos.z);
 
 				// 差分
 				m_fDiffAngle = m_fDestAngle - m_rot.y;

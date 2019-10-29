@@ -29,6 +29,7 @@
 #include "gameCharSelect.h"
 #include "gamePlay.h"
 #include "enemy.h"
+#include "chick.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -106,6 +107,7 @@ HRESULT CGame::Init()
 	CFeed::Load();				//食べ物のテクスチャの読み込み
 	CEgg::Load();				//卵のテクスチャの読み込み
 	CEnemy::Load();				//敵（仮）のテクスチャの読み込み
+	CChick::Load();				//ひよこのテクスチャの読み込み
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
 
 	CGameCharSelect::Load();	// ゲーム（キャラ選択）
@@ -157,6 +159,7 @@ void CGame::Uninit(void)
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
 	CEnemy::UnLoad();				//敵のテクスチャの破棄
+	CChick::UnLoad();				//ひよこのテクスチャの破棄
 
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）

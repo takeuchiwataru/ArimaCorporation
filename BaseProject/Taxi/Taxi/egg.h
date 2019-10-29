@@ -20,6 +20,7 @@
 #define EGG_POS			(7)											// —‘“¯m‚ÌŠÔŠu‚ÌL‚³i‘‚â‚·‚ÆL‚­‚È‚éj
 #define SPEED			(2.0f)										// ‰Á‘¬‚·‚é—Ê
 #define MAX_EGG		(3)		//—‘‚ÌÅ‘å”
+#define HATCHING_TIME	(60)										// ›z‰»‚·‚é‚Ü‚Å‚ÌŠÔ
 
 //*****************************************************************************
 // ‘O•ûéŒ¾
@@ -75,6 +76,8 @@ public:
 	int GetNumPlayer(void) { return m_nNumPlayer; }
 	void SetRank(int nRank) { m_nRank = nRank; }
 	int GetRank(void) { return m_nRank; }
+	int GetHatchingTimer(void) { return m_nHatchingTimer; }
+	void SetHatchingTimer(int nTimer) { m_nHatchingTimer = nTimer; }
 	void Jump(void);
 	void Bullet(void);
 
@@ -100,5 +103,6 @@ private:
 	float				m_fDiffAngle;			// ·•ª
 	int					m_nRank;				// Œü‚©‚Á‚Ä‚¢‚­‡ˆÊ
 	int					m_nNumPlayer;			// ƒvƒŒƒCƒ„[‰½‚ª‚Á‚Ä‚¢‚é—‘‚©
+	int					m_nHatchingTimer;		// ›z‰»‚·‚é‚Ü‚Å‚ÌŠÔ
 };
 #endif
