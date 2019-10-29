@@ -1,7 +1,7 @@
 //=============================================================================
 //
 // タイトルの処理 [title.cpp]
-// Author : shun yokomichi
+// Author : 有馬 武志
 //
 //=============================================================================
 #include "title.h"
@@ -13,6 +13,7 @@
 #include "sound.h"
 #include "ranking.h"
 #include "ui.h"
+#include "titlecamera.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -36,6 +37,7 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
+CTitleCamera *CTitle::m_pTitleCamera = NULL;
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -77,6 +79,12 @@ HRESULT CTitle::Init()
 	//	変数の初期化
 	m_nTitleCounter = 0;
 
+	if (m_pTitleCamera == NULL)
+	{
+		m_pTitleCamera = new CTitleCamera;
+		if (m_pTitleCamera != NULL) { m_pTitleCamera->Init(); }
+	}
+
 	return S_OK;
 }
 //=============================================================================
@@ -89,6 +97,14 @@ void CTitle::Uninit(void)
 	//===================================
 	CFade::UnLoad();	//フェードのテクスチャの破棄
 	CUi::UnLoad();		//UIのテクスチャの破棄
+
+	// タイトルカメラの破棄
+	if (m_pTitleCamera != NULL)
+	{
+		m_pTitleCamera->Uninit();
+		delete m_pTitleCamera;
+		m_pTitleCamera = NULL;
+	}
 
 	//フェード以外削除
 	CScene::NotFadeReleseAll();
@@ -141,6 +157,9 @@ void CTitle::Draw(void)
 		1.0f,
 		0);
 
+	//タイトルカメラの生成
+	if (m_pTitleCamera != NULL) { m_pTitleCamera->SetCamera(); }
+	
 	//全ての描画
 	CScene::DrawAll();
 }
