@@ -27,7 +27,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 
-#define EGG_SPEED				(25.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(40.0f)		// 卵が飛んでくスピード
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -175,28 +175,39 @@ void CEgg::Update(void)
 		{
 			fHeight = 30.0f;
 		}
-		m_fHeight = SetHeight() + fHeight;
+
 		Bullet();
 	}
-	else
-	{
-		m_move.y -= cosf(0) * 0.4f;
-		m_fHeight += m_move.y;
-	}
 
+	m_move.y -= cosf(0) * 0.4f;
+	m_fHeight += m_move.y;
+
+
+	pos.y = m_fHeight;
 	pos.x += m_move.x;
 	pos.z += m_move.z;
 
 	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight, pos.z));
+	CModel3D::SetPosition(pos);
 
-	CDebugProc::Print("%d\n", m_nRank);
+	CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+	CDebugProc::Print("%.1f\n", m_move.y);
+
+	if (m_bJump == true)
+	{
+		CDebugProc::Print("ジャンプ : 〇\n");
+	}
+	else
+	{
+		CDebugProc::Print("ジャンプ : ×\n");
+	}
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
 
 	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
+
 //=============================================================================
 // 描画処理
 //=============================================================================
@@ -433,13 +444,13 @@ float CEgg::SetHeight(void)
 //=============================================================================
 // ジャンプ
 //=============================================================================
-void CEgg::Jump(void)
+void CEgg::Jump(float fJump)
 {
 	// ジャンプ
 	if (m_bJump == false)
 	{// ジャンプしていない
 		m_bJump = true;
-		m_move.y += 5.5f;
+		m_move.y += fJump;
 	}
 
 	CModel3D::SetMove(m_move);
@@ -452,109 +463,11 @@ void CEgg::Bullet(void)
 {
 	if (m_bulletType == BULLETTYPE_PLAYER)
 	{
-		//CScene *pScene = CScene::GetTop(ENEMY_PRIOTITY);
-
-		//D3DXVECTOR3 pos = CModel3D::GetPosition();
-		//m_rot = CModel3D::GetRot();
-
-		////NULLチェック
-		//while (pScene != NULL)
-		//{
-		//	//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-		//	CScene *pSceneNext = pScene->GetNext();
-
-		//	if (pScene->GetObjType() == CScene::OBJTYPE_ENEMY && m_eggType == EGGTYPE_ATTACK)
-		//	{//タイプが敵だったら
-		//		CEnemy *pEnemy = (CEnemy*)pScene;
-
-		//		// 目的の角度
-		//		m_fDestAngle = atan2f(pEnemy->GetPosition().x - pos.x, pEnemy->GetPosition().z - pos.z);
-
-		//		// 差分
-		//		//m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
-		//		m_fDiffAngle = m_fDestAngle - m_rot.y;
-
-		//		if (m_fDiffAngle > D3DX_PI)
-		//		{
-		//			m_fDiffAngle -= D3DX_PI * 2.0f;
-		//		}
-		//		if (m_fDiffAngle < -D3DX_PI)
-		//		{
-		//			m_fDiffAngle += D3DX_PI * 2.0f;
-		//		}
-
-		//		m_rot.y += m_fDiffAngle * 0.05f;
-
-		//		if (m_rot.y > D3DX_PI)
-		//		{
-		//			m_rot.y -= D3DX_PI * 2.0f;
-		//		}
-		//		if (m_rot.y < -D3DX_PI)
-		//		{
-		//			m_rot.y += D3DX_PI * 2.0f;
-		//		}
-
-		//		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-		//		m_move.x = sinf(m_rot.y) * EGG_SPEED;
-		//		m_move.z = cosf(m_rot.y) * EGG_SPEED;
-
-		//		m_rot.x = D3DX_PI * 0.5f;
-		//	}
-		//	//Nextに次のSceneを入れる
-		//	pScene = pSceneNext;
-		//}
-		//CModel3D::SetRot(m_rot);
-
 		if (m_eggType == EGGTYPE_ATTACK)
 		{//タイプが敵だったら
 		 // 1つ前のプレイヤーに飛んでいく
-			CPlayer **pPlayer = CGame::GetPlayer();
-			D3DXVECTOR3 pos = CModel3D::GetPosition();
 
-			int nRank = m_nRank - 1;
-			int nCntChar = 0;
-
-			if (nRank >= 0)
-			{
-				for (nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
-				{// ひとつ前の順位のやつを見つける
-					int nData = CGame::GetRanking(nCntChar);
-
-					if (nRank == nData)
-					{
-						break;
-					}
-				}
-
-				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer[nCntChar]->GetPos().x - pos.x, pPlayer[nCntChar]->GetPos().z - pos.z);
-
-				// 差分
-				m_fDiffAngle = m_fDestAngle - m_rot.y;
-
-				if (m_fDiffAngle > D3DX_PI)
-				{
-					m_fDiffAngle -= D3DX_PI * 2.0f;
-				}
-				if (m_fDiffAngle < -D3DX_PI)
-				{
-					m_fDiffAngle += D3DX_PI * 2.0f;
-				}
-
-				m_rot.y += m_fDiffAngle * 0.5f;
-
-				if (m_rot.y > D3DX_PI)
-				{
-					m_rot.y -= D3DX_PI * 2.0f;
-				}
-				if (m_rot.y < -D3DX_PI)
-				{
-					m_rot.y += D3DX_PI * 2.0f;
-				}
-			}
-
-
-			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+		 //モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 			m_move.x = sinf(m_rot.y) * EGG_SPEED;
 			m_move.z = cosf(m_rot.y) * EGG_SPEED;
 

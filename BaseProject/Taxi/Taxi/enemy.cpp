@@ -521,7 +521,7 @@ void CEnemy::ChaseEgg(void)
 
 			if (m_abJump[nData] == true)
 			{
-				m_pEgg[0]->Jump();
+				m_pEgg[0]->Jump(EGGJUMP);
 			}
 
 			CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
@@ -545,7 +545,7 @@ void CEnemy::ChaseEgg(void)
 
 		if (m_abJump[nData] == true)
 		{
-			m_pEgg[1]->Jump();
+			m_pEgg[1]->Jump(EGGJUMP);
 		}
 	}
 	if (m_nNumEgg >= 3)
@@ -566,7 +566,7 @@ void CEnemy::ChaseEgg(void)
 
 		if (m_abJump[nData] == true)
 		{
-			m_pEgg[2]->Jump();
+			m_pEgg[2]->Jump(EGGJUMP);
 		}
 	}
 }

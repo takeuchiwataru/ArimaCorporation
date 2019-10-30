@@ -27,7 +27,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 
-#define EGG_SPEED				(8.0f)		// 卵が飛んでくスピード
+#define CHICK_SPEED				(25.0f)		// ひよこが飛んでくスピード
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -184,7 +184,7 @@ void CChick::Update(void)
 	pos.z += m_move.z;
 
 	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight, pos.z));
+	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight + 15.0f, pos.z));
 
 	CDebugProc::Print("%.1f\n", m_fHeight);
 
@@ -455,11 +455,22 @@ void CChick::Bullet(void)
 			D3DXVECTOR3 pos = CModel3D::GetPosition();
 
 			int nRank = m_nRank - 1;
+			int nCntChar = 0;
 
 			if (nRank >= 0)
 			{
+				for (nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
+				{// ひとつ前の順位のやつを見つける
+					int nData = CGame::GetRanking(nCntChar);
+
+					if (nRank == nData)
+					{
+						break;
+					}
+				}
+
 				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer[nRank]->GetPos().x - pos.x, pPlayer[nRank]->GetPos().z - pos.z);
+				m_fDestAngle = atan2f(pPlayer[nCntChar]->GetPos().x - pos.x, pPlayer[nCntChar]->GetPos().z - pos.z);
 
 				// 差分
 				m_fDiffAngle = m_fDestAngle - m_rot.y;
@@ -487,8 +498,8 @@ void CChick::Bullet(void)
 
 
 			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-			m_move.x = sinf(m_rot.y) * EGG_SPEED;
-			m_move.z = cosf(m_rot.y) * EGG_SPEED;
+			m_move.x = sinf(m_rot.y) * CHICK_SPEED;
+			m_move.z = cosf(m_rot.y) * CHICK_SPEED;
 
 			m_rot.x = D3DX_PI * 0.5f;
 
@@ -539,8 +550,8 @@ void CChick::Bullet(void)
 				}
 
 				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-				m_move.x = sinf(m_rot.y) * EGG_SPEED;
-				m_move.z = cosf(m_rot.y) * EGG_SPEED;
+				m_move.x = sinf(m_rot.y) * CHICK_SPEED;
+				m_move.z = cosf(m_rot.y) * CHICK_SPEED;
 
 				m_rot.x = D3DX_PI * 0.5f;
 			}

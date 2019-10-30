@@ -51,6 +51,8 @@
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
 #define SPEEDDOWN		(0.95f)										// 減速させる値
+#define CHICK_SCALE		(D3DXVECTOR3(2.0f, 2.0f, 2.0f))				//ひよこの大きさ
+#define THROW			(13.0f)										// 卵を投げる力
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(1.0f)										//加速値（前進）
@@ -1320,7 +1322,7 @@ void CPlayer::ChaseEgg(void)
 {
 	m_nCntFrame++;
 
-	if (m_nCntFrame > MAX_FRAME)
+	if (m_nCntFrame >= MAX_FRAME)
 	{
 		m_nCntFrame = 0;
 	}
@@ -1336,11 +1338,11 @@ void CPlayer::ChaseEgg(void)
 		if (m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{
 			// 前の向きを代入
-			int nData = m_nCntFrame - EGG_POS;
+			int nData = m_nCntFrame - EGG_POS * (1 + m_nNumChick);
 
 			if (nData < 0)
 			{
-				nData += MAX_FRAME + 1;
+				nData += MAX_FRAME;
 			}
 
 			// 卵の位置設定
@@ -1353,7 +1355,7 @@ void CPlayer::ChaseEgg(void)
 
 			if (m_abJump[nData] == true)
 			{
-				m_pEgg[0]->Jump();
+				m_pEgg[0]->Jump(EGGJUMP);
 			}
 		}
 	}
@@ -1364,7 +1366,7 @@ void CPlayer::ChaseEgg(void)
 
 		if (nData < 0)
 		{
-			nData += MAX_FRAME + 1;
+			nData += MAX_FRAME;
 		}
 
 		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.x,
@@ -1375,7 +1377,7 @@ void CPlayer::ChaseEgg(void)
 
 		if (m_abJump[nData] == true)
 		{
-			m_pEgg[1]->Jump();
+			m_pEgg[1]->Jump(EGGJUMP);
 		}
 	}
 	if (m_nNumEgg >= 3)
@@ -1385,7 +1387,7 @@ void CPlayer::ChaseEgg(void)
 
 		if (nData < 0)
 		{
-			nData += MAX_FRAME + 1;
+			nData += MAX_FRAME;
 		}
 
 		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.x,
@@ -1396,7 +1398,7 @@ void CPlayer::ChaseEgg(void)
 
 		if (m_abJump[nData] == true)
 		{
-			m_pEgg[2]->Jump();
+			m_pEgg[2]->Jump(EGGJUMP);
 		}
 	}
 
@@ -1409,12 +1411,12 @@ void CPlayer::ChaseEgg(void)
 
 			if (nData < 0)
 			{
-				nData += MAX_FRAME + 1;
+				nData += MAX_FRAME;
 			}
 
 			// 卵の位置設定
 			m_pChick[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
-				m_pChick[0]->SetHeight() + 15.0f,
+				m_pChick[0]->SetHeight(),
 				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
 
 			// 卵の角度設定
@@ -1426,6 +1428,48 @@ void CPlayer::ChaseEgg(void)
 			}
 		}
 	}
+	if (m_nNumChick >= 2)
+	{// ひよこが二匹の時
+	 // 二匹目
+		int nData = m_nCntFrame - EGG_POS * 2;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME;
+		}
+
+		m_pChick[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+			m_pChick[1]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
+
+		m_pChick[1]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pChick[1]->Jump();
+		}
+	}
+	if (m_nNumChick >= 3)
+	{
+		// 二匹目
+		int nData = m_nCntFrame - EGG_POS * 3;
+
+		if (nData < 0)
+		{
+			nData += MAX_FRAME;
+		}
+
+		m_pChick[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+			m_pChick[2]->SetHeight(),
+			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
+
+		m_pChick[2]->SetRot(m_OldEggRot[nData]);
+
+		if (m_abJump[nData] == true)
+		{
+			m_pChick[2]->Jump();
+		}
+	}
 }
 
 //=============================================================================
@@ -1433,12 +1477,34 @@ void CPlayer::ChaseEgg(void)
 //=============================================================================
 void CPlayer::BulletEgg(void)
 {
-	if (m_nNumEgg > 0)
-	{// 卵を持っているとき
-		if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+	if (m_nNumEgg + m_nNumChick > 0)
+	{// 卵かひよこを持っているとき
+		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
+		{
+			m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
+			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+
+			m_nNumChick--;	// 所持数を減らす
+
+			if (m_pChick[0]->GetType() == CChick::TYPE_SPEED)
+			{
+				m_State = PLAYERSTATE_SPEEDUP;
+				m_fSpeed += SPEED;
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
+			}
+
+			// 情報入れ替え
+			m_pChick[0] = m_pChick[1];
+			m_pChick[1] = m_pChick[2];
+			m_pChick[2] = NULL;
+		}
+		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+			m_pEgg[0]->Jump(THROW);
 
 			m_nNumEgg--;	// 所持数を減らす
 
@@ -1458,7 +1524,6 @@ void CPlayer::BulletEgg(void)
 		}
 	}
 }
-
 
 //=============================================================================
 // 卵との当たり判定
@@ -1513,6 +1578,43 @@ void CPlayer::CollisionEgg(void)
 					}
 				}
 			}
+			if (pScene->GetObjType() == OBJTYPE_CHICK)
+			{
+				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				if (pChick->GetState() == CChick::STATE_BULLET)
+				{
+					if (pChick->GetRank() != CGame::GetRanking(m_nPlayerNum))
+					{
+						if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
+						{// 衝突した
+							switch (pChick->GetType())
+							{
+								// 攻撃
+							case CChick::TYPE_ATTACK:
+								// ダメージ状態にする
+								if (m_bDamage == false)
+								{
+									m_bDamage = true;
+									m_State = PLAYERSTATE_DAMAGE;
+								}
+								pChick->Uninit();	// ひよこ削除
+								break;
+
+								// 減速
+							case CChick::TYPE_ANNOY:
+								if (m_bDamage == false)
+								{
+									m_bDamage = true;
+									m_State = PLAYERSTATE_SPEEDDOWN;
+								}
+								pChick->Uninit();	// ひよこ削除
+								break;
+							}
+						}
+					}
+				}
+			}
 
 			// Nextに次のSceneを入れる
 			pScene = pSceneNext;
@@ -1525,31 +1627,59 @@ void CPlayer::CollisionEgg(void)
 //=============================================================================
 void CPlayer::ChickAppear(void)
 {
-	/*if (m_pEgg[0] != NULL)
-	{
-	if (m_pEgg[0]->GetHatchingTimer() > HATCHING_TIME)
-	{
-	m_pEgg[0]->SetHatchingTimer(0);
-
 	if (m_pEgg[0] != NULL)
 	{
-	m_pChick[m_nNumChick] = CChick::Create(m_pos,
-	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-	D3DXVECTOR3(2.0f, 2.0f, 2.0f),
-	CChick::TYPE_ATTACK,
-	CChick::BULLETTYPE_PLAYER,
-	m_nPlayerNum);
+		if (m_pEgg[0]->GetHatchingTimer() > HATCHING_TIME)
+		{// 孵化する時間が経過
+		 // タイマーを0にもどす
+			m_pEgg[0]->SetHatchingTimer(0);
 
-	m_pEgg[m_nNumChick]->Uninit();
-	m_pEgg[m_nNumChick] = NULL;
-	m_pEgg[m_nNumChick] = m_pEgg[m_nNumChick + 1];
-	m_pEgg[m_nNumChick + 1] = NULL;
-	m_nNumEgg--;
+			if (m_pEgg[0] != NULL)
+			{
+				switch (m_pEgg[0]->GetType())
+				{
+					// 攻撃
+				case CEgg::EGGTYPE_ATTACK:
+					m_pChick[m_nNumChick] = CChick::Create(m_pos,
+						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+						CHICK_SCALE,
+						CChick::TYPE_ATTACK,
+						CChick::BULLETTYPE_PLAYER,
+						m_nPlayerNum);
+					break;
 
-	m_pChick[m_nNumChick]->SetState(CChick::STATE_CHASE);
+					// 減速
+				case CEgg::EGGTYPE_ANNOY:
+					m_pChick[m_nNumChick] = CChick::Create(m_pos,
+						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+						CHICK_SCALE,
+						CChick::TYPE_ANNOY,
+						CChick::BULLETTYPE_PLAYER,
+						m_nPlayerNum);
+					break;
 
-	m_nNumChick++;
+					// 加速
+				case CEgg::EGGTYPE_SPEED:
+					m_pChick[m_nNumChick] = CChick::Create(m_pos,
+						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+						CHICK_SCALE,
+						CChick::TYPE_SPEED,
+						CChick::BULLETTYPE_PLAYER,
+						m_nPlayerNum);
+					break;
+				}
+
+				m_pEgg[0]->Uninit();
+				m_pEgg[0] = m_pEgg[1];
+				m_pEgg[1] = m_pEgg[2];
+				m_pEgg[2] = NULL;
+				m_nNumEgg--;
+
+				// ひよこの状態を設定
+				m_pChick[m_nNumChick]->SetState(CChick::STATE_CHASE);
+
+				m_nNumChick++;
+			}
+		}
 	}
-	}
-	}*/
 }

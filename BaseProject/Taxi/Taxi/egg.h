@@ -20,7 +20,8 @@
 #define EGG_POS			(7)											// —‘“¯m‚ÌŠÔŠu‚ÌL‚³i‘‚â‚·‚ÆL‚­‚È‚éj
 #define SPEED			(2.0f)										// ‰Á‘¬‚·‚é—Ê
 #define MAX_EGG		(3)		//—‘‚ÌÅ‘å”
-#define HATCHING_TIME	(60)										// ›z‰»‚·‚é‚Ü‚Å‚ÌŠÔ
+#define HATCHING_TIME	(600)										// ›z‰»‚·‚é‚Ü‚Å‚ÌŠÔ
+#define EGGJUMP			(5.5f)										// —‘‚ÌƒWƒƒƒ“ƒv—Í
 
 //*****************************************************************************
 // ‘O•ûéŒ¾
@@ -78,7 +79,7 @@ public:
 	int GetRank(void) { return m_nRank; }
 	int GetHatchingTimer(void) { return m_nHatchingTimer; }
 	void SetHatchingTimer(int nTimer) { m_nHatchingTimer = nTimer; }
-	void Jump(void);
+	void Jump(float fJump);
 	void Bullet(void);
 
 private:
