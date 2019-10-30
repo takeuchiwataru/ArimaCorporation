@@ -174,13 +174,20 @@ void CEgg::Update(void)
 		if (m_eggType == EGGTYPE_ATTACK)
 		{
 			fHeight = 30.0f;
+
+			m_move.y -= cosf(0) * 0.4f;
+			m_fHeight += m_move.y;
 		}
 
 		Bullet();
 	}
+	else
+	{
+		m_move.y -= cosf(0) * 0.4f;
+		m_fHeight += m_move.y;
+	}
 
-	m_move.y -= cosf(0) * 0.4f;
-	m_fHeight += m_move.y;
+
 
 
 	pos.y = m_fHeight;
@@ -368,9 +375,16 @@ bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
 	D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-	if (pPos->x >= ModelMin.x - PLAYER_DEPTH && pPos->x <= ModelMax.x + PLAYER_DEPTH)
+	float fDepth = PLAYER_DEPTH;
+
+	if (m_eggType == EGGTYPE_ATTACK)
+	{
+		fDepth = PLAYER_DEPTH/* * 2*/;
+	}
+
+	if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
 	{// Zの範囲内にいる
-		if (pPos->z >= ModelMin.z - PLAYER_DEPTH && pPos->z <= ModelMax.z + PLAYER_DEPTH)
+		if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
 		{// Xの範囲内にいる
 			if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
 			{// オブジェクトの上から当たる場合
@@ -465,9 +479,11 @@ void CEgg::Bullet(void)
 	{
 		if (m_eggType == EGGTYPE_ATTACK)
 		{//タイプが敵だったら
-		 // 1つ前のプレイヤーに飛んでいく
+			CPlayer **pPlayer = CGame::GetPlayer();
 
-		 //モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+			m_rot = pPlayer[m_nRank]->GetRot();
+
+			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 			m_move.x = sinf(m_rot.y) * EGG_SPEED;
 			m_move.z = cosf(m_rot.y) * EGG_SPEED;
 

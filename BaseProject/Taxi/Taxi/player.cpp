@@ -1504,17 +1504,24 @@ void CPlayer::BulletEgg(void)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
-			m_pEgg[0]->Jump(THROW);
 
 			m_nNumEgg--;	// 所持数を減らす
 
-			if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
+			switch (m_pEgg[0]->GetType())
 			{
+				// 攻撃
+			case CEgg::EGGTYPE_ATTACK:
+				m_pEgg[0]->Jump(THROW);
+				break;
+
+				// 加速
+			case CEgg::EGGTYPE_SPEED:
 				m_State = PLAYERSTATE_SPEEDUP;
 				m_fSpeed += SPEED;
 
 				m_pEgg[0]->Uninit();
 				m_pEgg[0] = NULL;
+				break;
 			}
 
 			// 情報入れ替え
