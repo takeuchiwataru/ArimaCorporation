@@ -11,6 +11,8 @@
 #include "object.h"
 #include "manager.h"
 #include "tutorial.h"
+#include "fade.h"
+
 //===============================================================================
 //　マクロ定義
 //===============================================================================
@@ -40,6 +42,7 @@ HRESULT CGameCamera::Init(void)
 	m_posV = D3DXVECTOR3(0.0f, 500.0f, 0.0f);	//視点の初期値
 	m_posR = VECTOR_ZERO;						//注視点の初期値
 
+	m_cameraType = CAMERA_NONE;
 	m_pPlayer = NULL;
 	return S_OK;
 }
@@ -57,7 +60,15 @@ void CGameCamera::Uninit(void)
 //===============================================================================
 void CGameCamera::Update(void)
 {
-	UpdateNormal(); //通常状態
+	switch (m_cameraType)
+	{
+	case CAMERA_COURSE:
+		UpdateCourse(); //コース状態
+		break;
+	case CAMERA_PLAYER:
+		UpdatePlayer(); //プレイヤー状態
+		break;
+	}
 }
 
 //===============================================================================
@@ -69,9 +80,65 @@ void CGameCamera::SetCamera(void)
 }
 
 //=============================================================================
-// ゲームカメラ通常更新処理
+// ゲームカメラ（コース）更新処理
 //=============================================================================
-void CGameCamera::UpdateNormal(void)
+void CGameCamera::UpdateCourse(void)
+{
+	int nGameCounter = CGame::GetGameCounter();
+	int nCount = nGameCounter;
+
+	if (nGameCounter < CUORSE_VIEW_TIPE_0)
+	{// 1回目
+		nCount = nGameCounter;
+
+		if (nCount == 0)
+		{// 初期値
+			m_posR = D3DXVECTOR3(0.0f, 500.0f, 500.0f);
+			m_posV = D3DXVECTOR3(0.0f, 1000.0f, -1200.0f);
+		}
+		else
+		{
+			m_posR = D3DXVECTOR3(0.0f, 500.0f, 500.0f + (5.0f * nCount));
+		}
+	}
+	else if (nGameCounter < CUORSE_VIEW_TIPE_1)
+	{// 2回目
+		nCount = nGameCounter - CUORSE_VIEW_TIPE_0;
+
+		if (nCount == 0)
+		{// 初期値
+			m_posR = D3DXVECTOR3(0.0f + 1000.0f, 300.0f, 100.0f);
+			m_posV = D3DXVECTOR3(0.0f + 1000.0f + 1500.0f, 550.0f, -1.0f);
+		}
+		else
+		{
+			m_posR = D3DXVECTOR3(0.0f + 1000.0f, 300.0f, 100.0f + (4.0f * nCount));
+			m_posV = D3DXVECTOR3(0.0f + 1000.0f + 1500.0f, 550.0f, -1.0f + (2.0f * nCount));
+		}
+	}
+	else
+	{// 3回目
+		nCount = nGameCounter - CUORSE_VIEW_TIPE_1;
+
+		if (nCount == 0)
+		{// 初期値
+			m_posR = D3DXVECTOR3(0.0f, 100.0f, 0.0f);
+			m_posV = D3DXVECTOR3(0.0f, 200.0f, -800.0f);
+		}
+		else
+		{
+			m_posV = D3DXVECTOR3(0.0f, 200.0f, -800.0f + (-2.0f * nCount));
+		}
+	}
+
+	if (nGameCounter == CUORSE_VIEW_TIME)
+		CFade::Create(CGame::GAMEMODE_PLAY);
+}
+
+//=============================================================================
+// ゲームカメラ（プレイヤー）更新処理
+//=============================================================================
+void CGameCamera::UpdatePlayer(void)
 {
 	//プレイヤーの情報を取得する
 	CManager::MODE mode = CManager::GetMode();

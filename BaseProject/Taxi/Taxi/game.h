@@ -12,17 +12,24 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_MAP_OBJECT	(3500)
-#define MAX_MAP_CAR		(300)
-#define MAX_MAP_MESH	(1400)
-#define MAX_MAP_WALL	(550)
-#define MAX_MAP_ROUTE	(300)
-#define MAX_MAP_POINT	(300)
-#define MAX_POINT		(10)
-#define MAX_SCORE_UI	(6)
+#define MAX_MAP_OBJECT		(3500)
+#define MAX_MAP_CAR			(300)
+#define MAX_MAP_MESH		(1400)
+#define MAX_MAP_WALL		(550)
+#define MAX_MAP_ROUTE		(300)
+#define MAX_MAP_POINT		(300)
+#define MAX_POINT			(10)
+#define MAX_SCORE_UI		(6)
 
-#define MAX_PLAYER		(4)
-#define MAX_CHARCTER	(8)
+#define MAX_PLAYER			(4)
+#define MAX_CHARCTER		(8)
+
+#define CUORSE_VIEW_TIME	(360)
+#define CUORSE_VIEW_TIPE_0	(120)
+#define CUORSE_VIEW_TIPE_1	(240)
+
+#define START_SET_TIME		(360)
+#define START_COUNT_TIME	(180)
 
 //*****************************************************************************
 // 前方宣言
@@ -56,7 +63,8 @@ public:
 		GAMEMODE_NONE = 0,
 		GAMEMODE_CHARSELECT,				// キャラ選択
 		GAMEMODE_COURSESELECT,				// コース選択
-		GAMEMODE_PLAY,						// プレイヤー
+		GAMEMODE_COURSE_VIEW,				// コース見る
+		GAMEMODE_PLAY,						// プレイ
 		GAMEMODE_MAX						// 最大数
 	}GAMEMODE;
 
@@ -83,11 +91,13 @@ public:
 	static GAMESTATE GetGameState(void) { return m_gameState; }
 	static CPlayer **GetPlayer(void) { return m_pPlayer; }
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
-	static CGameCamera * GetGameCamera(int nNum) 
-	{ if (0 <= nNum && nNum < MAX_PLAYER) 
-		return m_pGameCamera[nNum];
-	  else 
-		  return NULL; }			//ゲームカメラの取得
+	static CGameCamera * GetGameCamera(int nNum)
+	{
+		if (0 <= nNum && nNum < MAX_PLAYER)
+			return m_pGameCamera[nNum];
+		else
+			return NULL;
+	}			//ゲームカメラの取得
 
 	static int GetGameCounter(void) { return m_nGameCounter; }					//ゲームのカウンター
 	static void SetGameModeNext(GAMEMODE gameModeNext) { m_gameModeNext = gameModeNext; };
@@ -106,7 +116,7 @@ public:
 	char *GetLineTop(char *pStr);				//行の先頭を取得
 	int  PopString(char *pStr, char *pDest);	//行の最後を切り捨て
 
-	//ウォークスルー用
+												//ウォークスルー用
 	static bool GetDrawUI(void) { return m_bDrawUI; };
 
 	// プレイヤー最大数
@@ -203,6 +213,7 @@ private:
 	int m_nCounterGameState;					//状態カウンタ
 	static CPlayer *m_pPlayer[MAX_PLAYER];		//プレイヤーのポインタ
 	static CPause *m_pPause;					//ポーズのポインタ
+	static CGameCamera * m_pCuorseCamera;		//コースのポインタ
 	static CGameCamera * m_pGameCamera[MAX_PLAYER];//カメラのポインタ
 	static bool m_bPause;						//現在ポーズかポーズじゃないか
 	static bool m_bHelp;						//現在ヘルプかヘルプじゃないか
@@ -225,7 +236,7 @@ private:
 	static int m_nRanking[MAX_PLAYER];			// ランキング
 	static bool m_bGoul[MAX_PLAYER];			// ゴール判定
 
-	//ウォークスルー用
+												//ウォークスルー用
 	static bool m_bDrawUI;
 };
 #endif

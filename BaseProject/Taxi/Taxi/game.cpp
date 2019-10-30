@@ -53,11 +53,12 @@ CGamePlay *CGame::m_pGamePlay = NULL;				// ゲーム（プレイ）
 CPlayer *CGame::m_pPlayer[MAX_PLAYER] = { NULL };
 CPause *CGame::m_pPause = NULL;
 CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
+CGameCamera * CGame::m_pCuorseCamera = NULL;
 CGameCamera * CGame::m_pGameCamera[MAX_PLAYER] = { NULL };
 bool CGame::m_bHelp = false;
 bool CGame::m_bPause = false;
 CGame::GAMEMODE CGame::m_gameMode = CGame::GAMEMODE_NONE;
-CGame::GAMEMODE CGame::m_gameModeNext = CGame::GAMEMODE_NONE; 
+CGame::GAMEMODE CGame::m_gameModeNext = CGame::GAMEMODE_NONE;
 CGame::GAMESTATE CGame::m_gameState = CGame::GAMESTATE_NONE;
 int	CGame::m_nCntSetStage = 0;
 int CGame::m_nGameCounter = 0;
@@ -71,9 +72,9 @@ int CGame::m_nControllerNum[MAX_PLAYER] = { 0 };	// コントローラー番号
 int CGame::m_nRanking[MAX_PLAYER] = { 0 };			// ランキング
 bool CGame::m_bGoul[MAX_PLAYER] = { false };		// ゴール
 
-//=============================================================================
-// デフォルトコンストラクタ
-//=============================================================================
+													//=============================================================================
+													// デフォルトコンストラクタ
+													//=============================================================================
 CGame::CGame()
 {
 	m_gameMode = GAMEMODE_NONE;
@@ -164,7 +165,7 @@ void CGame::Uninit(void)
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）
 
-	//プレイヤーモデルの破棄
+									//プレイヤーモデルの破棄
 	CPlayer::UnloadModel();
 
 	//ポーズ削除
@@ -196,6 +197,13 @@ void CGame::Uninit(void)
 	}
 
 	//カメラの破棄
+	if (m_pCuorseCamera != NULL)
+	{
+		m_pCuorseCamera->Uninit();
+		delete m_pCuorseCamera;
+		m_pCuorseCamera = NULL;
+	}
+
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
 		if (m_pPlayer[nCntPlayer] != NULL)
@@ -224,7 +232,8 @@ void CGame::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
-	
+	CFade::FADE fade = CFade::GetFade();
+
 	if (m_gameMode != m_gameModeNext)
 	{
 		SetGameMode(m_gameModeNext);
@@ -242,57 +251,50 @@ void CGame::Update(void)
 			CFade::Create(GAMEMODE_PLAY);
 
 		break;
+	case GAMEMODE_COURSE_VIEW:
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			if (m_pPlayer[nCntPlayer] != NULL)
+				m_pPlayer[nCntPlayer]->SetControl(false);
+
+		break;
 	case GAMEMODE_PLAY:
+		//現在の状態を保存
+		m_NowGameState = GetGameState();
 
-		if (m_pPause == false)
-		{//開く音
-			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		switch (m_NowGameState)
+		{
+		case GAMESTATE_NORMAL:	//通常の状態
+			if (m_nGameCounter < START_SET_TIME)
 			{
-				//m_bDrawUI = m_bDrawUI ? false : true;
-
-				//ポーズの選択の決定音
-				CFade::Create(CManager::MODE_RESULT);
+				for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+					if (m_pPlayer[nCntPlayer] != NULL)
+						m_pPlayer[nCntPlayer]->SetControl(false);
+			}
+			else if (m_nGameCounter == START_SET_TIME)
+			{
+				for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+					if (m_pPlayer[nCntPlayer] != NULL)
+						m_pPlayer[nCntPlayer]->SetControl(true);
 			}
 
-			//現在の状態を保存
-			m_NowGameState = GetGameState();
+			Ranking();		// ランキング
 
-			//カメラの更新処理
-			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-			{
-				if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->Update(); }
+			break;
+		case GAMESTATE_END:			//ゲーム終了状態
+			m_nCounterGameState++;
+
+			if (180 < m_nCounterGameState)
+			{//画面（モード）の設定
+				CFade::Create(CManager::MODE_TITLE);
 			}
-
-			switch (m_NowGameState)
-			{
-			case GAMESTATE_NORMAL:	//通常の状態
-				if (m_nGameCounter < 300)
-				{
-					for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-						if (m_pPlayer[nCntPlayer] != NULL)
-							m_pPlayer[nCntPlayer]->SetControl(false);
-				}
-				else if (m_nGameCounter == 300)
-				{
-					for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-						if (m_pPlayer[nCntPlayer] != NULL)
-							m_pPlayer[nCntPlayer]->SetControl(true);
-				}
-				
-				Ranking();
-				
-				break;
-			case GAMESTATE_END:			//ゲーム終了状態
-				m_nCounterGameState++;
-
-				if (180 < m_nCounterGameState)
-				{//画面（モード）の設定
-					CFade::Create(CManager::MODE_TITLE);
-				}
-				break;
-			}
+			break;
 		}
 
+		break;
+	}
+
+	if (fade == CFade::FADE_NONE)
+	{
 		//ポーズの処理
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
 		{//Pキーが押されたら
@@ -310,7 +312,7 @@ void CGame::Update(void)
 					m_pPause = CPause::Create();
 
 					//ポーズとフェードだけ回す
-					CScene::SetUpdatePri(7);	
+					CScene::SetUpdatePri(7);
 				}
 				break;
 			case false:
@@ -328,11 +330,32 @@ void CGame::Update(void)
 				}
 			}
 		}
-		break;
 	}
 
-	//	カウンター進める
-	m_nGameCounter++;
+	if (m_pPause == NULL)
+	{//開く音
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		{
+			//m_bDrawUI = m_bDrawUI ? false : true;
+
+			//ポーズの選択の決定音
+			CFade::Create(CManager::MODE_RESULT);
+			return;
+		}
+
+		//カメラの更新処理
+		if (m_pCuorseCamera != NULL) { m_pCuorseCamera->Update(); }
+
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->Update(); }
+
+		//	カウンター進める
+		m_nGameCounter++;
+	}
+	else
+	{
+		//m_pPause->Update();
+	}
 }
 
 //=============================================================================
@@ -342,12 +365,27 @@ void CGame::Draw(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	if (m_gameMode == GAMEMODE_PLAY)
+	if (m_gameMode == GAMEMODE_COURSE_VIEW)
+	{// その他
+	 // バックバッファ＆Ｚバッファのクリア
+		pDevice->Clear(0,
+			NULL,
+			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
+			D3DCOLOR_RGBA(157, 184, 224, 255),
+			1.0f,
+			0);
+
+		if (m_pCuorseCamera != NULL) { m_pCuorseCamera->SetCamera(); }
+
+		//全ての描画
+		CScene::DrawAll();
+	}
+	else if (m_gameMode == GAMEMODE_PLAY)
 	{// プレイ
 		D3DVIEWPORT9 viewport;
 		pDevice->GetViewport(&viewport);	// ビューポート取得
 
-		// バックバッファ＆Ｚバッファのクリア
+											// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
@@ -357,7 +395,7 @@ void CGame::Draw(void)
 
 		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 		{// プレイヤーカウント
-			//カメラの設定
+		 //カメラの設定
 			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
 
 			//全ての描画
@@ -366,12 +404,12 @@ void CGame::Draw(void)
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-		//２Dの描画
+											//２Dの描画
 		CScene::Draw2D();
 	}
 	else
 	{// その他
-		// バックバッファ＆Ｚバッファのクリア
+	 // バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
@@ -381,6 +419,11 @@ void CGame::Draw(void)
 
 		//全ての描画
 		CScene::DrawAll();
+	}
+
+	if (m_pPause != NULL)
+	{
+	//	m_pPause->Draw();
 	}
 }
 
@@ -433,6 +476,15 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 	case GAMEMODE_COURSESELECT:		// コース選択		
 
 		break;
+	case GAMEMODE_COURSE_VIEW:		// コース見る		
+		if (m_pCuorseCamera != NULL)
+		{
+			m_pCuorseCamera->Uninit();
+			delete m_pCuorseCamera;
+			m_pCuorseCamera = NULL;
+		}
+
+		break;
 	case GAMEMODE_PLAY:				// プレイ
 		if (m_pGamePlay != NULL)
 		{// NULL以外
@@ -466,6 +518,29 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 	case GAMEMODE_COURSESELECT:		// コース選択
 
 		break;
+	case GAMEMODE_COURSE_VIEW:		// コース見る
+		pSound->StopSound();
+		//タイトルの曲
+		pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME, 0.4f);
+		pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME);
+
+		SetStage();
+
+		//ゲームカメラの生成
+		if (m_pCuorseCamera == NULL)
+		{// NULL
+			m_pCuorseCamera = new CGameCamera;
+
+			if (m_pCuorseCamera != NULL)
+			{// NULL以外
+			 // 初期化処理
+				m_pCuorseCamera->Init();
+				// タイプ設定処理
+				m_pCuorseCamera->SetType(CGameCamera::CAMERA_COURSE);
+			}
+		}
+
+		break;
 	case GAMEMODE_PLAY:				// プレイ
 		pSound->StopSound();
 		//タイトルの曲
@@ -475,7 +550,6 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		if (m_pGamePlay == NULL)
 			m_pGamePlay = CGamePlay::Create();
 
-		SetStage();
 		break;
 	}
 
@@ -510,23 +584,24 @@ void CGame::SetStage(void)
 
 		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 		{// プレイヤーカウント
-			//プレイヤーの生成
+		 //プレイヤーの生成
 			if (m_pPlayer[nCntPlayer] == NULL)
 				m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(-150.0f + (100.0f * nCntPlayer), 0.0f, (-50.0f * nCntPlayer)), nCntPlayer, m_nControllerNum[nCntPlayer]);
-				//m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f), nCntPlayer, m_nControllerNum[nCntPlayer]);
+			//m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f), nCntPlayer, m_nControllerNum[nCntPlayer]);
 
 			if (m_pPlayer[nCntPlayer] != NULL)
 			{// NULL以外
-				//ゲームカメラの生成
+			 //ゲームカメラの生成
 				if (m_pGameCamera[nCntPlayer] == NULL)
 				{// NULL
 					m_pGameCamera[nCntPlayer] = new CGameCamera;
 
 					if (m_pGameCamera[nCntPlayer] != NULL)
 					{// NULL以外
-						// 初期化処理
+					 // 初期化処理
 						m_pGameCamera[nCntPlayer]->Init();
-
+						// タイプ設定処理
+						m_pGameCamera[nCntPlayer]->SetType(CGameCamera::CAMERA_PLAYER);
 						// 追従プレイヤー設定
 						m_pGameCamera[nCntPlayer]->SetPlayer(m_pPlayer[nCntPlayer]);
 						// ビューポート設定
@@ -595,7 +670,7 @@ void CGame::Ranking(void)
 {
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 
-	// 距離を測る
+																// 距離を測る
 	float fLenght[MAX_PLAYER] = { 0.0f };	// 距離
 	int	nGoulNum = 0;						// ゴール数
 
@@ -603,7 +678,7 @@ void CGame::Ranking(void)
 	{// プレイヤーカウント
 		if (m_pPlayer[nCntPlayer] != NULL)
 		{// NULL以外
-			// 位置取得
+		 // 位置取得
 			D3DXVECTOR3 pos = m_pPlayer[nCntPlayer]->GetPos();
 			if (m_bGoul[nCntPlayer] == false)
 			{// ゴールしていない
@@ -675,7 +750,7 @@ void CGame::TextLoad(int nLoadNumber)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-	//ファイルポインタの初期化処理
+						//ファイルポインタの初期化処理
 	pFile = NULL;
 
 	//ファイルを開く 読み込み
