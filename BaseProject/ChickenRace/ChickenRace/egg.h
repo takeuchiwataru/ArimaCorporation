@@ -18,7 +18,7 @@
 #define EGG_SCALE		(10.0f)										//卵の大きさ
 #define EGG_RANGE		(50.0f)										// 卵とキャラクターの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
-#define SPEED			(2.0f)										// 加速する量
+#define SPEED			(1.0f)										// 加速する量
 #define MAX_EGG			(3)											//卵の最大数
 #define HATCHING_TIME	(600)										// 孵化するまでの時間
 #define EGGJUMP			(5.5f)										// 卵のジャンプ力
@@ -77,12 +77,16 @@ public:
 	int GetNumPlayer(void) { return m_nNumPlayer; }
 	void SetRank(int nRank) { m_nRank = nRank; }
 	int GetRank(void) { return m_nRank; }
+	void SetRot(D3DXVECTOR3 rot) { m_rot = rot; }
 	int GetHatchingTimer(void) { return m_nHatchingTimer; }
 	void SetHatchingTimer(int nTimer) { m_nHatchingTimer = nTimer; }
 	void Jump(float fJump);
 	void Bullet(void);
+	void SetThrow(bool bThrow) { m_bThrow = bThrow; }
 
 private:
+	D3DXVECTOR3 Item(D3DXVECTOR3 pos);
+	void AdjustAngle(float rot);
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
 	static DWORD		m_nNumMatModel;			//マテリアルの情報数
@@ -100,6 +104,7 @@ private:
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
 	bool				m_bJump;				// ジャンプしているかどうか
+	bool				m_bThrow;				// 投げたかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
 	int					m_nRank;				// 向かっていく順位

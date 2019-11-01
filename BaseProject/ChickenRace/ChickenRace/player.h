@@ -24,7 +24,6 @@
 #define MAX_FRAME	(60)
 
 #define DAMAGE_TIME	(60)		// ダメージを食らっている時間
-#define SPEEDUP_TIME	(60)	// 加速している時間
 #define SPEEDDOWN_TIME	(300)	// 減速している時間
 #define MAX_EGG		(3)		//卵の最大数
 
@@ -131,9 +130,9 @@ public:
 	STATE_SPEED GetStateSpeed(void) { return m_StateSpeed; };
 	STATE_HANDLE GetStateHandle(void) { return m_StateHandle; };
 	STATE GetState(void) { return m_MoveState; };
+	PLAYERSTATE GetPlayerState(void) { return m_State; }
 
 	void CollisitionWall(void);
-	void CollisionEgg(void);
 
 	void SetControl(bool bControl) { m_bControl = bControl; };
 	bool GetControl(void) { return m_bControl; };
@@ -165,6 +164,8 @@ private:
 	void SetStateHandle(STATE_HANDLE state) { m_StateHandle = state; };
 	void CollisionObject(void);
 	void CollisionFeed(void);
+	void CollisionEgg(void);
+	void CollisionChick(void);
 	void CarCalculate(D3DXVECTOR3 * TirePos);
 	void UpdateStateJump(void);
 	void PlaySoundObj(int nType, CSound * pSound);
@@ -220,6 +221,7 @@ private:
 	int							  m_nNumEgg;
 	int							  m_nNumChick;
 	int							  m_nCntFrame;			// 卵のついてくる処理に使う
+	int							  m_nPlayerRank;		// 順位保存用
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
 

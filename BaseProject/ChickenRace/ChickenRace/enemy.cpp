@@ -222,11 +222,11 @@ void CEnemy::Update(void)
 	{// スピードアイテムを使ったとき
 		m_nCountSpeed++;
 
-		if (m_nCountSpeed > SPEEDUP_TIME)
+		/*if (m_nCountSpeed > SPEEDUP_TIME)
 		{
 			m_State = ENEMYSTATE_NORMAL;
 			m_nCountSpeed = 0;
-		}
+		}*/
 	}
 
 	if (m_bDamage == true)

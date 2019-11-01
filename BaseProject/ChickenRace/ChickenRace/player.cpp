@@ -1,7 +1,7 @@
 //=============================================================================
 //
 // プレイヤーの処理 [player.cpp]
-// Author : 佐藤安純 Sato_Asumi
+// Author : 坂川詠祐
 //
 //=============================================================================
 #define _CRT_SECURE_NO_WARNINGS
@@ -53,6 +53,8 @@
 #define SPEEDDOWN		(0.95f)										// 減速させる値
 #define CHICK_SCALE		(D3DXVECTOR3(2.0f, 2.0f, 2.0f))				//ひよこの大きさ
 #define THROW			(13.0f)										// 卵を投げる力
+#define EGG_RAND		(6.5f)										// 卵に乗るときのジャンプ力
+#define EGG_HEIGHT		(40.0f)										// 卵に乗ったように見える高さ
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(1.0f)										//加速値（前進）
@@ -254,6 +256,7 @@ HRESULT CPlayer::Init(void)
 	m_nCntDamage = 0;
 	m_bDamage = false;
 	m_State = PLAYERSTATE_NORMAL;
+	m_nPlayerRank = 0;
 
 	m_nPlayerNum = 0;				// プレイヤー番号
 	m_nControllerNum = 0;			// コントローラー番号
@@ -378,6 +381,8 @@ void CPlayer::Update(void)
 	CollisionFeed();		// 餌の当たり判定
 
 	CollisionEgg();			// 卵との当たり判定
+
+	CollisionChick();		// ひよことの当たり判定
 
 	ChaseEgg();				// 卵がついてくる処理
 
@@ -585,6 +590,11 @@ void CPlayer::UpdateMove(void)
 		{
 			m_State = PLAYERSTATE_NORMAL;
 			m_nCountSpeed = 0;
+
+			// ジャンプ
+			m_bJumpSave = true;
+			m_bJump = true;
+			m_move.y += EGG_RAND;
 		}
 	}
 
@@ -816,7 +826,14 @@ void CPlayer::UpdateField(void)
 				//if (m_pos.y <= fHight)
 				if (m_bJump == false || (m_bJump == true && m_pos.y < fHight))
 				{
-					m_pos.y = fHight;					//地面の高さを取得
+					float fEggHeight = 0.0f;
+
+					if (m_State == PLAYERSTATE_SPEEDUP)
+					{// 卵に乗ったように見える高さ
+						fEggHeight = EGG_HEIGHT;
+					}
+
+					m_pos.y = fHight + fEggHeight;		//地面の高さを取得
 					m_move.y = 0.0f;					//移動量を初期化する
 
 														//ジャンプ中かどうか
@@ -1509,27 +1526,33 @@ void CPlayer::BulletEgg(void)
 		{
 			m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
 			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
 
 			m_nNumChick--;	// 所持数を減らす
+
 			m_nNumItem--;
 
-			if (m_pChick[0]->GetType() == CChick::TYPE_SPEED)
+			switch (m_pChick[0]->GetType())
 			{
+				// 加速
+			case CChick::TYPE_SPEED:
 				m_State = PLAYERSTATE_SPEEDUP;
 				m_fSpeed += SPEED;
 
 				m_pChick[0]->Uninit();
 				m_pChick[0] = NULL;
+				break;
+
+				// 減速
+			case CChick::TYPE_ANNOY:
+				m_pChick[0]->SetDis(false);
+				break;
 			}
 
 			// 情報入れ替え
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
 			m_pChick[2] = NULL;
-
-			m_bulletType[0] = m_bulletType[1];
-			m_bulletType[1] = m_bulletType[2];
-			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
@@ -1537,6 +1560,7 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
 
 			m_nNumEgg--;	// 所持数を減らす
+
 			m_nNumItem--;
 
 			switch (m_pEgg[0]->GetType())
@@ -1544,6 +1568,8 @@ void CPlayer::BulletEgg(void)
 				// 攻撃
 			case CEgg::EGGTYPE_ATTACK:
 				m_pEgg[0]->Jump(THROW);
+				m_pEgg[0]->SetRot(m_rot);
+				m_pEgg[0]->SetThrow(TRUE);
 				break;
 
 				// 加速
@@ -1551,8 +1577,10 @@ void CPlayer::BulletEgg(void)
 				m_State = PLAYERSTATE_SPEEDUP;
 				m_fSpeed += SPEED;
 
-				m_pEgg[0]->Uninit();
-				m_pEgg[0] = NULL;
+				// ジャンプ
+				m_bJumpSave = true;
+				m_bJump = true;
+				m_move.y += EGG_RAND;
 				break;
 			}
 
@@ -1560,10 +1588,6 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
 			m_pEgg[2] = NULL;
-
-			m_bulletType[0] = m_bulletType[1];
-			m_bulletType[1] = m_bulletType[2];
-			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 	}
 }
@@ -1590,7 +1614,7 @@ void CPlayer::CollisionEgg(void)
 
 				if (pEgg->GetState() == CEgg::EGGSTATE_BULLET)
 				{
-					if (pEgg->GetRank() != CGame::GetRanking(m_nPlayerNum))
+					if (pEgg->GetRank() != m_nPlayerRank)
 					{
 						if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
 						{// 衝突した
@@ -1621,13 +1645,35 @@ void CPlayer::CollisionEgg(void)
 					}
 				}
 			}
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+	}
+}
+
+//=============================================================================
+// ひよことの当たり判定
+//=============================================================================
+void CPlayer::CollisionChick(void)
+{
+	CSound *pSound = CManager::GetSound();
+	CScene *pScene;
+
+	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
+	{
+		// プライオリティーチェック
+		pScene = CScene::GetTop(nCntPriority);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
 			if (pScene->GetObjType() == OBJTYPE_CHICK)
 			{
 				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
 				if (pChick->GetState() == CChick::STATE_BULLET)
 				{
-					if (pChick->GetRank() != CGame::GetRanking(m_nPlayerNum))
+					if (pChick->GetRank() != m_nPlayerRank)
 					{
 						if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
 						{// 衝突した
@@ -1651,14 +1697,12 @@ void CPlayer::CollisionEgg(void)
 									m_bDamage = true;
 									m_State = PLAYERSTATE_SPEEDDOWN;
 								}
-								pChick->Uninit();	// ひよこ削除
 								break;
 							}
 						}
 					}
 				}
 			}
-
 			// Nextに次のSceneを入れる
 			pScene = pSceneNext;
 		}

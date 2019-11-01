@@ -26,8 +26,9 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-
-#define CHICK_SPEED				(25.0f)		// ひよこが飛んでくスピード
+#define DISTIME					(100)		// 消えるまでの時間
+#define CHICK_SPEED				(30.0f)		// ひよこが飛んでくスピード
+#define ANNOY_RANGE				(200.0f)	// 減速させる範囲
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -66,6 +67,7 @@ CChick::CChick() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_fHeight = 0.0f;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
+	m_nDisTimer = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -138,9 +140,11 @@ HRESULT CChick::Init(void)
 	m_fDestAngle = 0.0f;
 	m_fDiffAngle = 0.0f;
 	m_bJump = false;
+	m_bDis = true;
 	m_state = STATE_NORMAL;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
+	m_nDisTimer = 0;
 	return S_OK;
 }
 
@@ -161,32 +165,8 @@ void CChick::Uninit(void)
 //=============================================================================
 void CChick::Update(void)
 {
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
-
-	if (m_state == STATE_BULLET)
-	{
-		float fHeight = 0.0f;
-
-		if (m_type == TYPE_ATTACK)
-		{
-			fHeight = 30.0f;
-		}
-		m_fHeight = SetHeight() + fHeight;
-		Bullet();
-	}
-	else
-	{
-		m_move.y -= cosf(0) * 0.4f;
-		m_fHeight += m_move.y;
-	}
-
-	pos.x += m_move.x;
-	pos.z += m_move.z;
-
-	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(D3DXVECTOR3(pos.x, m_fHeight + 15.0f, pos.z));
-
-	CDebugProc::Print("%.1f\n", m_fHeight);
+	// ひよこの動き
+	Move();
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -300,9 +280,6 @@ HRESULT CChick::Load(void)
 	//頂点バッファのアンロック
 	m_pMeshModel->UnlockVertexBuffer();
 
-	//使っているテクスチャ
-	//D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
-
 	return S_OK;
 }
 
@@ -332,6 +309,77 @@ void CChick::UnLoad(void)
 	}
 }
 
+//===============================================================================
+// ひよこの動き
+//===============================================================================
+void CChick::Move(void)
+{
+	D3DXVECTOR3 pos = CModel3D::GetPosition();
+
+	// 使ったとき
+	pos = Item(pos);
+
+	if (m_type != TYPE_ANNOY || m_state != STATE_BULLET)
+	{
+		m_move.y -= cosf(0) * 0.4f;
+		m_fHeight += m_move.y;
+
+		// 高さを設定
+		SetHeight();
+
+		pos.y = m_fHeight;
+	}
+
+	pos.x += m_move.x;
+	pos.z += m_move.z;
+
+	CModel3D::SetMove(m_move);
+	CModel3D::SetPosition(D3DXVECTOR3(pos.x, pos.y + 15.0f, pos.z));
+
+	if (m_bDis == false)
+	{
+		m_nDisTimer++;
+
+		if (m_nDisTimer > DISTIME)
+		{// 消す
+			m_nDisTimer = 0;
+			Uninit();
+		}
+	}
+
+	CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+}
+
+//===============================================================================
+// ひよこを使用したときの動き
+//===============================================================================
+D3DXVECTOR3 CChick::Item(D3DXVECTOR3 pos)
+{
+	if (m_state == STATE_BULLET)
+	{// 弾の状態の時
+		float fHeight = 0.0f;
+
+		switch (m_type)
+		{
+			// 攻撃
+		case TYPE_ATTACK:
+			break;
+
+			// 減速させる
+		case TYPE_ANNOY:
+			CPlayer **pPlayer = NULL;
+			pPlayer = CGame::GetPlayer();
+
+			pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 50.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+
+			break;
+		}
+		// 飛んでく動き
+		Bullet();
+	}
+
+	return pos;
+}
 
 //===============================================================================
 // 当たり判定
@@ -353,9 +401,16 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
 	D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-	if (pPos->x >= ModelMin.x - PLAYER_DEPTH && pPos->x <= ModelMax.x + PLAYER_DEPTH)
+	float fDepth = PLAYER_DEPTH;
+
+	if (m_type == TYPE_ANNOY)
+	{
+		fDepth = ANNOY_RANGE;
+	}
+
+	if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
 	{// Zの範囲内にいる
-		if (pPos->z >= ModelMin.z - PLAYER_DEPTH && pPos->z <= ModelMax.z + PLAYER_DEPTH)
+		if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
 		{// Xの範囲内にいる
 			if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
 			{// オブジェクトの上から当たる場合
@@ -406,7 +461,7 @@ float CChick::SetHeight(void)
 
 				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
 				{
-					m_fHeight = fHeight;					//地面の高さを取得
+					m_fHeight = fHeight;				//地面の高さを取得
 					m_move.y = 0.0f;					//移動量を初期化する
 
 														//ジャンプの状態設定
@@ -475,27 +530,12 @@ void CChick::Bullet(void)
 				// 差分
 				m_fDiffAngle = m_fDestAngle - m_rot.y;
 
-				if (m_fDiffAngle > D3DX_PI)
-				{
-					m_fDiffAngle -= D3DX_PI * 2.0f;
-				}
-				if (m_fDiffAngle < -D3DX_PI)
-				{
-					m_fDiffAngle += D3DX_PI * 2.0f;
-				}
+				AdjustAngle(m_fDiffAngle);
 
 				m_rot.y += m_fDiffAngle * 0.5f;
 
-				if (m_rot.y > D3DX_PI)
-				{
-					m_rot.y -= D3DX_PI * 2.0f;
-				}
-				if (m_rot.y < -D3DX_PI)
-				{
-					m_rot.y += D3DX_PI * 2.0f;
-				}
+				AdjustAngle(m_rot.y);
 			}
-
 
 			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 			m_move.x = sinf(m_rot.y) * CHICK_SPEED;
@@ -529,25 +569,11 @@ void CChick::Bullet(void)
 				// 差分
 				m_fDiffAngle = m_fDestAngle - m_rot.y;
 
-				if (m_fDiffAngle > D3DX_PI)
-				{
-					m_fDiffAngle -= D3DX_PI * 2.0f;
-				}
-				if (m_fDiffAngle < -D3DX_PI)
-				{
-					m_fDiffAngle += D3DX_PI * 2.0f;
-				}
+				AdjustAngle(m_fDiffAngle);
 
 				m_rot.y += m_fDiffAngle * 0.05f;
 
-				if (m_rot.y > D3DX_PI)
-				{
-					m_rot.y -= D3DX_PI * 2.0f;
-				}
-				if (m_rot.y < -D3DX_PI)
-				{
-					m_rot.y += D3DX_PI * 2.0f;
-				}
+				AdjustAngle(m_rot.y);
 
 				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 				m_move.x = sinf(m_rot.y) * CHICK_SPEED;
@@ -559,5 +585,20 @@ void CChick::Bullet(void)
 			pScene = pSceneNext;
 		}
 		CModel3D::SetRot(m_rot);
+	}
+}
+
+//=============================================================================
+// 角度の調節
+//=============================================================================
+void CChick::AdjustAngle(float rot)
+{
+	if (rot > D3DX_PI)
+	{
+		rot -= D3DX_PI * 2.0f;
+	}
+	if (rot < -D3DX_PI)
+	{
+		rot += D3DX_PI * 2.0f;
 	}
 }

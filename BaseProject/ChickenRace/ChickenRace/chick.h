@@ -17,7 +17,7 @@
 #define CHICK_PRIOTITY				(3)
 #define CHICK_RANGE		(50.0f)										// ひよことキャラクターの距離
 #define CHICK_POS			(7)											// ひよこ同士の間隔の広さ（増やすと広くなる）
-#define SPEED			(2.0f)										// 加速する量
+#define CHICK_BOOST			(2.0f)										// 加速する量
 #define MAX_CHICK		(3)												// ひよこの最大数
 
 //*****************************************************************************
@@ -74,10 +74,14 @@ public:
 	int GetNumPlayer(void) { return m_nNumPlayer; }
 	void SetRank(int nRank) { m_nRank = nRank; }
 	int GetRank(void) { return m_nRank; }
+	void SetDis(bool bDis) { m_bDis = bDis; }
 	void Jump(void);
 	void Bullet(void);
 
 private:
+	void Move(void);
+	D3DXVECTOR3 Item(D3DXVECTOR3 pos);
+	void AdjustAngle(float rot);
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
 	static DWORD		m_nNumMatModel;			//マテリアルの情報数
@@ -95,9 +99,11 @@ private:
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
 	bool				m_bJump;				// ジャンプしているかどうか
+	bool				m_bDis;					// 消すかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
 	int					m_nRank;				// 向かっていく順位
 	int					m_nNumPlayer;			// プレイヤー何が持っているひよこか
+	int					m_nDisTimer;			// 消すまでの時間
 };
 #endif

@@ -143,6 +143,7 @@ HRESULT CEgg::Init(void)
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nHatchingTimer = 0;
+	m_bThrow = false;
 	return S_OK;
 }
 
@@ -167,28 +168,12 @@ void CEgg::Update(void)
 
 	m_nHatchingTimer++;
 
-	if (m_eggState == EGGSTATE_BULLET)
-	{
-		float fHeight = 0.0f;
+	pos = Item(pos);
 
-		if (m_eggType == EGGTYPE_ATTACK)
-		{
-			fHeight = 30.0f;
+	m_move.y -= cosf(0) * 0.4f;
+	m_fHeight += m_move.y;
 
-			m_move.y -= cosf(0) * 0.4f;
-			m_fHeight += m_move.y;
-		}
-
-		Bullet();
-	}
-	else
-	{
-		m_move.y -= cosf(0) * 0.4f;
-		m_fHeight += m_move.y;
-	}
-
-
-
+	SetHeight();
 
 	pos.y = m_fHeight;
 	pos.x += m_move.x;
@@ -197,17 +182,17 @@ void CEgg::Update(void)
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(pos);
 
-	//CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
-	//CDebugProc::Print("%.1f\n", m_move.y);
+	CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+	CDebugProc::Print("%.1f\n", m_move.y);
 
-	//if (m_bJump == true)
-	//{
-	//	CDebugProc::Print("ジャンプ : 〇\n");
-	//}
-	//else
-	//{
-	//	CDebugProc::Print("ジャンプ : ×\n");
-	//}
+	if (m_bJump == true)
+	{
+		CDebugProc::Print("ジャンプ : 〇\n");
+	}
+	else
+	{
+		CDebugProc::Print("ジャンプ : ×\n");
+	}
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -322,9 +307,6 @@ HRESULT CEgg::Load(void)
 	//頂点バッファのアンロック
 	m_pMeshModel->UnlockVertexBuffer();
 
-	//使っているテクスチャ
-	//D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
-
 	return S_OK;
 }
 
@@ -354,6 +336,52 @@ void CEgg::UnLoad(void)
 	}
 }
 
+//=============================================================================
+// 使ったときの処理
+//=============================================================================
+D3DXVECTOR3 CEgg::Item(D3DXVECTOR3 pos)
+{
+	if (m_eggState == EGGSTATE_BULLET)
+	{
+		float fHeight = 0.0f;
+
+		switch (m_eggType)
+		{
+			// 攻撃
+		case EGGTYPE_ATTACK:
+			fHeight = 30.0f;
+			break;
+
+			// 加速
+		case EGGTYPE_SPEED:
+			CPlayer **pPlayer = NULL;
+			pPlayer = CGame::GetPlayer();
+
+			pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y, pPlayer[m_nNumPlayer]->GetPos().z);
+
+			m_scale = D3DXVECTOR3(15.0f, 15.0f, 15.0f);
+
+			m_rot.z = D3DX_PI * 0.5f;
+
+			m_rot.x += 0.5f;
+
+			AdjustAngle(m_rot.x);
+
+			CModel3D::SetRot(m_rot);
+			CModel3D::ScaleVtxCornerPos(m_scale);
+
+			if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_NORMAL)
+			{// 加速状態じゃなくなったら削除
+				Uninit();
+			}
+			break;
+		}
+
+		Bullet();
+	}
+
+	return pos;
+}
 
 //===============================================================================
 // 当たり判定
@@ -435,14 +463,24 @@ float CEgg::SetHeight(void)
 
 				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
 				{
-					m_fHeight = fHeight;					//地面の高さを取得
+					float fEggHeight = 15.0f;
+
+					if (m_eggType == EGGTYPE_SPEED && m_eggState == EGGSTATE_BULLET)
+					{
+						fEggHeight = 30.0f;
+					}
+					m_fHeight = fHeight + fEggHeight;					//地面の高さを取得
 					m_move.y = 0.0f;					//移動量を初期化する
 
 														//ジャンプの状態設定
 					m_bJump = false;
-
 					CModel3D::SetMove(m_move);
 					CModel3D::SetPosition(D3DXVECTOR3(pos.x, fHeight, pos.z));
+
+					if (m_bThrow == true)
+					{
+						Uninit();
+					}
 
 					break;
 				}
@@ -479,11 +517,7 @@ void CEgg::Bullet(void)
 	{
 		if (m_eggType == EGGTYPE_ATTACK)
 		{//タイプが敵だったら
-			CPlayer **pPlayer = CGame::GetPlayer();
-
-			m_rot = pPlayer[m_nRank]->GetRot();
-
-			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+		 //モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 			m_move.x = sinf(m_rot.y) * EGG_SPEED;
 			m_move.z = cosf(m_rot.y) * EGG_SPEED;
 
@@ -545,5 +579,20 @@ void CEgg::Bullet(void)
 			pScene = pSceneNext;
 		}
 		CModel3D::SetRot(m_rot);
+	}
+}
+
+//=============================================================================
+// 角度の調節
+//=============================================================================
+void CEgg::AdjustAngle(float rot)
+{
+	if (rot > D3DX_PI)
+	{
+		rot -= D3DX_PI * 2.0f;
+	}
+	if (rot < -D3DX_PI)
+	{
+		rot += D3DX_PI * 2.0f;
 	}
 }
