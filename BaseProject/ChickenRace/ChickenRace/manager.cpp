@@ -359,7 +359,7 @@ void CManager::Uninit(void)
 //=============================================================================
 void CManager::Update(void)
 {
-	m_nInput = (m_nInput + 1) % 4;
+	m_nInput = (m_nInput + 1) % 2;
 
 	// XVˆ—
 	m_pRenderer->Update();
