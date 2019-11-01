@@ -11,6 +11,9 @@
 // ヘッダファイルのインクルード
 //*****************************************************************************
 #define DIRECTINPUT_VERSION (0x0800)//ビルド時に警告対処用マクロ
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#include <WinSock2.h>
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include "d3dx9.h"					 //描画処理に必要
@@ -37,6 +40,7 @@
 #pragma comment(lib,"winmm.lib")	//システム時刻取得に必要
 #pragma comment(lib,"dinput8.lib")	//入力処理に必要
 #pragma comment (lib, "XInput.lib")	// XInput処理に必要
+#pragma comment(lib, "ws2_32.lib")		//winsockに使用
 
 //*****************************************************************************
 // マクロ定義

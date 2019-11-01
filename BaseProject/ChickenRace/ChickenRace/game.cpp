@@ -4,6 +4,8 @@
 // Author : 有馬　武志
 //
 //=============================================================================
+#define _CRT_SECURE_NO_WARNINGS	//Fire Wall突破
+#include <string.h>				//ストリング使用のため
 #include "game.h"
 #include "main.h"
 #include "manager.h"
@@ -165,7 +167,7 @@ void CGame::Uninit(void)
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）
 
-									//プレイヤーモデルの破棄
+	//プレイヤーモデルの破棄
 	CPlayer::UnloadModel();
 
 	//ポーズ削除
@@ -205,7 +207,7 @@ void CGame::Uninit(void)
 	}
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-	{
+	{// プレイヤーカウント
 		if (m_pPlayer[nCntPlayer] != NULL)
 		{// NULL以外
 			m_pPlayer[nCntPlayer]->Uninit();
@@ -213,7 +215,7 @@ void CGame::Uninit(void)
 		}
 
 		if (m_pGameCamera[nCntPlayer] != NULL)
-		{
+		{// NULL以外
 			m_pGameCamera[nCntPlayer]->Uninit();
 			delete m_pGameCamera[nCntPlayer];
 			m_pGameCamera[nCntPlayer] = NULL;
@@ -234,14 +236,17 @@ void CGame::Update(void)
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 	CFade::FADE fade = CFade::GetFade();
 
+	// 取得
+	bool bOnine = CTitle::GetOnline();
+
 	if (m_gameMode != m_gameModeNext)
-	{
+	{// ゲームモードが変わった
 		SetGameMode(m_gameModeNext);
 		return;
 	}
 
 	switch (m_gameMode)
-	{
+	{// ゲームモード
 	case GAMEMODE_CHARSELECT:
 		//if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 		//	CFade::Create(GAMEMODE_PLAY);
@@ -262,7 +267,7 @@ void CGame::Update(void)
 		m_NowGameState = GetGameState();
 
 		switch (m_NowGameState)
-		{
+		{// ゲーム状態
 		case GAMESTATE_NORMAL:	//通常の状態
 			if (m_nGameCounter < START_SET_TIME)
 			{
@@ -294,39 +299,42 @@ void CGame::Update(void)
 	}
 
 	if (fade == CFade::FADE_NONE)
-	{
-		//ポーズの処理
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
-		{//Pキーが押されたら
-			m_bPause = m_bPause ? false : true;
+	{// フェードしていない
+		if (bOnine == false)
+		{// オンラインじゃない
+			//ポーズの処理
+			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
+			{//Pキーが押されたら
+				m_bPause = m_bPause ? false : true;
 
-			switch (m_bPause)
-			{
-			case true:
-				if (m_pPause == NULL)
-				{
-					//ポーズを開く音
-					//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
+				switch (m_bPause)
+				{// ポーズ
+				case true:
+					if (m_pPause == NULL)
+					{
+						//ポーズを開く音
+						//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
 
-					//ポーズの生成
-					m_pPause = CPause::Create();
+						//ポーズの生成
+						m_pPause = CPause::Create();
 
-					//ポーズとフェードだけ回す
-					CScene::SetUpdatePri(7);
-				}
-				break;
-			case false:
-				if (m_pPause != NULL)
-				{
-					//ポーズを閉じる音
-					//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+						//ポーズとフェードだけ回す
+						CScene::SetUpdatePri(7);
+					}
+					break;
+				case false:
+					if (m_pPause != NULL)
+					{
+						//ポーズを閉じる音
+						//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
 
-					//ポーズを削除
-					m_pPause->Uninit();
-					m_pPause = NULL;
+						//ポーズを削除
+						m_pPause->Uninit();
+						m_pPause = NULL;
 
-					//アップデート順番をすべて回す
-					CScene::SetUpdatePri(0);
+						//アップデート順番をすべて回す
+						CScene::SetUpdatePri(0);
+					}
 				}
 			}
 		}
@@ -334,13 +342,16 @@ void CGame::Update(void)
 
 	if (m_bPause == false)
 	{//開く音
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		if (m_gameMode == GAMEMODE_PLAY)
 		{
-			//m_bDrawUI = m_bDrawUI ? false : true;
+			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+			{
+				//m_bDrawUI = m_bDrawUI ? false : true;
 
-			//ポーズの選択の決定音
-			CFade::Create(CManager::MODE_RESULT);
-			return;
+				//ポーズの選択の決定音
+				CFade::Create(CManager::MODE_TITLE);
+				return;
+			}
 		}
 
 		//カメラの更新処理
@@ -352,10 +363,8 @@ void CGame::Update(void)
 		//	カウンター進める
 		m_nGameCounter++;
 	}
-	else
-	{
-		//m_pPause->Update();
-	}
+
+	CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
 }
 
 //=============================================================================
@@ -363,6 +372,9 @@ void CGame::Update(void)
 //=============================================================================
 void CGame::Draw(void)
 {
+	// 取得
+	bool bOnine = CTitle::GetOnline();
+
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	if (m_gameMode == GAMEMODE_COURSE_VIEW)
@@ -385,7 +397,7 @@ void CGame::Draw(void)
 		D3DVIEWPORT9 viewport;
 		pDevice->GetViewport(&viewport);	// ビューポート取得
 
-											// バックバッファ＆Ｚバッファのクリア
+		// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
@@ -393,18 +405,29 @@ void CGame::Draw(void)
 			1.0f,
 			0);
 
-		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
-		{// プレイヤーカウント
-		 //カメラの設定
-			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
+		if (bOnine == true)
+		{// オンライン
+			int nClient = CClient::GetnID();
+			if (m_pGameCamera[nClient] != NULL) { m_pGameCamera[nClient]->SetCamera(); }
 
 			//全ての描画
 			CScene::DrawAll();
 		}
+		else
+		{// ローカル
+			for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+			{// プレイヤーカウント
+			 //カメラの設定
+				if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
+
+				//全ての描画
+				CScene::DrawAll();
+			}
+		}
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-											//２Dの描画
+		//２Dの描画
 		CScene::Draw2D();
 	}
 	else
@@ -419,11 +442,6 @@ void CGame::Draw(void)
 
 		//全ての描画
 		CScene::DrawAll();
-	}
-
-	if (m_pPause != NULL)
-	{
-	//	m_pPause->Draw();
 	}
 }
 
@@ -565,6 +583,9 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 //=============================================================================
 void CGame::SetStage(void)
 {
+	// 取得
+	bool bOnine = CTitle::GetOnline();
+
 	//サウンドのポインタ
 	CSound *pSound = CManager::GetSound();
 
@@ -588,7 +609,7 @@ void CGame::SetStage(void)
 
 		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 		{// プレイヤーカウント
-		 //プレイヤーの生成
+			//プレイヤーの生成
 			if (m_pPlayer[nCntPlayer] == NULL)
 				m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(-150.0f + (100.0f * nCntPlayer), 0.0f, (-50.0f * nCntPlayer)), nCntPlayer, m_nControllerNum[nCntPlayer]);
 			//m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f), nCntPlayer, m_nControllerNum[nCntPlayer]);
@@ -608,24 +629,37 @@ void CGame::SetStage(void)
 						m_pGameCamera[nCntPlayer]->SetType(CGameCamera::CAMERA_PLAYER);
 						// 追従プレイヤー設定
 						m_pGameCamera[nCntPlayer]->SetPlayer(m_pPlayer[nCntPlayer]);
+
 						// ビューポート設定
-						m_pGameCamera[nCntPlayer]->SetViewPort(
-							// 横
-							//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) % 2)), 
-							//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) / 2)), 
-							//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
-							//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
-							// 縦
-							//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) / 2)),
-							//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) % 2)),
-							//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-							//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-							// 縦->横
-							(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) / 2) : ((nCntPlayer) % 2))),
-							(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) % 2) : ((nCntPlayer) / 2))),
-							(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-							(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-						);
+						if (bOnine == true)
+						{
+							m_pGameCamera[nCntPlayer]->SetViewPort(
+								(DWORD)(0.0f), 
+								(DWORD)(0.0f), 
+								(DWORD)((SCREEN_WIDTH * 1.0f)),
+								(DWORD)((SCREEN_HEIGHT * 1.0f))
+							);
+						}
+						else
+						{
+							m_pGameCamera[nCntPlayer]->SetViewPort(
+								// 横
+								//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) % 2)), 
+								//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) / 2)), 
+								//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
+								//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
+								// 縦
+								//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) / 2)),
+								//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) % 2)),
+								//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+								//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+								// 縦->横
+								(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) / 2) : ((nCntPlayer) % 2))),
+								(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) % 2) : ((nCntPlayer) / 2))),
+								(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+								(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+							);
+						}
 					}
 				}
 			}

@@ -33,6 +33,7 @@ public:
 	{
 		TEXTURE_COUNT = 0,
 		TEXTURE_RANK,
+		TEXTURE_ITEM,
 		TEXTURE_GOUL,
 		TEXTURE_MAX
 	}TEXTURE;
@@ -55,6 +56,7 @@ private:
 	CScene2D *m_pLine[MAX_LINE];			// 線
 	CScene2D *m_pCountDown[COUNT_DOWN];		// カウントダウン
 	CScene2D *m_pRanking[MAX_PLAYER];		// ランキング
+	CScene2D *m_pItemFrame[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pGoul[MAX_PLAYER];			// ゴール
 

@@ -249,6 +249,7 @@ HRESULT CPlayer::Init(void)
 	m_bDirive = true;
 	m_nNumEgg = 0;
 	m_nNumChick = 0;
+	m_nNumItem = 0;
 	m_bJumpSave = false;
 	m_nCntDamage = 0;
 	m_bDamage = false;
@@ -272,6 +273,8 @@ HRESULT CPlayer::Init(void)
 	{
 		m_pEgg[nCntEgg] = NULL;
 		m_pChick[nCntEgg] = NULL;
+
+		m_bulletType[nCntEgg] = BULLET_EGG_ATTACK;
 	}
 
 	if (m_pMotion == NULL)	//モーションの生成
@@ -433,20 +436,20 @@ void CPlayer::ControlKey(void)
 {
 	CSound *pSound = CManager::GetSound();
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
-	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(m_nControllerNum);		//ジョイパットの取得
 
-																//前進後退の設定
+	//前進後退の設定
 	if (m_bDirive)
 	{
 		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-			(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, m_nControllerNum) == true) ||
-			(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
+			(pXpad->GetPress(INPUT_R1) == true) ||
+			(pXpad->GetPress(INPUT_R2) == true))
 		{
 			SetState(STATE_DRIVE);		//前進状態に設定
 		}
 		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-			(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_LEFT, m_nControllerNum) == true) ||
-			(pXpad->GetPress(XINPUT_GAMEPAD_LEFT_SHOULDER, m_nControllerNum) == true))
+			(pXpad->GetPress(INPUT_L1) == true) ||
+			(pXpad->GetPress(INPUT_L2) == true))
 		{
 			SetState(STATE_REVERSE);	//後退状態に設定
 		}
@@ -455,11 +458,17 @@ void CPlayer::ControlKey(void)
 	//向きの設定
 	if (m_StateSpeed != STATE_SPEED_STOP)
 	{
-		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || pXpad->GetPress(CInputXPad::XPADOTHER_STICK_L_LEFT, m_nControllerNum) == true || pXpad->GetPress(XINPUT_GAMEPAD_DPAD_LEFT, m_nControllerNum) == true)
+		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || 
+			pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true ||
+			pXpad->GetPress(INPUT_LS_L) == true ||
+			pXpad->GetPress(INPUT_LEFT) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
 		}
-		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || pXpad->GetPress(CInputXPad::XPADOTHER_STICK_L_RIGHT, m_nControllerNum) == true || pXpad->GetPress(XINPUT_GAMEPAD_DPAD_RIGHT, m_nControllerNum) == true)
+		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || 
+			pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true ||
+			pXpad->GetPress(INPUT_LS_R) == true ||
+			pXpad->GetPress(INPUT_RIGHT) == true)
 		{//右ハンドル状態
 			SetStateHandle(HANDLE_RIGHT);
 		}
@@ -475,15 +484,15 @@ void CPlayer::ControlKey(void)
 
 	//アクセル
 	if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-		(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_LEFT, m_nControllerNum) == true) ||
-		(pXpad->GetPress(XINPUT_GAMEPAD_LEFT_SHOULDER, m_nControllerNum) == true))
+		(pXpad->GetPress(INPUT_L1) == true) ||
+		(pXpad->GetPress(INPUT_L2) == true))
 	{//減速状態
 		SetStateSpeed(STATE_SPEED_BRAKS);
 	}
 	else if
 		((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-		(pXpad->GetPress(CInputXPad::XPADOTHER_TRIGGER_RIGHT, m_nControllerNum) == true) ||
-			(pXpad->GetPress(XINPUT_GAMEPAD_RIGHT_SHOULDER, m_nControllerNum) == true))
+		(pXpad->GetPress(INPUT_R1) == true) ||
+		(pXpad->GetPress(INPUT_R2) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -528,7 +537,9 @@ void CPlayer::ControlKey(void)
 	{// ジャンプしていない
 		m_bJumpSave = false;
 
-		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true || pXpad->GetTrigger(XINPUT_GAMEPAD_A, m_nControllerNum) == true)
+		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
+			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true ||
+			pXpad->GetTrigger(INPUT_A) == true)
 		{// ジャンプキー
 			m_bJumpSave = true;
 			m_bJump = true;
@@ -540,7 +551,8 @@ void CPlayer::ControlKey(void)
 		m_bJumpSave = false;
 	}
 
-	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true || pXpad->GetTrigger(XINPUT_GAMEPAD_B, m_nControllerNum) == true)
+	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true || 
+		pXpad->GetTrigger(INPUT_B) == true)
 	{// 弾発射
 		BulletEgg();
 	}
@@ -581,7 +593,7 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL)
@@ -596,7 +608,7 @@ void CPlayer::UpdateMove(void)
 
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		m_fSpeed = m_PlayerInfo.fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
@@ -610,6 +622,7 @@ void CPlayer::UpdateMove(void)
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
 		m_PlayerInfo.nCountTime = 0;
+		CDebugProc::Print("DWON***\n");
 
 		if (m_State == PLAYERSTATE_SPEEDUP)
 		{// スピードアイテムを使ったとき
@@ -866,6 +879,7 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 	if (m_StateSpeed != state)
 	{
 		m_PlayerInfo.nCountTime = 0;
+		CDebugProc::Print("CHANGE***\n");
 
 		CSound *pSound = CManager::GetSound();
 
@@ -1153,6 +1167,27 @@ void CPlayer::DebugProc(void)
 
 	//CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
 
+//	CDebugProc::Print("アイテム：%d\n", m_nNumItem);
+//	for (int nCount = 0; nCount < MAX_EGG; nCount++)
+//		CDebugProc::Print("アイテム種類：%d\n", m_bulletType[nCount]);
+
+	CDebugProc::Print("カウント：%f\n", m_PlayerInfo.nCountTime);
+
+	switch (m_StateSpeed)
+	{
+	case STATE_SPEED_ACCEL:
+		CDebugProc::Print("STATE_SPEED_ACCEL\n");
+		break;
+	case STATE_SPEED_BRAKS:
+		CDebugProc::Print("STATE_SPEED_BRAKS\n");
+		break;
+	case STATE_SPEED_DOWN:
+		CDebugProc::Print("STATE_SPEED_DOWN\n");
+		break;
+	case STATE_SPEED_STOP:
+		CDebugProc::Print("STATE_SPEED_STOP\n");
+		break;
+	}
 }
 
 //=============================================================================
@@ -1249,6 +1284,7 @@ void CPlayer::CollisionFeed(void)
 						EggAppear(pFeed);	// 卵出現
 						pFeed->Uninit();	// 餌削除
 						m_nNumEgg++;
+						m_nNumItem++;
 					}
 				}
 			}
@@ -1274,6 +1310,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				CEgg::EGGTYPE_ATTACK,
 				CEgg::BULLETTYPE_PLAYER,
 				m_nPlayerNum);
+
+			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_ATTACK;
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 		{// 妨害の卵生成
@@ -1283,6 +1321,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				CEgg::EGGTYPE_ANNOY,
 				CEgg::BULLETTYPE_PLAYER,
 				m_nPlayerNum);
+
+			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_ANNOY;
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 		{// 加速の卵生成
@@ -1292,6 +1332,8 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				CEgg::EGGTYPE_SPEED,
 				CEgg::BULLETTYPE_PLAYER,
 				m_nPlayerNum);
+
+			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_SPEED;
 		}
 	}
 
@@ -1469,6 +1511,7 @@ void CPlayer::BulletEgg(void)
 			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
 
 			m_nNumChick--;	// 所持数を減らす
+			m_nNumItem--;
 
 			if (m_pChick[0]->GetType() == CChick::TYPE_SPEED)
 			{
@@ -1483,6 +1526,10 @@ void CPlayer::BulletEgg(void)
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
 			m_pChick[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
@@ -1490,6 +1537,7 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
 
 			m_nNumEgg--;	// 所持数を減らす
+			m_nNumItem--;
 
 			switch (m_pEgg[0]->GetType())
 			{
@@ -1512,6 +1560,10 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
 			m_pEgg[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 	}
 }
@@ -1637,6 +1689,9 @@ void CPlayer::ChickAppear(void)
 						CChick::TYPE_ATTACK,
 						CChick::BULLETTYPE_PLAYER,
 						m_nPlayerNum);
+
+					m_bulletType[m_nNumChick] = BULLET_CHICK_ATTACK;
+
 					break;
 
 					// 減速
@@ -1647,6 +1702,9 @@ void CPlayer::ChickAppear(void)
 						CChick::TYPE_ANNOY,
 						CChick::BULLETTYPE_PLAYER,
 						m_nPlayerNum);
+
+					m_bulletType[m_nNumChick] = BULLET_CHICK_ANNOY;
+
 					break;
 
 					// 加速
@@ -1657,6 +1715,9 @@ void CPlayer::ChickAppear(void)
 						CChick::TYPE_SPEED,
 						CChick::BULLETTYPE_PLAYER,
 						m_nPlayerNum);
+
+					m_bulletType[m_nNumChick] = BULLET_CHICK_SPEED;
+
 					break;
 				}
 
@@ -1688,13 +1749,13 @@ void CPlayer::CollisionCharacter(void)
 		{// NULL以外
 			if (pPlayer[nCntPlayer] != this)
 			{// 自分以外
-				// 距離計算
+			 // 距離計算
 				D3DXVECTOR3 pos = pPlayer[nCntPlayer]->GetPos();
 				float fLenght = sqrtf(powf(pos.x - m_pos.x, 2.0f) + powf(pos.z - m_pos.z, 2.0f));
 
 				if (fLenght < 80.0f)
 				{// 範囲内
-					// 角度計算
+				 // 角度計算
 					float fAngle = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
 
 					// 位置調整

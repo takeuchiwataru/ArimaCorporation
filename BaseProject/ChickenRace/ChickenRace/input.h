@@ -21,6 +21,30 @@
 
 #define INPUT_DEADZONE		( 0.24f * FLOAT(0x7FFF) )  // Default to 24% of the +/- 32767 range.   This is a reasonable default value but can be altered if needed.
 
+//*****************************************************************************
+// マクロの定義
+//*****************************************************************************
+#define JOYPAD_MAX			(4)		// ジョイパッドの接続数
+#define JOYPAD_MAX_BUTTON	(14)	// ジョイパッドのボタン数
+#define JOYPAD_MAX_STICK	(2)		// ジョイパッドの入力個数
+#define LEFT_STICK			(0)		// ジョイパッドのLスティックの番号
+#define RIGHT_STICK			(1)		// ジョイパッドのRスティックの番号
+#define JOYPAD_MAX_KEY		(JOYPAD_MAX_BUTTON + JOYPAD_MAX_STICK * 4)	// ジョイパッドの入力個数
+
+//*****************************************************************************
+// 列挙の定義
+//*****************************************************************************
+typedef enum
+{//入力情報
+	INPUT_UP, INPUT_DOWN, INPUT_LEFT, INPUT_RIGHT,
+	INPUT_START, INPUT_BACK,
+	INPUT_L2, INPUT_R2, INPUT_L1, INPUT_R1,
+	INPUT_A, INPUT_B, INPUT_X, INPUT_Y,
+	INPUT_LS_R, INPUT_LS_L, INPUT_LS_U, INPUT_LS_D,
+	INPUT_RS_R, INPUT_RS_L, INPUT_RS_U, INPUT_RS_D,
+	INPUT_MAX
+}JOY_INPUT;
+
 //=====================
 //	   基本クラス
 //=====================
@@ -232,5 +256,65 @@ private:
 
 	float m_LStickRot[m_CONTROLLER];					// Lスティック向き
 	float m_RStickRot[m_CONTROLLER];					// Rスティック向き
+};
+//*****************************************************************************
+// クラスの定義
+//*****************************************************************************
+class CInputJoyPad_0
+{
+public:
+	CInputJoyPad_0();
+	~CInputJoyPad_0();
+
+	void Init(void);
+	void Uninit(void);
+	void Update(void);
+	void InputUpdate(bool bInput, int input);
+	void StickUpdate(void);
+	void Skip(void);
+
+	void GetAllAssign(char *aAssign);			//インプットデータの送信用に代入
+	static void GetAllReflect(char *aReflect, int &nCntScan);	//インプットデータの反映
+	static void GetReflect(char *aReflect, int nNumClient);	//インプットデータの反映
+
+	bool GetConnect(void) { return m_abConnection; };
+
+	bool GetAllTrigger(void);
+	bool GetPress(int input) { return m_bButton[input]; };
+	bool GetTrigger(int input);
+	bool GetTPress(int input) { if (m_nPress[input] < 30) { return GetTrigger(input); } else if (m_nPress[input] % 2 == 0) { return m_bButton[input]; } else { return false; } return false; };
+	bool GetRelease(int input) { return (m_bButtonOld[input] ? (m_bButton[input] ? false : true) : false); };
+	float GetfStickAngle(int nStick) { return m_fStickAngle[nStick]; };
+	void ReSetPress(void);
+	void NoInput(int input) { m_bInput[input] = false; m_nPress[input] = 0; }
+	int &GetnPress(int input) { return m_nPress[input]; }
+	int &GetnRelease(int input) { return m_nRelease[input]; }
+	int &GetnStickX(int nStick) { return m_nStickX[nStick]; };
+	int &GetnStickY(int nStick) { return m_nStickY[nStick]; };
+	bool GetStickDefeat(int nStick)
+	{//スティックが倒れていればtrue
+		int nPlus = nStick * 4;
+		if (m_bButton[INPUT_LS_R + nPlus] || m_bButton[INPUT_LS_L + nPlus] || m_bButton[INPUT_LS_U + nPlus] || m_bButton[INPUT_LS_D + nPlus]) { return true; }
+		return false;
+	};
+
+private:
+	bool Connect(void);
+
+	static int m_nNumPad;					//ジョイパッドの総数
+	int  m_nID;								//ジョイパッドの番号
+	bool m_abConnection;					// ジョイパッドの接続状態
+	int		m_nStickX[2];
+	int		m_nStickY[2];
+	bool	m_bInput[JOYPAD_MAX_KEY];		//入力制限の有無
+	bool	m_bServerUp;					//サーバー生存時の更新
+
+	int	 m_nPress[JOYPAD_MAX_KEY];			//押し続けているF数
+	int	 m_nRelease[JOYPAD_MAX_KEY];		//離したF数
+	bool m_bButtonOld[JOYPAD_MAX_KEY];		//前回のボタン
+	bool m_bButton[JOYPAD_MAX_KEY];			//今回のボタン
+	bool m_bButtonServer[JOYPAD_MAX_KEY];	//サーバーに送り付けるボタン
+	bool m_bDefeat[JOYPAD_MAX_STICK];		//スティックが倒れているか
+	float m_fStickAngle[JOYPAD_MAX_STICK];	//スティックの角度
 };
 #endif

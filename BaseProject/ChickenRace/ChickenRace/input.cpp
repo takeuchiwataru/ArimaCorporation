@@ -4,7 +4,12 @@
 // Author : 有馬武志 / 目黒未来也
 //
 //=============================================================================
+#define _CRT_SECURE_NO_WARNINGS	//Fire Wall突破
+#include <stdio.h>				//インクルドファイル
+
 #include "input.h"
+#include "manager.h"
+#include "Server.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -20,7 +25,7 @@
 //*****************************************************************************
 LPDIRECTINPUT8 CInput::m_pInput = NULL;
 D3DXVECTOR3 CInputMouse::m_MousePos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-
+int CInputJoyPad_0::m_nNumPad = 0;
 //===============================================================================
 //　デフォルトコンストラクタ
 //===============================================================================
@@ -1139,3 +1144,417 @@ D3DXVECTOR2 CInputXPad::GetStickMove(int nLR, int nIdxPad)
 
 	return D3DXVECTOR2(0.0f, 0.0f);
 }
+
+//=============================================================================
+// ジョイパッドクラスのコンストラクタ
+//=============================================================================
+CInputJoyPad_0::CInputJoyPad_0()
+{
+	m_abConnection = false;
+	m_nID = m_nNumPad;
+	m_nNumPad++;
+}
+//=============================================================================
+// ジョイパッドクラスのデストラクタ
+//=============================================================================
+CInputJoyPad_0::~CInputJoyPad_0()
+{
+
+}
+//=============================================================================
+// ジョイパッドクラスの接続判定処理
+//=============================================================================
+bool CInputJoyPad_0::Connect(void)
+{
+	DWORD dwResult;
+
+	XINPUT_STATE state;
+	ZeroMemory(&state, sizeof(XINPUT_STATE));
+
+	dwResult = XInputGetState(m_nID, &state);
+
+	if (dwResult == ERROR_SUCCESS)
+	{
+		//MessageBox(0, "コントローラーが接続されています", "", MB_OK );
+		// デッドゾーンの設定
+		if ((state.Gamepad.sThumbLX < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+			state.Gamepad.sThumbLX > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) &&
+			(state.Gamepad.sThumbLY < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+				state.Gamepad.sThumbLY > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE))
+		{
+			state.Gamepad.sThumbLX = 0;
+			state.Gamepad.sThumbLY = 0;
+		}
+
+		if ((state.Gamepad.sThumbRX < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+			state.Gamepad.sThumbRX > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) &&
+			(state.Gamepad.sThumbRY < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+				state.Gamepad.sThumbRY > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE))
+		{
+			state.Gamepad.sThumbRX = 0;
+			state.Gamepad.sThumbRY = 0;
+		}
+
+		m_abConnection = true;
+	}
+	else
+	{
+		//MessageBox(0, "コントローラーが接続されていません", "", MB_OK);
+		m_abConnection = false;
+	}
+
+	return m_abConnection;
+}
+//=============================================================================
+// ジョイパッドクラスの初期化処理
+//=============================================================================
+void CInputJoyPad_0::Init(void)
+{
+	DWORD dwResult;
+
+	XINPUT_STATE state;
+	ZeroMemory(&state, sizeof(XINPUT_STATE));
+
+	dwResult = XInputGetState(m_nID, &state);
+
+	// 協調モードを設定
+	if (dwResult == ERROR_SUCCESS)
+	{
+		//MessageBox(0, "コントローラーが接続されています", "", MB_OK );
+		// デッドゾーンの設定
+		if ((state.Gamepad.sThumbLX < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+			state.Gamepad.sThumbLX > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) &&
+			(state.Gamepad.sThumbLY < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+				state.Gamepad.sThumbLY > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE))
+		{
+			state.Gamepad.sThumbLX = 0;
+			state.Gamepad.sThumbLY = 0;
+		}
+
+		if ((state.Gamepad.sThumbRX < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+			state.Gamepad.sThumbRX > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) &&
+			(state.Gamepad.sThumbRY < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+				state.Gamepad.sThumbRY > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE))
+		{
+			state.Gamepad.sThumbRX = 0;
+			state.Gamepad.sThumbRY = 0;
+		}
+
+		m_abConnection = true;
+	}
+	else
+	{
+		//MessageBox(0, "コントローラーが接続されていません", "", MB_OK);
+		m_abConnection = false;
+	}
+
+	//入力情報の初期化
+	for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+	{//ボタンの初期化
+		m_bInput[nCntButton] = true;
+		m_bButtonOld[nCntButton] = false;
+		m_bButton[nCntButton] = false;
+		m_nPress[nCntButton] = 0;
+		m_nRelease[nCntButton] = 0;
+		m_bButtonServer[nCntButton] = false;
+	}
+	m_nPress[LEFT_STICK] = 0; m_nPress[RIGHT_STICK] = 0;
+	m_fStickAngle[LEFT_STICK] = 99.9f; m_fStickAngle[RIGHT_STICK] = 99.9f;
+	m_bServerUp = false;
+}
+
+//=============================================================================
+// ジョイパッドクラスの終了処理
+//=============================================================================
+void CInputJoyPad_0::Uninit(void)
+{
+	m_nNumPad--;
+	XInputEnable(false);
+	delete this;
+}
+
+//=============================================================================
+// ジョイパッドクラスの更新処理
+//=============================================================================
+void CInputJoyPad_0::Update(void)
+{
+	bool bUpdate = false;
+	if (CClient::GetpmyClient() == NULL) { bUpdate = true; }
+	else
+	{
+		if (CManager::GetnInput() == 0) { bUpdate = true; }
+	}
+
+	if (bUpdate)
+	{//更新可能なら
+		for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+		{//毎F初期化
+			m_bButtonOld[nCntButton] = m_bButton[nCntButton];
+			m_bButton[nCntButton] = false;
+			if (m_nPress[nCntButton] > 999999) { m_nPress[nCntButton] = 999; }
+			if (m_nRelease[nCntButton] < -999999) { m_nRelease[nCntButton] = -999; }
+		}
+		m_bDefeat[LEFT_STICK] = false;
+		m_bDefeat[RIGHT_STICK] = false;
+		m_fStickAngle[LEFT_STICK] = -99.0f;
+		m_fStickAngle[RIGHT_STICK] = -99.0f;
+
+		m_nStickX[0] = 0;
+		m_nStickX[1] = 0;
+		m_nStickY[0] = 0;
+		m_nStickY[1] = 0;
+	}
+
+	if (Connect())
+	{//繋がっていれば
+		if (CClient::GetpmyClient() != NULL) { m_bServerUp = true; }
+		// ジョイパッド情報の取得
+		XINPUT_STATE state;
+
+		XInputGetState(m_nID, &state);
+
+		//ボタン
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP ? true : false), 0);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN ? true : false), 1);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT ? true : false), 2);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT ? true : false), 3);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_START ? true : false), 4);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK ? true : false), 5);
+		InputUpdate(state.Gamepad.bLeftTrigger > 0, 6);
+		InputUpdate(state.Gamepad.bRightTrigger > 0, 7);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER ? true : false), 8);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER ? true : false), 9);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_A ? true : false), 10);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_B ? true : false), 11);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_X ? true : false), 12);
+		InputUpdate((state.Gamepad.wButtons & XINPUT_GAMEPAD_Y ? true : false), 13);
+		//Lスティック
+		InputUpdate(state.Gamepad.sThumbLX > 10000, 14);
+		InputUpdate(state.Gamepad.sThumbLX < -10000, 15);
+		InputUpdate(state.Gamepad.sThumbLY > 10000, 16);
+		InputUpdate(state.Gamepad.sThumbLY < -10000, 17);
+		//Rスティック
+		InputUpdate(state.Gamepad.sThumbRX > 10000, 18);
+		InputUpdate(state.Gamepad.sThumbRX < -10000, 19);
+		InputUpdate(state.Gamepad.sThumbRY > 10000, 20);
+		InputUpdate(state.Gamepad.sThumbRY < -10000, 21);
+
+		if (bUpdate)
+		{//更新可能なら
+			m_nStickX[0] = state.Gamepad.sThumbLX;
+			m_nStickX[1] = state.Gamepad.sThumbRX;
+			m_nStickY[0] = state.Gamepad.sThumbLY;
+			m_nStickY[1] = state.Gamepad.sThumbRY;
+			StickUpdate();
+		}
+		//for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+		//{//入力制限解除
+		//	if (GetTrigger(nCntButton)) { m_bInput[nCntButton] = true; }
+		//}
+	}
+	m_bServerUp = false;
+}
+//=============================================================================
+// ジョイパッド　入力時の更新処理
+//=============================================================================
+void CInputJoyPad_0::InputUpdate(bool bInput, int input)
+{
+	if (m_bServerUp)
+	{
+		if (bInput)
+		{
+			m_bButtonServer[input] = true;
+		}
+		return;
+	}
+
+	if (bInput)
+	{
+		m_bButton[input] = true;
+		if (m_nPress[input] < 0) { m_nPress[input] = 0; }
+		if (m_bInput[input]) { m_nPress[input]++; }
+		m_nRelease[input] = 0;
+	}
+	else
+	{
+		if (m_nPress[input] > 0) { m_nPress[input] *= -1; }
+		m_nRelease[input]--;
+	}
+}
+//=============================================================================
+// ジョイパッド　スティック更新処理
+//=============================================================================
+void CInputJoyPad_0::StickUpdate(void)
+{
+	if (GetStickDefeat(LEFT_STICK))
+	{
+		m_bDefeat[LEFT_STICK] = true;
+		m_fStickAngle[LEFT_STICK] = atan2f((float)m_nStickX[0], (float)m_nStickY[0]);
+	}
+	if (GetStickDefeat(RIGHT_STICK))
+	{
+		m_bDefeat[RIGHT_STICK] = true;
+		m_fStickAngle[RIGHT_STICK] = atan2f((float)m_nStickX[1], (float)m_nStickY[1]);
+	}
+}
+//=============================================================================
+// ジョイパッド　全ボタントリガー処理
+//=============================================================================
+bool CInputJoyPad_0::GetAllTrigger(void)
+{
+	for (int nCount = 0; nCount < INPUT_MAX; nCount++)
+	{
+		if ((m_bButtonOld[nCount] ? false : (m_bButton[nCount] ? true : false)))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+//=============================================================================
+// ジョイパッド　トリガー処理
+//=============================================================================
+bool CInputJoyPad_0::GetTrigger(int input)
+{
+	if (CClient::GetpmyClient() == NULL) 
+	{ 
+		return (m_bButtonOld[input] ? false : (m_bButton[input] ? true : false));
+	}
+	else
+	{
+		if (CManager::GetnInput() == 0) 
+		{ 
+			return (m_bButtonOld[input] ? false : (m_bButton[input] ? true : false));
+		}
+	}
+	return false;
+}
+
+//=============================================================================
+// ジョイパッド　離したF数をリセット
+//=============================================================================
+void CInputJoyPad_0::ReSetPress(void)
+{
+	for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+	{//ボタンの初期化
+		m_nPress[nCntButton] = 0;
+	}
+}
+//=============================================================================
+// インプットデータの送信用に代入
+//=============================================================================
+void CInputJoyPad_0::GetAllAssign(char *aAssign)
+{
+	char aStr[NUM_KEY_MAX * 2 + 8];
+	char aWKStr[128];
+	int nCntScan = 0;
+
+	strcpy(&aStr[0], "");
+
+	wsprintf(&aWKStr[0], "%d %d %d %d ", m_nStickX[0], m_nStickX[1], m_nStickY[0], m_nStickY[1]);
+	//wsprintf(&aWKStr[0], "%d %d %d %d ", -10, -200, -3, -4000);
+
+	strcpy(&aStr[0], &aWKStr[0]);
+	//nCntScan += strlen(aWKStr);
+
+	for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+	{//true::1 false::0 で代入
+		if (m_bButtonServer[nCntButton])
+		{
+			strcat(&aStr[nCntScan], "1 ");
+		}
+		else { strcat(&aStr[nCntScan], "0 "); }
+		//nCntScan += 2;
+		//aStr[nCntScan + 1] = ' ';
+		//aStr[nCntScan] = '1';
+		//nCntScan += 2;
+	}
+	strcat(aAssign, &aStr[0]);
+	strcat(aAssign, "A");
+	for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+	{
+		m_bButtonServer[nCntButton] = false;
+	}
+	return;
+}
+//=============================================================================
+// インプットデータの反映
+//=============================================================================
+void CInputJoyPad_0::GetAllReflect(char *aReflect, int &nCntScan)
+{
+	int nButton;
+	int nNumber;
+	int nDefeat[2];
+	char aStr[64];
+	static int nCnt = 0;
+
+	sscanf(&aReflect[nCntScan], "%d", &nNumber);
+	nCntScan += 2;
+	CInputJoyPad_0 *&pPad = CManager::GetInputJoyPad0(nNumber);
+
+	for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+	{
+		sscanf(&aReflect[nCntScan], "%d", &nButton);
+		nCntScan += 2;
+
+		pPad->InputUpdate((nButton == 1 ? true : false), nCntButton);
+		if (pPad->GetTrigger(nCntButton))
+		{
+			nCnt++;
+		}
+	}
+
+	return;
+	sscanf(&aReflect[nCntScan], "%d %d %f %f "
+		, &nDefeat[0], &nDefeat[1]
+		, &pPad->m_fStickAngle[0], &pPad->m_fStickAngle[1]);
+	if (nDefeat[0] == 1) { pPad->m_bDefeat[0] = true; }
+	if (nDefeat[1] == 1) { pPad->m_bDefeat[1] = true; }
+	snprintf(aStr, sizeof(aStr), "%f %f ", pPad->m_fStickAngle[LEFT_STICK], pPad->m_fStickAngle[RIGHT_STICK]);
+	nCntScan += 4 + strlen(aStr);
+
+	//CManager::GetDLog()->Printf(CDebugLog::MODE_LOG, "ランダムな数 %d\n", CServer::GetnRand());
+}
+//=============================================================================
+// インプットデータの反映
+//=============================================================================
+void CInputJoyPad_0::GetReflect(char *aReflect, int nNumClient)	//インプットデータの反映
+{
+	int nButton;
+	int nNumber;
+	char aWKStr[1280];
+	static int nCnt = 0;
+	int nCntScan = 0;
+
+	for (int nCount = 0; nCount < nNumClient; nCount++)
+	{
+		strcpy(&aWKStr[0], &aReflect[nCntScan]);
+		sscanf(&aReflect[nCntScan], "%d", &nNumber);
+		nCntScan += 2;
+		//continue;
+
+		CInputJoyPad_0 *&pPad = CManager::GetInputJoyPad0(nNumber);
+		sscanf(&aReflect[nCntScan], "%d %d %d %d", &pPad->m_nStickX[0], &pPad->m_nStickX[1], &pPad->m_nStickY[0], &pPad->m_nStickY[1]);
+		wsprintf(&aWKStr[0], "%d %d %d %d ", pPad->m_nStickX[0], pPad->m_nStickX[1], pPad->m_nStickY[0], pPad->m_nStickY[1]);
+
+		nCntScan += strlen(aWKStr);
+
+		//pPad->StickUpdate();
+
+		for (int nCntButton = 0; nCntButton < JOYPAD_MAX_KEY; nCntButton++)
+		{
+			sscanf(&aReflect[nCntScan], "%d", &nButton);
+			nCntScan += 2;
+
+			pPad->InputUpdate((nButton == 1 ? true : false), nCntButton);
+			if (pPad->GetTrigger(nCntButton))
+			{
+				nCnt++;
+			}
+		}
+
+	}
+
+	return;
+}
+

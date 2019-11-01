@@ -48,6 +48,9 @@ public:
 	void Draw(void);						//描画処理
 
 private:
+	void Online(void);
+	void Local(void);
+
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
 	CScene2D *m_pPlayerNum[MAX_PLAYER];		// プレイヤー番号

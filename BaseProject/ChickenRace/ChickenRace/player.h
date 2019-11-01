@@ -81,6 +81,17 @@ public:
 		PLAYERSTATE_MAX,			//最大数
 	} PLAYERSTATE;
 
+	typedef enum
+	{
+		BULLET_EGG_ATTACK = 0,		// 卵（攻撃）
+		BULLET_EGG_ANNOY,			// 卵（妨害）
+		BULLET_EGG_SPEED,			// 卵（速度）
+		BULLET_CHICK_ATTACK,		// ひよこ（攻撃）
+		BULLET_CHICK_ANNOY,			// ひよこ（妨害）
+		BULLET_CHICK_SPEED,			// ひよこ（速度）
+		BULLET_MAX,
+	}BULLET;
+
 	//テキスト情報
 	typedef struct
 	{
@@ -134,6 +145,9 @@ public:
 	bool GetShake(void) { return m_bShake; }
 	bool GetDrive(void) { return m_bDirive; }
 	void SetDrive(bool bDrive) { m_bDirive = bDrive; }
+
+	int GetItemNum(void) { return m_nNumItem; }
+	int GetItemType(int nNum) { return m_bulletType[nNum]; }
 
 private:
 	//変数宣言
@@ -208,6 +222,9 @@ private:
 	int							  m_nCntFrame;			// 卵のついてくる処理に使う
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
+
+	int							  m_nNumItem;
+	BULLET						  m_bulletType[MAX_EGG];
 
 	bool						  m_bDamage;
 	PLAYERSTATE					  m_State;

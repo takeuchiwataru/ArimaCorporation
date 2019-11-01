@@ -197,17 +197,17 @@ void CEgg::Update(void)
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(pos);
 
-	CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
-	CDebugProc::Print("%.1f\n", m_move.y);
+	//CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+	//CDebugProc::Print("%.1f\n", m_move.y);
 
-	if (m_bJump == true)
-	{
-		CDebugProc::Print("ジャンプ : 〇\n");
-	}
-	else
-	{
-		CDebugProc::Print("ジャンプ : ×\n");
-	}
+	//if (m_bJump == true)
+	//{
+	//	CDebugProc::Print("ジャンプ : 〇\n");
+	//}
+	//else
+	//{
+	//	CDebugProc::Print("ジャンプ : ×\n");
+	//}
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();

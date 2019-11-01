@@ -44,6 +44,10 @@ CRanking *CManager::m_pRanking = NULL;
 CSelect  *CManager::m_pSelect = NULL;
 CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
+CInputJoyPad_0	*CManager::m_pJoyPad0[JOYPAD_MAX] = {};	//ジョイパッド
+int				CManager::m_nInput = 0;
+CServer			*CManager::m_pServer = NULL;					//デバックログ
+CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
 CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
@@ -98,6 +102,16 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 
 	//ジョイパッド生成
 	m_pJoyPad = CInputJoypad::Create(hInstance, hWnd);
+
+	m_nInput = 0;
+	for (int nCount = 0; nCount < JOYPAD_MAX; nCount++)
+	{//ジョイパッドの最大数回転
+		if (m_pJoyPad0[nCount] == NULL)
+		{//ジョイパッドの生成
+			m_pJoyPad0[nCount] = new CInputJoyPad_0;
+			m_pJoyPad0[nCount]->Init();
+		}
+	}
 
 	// XInputクラスの生成
 	if (m_pXPad == NULL)
@@ -179,6 +193,20 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 //=============================================================================
 void CManager::Uninit(void)
 {
+	if (m_pServer != NULL)
+	{//サーバーの生成
+		m_pServer->Uninit();
+		m_pServer = NULL;
+	}
+	if (m_pClient != NULL)
+	{//クライアントの生成
+		m_pClient->Uninit();
+		m_pClient = NULL;
+	}
+
+	// クライアント数リセット
+	CServer::ResetMaxClient();
+
 	//画面の破棄
 	switch (m_mode)
 	{
@@ -322,6 +350,8 @@ void CManager::Uninit(void)
 		delete m_pDebugProc;
 		m_pDebugProc = NULL;
 	}
+
+	for (int nCount = 0; nCount < JOYPAD_MAX; nCount++) { m_pJoyPad0[nCount]->Uninit(); }
 }
 
 //=============================================================================
@@ -329,6 +359,8 @@ void CManager::Uninit(void)
 //=============================================================================
 void CManager::Update(void)
 {
+	m_nInput = (m_nInput + 1) % 4;
+
 	// 更新処理
 	m_pRenderer->Update();
 
@@ -342,8 +374,17 @@ void CManager::Update(void)
 	m_pJoyPad->Update();
 
 	// XInputの更新処理
-	if (m_pXPad != NULL)
-		m_pXPad->Update();
+	if (m_pXPad != NULL) { m_pXPad->Update(); }
+
+	for (int nCount = 0; nCount < JOYPAD_MAX; nCount++){ m_pJoyPad0[nCount]->Update(); }
+	if (m_nInput == 0)
+	{
+		if (m_pClient != NULL)
+		{//クライアントの更新
+			m_pClient->Update();
+			m_pClient->GetbRecv() = false;
+		}
+	}
 
 	//ライトの更新処理
 	m_pLight->Update();
@@ -356,6 +397,8 @@ void CManager::Update(void)
 
 	//デバック用
 	//CDebugProc::Print("F1 ワイヤーフレーム　F2　通常\n");
+
+	CDebugProc::Print("Client数 %d\n", CServer::GetnMaxClient());
 
 	switch (m_mode)
 	{
@@ -555,5 +598,45 @@ void CManager::SetMode(MODE mode)
 				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_SELECT);
 			}
 		}
+	}
+}
+
+//=============================================================================
+// モードの設定処理
+//=============================================================================
+void CManager::OnlineSeting(bool bOpen, bool bHost)
+{
+	if (bOpen == true)
+	{// 開くなら
+		if (bHost == true)
+		{// ホストなら
+			if (m_pServer == NULL)
+			{//サーバーの生成
+				m_pServer = new CServer;
+				m_pServer->Init();
+			}
+		}
+		if (m_pClient == NULL)
+		{//クライアントの生成
+			for (int nCount = 0; nCount < JOYPAD_MAX; nCount++) { m_pJoyPad0[nCount]->Update(); }
+			m_pClient = new CClient;
+			m_pClient->Init();
+		}
+	}
+	else
+	{// 閉じるなら
+		if (m_pServer != NULL)
+		{//サーバーの生成
+			m_pServer->Uninit();
+			m_pServer = NULL;
+		}
+		if (m_pClient != NULL)
+		{//クライアントの生成
+			m_pClient->Uninit();
+			m_pClient = NULL;
+		}
+
+		// クライアント数リセット
+		CServer::ResetMaxClient();
 	}
 }

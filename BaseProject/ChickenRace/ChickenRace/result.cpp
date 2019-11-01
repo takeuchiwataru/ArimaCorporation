@@ -4,6 +4,9 @@
 // Author : 有馬　武志
 //
 //=============================================================================
+#define _CRT_SECURE_NO_WARNINGS	//Fire Wall突破
+#include <stdio.h>				//インクルドファイル
+
 #include "result.h"
 #include "main.h"
 #include "renderer.h"

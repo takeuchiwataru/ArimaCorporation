@@ -15,6 +15,8 @@
 #include "ui.h"
 #include "titlecamera.h"
 
+#include "titlemenu.h"
+
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -37,7 +39,12 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-CTitleCamera *CTitle::m_pTitleCamera = NULL;
+int				CTitle::m_nTitleCounter = 0;		// タイトルのカウンター
+
+CTitleCamera	*CTitle::m_pTitleCamera = NULL;
+bool			CTitle::m_bMenu = false;			// メニュー
+bool			CTitle::m_bOnline = false;			// オンライン
+bool			CTitle::m_bHost = false;			// ホスト
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -51,6 +58,12 @@ CTitle::CTitle()
 	m_nCntCreate = 0;
 	m_bOnOff = false;
 	m_nTitleCounter = 0;
+
+	m_bMenu = false;			// メニュー
+	m_bOnline = false;			// オンライン
+	m_bHost = false;			// ホスト
+
+	m_pTitleMenu = NULL;		// タイトルメニュー
 }
 //=============================================================================
 // デストラクタ
@@ -69,12 +82,12 @@ HRESULT CTitle::Init()
 	//===================================
 	CFade::Load();		//フェードのテクスチャの読み込み
 	CUi::Load();		//UIのテクスチャの読み込み
+	CTitleMenu::Load();
 
 	//===================================
 	//		    UI生成の場所
 	//===================================
 	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 120.0f, 0.0f), D3DXVECTOR2(0.0f, 0.0f), CUi::UI_TITLE_LOGO);	//タイトルロゴ
-	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 270.0f, 0.0f), D3DXVECTOR2(250.0f, 50.0f), CUi::UI_PRESS_BUTTON);	//エンター指示
 
 	//	変数の初期化
 	m_nTitleCounter = 0;
@@ -84,6 +97,14 @@ HRESULT CTitle::Init()
 		m_pTitleCamera = new CTitleCamera;
 		if (m_pTitleCamera != NULL) { m_pTitleCamera->Init(); }
 	}
+
+	// タイトルメニュー
+	if (m_pTitleMenu == NULL)
+	{
+		m_pTitleMenu = CTitleMenu::Create();
+	}
+
+	CManager::OnlineSeting(false);	// オンライン設定
 
 	return S_OK;
 }
@@ -97,6 +118,7 @@ void CTitle::Uninit(void)
 	//===================================
 	CFade::UnLoad();	//フェードのテクスチャの破棄
 	CUi::UnLoad();		//UIのテクスチャの破棄
+	CTitleMenu::Unload();
 
 	// タイトルカメラの破棄
 	if (m_pTitleCamera != NULL)
@@ -104,6 +126,13 @@ void CTitle::Uninit(void)
 		m_pTitleCamera->Uninit();
 		delete m_pTitleCamera;
 		m_pTitleCamera = NULL;
+	}
+
+	// タイトルメニュー
+	if (m_pTitleMenu != NULL)
+	{
+		m_pTitleMenu->Uninit();
+		m_pTitleMenu = NULL;
 	}
 
 	//フェード以外削除
@@ -116,7 +145,7 @@ void CTitle::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);					//ジョイパットの取得
 	CInputMouse *pCInputMouse = CManager::GetInputMouse();
 
 	//サウンドの情報
@@ -128,19 +157,19 @@ void CTitle::Update(void)
 	//	タイトルのカウンター加算
 	m_nTitleCounter++;
 
-	if (pXpad->GetALL(1, 0) == true || pCInputKeyBoard->GetKeyboardAny(1) == true || pCInputMouse->GetMouseTrigger(0) == true)
-	{//タイトルからゲームへ
-		//フェードが始まったら
-		if (pFade == CFade::FADE_NONE)
-		{
-			//タイトルの選択の音量
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_TITLEFADE, 0.5f);
-			//タイトルの選択の決定音
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLEFADE);
-
-			CFade::Create(CManager::MODE_GAME);
-		}
-	}
+	//if (pXpad->GetAllTrigger() == true || pCInputKeyBoard->GetKeyboardAny(1) == true || pCInputMouse->GetMouseTrigger(0) == true)
+	//{//タイトルからゲームへ
+	//	//フェードが始まったら
+	//	if (pFade == CFade::FADE_NONE)
+	//	{
+	//		//タイトルの選択の音量
+	//		pSound->SetVolume(CSound::SOUND_LABEL_SE_TITLEFADE, 0.5f);
+	//		//タイトルの選択の決定音
+	//		pSound->PlaySound(CSound::SOUND_LABEL_SE_TITLEFADE);
+	//
+	//		CFade::Create(CManager::MODE_GAME);
+	//	}
+	//}
 }
 //=============================================================================
 // 描画処理

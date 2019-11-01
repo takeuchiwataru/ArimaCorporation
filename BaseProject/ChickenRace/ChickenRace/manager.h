@@ -20,6 +20,7 @@
 #include "result.h"
 #include "ranking.h"
 #include "select.h"
+#include "Server.h"
 
 //*****************************************************************************
 // 前方宣言
@@ -60,6 +61,12 @@ public://誰でも扱える
 	static CSound *GetSound(void) { return m_pSound; }
 	static bool GetInputFlag(void) { return m_bInput; }
 	static void SetInputFlag(bool bInput) { m_bInput = bInput; }
+	static CInputJoyPad_0 *&GetInputJoyPad0(int nID) { return m_pJoyPad0[nID]; }
+	static int			&GetnInput(void) { return m_nInput; }
+	static CServer		*&GetServer(void) { return m_pServer; }
+	static CClient		*&GetClient(void) { return m_pClient; }
+
+	static void OnlineSeting(bool bOpen, bool bHost = true);
 
 private://個人でのみ使う
 	static MODE m_mode;
@@ -79,5 +86,9 @@ private://個人でのみ使う
 	static CSelect	*m_pSelect;
 	static CTutorial * m_pTutorial;
 	static bool m_bInput;				//入力状態の取得
+	static CInputJoyPad_0	*m_pJoyPad0[JOYPAD_MAX];	//ジョイパッドのポインタ
+	static int				m_nInput;					//インプットの更新チェック
+	static CServer			*m_pServer;		//サーバー
+	static CClient			*m_pClient;		//クライアント
 };
 #endif

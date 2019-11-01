@@ -524,7 +524,7 @@ void CEnemy::ChaseEgg(void)
 				m_pEgg[0]->Jump(EGGJUMP);
 			}
 
-			CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
+			//CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
 		}
 	}
 	if (m_nNumEgg >= 2)
