@@ -14,6 +14,7 @@
 #include "motion.h"
 #include "scene.h"
 #include "RoadPointer.h"
+#include "game.h"
 
 //=============================================================================
 // マクロ定義
@@ -26,6 +27,7 @@
 
 #define DAMAGE_TIME	(60)		// ダメージを食らっている時間
 #define SPEEDDOWN_TIME	(300)	// 減速している時間
+#define FALL_CHICK_RANGE		(400)							// ひよこが降る範囲
 #define MAX_EGG		(3)		//卵の最大数
 
 //=============================================================================
@@ -137,6 +139,10 @@ public:
 
 	void SetControl(bool bControl) { m_bControl = bControl; };
 	bool GetControl(void) { return m_bControl; };
+	int GetCntChick(void) { return m_nCntChick; }
+	CChick **GetAnnoyChick(void) { return m_pAnnoyChick; }
+	void FallChicks(D3DXVECTOR3 pos);
+	void AnnoyChicks(void);
 
 	void SetJump(bool bJump) { m_bJump = bJump; }
 	bool GetJump(void) { return m_bJump; };
@@ -151,7 +157,6 @@ public:
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
 
 private:
-	//変数宣言
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
 	void RemakeCarRot(float * pAngle);
@@ -175,59 +180,63 @@ private:
 	void ChickAppear(void);
 	void ChaseEgg(void);
 	void BulletEgg(void);
-
 	void CollisionCharacter(void);
+	void ChaseAnnoyS(void);
 
 	static CModel *		m_pModel;			//パーツモデルのポインタ
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
 											//メンバ変数
-	static int					  m_nMaxMotion;			// モーションの最大数
-	static CMotion::MOTION_INFO * m_pMotionInfo;		// モーション情報
-	static LPDIRECT3DTEXTURE9     m_pTexture;			// テクスチャ
-	D3DXVECTOR3				      m_pos;				// 中心座標
-	D3DXVECTOR3					  m_move;				// 移動
-	D3DXVECTOR3					  m_MoveMotion;			// モーションの移動量
-	D3DXVECTOR3					  m_OldPos;				// 前回の座標
-	D3DXVECTOR3					  m_OldDiffuse;			// 前回の差分
-	D3DXVECTOR3					  m_rot;				// 向き
-	D3DXVECTOR3					  m_OldEggRot[MAX_FRAME];	// 前回の位置
-	D3DXVECTOR3					  m_vtxMaxModel;		// モデルの頂点最大値
-	D3DXVECTOR3					  m_vtxMinModel;		// モデルの頂点最小値
-	D3DXMATRIX					  m_mtxWorld;			// ワールドマトリックス
-	CMotion *					  m_pMotion;			// モーションのポインタ
-	STATE						  m_MoveState;			// 状態設定
-	STATE_SPEED					  m_StateSpeed;			// スピードの状態
-	STATE_HANDLE				  m_StateHandle;		// ハンドルの状態
-	PLAYER_INFO					  m_PlayerInfo;			// プレイヤーの情報
-	CLoadTextPlayer *			  m_pText;				// プレイヤーの情報読み込み
-	CEgg						  *m_pEgg[MAX_EGG];		//卵のポインタ
-	CChick						  *m_pChick[MAX_EGG];	//ひよこのポインタ
-	bool						  m_bJump;				//  ジャンプフラグ
-	bool						  m_bControl;			// コントローラーの使用状態
-	int							  m_nCountJumpTime;		// ジャンプ状態の時間をカウントする
-	float						  m_fvtxMaxY;			// モデル頂点の最大値（Y）
-	float						  m_fMaxSpeed;			// スピードの最大値
-	float						  m_fMass;				// 質量
-	float						  m_fSpeed;				// 速さ
-	int							  m_nCountTime;			// 時間の加算
-	int							  m_nCountSpeed;		// 時間の加算
-	bool						  m_bCrcleCarIn;		// 車が範囲内に入っているかどうか
-	CLoadEffect *				  m_pLoadEffect;		// ロードエフェクトのポインタ変数
+	static int					  m_nMaxMotion;					// モーションの最大数
+	static CMotion::MOTION_INFO * m_pMotionInfo;				// モーション情報
+	static LPDIRECT3DTEXTURE9     m_pTexture;					// テクスチャ
+	D3DXVECTOR3				      m_pos;						// 中心座標
+	D3DXVECTOR3					  m_move;						// 移動
+	D3DXVECTOR3					  m_MoveMotion;					// モーションの移動量
+	D3DXVECTOR3					  m_OldPos;						// 前回の座標
+	D3DXVECTOR3					  m_OldDiffuse;					// 前回の差分
+	D3DXVECTOR3					  m_rot;						// 向き
+	D3DXVECTOR3					  m_OldEggRot[MAX_FRAME];		// 前回の位置
+	D3DXVECTOR3					  m_vtxMaxModel;				// モデルの頂点最大値
+	D3DXVECTOR3					  m_vtxMinModel;				// モデルの頂点最小値
+	D3DXMATRIX					  m_mtxWorld;					// ワールドマトリックス
+	CMotion *					  m_pMotion;					// モーションのポインタ
+	STATE						  m_MoveState;					// 状態設定
+	STATE_SPEED					  m_StateSpeed;					// スピードの状態
+	STATE_HANDLE				  m_StateHandle;				// ハンドルの状態
+	PLAYER_INFO					  m_PlayerInfo;					// プレイヤーの情報
+	CLoadTextPlayer *			  m_pText;						// プレイヤーの情報読み込み
+	CEgg						  *m_pEgg[MAX_EGG];				//卵のポインタ
+	CChick						  *m_pChick[MAX_EGG];			//ひよこのポインタ
+	CChick						  *m_pAnnoyChick[MAX_PLAYER];	//ひよこのポインタ
+	bool						  m_bJump;						//  ジャンプフラグ
+	bool						  m_bControl;					// コントローラーの使用状態
+	int							  m_nCountJumpTime;				// ジャンプ状態の時間をカウントする
+	float						  m_fvtxMaxY;					// モデル頂点の最大値（Y）
+	float						  m_fMaxSpeed;					// スピードの最大値
+	float						  m_fMass;						// 質量
+	float						  m_fSpeed;						// 速さ
+	int							  m_nCountTime;					// 時間の加算
+	int							  m_nCountSpeed;				// 時間の加算
+	bool						  m_bCrcleCarIn;				// 車が範囲内に入っているかどうか
+	CLoadEffect *				  m_pLoadEffect;				// ロードエフェクトのポインタ変数
 	int							  m_nCntCombo;
-	int							  m_nCntShake;			//揺れの時間をカウントする
-	bool						  m_bShake;				//揺れのオンオフ
-	bool						  m_bDirive;			//前進、後退の操作フラグ
+	int							  m_nCntShake;					//揺れの時間をカウントする
+	bool						  m_bShake;						//揺れのオンオフ
+	bool						  m_bDirive;					//前進、後退の操作フラグ
 	int							  m_nCntFlag;
 	int							  m_nNumEgg;
 	int							  m_nNumChick;
-	int							  m_nCntFrame;			// 卵のついてくる処理に使う
-	int							  m_nPlayerRank;		// 順位保存用
+	int							  m_nCntFrame;					// 卵のついてくる処理に使う
+	int							  m_nPlayerRank;				// 順位保存用
+	int							  m_nCntChick;
+	int							  m_nDestRank;					// 狙う順位
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
-
+	bool						  m_bAnnoyS;
 	int							  m_nNumItem;
+	int							  m_nAnnoySTimer;
 	BULLET						  m_bulletType[MAX_EGG];
 
 	bool						  m_bDamage;
