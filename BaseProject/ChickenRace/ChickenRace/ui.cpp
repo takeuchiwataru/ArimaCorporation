@@ -14,7 +14,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define UI_TEXTURE_NAME_1		"data\\TEXTURE\\Title\\UI\\タイトル名.png"		//読み込むテクスチャファイルenter
+#define UI_TEXTURE_NAME_1		"data\\TEXTURE\\Title\\UI\\title.png"			//読み込むテクスチャファイルenter
 #define UI_TEXTURE_NAME_2		"data\\TEXTURE\\Title\\UI\\PressButton.png"		//読み込むテクスチャファイル
 #define TITLE_SIZE_X			(500.0f)										//タイトルの横のサイズ
 #define TITLE_SIZE_Y			(180.0f)										//タイトルの縦のサイズ

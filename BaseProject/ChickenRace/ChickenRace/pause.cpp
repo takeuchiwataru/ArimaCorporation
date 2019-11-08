@@ -188,7 +188,7 @@ void CPause::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CInputJoypad *pCInputJoypad = CManager::GetInputJoyPad();
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(CGame::GetControllerNum(0));		//ジョイパットの取得
 	CInputMouse *pCInputMouse = CManager::GetInputMouse();
 
 	//サウンドの情報
@@ -202,7 +202,9 @@ void CPause::Update(void)
 	//頂点バッファをロック
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_UP) == true && m_bSerectEnd == false || pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true && m_bSerectEnd == false || pCInputJoypad->GetTrigger(CInputJoypad::STICK_L_DOWN) == true && m_bSerectEnd == false)
+	if (m_bSerectEnd == false && 
+		(pCInputKeyBoard->GetKeyboardTrigger(DIK_UP) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
+		pXpad->GetTrigger(INPUT_UP) == true || pXpad->GetTrigger(INPUT_LS_U) == true))
 	{//矢印キーの上を押したとき
 
 		//ポーズの選択肢移動音
@@ -217,7 +219,9 @@ void CPause::Update(void)
 		m_SelectNum = (m_SelectNum + 2) % 3;
 		m_SelectColor = PAUSE_COLOR_INIT;
 	}
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_DOWN) == true && m_bSerectEnd == false || pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true && m_bSerectEnd == false || pCInputJoypad->GetTrigger(CInputJoypad::STICK_L_UP) == true && m_bSerectEnd == false)
+	if (m_bSerectEnd == false && 
+		(pCInputKeyBoard->GetKeyboardTrigger(DIK_DOWN) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
+		pXpad->GetTrigger(INPUT_DOWN) == true || pXpad->GetTrigger(INPUT_LS_D) == true))
 	{//矢印キーの下を押したとき
 
 		//ポーズの選択し移動音
@@ -251,7 +255,9 @@ void CPause::Update(void)
 	//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
 
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true || pCInputMouse->GetMouseTrigger(0) == true || pCInputJoypad->GetTrigger(CInputJoypad::BUTTON_B) == true || pCInputJoypad->GetTrigger(CInputJoypad::BUTTON_A) == true && m_bSerectEnd == false)
+	if (m_bSerectEnd == false && 
+		(pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
+		pXpad->GetTrigger(INPUT_B) == true))
 	{
 		if (m_SelectNum == 0)
 		{

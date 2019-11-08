@@ -32,6 +32,7 @@ public:
 		TEXTURE_FRAME,
 		TEXTURE_NUMBER,
 		TEXTURE_ENTER,
+		TEXTURE_YOU,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -57,6 +58,8 @@ private:
 	CScene2D *m_pPlayerBG[MAX_PLAYER];		// プレイヤー背景
 	CScene2D *m_pSelect[MAX_PLAYER];		// 選択
 	CScene2D *m_pEnter[MAX_PLAYER];			// 決定
+
+	CScene2D *m_pYor;						// あなた
 
 	bool	m_bEntry[MAX_PLAYER];			// エントリー
 	bool	m_bEnter[MAX_PLAYER];			// 決定したか

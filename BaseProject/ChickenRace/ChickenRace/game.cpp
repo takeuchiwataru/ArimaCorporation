@@ -232,7 +232,7 @@ void CGame::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(m_nControllerNum[0]);		//ジョイパットの取得
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 	CFade::FADE fade = CFade::GetFade();
 
@@ -300,40 +300,44 @@ void CGame::Update(void)
 
 	if (fade == CFade::FADE_NONE)
 	{// フェードしていない
-		if (bOnine == false)
-		{// オンラインじゃない
-			//ポーズの処理
-			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true)
-			{//Pキーが押されたら
-				m_bPause = m_bPause ? false : true;
+		if (m_gameMode == GAMEMODE_COURSE_VIEW || m_gameMode == GAMEMODE_PLAY)
+		{// レース中
+			if (bOnine == false)
+			{// オンラインじゃない
+				//ポーズの処理
+				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_P) == true ||
+					pXpad->GetTrigger(INPUT_START) == true)
+				{//Pキーが押されたら
+					m_bPause = m_bPause ? false : true;
 
-				switch (m_bPause)
-				{// ポーズ
-				case true:
-					if (m_pPause == NULL)
-					{
-						//ポーズを開く音
-						//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
+					switch (m_bPause)
+					{// ポーズ
+					case true:
+						if (m_pPause == NULL)
+						{
+							//ポーズを開く音
+							//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_OPEN);
 
-						//ポーズの生成
-						m_pPause = CPause::Create();
+							//ポーズの生成
+							m_pPause = CPause::Create();
 
-						//ポーズとフェードだけ回す
-						CScene::SetUpdatePri(7);
-					}
-					break;
-				case false:
-					if (m_pPause != NULL)
-					{
-						//ポーズを閉じる音
-						//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
+							//ポーズとフェードだけ回す
+							CScene::SetUpdatePri(7);
+						}
+						break;
+					case false:
+						if (m_pPause != NULL)
+						{
+							//ポーズを閉じる音
+							//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_CLOSE);
 
-						//ポーズを削除
-						m_pPause->Uninit();
-						m_pPause = NULL;
+							//ポーズを削除
+							m_pPause->Uninit();
+							m_pPause = NULL;
 
-						//アップデート順番をすべて回す
-						CScene::SetUpdatePri(0);
+							//アップデート順番をすべて回す
+							CScene::SetUpdatePri(0);
+						}
 					}
 				}
 			}
@@ -343,7 +347,7 @@ void CGame::Update(void)
 	if (m_bPause == false)
 	{//開く音
 		if (m_gameMode == GAMEMODE_PLAY)
-		{
+		{// プレイのみ
 			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 			{
 				//m_bDrawUI = m_bDrawUI ? false : true;
@@ -365,6 +369,7 @@ void CGame::Update(void)
 	}
 
 	CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
+	CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
 }
 
 //=============================================================================

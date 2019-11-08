@@ -381,6 +381,23 @@ void CScene2D::SetUV(float fPattern, int nNum)
 	m_pVtxBuff->Unlock();
 }
 
+void CScene2D::SetUV_X_ROLL(void)
+{
+	VERTEX_2D *pVtx;//頂点情報へのポインタ
+
+	//頂点バッファをロックし、頂点データへのポインタを取得
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
+
+	//テクスチャ設定
+	pVtx[0].tex = D3DXVECTOR2(1.0f, 0.0f);
+	pVtx[1].tex = D3DXVECTOR2(0.0f, 0.0f);
+	pVtx[2].tex = D3DXVECTOR2(1.0f, 1.0f);
+	pVtx[3].tex = D3DXVECTOR2(0.0f, 1.0f);
+
+	//頂点バッファをアンロックする
+	m_pVtxBuff->Unlock();
+}
+
 //=============================================================================
 // UVの横の設定
 //=============================================================================
