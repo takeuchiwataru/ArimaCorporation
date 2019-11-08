@@ -138,6 +138,7 @@ public:
 			m_nControllerNum[nCntPlayer] = nControllerNum[nCntPlayer];
 	}
 	static int *GetControllerNum(void) { return m_nControllerNum; }
+	static int GetControllerNum(int nNum) { return m_nControllerNum[nNum]; }
 
 	// ƒ‰ƒ“ƒLƒ“ƒO
 	static int GetRanking(int nPlayerNum) { return m_nRanking[nPlayerNum]; }

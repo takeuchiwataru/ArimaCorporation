@@ -66,7 +66,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	static CServer		*&GetServer(void) { return m_pServer; }
 	static CClient		*&GetClient(void) { return m_pClient; }
 
-	static void OnlineSeting(bool bOpen, bool bHost = true);
+	static bool OnlineSeting(bool bOpen, bool bHost = true);
 
 private://ŒÂl‚Å‚Ì‚İg‚¤
 	static MODE m_mode;

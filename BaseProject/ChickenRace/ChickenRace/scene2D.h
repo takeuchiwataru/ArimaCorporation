@@ -43,6 +43,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	void SetTexture(int PatternAnim, int X, int Y, int nNum);
 	void SetPosSizeSide(D3DXVECTOR3 pos, D3DXVECTOR2 nSize);
 	void SetUV(float fPattern, int nNum);
+	void SetUV_X_ROLL(void);
 	void SetUVWidth(float fPattern, int nNum);
 
 private://ŒÂl‚Å‚Ì‚İg‚¤

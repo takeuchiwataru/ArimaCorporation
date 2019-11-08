@@ -604,7 +604,7 @@ void CManager::SetMode(MODE mode)
 //=============================================================================
 // モードの設定処理
 //=============================================================================
-void CManager::OnlineSeting(bool bOpen, bool bHost)
+bool CManager::OnlineSeting(bool bOpen, bool bHost)
 {
 	if (bOpen == true)
 	{// 開くなら
@@ -620,7 +620,16 @@ void CManager::OnlineSeting(bool bOpen, bool bHost)
 		{//クライアントの生成
 			for (int nCount = 0; nCount < JOYPAD_MAX; nCount++) { m_pJoyPad0[nCount]->Update(); }
 			m_pClient = new CClient;
-			m_pClient->Init();
+			if (FAILED(m_pClient->Init()))
+			{
+				if (m_pClient != NULL)
+				{//クライアントの生成
+					m_pClient->Uninit();
+					m_pClient = NULL;
+				}
+
+				return false;
+			}
 		}
 	}
 	else
@@ -639,4 +648,6 @@ void CManager::OnlineSeting(bool bOpen, bool bHost)
 		// クライアント数リセット
 		CServer::ResetMaxClient();
 	}
+
+	return true;
 }

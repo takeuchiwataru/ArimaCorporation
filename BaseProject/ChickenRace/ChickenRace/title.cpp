@@ -84,11 +84,6 @@ HRESULT CTitle::Init()
 	CUi::Load();		//UIのテクスチャの読み込み
 	CTitleMenu::Load();
 
-	//===================================
-	//		    UI生成の場所
-	//===================================
-	CUi::Create(D3DXVECTOR3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 120.0f, 0.0f), D3DXVECTOR2(0.0f, 0.0f), CUi::UI_TITLE_LOGO);	//タイトルロゴ
-
 	//	変数の初期化
 	m_nTitleCounter = 0;
 

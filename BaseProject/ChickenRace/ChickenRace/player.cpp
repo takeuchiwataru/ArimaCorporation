@@ -439,6 +439,9 @@ void CPlayer::Draw(void)
 //=============================================================================
 void CPlayer::ControlKey(void)
 {
+	// 取得
+	bool bOnline = CTitle::GetOnline();
+
 	CSound *pSound = CManager::GetSound();
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(m_nControllerNum);		//ジョイパットの取得
@@ -446,7 +449,7 @@ void CPlayer::ControlKey(void)
 	//前進後退の設定
 	if (m_bDirive)
 	{
-		if ((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		if ((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 			(pXpad->GetPress(INPUT_R1) == true) ||
 			(pXpad->GetPress(INPUT_R2) == true))
 		{
@@ -463,15 +466,17 @@ void CPlayer::ControlKey(void)
 	//向きの設定
 	if (m_StateSpeed != STATE_SPEED_STOP)
 	{
-		if ((pInputKeyboard->GetKeyboardPress(DIK_A) == true) || 
-			pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true ||
+		if ((bOnline == false && 
+			(pInputKeyboard->GetKeyboardPress(DIK_A) == true ||
+			pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true)) ||
 			pXpad->GetPress(INPUT_LS_L) == true ||
 			pXpad->GetPress(INPUT_LEFT) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
 		}
-		else if ((pInputKeyboard->GetKeyboardPress(DIK_D) == true) || 
-			pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true ||
+		else if ((bOnline == false && 
+			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
+			pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
 			pXpad->GetPress(INPUT_LS_R) == true ||
 			pXpad->GetPress(INPUT_RIGHT) == true)
 		{//右ハンドル状態
@@ -488,14 +493,14 @@ void CPlayer::ControlKey(void)
 	}
 
 	//アクセル
-	if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+	if ((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
 		(pXpad->GetPress(INPUT_L1) == true) ||
 		(pXpad->GetPress(INPUT_L2) == true))
 	{//減速状態
 		SetStateSpeed(STATE_SPEED_BRAKS);
 	}
 	else if
-		((pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pXpad->GetPress(INPUT_R1) == true) ||
 		(pXpad->GetPress(INPUT_R2) == true))
 	{ //アクセルを状態
@@ -542,8 +547,9 @@ void CPlayer::ControlKey(void)
 	{// ジャンプしていない
 		m_bJumpSave = false;
 
-		if (pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
-			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true ||
+		if ((bOnline == false && 
+			(pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
+			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
 			pXpad->GetTrigger(INPUT_A) == true)
 		{// ジャンプキー
 			m_bJumpSave = true;
@@ -1558,6 +1564,7 @@ void CPlayer::BulletEgg(void)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
 
 			m_nNumEgg--;	// 所持数を減らす
 

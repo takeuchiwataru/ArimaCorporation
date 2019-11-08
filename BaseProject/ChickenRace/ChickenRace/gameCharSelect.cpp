@@ -43,6 +43,8 @@ CGameCharSelect::CGameCharSelect()
 		m_bEnter[nCntPlayer] = false;
 	}
 
+	m_pYor = NULL;
+
 	m_nEntryCounter = 0;				// エントリーカウント
 
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
@@ -77,6 +79,9 @@ HRESULT CGameCharSelect::Load(void)
 			break;
 		case TEXTURE_ENTER:
 			strcpy(cName, "data/TEXTURE/game/charselect/characterselect.png");
+			break;
+		case TEXTURE_YOU:
+			strcpy(cName, "data/TEXTURE/game/charselect/modeselect_17.png");
 			break;
 		}
 
@@ -133,14 +138,14 @@ HRESULT CGameCharSelect::Init()
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{// プレイヤーカウント	
-	 // プレイヤー番号
+		// プレイヤー番号
 		if (m_pPlayerNum[nCntPlayer] == NULL)
 		{// NULL
 			m_pPlayerNum[nCntPlayer] = new CScene2D(1, CScene::OBJTYPE_2DPOLYGON);
 			m_pPlayerNum[nCntPlayer]->Init();
 			m_pPlayerNum[nCntPlayer]->SetPosSize(
 				D3DXVECTOR3(
-				(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.18f),
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.18f),
 					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.2f),
 					0.0f),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.1f, SCREEN_HEIGHT * 0.05f));
@@ -155,7 +160,7 @@ HRESULT CGameCharSelect::Init()
 			m_pPlayerBG[nCntPlayer]->Init();
 			m_pPlayerBG[nCntPlayer]->SetPosSize(
 				D3DXVECTOR3(
-				(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
 					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)),
 					0.0f),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.25f, SCREEN_HEIGHT * 0.25f));
@@ -204,7 +209,7 @@ HRESULT CGameCharSelect::Init()
 			m_pCharacter[nCntChar]->Init();
 			m_pCharacter[nCntChar]->SetPosSize(
 				D3DXVECTOR3(
-				(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (nCntChar % 4 == 0 || nCntChar % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (nCntChar / 2 % 2 == 0 ? -1.0f : 1.0f)),
+					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (nCntChar % 4 == 0 || nCntChar % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (nCntChar / 2 % 2 == 0 ? -1.0f : 1.0f)),
 					(SCREEN_HEIGHT * 0.8f) + ((SCREEN_WIDTH * 0.053f) * (nCntChar / 4 == 0 ? -1.0f : 1.0f)),
 					0.0f),
 				D3DXVECTOR2(SCREEN_WIDTH * 0.05f, SCREEN_WIDTH * 0.05f));
@@ -216,6 +221,21 @@ HRESULT CGameCharSelect::Init()
 	if (bOnine == true)
 	{// オンライン
 		int nClient = CServer::GetnMaxClient();		// クライアント数
+		int nID = CClient::GetnID();			// クライアントID
+
+		// あなた
+		if (m_pYor == NULL)
+		{// NULL
+			m_pYor = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
+			m_pYor->Init();
+			m_pYor->SetPosSize(
+				D3DXVECTOR3(
+					(nID % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)) + (SCREEN_HEIGHT * 0.07f),
+					(nID / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)) - (SCREEN_HEIGHT * 0.18f),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.12f, SCREEN_HEIGHT * 0.04f));
+			m_pYor->BindTexture(m_pTexture[TEXTURE_YOU]);
+		}
 
 		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 		{// プレイヤーカウント				
@@ -236,7 +256,7 @@ HRESULT CGameCharSelect::Init()
 			if (nCntPlayer < nClient)
 				m_bEntry[nCntPlayer] = true;
 		}
-
+		
 		// プレイヤー最大数設定
 		CGame::SetMaxPlayer(nClient);
 	}
@@ -270,6 +290,12 @@ void CGameCharSelect::Uninit(void)
 			m_pEnter[nCntPlayer]->Uninit();		// 終了処理
 			m_pEnter[nCntPlayer] = NULL;		// NULLへ
 		}
+	}
+
+	if (m_pYor != NULL)
+	{// NULL以外
+		m_pYor->Uninit();	// 終了処理
+		m_pYor = NULL;		// NULLへ
 	}
 
 	// キャラクター
@@ -440,7 +466,7 @@ void CGameCharSelect::Online(void)
 				}
 			}
 
-			if (pXpad->GetTrigger(INPUT_START) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
 				{
@@ -640,7 +666,7 @@ void CGameCharSelect::Local(void)
 				}
 			}
 
-			if (pXpad->GetTrigger(INPUT_START) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
 				{
@@ -666,7 +692,7 @@ void CGameCharSelect::Local(void)
 			{// 使用していない
 				pXpad = CManager::GetInputJoyPad0(nCntPlayer);		//ジョイパットの取得
 
-				if (pXpad->GetTrigger(INPUT_START) == true)
+				if (pXpad->GetTrigger(INPUT_B) == true)
 				{// 決定キー
 					if (m_bEntry[nPlayerNum] == false)
 					{

@@ -412,11 +412,15 @@ HRESULT CClient::Init(void)
 
 	//サーバーに接続
 	int nLoop;
-	do
-	{
+	//do
+	//{
 		nLoop = connect(m_sockClient, (struct sockaddr *)&m_addrServer, sizeof(m_addrServer));
 
-	} while (nLoop == -1);
+	//} while (nLoop == -1);
+
+	if (nLoop == -1)
+		return E_FAIL;
+
 	//サーバーからデータ（メッセージの受信）
 	memset(m_aStr, 0, sizeof(m_aStr));
 	m_nLengthData = recv(m_sockClient, m_aStr, sizeof(m_aStr), 0);	//データ受信とそのバイト数を返す
