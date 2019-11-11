@@ -65,6 +65,8 @@ CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, o
 		m_aVtxCornerPos[nCntCorner] = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	}
 	m_bTexMat = false;
+	m_pShaderMeshTextures = NULL;
+	m_pToonShader = NULL;
 }
 //===============================================================================
 //　デストラクタ
@@ -112,8 +114,11 @@ HRESULT CModel3D::Init(void)
 	m_bSmallObjDraw = false;		// 小さいオブジェクトの描画フラグ
 	m_bHightObjDraw = false;		// 高いオブジェクトの描画フラグ
 	m_bOnlyLengthDraw = false;		// 描画距離だけを求めるオブジェクトフラグ
-	m_pToonShader = NULL;			// シェーダーのポインタの初期化
 
+	m_pToonShader = NULL;			// シェーダーのポインタの初期化
+	m_pMeshMaterials = NULL;		// シェーダー用のメッシュマテリアル
+	m_pShaderMeshTextures = NULL;	// シェーダー用のメッシュテクスチャ
+		
 	//===================================================
 	//    　　　　　マテリアルとテクスチャの情報
 	//===================================================
@@ -151,6 +156,18 @@ HRESULT CModel3D::Init(void)
 //=============================================================================
 void CModel3D::Uninit(void)
 {
+	//シェーダー残骸消すもの
+	if (m_pShaderMeshTextures != NULL)
+	{
+		delete[] m_pShaderMeshTextures;
+		m_pShaderMeshTextures = NULL;
+	}
+	if (m_pMeshMaterials != NULL)
+	{
+		delete[] m_pMeshMaterials;
+		m_pMeshMaterials = NULL;
+	}
+
 	//シェーダーのポインタの破棄
 	if (m_pToonShader != NULL)
 	{

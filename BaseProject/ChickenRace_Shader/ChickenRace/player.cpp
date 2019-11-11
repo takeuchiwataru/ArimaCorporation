@@ -189,6 +189,7 @@ void CPlayer::UnloadModel(void)
 {
 	if (m_pModel != NULL)
 	{
+		m_pModel->Uninit();
 		delete m_pModel;
 		m_pModel = NULL;
 	}

@@ -58,11 +58,15 @@ CModel::CModel()
 	m_Scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);	//拡大縮小率
 	m_pTextures = NULL;
 	m_bTexMat = false;
+	m_pMeshMaterials = NULL;
+	m_pShaderMeshTextures = NULL;
+	m_pToonShader = NULL;
+
 }
 //===============================================================================
 //　デストラクタ
 //===============================================================================
-CModel::~CModel() {}
+CModel::~CModel() { }
 
 //=============================================================================
 // 初期化処理
@@ -132,10 +136,12 @@ HRESULT CModel::Init(char FileName[40])
 	m_Rot.y = 0.0f;
 
 	m_pToonShader = NULL;			// シェーダーのポインタの初期化
+	m_pMeshMaterials = NULL;
+	m_pShaderMeshTextures = NULL;
 
-									//===================================================
-									//    　　　　　マテリアルとテクスチャの情報
-									//===================================================
+	//===================================================
+	//    　　　　　マテリアルとテクスチャの情報
+	//===================================================
 	D3DXMATERIAL *d3dxMaterials = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
 	m_pMeshMaterials = new D3DMATERIAL9[(int)m_nNumMat];
 	m_pShaderMeshTextures = new LPDIRECT3DTEXTURE9[(int)m_nNumMat];
@@ -170,6 +176,18 @@ HRESULT CModel::Init(char FileName[40])
 //=============================================================================
 void CModel::Uninit(void)
 {
+	//シェーダー残骸消すもの
+	if (m_pMeshMaterials != NULL)
+	{
+		delete[] m_pMeshMaterials;
+		m_pMeshMaterials = NULL;
+	}
+	if (m_pShaderMeshTextures != NULL)
+	{
+		delete[] m_pShaderMeshTextures;
+		m_pShaderMeshTextures = NULL;
+	}
+
 	//シェーダーのポインタの破棄
 	if (m_pToonShader != NULL)
 	{
