@@ -32,6 +32,7 @@
 #include "gamePlay.h"
 #include "enemy.h"
 #include "chick.h"
+#include "ColMesh.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -73,6 +74,8 @@ int CGame::m_nCharSelectNum[MAX_PLAYER] = { 0 };	// キャラ選択番号
 int CGame::m_nControllerNum[MAX_PLAYER] = { 0 };	// コントローラー番号
 int CGame::m_nRanking[MAX_PLAYER] = { 0 };			// ランキング
 bool CGame::m_bGoul[MAX_PLAYER] = { false };		// ゴール
+
+int CGame::m_nCameraNumber = 0;						// 現在使用しているカメラ番号
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -120,12 +123,14 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
+	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
 	m_bPause = false;					//ポーズを初期化
 	m_nGameCounter = 0;					//カウンターの初期化
+
+	m_nCameraNumber = 0;				// 現在使用しているカメラ番号
 
 	m_nMaxPlayer = 0;					// プレイヤー数
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
@@ -141,7 +146,6 @@ HRESULT CGame::Init()
 		m_nMaxPlayer = 2;
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
-
 	return S_OK;
 }
 //=============================================================================
@@ -224,6 +228,8 @@ void CGame::Uninit(void)
 
 	//フェード以外の破棄
 	CScene::NotFadeReleseAll();
+
+	CCOL_MESH_MANAGER::EndMap();
 }
 //=============================================================================
 // 更新処理
@@ -382,6 +388,8 @@ void CGame::Draw(void)
 
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
+	m_nCameraNumber = 0;
+
 	if (m_gameMode == GAMEMODE_COURSE_VIEW)
 	{// その他
 	 // バックバッファ＆Ｚバッファのクリア
@@ -413,6 +421,7 @@ void CGame::Draw(void)
 		if (bOnine == true)
 		{// オンライン
 			int nClient = CClient::GetnID();
+			m_nCameraNumber = nClient;
 			if (m_pGameCamera[nClient] != NULL) { m_pGameCamera[nClient]->SetCamera(); }
 
 			//全ての描画
@@ -422,7 +431,9 @@ void CGame::Draw(void)
 		{// ローカル
 			for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 			{// プレイヤーカウント
-			 //カメラの設定
+				m_nCameraNumber = nCntPlayer;
+			 
+				//カメラの設定
 				if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
 
 				//全ての描画
@@ -576,7 +587,6 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 
 		if (m_nCntSetStage == 0)
 			SetStage();
-
 		break;
 	}
 
@@ -609,15 +619,23 @@ void CGame::SetStage(void)
 		//		Create
 		//===================================
 
+		CCOL_MESH_MANAGER::LoadMap();
+
 		if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 		CPlayer::LoadModel();	//モデルの読み込み
 
 		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 		{// プレイヤーカウント
+			float frot = (-D3DX_PI * 0.5f);
+			float fLeft = 100.0f;
+			float fDiff = (fLeft * 2.0f) / 3.0f;
+
 			//プレイヤーの生成
 			if (m_pPlayer[nCntPlayer] == NULL)
-				m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(-150.0f + (100.0f * nCntPlayer), 0.0f, (-50.0f * nCntPlayer)), nCntPlayer, m_nControllerNum[nCntPlayer]);
-			//m_pPlayer[nCntPlayer] = CPlayer::Create(D3DXVECTOR3(0.0f, 0.0f, 0.0f), nCntPlayer, m_nControllerNum[nCntPlayer]);
+				m_pPlayer[nCntPlayer] = CPlayer::Create(
+					D3DXVECTOR3(-150.0f, -90.0f, -70.0f + (((70.0f * 2.0f) / 3.0f) * nCntPlayer)),
+					D3DXVECTOR3(0.0f, frot, 0.0f),
+					nCntPlayer, m_nControllerNum[nCntPlayer]);
 
 			if (m_pPlayer[nCntPlayer] != NULL)
 			{// NULL以外
@@ -675,32 +693,32 @@ void CGame::SetStage(void)
 			//オブジェクトの生成
 			CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
 		}
-		for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
-		{
-			//フィールドの生成
-			CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
-				m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
-				m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
-				m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
-				m_Mesh[nCount].m_nTexType, 0);
-		}
-		for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
-		{
-			//壁の生成
-			CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
-		}
+		//for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
+		//{
+		//	//フィールドの生成
+		//	CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
+		//		m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
+		//		m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
+		//		m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
+		//		m_Mesh[nCount].m_nTexType, 0);
+		//}
+		//for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
+		//{
+		//	//壁の生成
+		//	CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
+		//}
 
 		// 餌の生成
-		CFeed::Create(D3DXVECTOR3(0.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
-		CFeed::Create(D3DXVECTOR3(100.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
-		CFeed::Create(D3DXVECTOR3(200.0f, 1.0f, 700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
+		CFeed::Create(D3DXVECTOR3(-1300.0f, -110.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
+		CFeed::Create(D3DXVECTOR3(-1600.0f, -110.0f, 600.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
+		CFeed::Create(D3DXVECTOR3(-2000.0f, -110.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
 
-		CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
-		CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1800.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
-		CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1900.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
+		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
+		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1800.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
+		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1900.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
 
-		// 敵の生成
-		CEnemy::Create(D3DXVECTOR3(-300.0f, 1.0f, 1500.0f));
+		//// 敵の生成
+		//CEnemy::Create(D3DXVECTOR3(-300.0f, 1.0f, 1500.0f));
 
 		m_nCntSetStage = 1;
 	}

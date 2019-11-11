@@ -17,6 +17,8 @@
 #define MAX_MAINMENU	(3)
 #define MAX_SUBMENU		(3)
 #define MAX_FLAG		(2)
+#define MAX_CHICKS		(2)
+#define MAX_PIYO		(4)
 
 //*****************************************************************************
 // 前方宣言
@@ -32,7 +34,9 @@ public:
 	typedef enum
 	{
 		TEXTURE_LOGO = 0,
+		TEXTURE_EGG,
 		TEXTURE_FLAG,
+		TEXTURE_PIYO,
 		TEXTURE_PRESS,
 		TEXTURE_MENU,
 		TEXTURE_NAME_M,
@@ -41,6 +45,7 @@ public:
 		TEXTURE_ENTRY,
 		TEXTURE_HINT,
 		TEXTURE_NUM,
+		TEXTURE_SETING,
 		TEXTURE_SEARCH,
 		TEXTURE_MAX
 	}TEXTURE;
@@ -64,8 +69,12 @@ private:
 	void ControllEntry(void);
 
 	void EditLogo(void);
+	void EditEgg(void);
 	void EditChicken(void);
 	void EditFlag(void);
+	void EditChicks(void);
+	void EditPIYO(void);
+	void EditChicksHome(void);
 	void EditPress(void);
 	void EditMenuBG(void);
 	void EditMainMenu(void);
@@ -75,15 +84,19 @@ private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
 	CScene2D			*m_pLogo;				// ロゴ
+	CScene2D			*m_pEgg;				// 卵
 	CScene2D			*m_pChicken;			// チキン
 	CScene2D			*m_pFlag[MAX_FLAG];		// 旗
+	CScene2D			*m_pChicks[MAX_CHICKS];	// ひよこ
+	CScene2D			*m_pPIYO[MAX_PIYO];		// ピヨ
+	CScene2D			*m_pChicksHome;			// ひよこ家
 	int					m_nCntLogo;				// ロゴカウント
 
 	CScene2D			*m_pPress;				// プレス
 	int					m_nCntPress;			// プレスカウント
 
 	CScene2D			*m_pMenuBG;				// メニューBG
-	
+
 	CScene2D			*m_pMainMenu[MAX_MAINMENU];		// メインメニュー
 	CScene2D			*m_pNameMenu[MAX_MAINMENU];		// メニュー名
 	int					m_nCntMainMenu;					// メインメニューカウント

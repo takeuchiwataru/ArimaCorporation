@@ -147,6 +147,10 @@ void CFeed::Update(void)
 	//‹——£‚ÌŽæ“¾
 	float fLength = CModel3D::GetLength();
 
+	m_rot.y += 0.005f;
+
+	CModel3D::SetRot(m_rot);
+
 	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
 //=============================================================================

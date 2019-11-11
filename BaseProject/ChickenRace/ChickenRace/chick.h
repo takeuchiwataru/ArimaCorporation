@@ -34,9 +34,12 @@ class CChick : public CModel3D
 public:
 	typedef enum
 	{// ひよこの種類
-		TYPE_ATTACK = 0,		// 攻撃
+		TYPE_ATTACK = 0,	// 攻撃
 		TYPE_ANNOY,			// 妨害
 		TYPE_SPEED,			// 加速
+		TYPE_ATTACK_S,		// 強い攻撃
+		TYPE_ANNOY_S,		// 強い妨害
+		TYPE_SPEED_S,		// 強い加速
 		TYPE_MAX,			//最大数
 	} TYPE;
 
@@ -46,7 +49,7 @@ public:
 		STATE_CHASE,			// ついていく
 		STATE_BULLET,		// 飛んでいく
 		STATE_MAX,			//最大数
-	} CHICKSTATE;
+	} STATE;
 
 	typedef enum
 	{// ひよこの状態
@@ -64,23 +67,32 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CChick *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYPE type, BULLETTYPE bulletType, int nNumPlayer);
+	static CChick *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYPE type, BULLETTYPE bulletType, STATE state, int nNumPlayer);
 	bool CollisionChick(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	float SetHeight(void);
-	CHICKSTATE GetState(void) { return m_state; }
-	void SetState(CHICKSTATE state) { m_state = state; }
+	STATE GetState(void) { return m_state; }
+	void SetState(STATE state) { m_state = state; }
 	TYPE GetType(void) { return m_type; }
 	BULLETTYPE GetBulletType(void) { return m_bulletType; }
 	int GetNumPlayer(void) { return m_nNumPlayer; }
 	void SetRank(int nRank) { m_nRank = nRank; }
 	int GetRank(void) { return m_nRank; }
 	void SetDis(bool bDis) { m_bDis = bDis; }
+	bool GetDis(void) { return m_bDis; }
 	void Jump(void);
 	void Bullet(void);
+	void SetRot(D3DXVECTOR3 rot) { m_rot = rot; }
+	void SetPos(D3DXVECTOR3 pos) { m_pos = pos; }
+	bool GetAttackS(void) { return m_bAttackS; }
+	void SetAttackS(bool bAttackS) { m_bAttackS = bAttackS; }
+	void SetDestRank(int nDestRank) { m_DestRank = nDestRank; }
 
 private:
 	void Move(void);
-	D3DXVECTOR3 Item(D3DXVECTOR3 pos);
+	void Attack(void);
+	void AnnoyS(void);
+	void AttackS(void);
+	void Item(void);
 	void AdjustAngle(float rot);
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
@@ -88,22 +100,25 @@ private:
 	static LPDIRECT3DTEXTURE9 m_pMeshTextures;	//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
-
+	static int			m_nChickTimer;
 	BULLETTYPE			m_bulletType;			// 弾の種類
 	TYPE				m_type;				// ひよこの種類
-	CHICKSTATE			m_state;				// ひよこの状態
+	STATE				m_state;				// ひよこの状態
 	D3DXVECTOR3			m_scale;				// 大きさ
 	D3DXVECTOR3			m_rot;					// 回転
 	CShadow				*m_pShadow;				// 影のポインタ
 	CObjBillboad *		m_pObjBill;				// オブジェクトビルボードのポインタ
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
+	D3DXVECTOR3			m_pos;
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bDis;					// 消すかどうか
-	float				m_fDestAngle;			// 目的の角度
-	float				m_fDiffAngle;			// 差分
+	bool				m_bAttackS;
+	D3DXVECTOR3			m_fDestAngle;			// 目的の角度
+	D3DXVECTOR3			m_fDiffAngle;			// 差分
 	int					m_nRank;				// 向かっていく順位
 	int					m_nNumPlayer;			// プレイヤー何が持っているひよこか
 	int					m_nDisTimer;			// 消すまでの時間
+	int					m_DestRank;			// 目的の順位
 };
 #endif

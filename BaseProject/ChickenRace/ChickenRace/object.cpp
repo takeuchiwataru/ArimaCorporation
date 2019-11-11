@@ -17,13 +17,17 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MODEL_NAME_1	"data\\MODEL\\Object\\tree2.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_2	"data\\MODEL\\Object\\柵.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"		//読み込むテクスチャファイル
+#define MODEL_NAME_1	"data\\MODEL\\Object\\tree4.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_2	"data\\MODEL\\Object\\柵.x"				//読み込むテクスチャファイル
+#define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_4	"data\\MODEL\\Map\\Map_First.x"			//読み込むテクスチャファイル
+#define MODEL_NAME_5	"data\\MODEL\\Map\\Map_Second.x"		//読み込むテクスチャファイル
 
-#define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\leaf.png"		//読み込むテクスチャファイル
+#define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\tree000.jpg"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル
 #define TEXTURE_NAME_3	"data\\TEXTURE\\modeltex\\bender.jpg"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_4	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
+#define TEXTURE_NAME_5	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
@@ -217,6 +221,7 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 			// 種類の設定
 			pObject->BindModel(m_pMeshModel[nObjectType], m_pBuffMatModel[nObjectType], m_nNumMatModel[nObjectType], m_pMeshTextures[nTexType],
 				m_LoadVtxMaxModel[nObjectType], m_LoadVtxMinModel[nObjectType]);
+			pObject->SetType(nObjectType);
 			// オブジェクトごとの設定用タイプ
 			pObject->m_nType = nObjectType;
 			// サイズを代入
@@ -255,6 +260,8 @@ HRESULT CObject::Load(void)
 	D3DXLoadMeshFromX(MODEL_NAME_1, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
 	D3DXLoadMeshFromX(MODEL_NAME_2, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
 	D3DXLoadMeshFromX(MODEL_NAME_3, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
+	D3DXLoadMeshFromX(MODEL_NAME_4, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[3], NULL, &m_nNumMatModel[3], &m_pMeshModel[3]);
+	D3DXLoadMeshFromX(MODEL_NAME_5, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[4], NULL, &m_nNumMatModel[4], &m_pMeshModel[4]);
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
@@ -324,7 +331,8 @@ HRESULT CObject::Load(void)
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
-
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_4, &m_pMeshTextures[3]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_5, &m_pMeshTextures[4]);
 	return S_OK;
 }
 //===============================================================================

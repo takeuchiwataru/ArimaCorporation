@@ -9,6 +9,8 @@
 
 #include "main.h"
 #include "scene.h"
+#include "toonshader.h"
+#include "camerabace.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -103,16 +105,20 @@ protected:
 	void SetOnlyLength(bool bOnlyLength) { m_bOnlyLengthDraw = bOnlyLength; };
 	bool GetDelete(void) { return m_bDelete; };
 	void SetDelete(bool bDelete) { m_bDelete = bDelete; };
+	void SetType(int nType) { m_nType = nType; }
 
 private://個人でのみ使う
 	float CrossingAngle(D3DXVECTOR3 vec0, D3DXVECTOR3 vec1);	// ベクトルのなす角を計算
 	void RotCalculation(void);									// 衝突時の角度計算
 	bool LengthJudgment(void);									//距離判定
 
+	D3DMATERIAL9			*m_pMeshMaterials = NULL;
+
 	LPD3DXMESH				m_pMeshObject;						//メッシュ情報へのポインタ
 	LPD3DXBUFFER			m_pBuffMatObject;					//マテリアルの情報へのポインタ
 	DWORD					m_nNumMatObject;					//マテリアルの情報数
 	LPDIRECT3DTEXTURE9		m_pMeshTextures;
+	LPDIRECT3DTEXTURE9		*m_pShaderMeshTextures;				//シェーダー用
 	D3DXMATRIX				m_mtxWorldObject;					//ワールドマトリックス
 	D3DXMATRIX				m_mtxRot;							//回転マトリックス(保存用)
 	D3DXQUATERNION			m_quat;								//クォータニオン
@@ -145,5 +151,8 @@ private://個人でのみ使う
 	bool					m_bOnlyLengthDraw;					// 描画距離だけ求める
 	D3DXVECTOR3				m_scale;							// スケール変更の倍率
 	float					m_fLength;							// 距離
+	bool					m_bTexMat;							// シェーダーに使うテクスチャとマテリアル
+	int						m_nType;							//モデルの種類
+	CToonShader				*m_pToonShader;						//シェーダーのポインタ
 };
 #endif

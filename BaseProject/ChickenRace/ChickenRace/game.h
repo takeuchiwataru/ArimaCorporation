@@ -91,6 +91,7 @@ public:
 	static GAMESTATE GetGameState(void) { return m_gameState; }
 	static CPlayer **GetPlayer(void) { return m_pPlayer; }
 	static CLoadTextMotion * GetPlayerMotion(void) { return m_pPlayerMotion; }	//プレイヤーのモーションの取得
+	static CGameCamera * GetCourseCamera(void) { return m_pCuorseCamera; }
 	static CGameCamera * GetGameCamera(int nNum)
 	{
 		if (0 <= nNum && nNum < MAX_PLAYER)
@@ -102,6 +103,7 @@ public:
 	static int GetGameCounter(void) { return m_nGameCounter; }					//ゲームのカウンター
 	static void SetGameModeNext(GAMEMODE gameModeNext) { m_gameModeNext = gameModeNext; };
 	void SetGameMode(GAMEMODE gameMode);
+	static GAMEMODE GetGameMode(void) { return m_gameMode; }
 	void SetStage(void);
 	void Ranking(void);
 
@@ -146,6 +148,8 @@ public:
 
 	// ゴール
 	static bool *GetGoul(void) { return m_bGoul; }
+
+	static int GetCameraNumber(void) { return m_nCameraNumber; }
 
 private:
 	//テキストの値を管理する場所
@@ -237,7 +241,9 @@ private:
 	static int m_nRanking[MAX_PLAYER];			// ランキング
 	static bool m_bGoul[MAX_PLAYER];			// ゴール判定
 
-												//ウォークスルー用
+	//ウォークスルー用
 	static bool m_bDrawUI;
+
+	static int m_nCameraNumber;					// 現在使用しているカメラ番号
 };
 #endif

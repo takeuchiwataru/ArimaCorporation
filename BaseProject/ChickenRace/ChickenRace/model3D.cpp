@@ -15,6 +15,8 @@
 #include "player.h"
 #include "resultcamera.h"
 #include "tutorial.h"
+#include "toonshader.h"
+#include "camerabace.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -38,6 +40,7 @@
 //===============================================================================
 CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, objType)
 {
+	m_pMeshMaterials = NULL;
 	m_pMeshObject = NULL;					//メッシュ情報へのポインタ
 	m_pBuffMatObject = NULL;				//マテリアルの情報へのポインタ
 	m_nNumMatObject = 0;					//マテリアルの情報数
@@ -61,6 +64,9 @@ CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, o
 	{// 当たり判定用ボックスの角８つの頂点座標
 		m_aVtxCornerPos[nCntCorner] = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	}
+	m_bTexMat = false;
+	m_pShaderMeshTextures = NULL;
+	m_pToonShader = NULL;
 }
 //===============================================================================
 //　デストラクタ
@@ -100,14 +106,48 @@ HRESULT CModel3D::Init(void)
 	}
 
 	//変数の初期化
-	m_bUpdate = true;			// アップデートを通すかどうか
-	m_bUpdateBlow = true;		// 吹っ飛ばす処理をするかどうか
-	m_bBlow = false;			// 吹っ飛ばしたかどうか
-	m_bDelete = false;			// 破棄するかどうか
-	m_nCountTime = 0;			// カウンター
-	m_bSmallObjDraw = false;	// 小さいオブジェクトの描画フラグ
-	m_bHightObjDraw = false;	// 高いオブジェクトの描画フラグ
-	m_bOnlyLengthDraw = false;	// 描画距離だけを求めるオブジェクトフラグ
+	m_bUpdate = true;				// アップデートを通すかどうか
+	m_bUpdateBlow = true;			// 吹っ飛ばす処理をするかどうか
+	m_bBlow = false;				// 吹っ飛ばしたかどうか
+	m_bDelete = false;				// 破棄するかどうか
+	m_nCountTime = 0;				// カウンター
+	m_bSmallObjDraw = false;		// 小さいオブジェクトの描画フラグ
+	m_bHightObjDraw = false;		// 高いオブジェクトの描画フラグ
+	m_bOnlyLengthDraw = false;		// 描画距離だけを求めるオブジェクトフラグ
+
+	m_pToonShader = NULL;			// シェーダーのポインタの初期化
+	m_pMeshMaterials = NULL;		// シェーダー用のメッシュマテリアル
+	m_pShaderMeshTextures = NULL;	// シェーダー用のメッシュテクスチャ
+		
+	//===================================================
+	//    　　　　　マテリアルとテクスチャの情報
+	//===================================================
+	D3DXMATERIAL *d3dxMaterials = (D3DXMATERIAL*)m_pBuffMatObject->GetBufferPointer();
+	m_pMeshMaterials = new D3DMATERIAL9[(int)m_nNumMatObject];
+	m_pShaderMeshTextures = new LPDIRECT3DTEXTURE9[(int)m_nNumMatObject];
+
+	for (DWORD MatCount = 0; MatCount < (int)m_nNumMatObject; MatCount++)
+	{
+		m_pMeshMaterials[MatCount] = d3dxMaterials[MatCount].MatD3D;
+		m_pMeshMaterials[MatCount].Ambient = m_pMeshMaterials[MatCount].Diffuse;
+		m_pShaderMeshTextures[MatCount] = NULL;
+
+		if (d3dxMaterials[MatCount].pTextureFilename != NULL &&
+			lstrlen(d3dxMaterials[MatCount].pTextureFilename) > 0)
+		{
+			D3DXCreateTextureFromFile(pDevice,
+				d3dxMaterials[MatCount].pTextureFilename,
+				&m_pShaderMeshTextures[MatCount]);
+		}
+	}
+
+	//シェーダーの読み込むファイル
+	if (m_pToonShader == NULL)
+	{
+		m_pToonShader = new CToonShader;
+		m_pToonShader->Init("ToonShader.fx");
+	}
+
 	return S_OK;
 }
 
@@ -116,6 +156,26 @@ HRESULT CModel3D::Init(void)
 //=============================================================================
 void CModel3D::Uninit(void)
 {
+	//シェーダー残骸消すもの
+	if (m_pShaderMeshTextures != NULL)
+	{
+		delete[] m_pShaderMeshTextures;
+		m_pShaderMeshTextures = NULL;
+	}
+	if (m_pMeshMaterials != NULL)
+	{
+		delete[] m_pMeshMaterials;
+		m_pMeshMaterials = NULL;
+	}
+
+	//シェーダーのポインタの破棄
+	if (m_pToonShader != NULL)
+	{
+		m_pToonShader->Uninit();
+		delete m_pToonShader;
+		m_pToonShader = NULL;
+	}
+
 	CScene::Release();
 }
 
@@ -210,92 +270,205 @@ void CModel3D::Draw(void)
 	D3DXMATRIX mtxRot, mtxTrans, mtxSpin, mtxScale;	//計算用マトリックス
 	D3DMATERIAL9 matDef;							//現在のマテリアルを保存
 	D3DXMATERIAL *pMat;								//マテリアルデータへのポインタ
+	LPD3DXEFFECT Shader = NULL;						//シェーダー
+	CGameCamera *pCamera = NULL;					//カメラのポイント
 
-													// ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorldObject);
-
-	// 回転を反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_Rot.y, m_Rot.x, m_Rot.z);
-	D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxRot);
-
-	// クォータニオン
-	D3DXQuaternionRotationAxis(&m_quat, &m_VecAxis, m_fValueRot);
-
-	// クォータニオンから回転行列
-	D3DXMatrixRotationQuaternion(&mtxSpin, &m_quat);
-
-	// ローカルで出た値を保存
-	m_mtxRot = mtxSpin;
-
-	// 掛け合わせる
-	D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &m_mtxRot);
-
-	// 拡大縮小行列の作成
-	D3DXMatrixScaling(&mtxScale, m_Scale.x, m_Scale.y, m_Scale.z);
-	D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxScale);
-
-	// 位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_Pos.x, m_Pos.y, m_Pos.z);
-	D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxTrans);
-
-	// ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorldObject);
-
-	if (m_pBuffMatObject != NULL)
+													////カメラのポインタに情報を代入
+	if (pCamera == NULL)
 	{
-		// 現在のマテリアルを取得
-		pDevice->GetMaterial(&matDef);
-
-		// マテリアルデータへのポインタを取得
-		pMat = (D3DXMATERIAL*)m_pBuffMatObject->GetBufferPointer();
-		float fcol_a;
-		float fcol_r;
-		float fcol_g;
-		float fcol_b;
-
-		for (int nCntMat = 0; nCntMat < (int)m_nNumMatObject; nCntMat++)
+		switch (CManager::GetMode())
 		{
-			if (m_bcolChange == true)
-			{	// カラー変更(透明度)
-				fcol_a = pMat[nCntMat].MatD3D.Diffuse.a;
-				pMat[nCntMat].MatD3D.Diffuse.a = m_col.a;
-				fcol_r = pMat[nCntMat].MatD3D.Diffuse.r;
-				pMat[nCntMat].MatD3D.Diffuse.r = m_col.r;
-				fcol_g = pMat[nCntMat].MatD3D.Diffuse.g;
-				pMat[nCntMat].MatD3D.Diffuse.g = m_col.g;
-				fcol_b = pMat[nCntMat].MatD3D.Diffuse.b;
-				pMat[nCntMat].MatD3D.Diffuse.b = m_col.b;
-			}
-
-			//マテリアルの設定
-			pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
-
-			if (pMat[nCntMat].pTextureFilename != NULL)
+		case CManager::MODE_TITLE:
+			break;
+		case CManager::MODE_GAME:
+			switch (CGame::GetGameMode())
 			{
-				//テクスチャがある場合
-				pDevice->SetTexture(0, m_pMeshTextures);
+			case CGame::GAMEMODE_CHARSELECT:
+			case CGame::GAMEMODE_COURSESELECT:
+			case CGame::GAMEMODE_COURSE_VIEW:
+				pCamera = CGame::GetCourseCamera();
+				break;
+			case CGame::GAMEMODE_PLAY:
+				int nNum = CGame::GetCameraNumber();
+				//nNum = 1;
+				if (nNum == 0)
+					pCamera = CGame::GetGameCamera(nNum);
+				else
+					pCamera = CGame::GetGameCamera(nNum);
+				break;
 			}
-			else
-			{	// テクスチャを使っていない
-				pDevice->SetTexture(0, NULL);
-			}
-			//オブジェクト(パーツ)の描画
-			m_pMeshObject->DrawSubset(nCntMat);
 
-			// カラー変更
-			if (m_bcolChange == true)
-			{
-				pMat[nCntMat].MatD3D.Diffuse.a = fcol_a;
-				pMat[nCntMat].MatD3D.Diffuse.r = fcol_r;
-				pMat[nCntMat].MatD3D.Diffuse.g = fcol_g;
-				pMat[nCntMat].MatD3D.Diffuse.b = fcol_b;
-			}
+			break;
 		}
+	}
 
-		// マテリアルをデフォルトに戻す
-		pDevice->SetMaterial(&matDef);
+	//シェーダーに情報を代入
+	if (m_pToonShader != NULL)
+	{
+		Shader = m_pToonShader->GetShader();
+	}
 
-		m_bcolChange = false;	// 変更終了
+	//シェーダーの中身がある場合
+	if (Shader != NULL)
+	{
+		LPDIRECT3DTEXTURE9 ShaderTex = m_pToonShader->GetTexture();
+		LPDIRECT3DTEXTURE9 LineTex = m_pToonShader->GetLineTexture();
+
+		// ワールドマトリックスの初期化
+		D3DXMatrixIdentity(&m_mtxWorldObject);
+
+		// 回転を反映
+		D3DXMatrixRotationYawPitchRoll(&mtxRot, m_Rot.y, m_Rot.x, m_Rot.z);
+		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxRot);
+
+		// クォータニオン
+		D3DXQuaternionRotationAxis(&m_quat, &m_VecAxis, m_fValueRot);
+
+		// クォータニオンから回転行列
+		D3DXMatrixRotationQuaternion(&mtxSpin, &m_quat);
+
+		// ローカルで出た値を保存
+		m_mtxRot = mtxSpin;
+
+		// 掛け合わせる
+		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &m_mtxRot);
+
+		// 拡大縮小行列の作成
+		D3DXMatrixScaling(&mtxScale, m_Scale.x, m_Scale.y, m_Scale.z);
+		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxScale);
+
+		// 位置を反映
+		D3DXMatrixTranslation(&mtxTrans, m_Pos.x, m_Pos.y, m_Pos.z);
+		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxTrans);
+
+		//拡大処理
+		m_mtxWorldObject._44 = (1.0f / 1.0f);
+		m_mtxWorldObject._41 *= m_mtxWorldObject._44;
+		m_mtxWorldObject._42 *= m_mtxWorldObject._44;
+		m_mtxWorldObject._43 *= m_mtxWorldObject._44;
+
+		// ワールドマトリックスの設定
+		pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorldObject);
+
+		//===================================================
+		//    　　　　　　シェーダーの情報設定
+		//===================================================
+			//テクニックの設定
+		Shader->SetTechnique("ToonShading");
+
+		//マトリックスを渡す
+		D3DXMATRIX mtxView = pCamera->GetViewMatrix();
+		D3DXMATRIX mtxProjection = pCamera->GetProjectionMatrix();
+		D3DXVECTOR3 ViewPosV = pCamera->GetCameraPosV();
+
+		//シェーダーにマトリックスを渡す
+		Shader->SetMatrix("matProj", &mtxProjection);
+		Shader->SetMatrix("matView", &mtxView);
+		Shader->SetMatrix("matWorld", &m_mtxWorldObject);
+
+		//テクスチャの割り当て
+		Shader->SetTexture("ShadeTexture", ShaderTex);
+		Shader->SetTexture("LineTexture", LineTex);
+
+		Shader->SetVector("EyePos", (D3DXVECTOR4*)&ViewPosV);
+
+		//シェーダ開始
+		Shader->Begin(NULL, 0);
+
+		if (m_pBuffMatObject != NULL)
+		{
+			// 現在のマテリアルを取得
+			pDevice->GetMaterial(&matDef);
+
+			// マテリアルデータへのポインタを取得
+			pMat = (D3DXMATERIAL*)m_pBuffMatObject->GetBufferPointer();
+			float fcol_a;
+			float fcol_r;
+			float fcol_g;
+			float fcol_b;
+
+			for (int nCntMat = 0; nCntMat < (int)m_nNumMatObject; nCntMat++)
+			{
+				//シェーダのデータにモデルのテクスチャを入れる
+				m_pShaderMeshTextures[nCntMat] = m_pMeshTextures;
+
+				if (m_bcolChange == true)
+				{// カラー変更(透明度)
+					fcol_a = pMat[nCntMat].MatD3D.Diffuse.a;
+					pMat[nCntMat].MatD3D.Diffuse.a = m_col.a;
+					fcol_r = pMat[nCntMat].MatD3D.Diffuse.r;
+					pMat[nCntMat].MatD3D.Diffuse.r = m_col.r;
+					fcol_g = pMat[nCntMat].MatD3D.Diffuse.g;
+					pMat[nCntMat].MatD3D.Diffuse.g = m_col.g;
+					fcol_b = pMat[nCntMat].MatD3D.Diffuse.b;
+					pMat[nCntMat].MatD3D.Diffuse.b = m_col.b;
+				}
+
+				//マテリアルの設定
+				pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
+
+				//テクスチャがある場合
+				pDevice->SetTexture(0, m_pShaderMeshTextures[nCntMat]);
+
+				// カラー変更
+				if (m_bcolChange == true)
+				{
+					pMat[nCntMat].MatD3D.Diffuse.a = fcol_a;
+					pMat[nCntMat].MatD3D.Diffuse.r = fcol_r;
+					pMat[nCntMat].MatD3D.Diffuse.g = fcol_g;
+					pMat[nCntMat].MatD3D.Diffuse.b = fcol_b;
+				}
+
+				//===================================================
+				//    　　　　シェーダーの割り当て作業
+				//===================================================
+
+				if (m_nType != 3 && m_nType != 4)
+				{
+					//パスを指定して開始
+					Shader->BeginPass(0);
+
+					//シェーダーテクスチャの有無に応じてシェーダーをつける
+					if (m_pShaderMeshTextures[nCntMat] != NULL)
+					{
+						//テクスチャがある場合
+						m_bTexMat = true;
+						//シェーダーにboolの情報を渡す
+						Shader->SetBool("TexMat", m_bTexMat);
+					}
+					else if (m_pShaderMeshTextures[nCntMat] == NULL)
+					{
+						//テクスチャがない場合
+						m_bTexMat = false;
+						//シェーダーにboolの情報を渡す
+						Shader->SetBool("TexMat", m_bTexMat);
+					}
+
+					//オブジェクトのテクスチャ
+					Shader->SetTexture("DecalTexture", m_pShaderMeshTextures[nCntMat]);
+
+					//プロパティー名,NameID,設定する配列の値
+					Shader->SetFloatArray("Diffuse", (FLOAT*)&m_pMeshMaterials[nCntMat].Diffuse, 4);
+
+					//変更を基になるディレクトリ ストアに保存
+					Shader->CommitChanges();
+				}
+
+				//オブジェクト(パーツ)の描画
+				m_pMeshObject->DrawSubset(nCntMat);
+
+				//パスの終了
+				Shader->EndPass();
+			}
+
+			// マテリアルをデフォルトに戻す
+			pDevice->SetMaterial(&matDef);
+
+			m_bcolChange = false;	// 変更終了
+
+		}
+		//シェーダの終了
+		Shader->End();
 	}
 }
 //===============================================================================
@@ -432,7 +605,7 @@ D3DXVECTOR3 CModel3D::BlowOff(D3DXVECTOR3 pos, D3DXVECTOR3 move, float fHeavy)
 		D3DXVECTOR3 newV1, newV2;		// 衝突後の速度
 		float fElast = 1.0f;			// 弾性係数
 
-		// 相手の速度
+										// 相手の速度
 		newV1.x = (-move.x + m_Move.x) * (1.0f + fElast) / (fHeavy / m_fMass + 1.0f) + move.x;
 		newV1.z = (-move.z + m_Move.z) * (1.0f + fElast) / (fHeavy / m_fMass + 1.0f) + move.z;
 
@@ -474,7 +647,7 @@ bool CModel3D::Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin
 	D3DXVECTOR3 vtxMaxObject = D3DXVECTOR3(m_mtxWorldObject._41, m_mtxWorldObject._42, m_mtxWorldObject._43);	// ワールド座標の取得
 	D3DXVECTOR3 vtxMinObject = D3DXVECTOR3(m_mtxWorldObject._41, m_mtxWorldObject._42, m_mtxWorldObject._43);	// ワールド座標の取得
 
-	// 頂点座標の最大値を求める
+																												// 頂点座標の最大値を求める
 	vtxMaxObject.x += m_VtxMaxModel.x * m_scale.x;
 	vtxMaxObject.y += m_VtxMaxModel.y * m_scale.y;
 	vtxMaxObject.z += m_VtxMaxModel.z * m_scale.z;
@@ -599,7 +772,7 @@ void CModel3D::Landing(D3DXVECTOR3 posOld)
 {
 	if (m_bBlow)
 	{// 動いたとき
-	//プライオリティーチェック
+	 //プライオリティーチェック
 		CScene *pScene = CScene::GetTop(MESH_PRIOTITY);
 
 		//NULLチェック

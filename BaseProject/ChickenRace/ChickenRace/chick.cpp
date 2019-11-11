@@ -29,6 +29,10 @@
 #define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(30.0f)		// ひよこが飛んでくスピード
 #define ANNOY_RANGE				(200.0f)	// 減速させる範囲
+#define CHICK_JUMP				(6.5f)		// ジャンプ力
+#define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
+#define CHICK_FALL_NUM			(5)			// 落ちてくるひよこの数
+#define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -53,6 +57,7 @@ DWORD CChick::m_nNumMatModel = NULL;							//マテリアルの情報数
 LPDIRECT3DTEXTURE9 CChick::m_pMeshTextures = NULL;
 D3DXVECTOR3 CChick::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 D3DXVECTOR3 CChick::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+int CChick::m_nChickTimer = 0;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -60,14 +65,16 @@ D3DXVECTOR3 CChick::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 CChick::CChick() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 {
 	m_scale = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	// 大きさ
+	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	m_fDestAngle = 0.0f;
-	m_fDiffAngle = 0.0f;
+	m_fDestAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fDiffAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fHeight = 0.0f;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nDisTimer = 0;
+	m_DestRank = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -77,7 +84,7 @@ CChick::~CChick() {}
 //===============================================================================
 //　生成
 //===============================================================================
-CChick * CChick::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYPE type, BULLETTYPE bulletType, int nNumPlayer)
+CChick * CChick::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYPE type, BULLETTYPE bulletType, STATE state, int nNumPlayer)
 {
 	CChick *pChick = NULL;
 
@@ -104,10 +111,13 @@ CChick * CChick::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYP
 			pChick->Init();
 			// 位置を代入
 			pChick->SetPosition(pos);
+			pChick->m_pos = pos;
 			// 回転を反映
 			pChick->SetRot(rot);
 			// 何位の卵か
 			pChick->m_nNumPlayer = nNumPlayer;
+			// 状態の設定
+			pChick->m_state = state;
 		}
 	}
 
@@ -137,14 +147,19 @@ HRESULT CChick::Init(void)
 	m_pObjBill = NULL;
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fHeight = 0.0f;
-	m_fDestAngle = 0.0f;
-	m_fDiffAngle = 0.0f;
+	m_fDestAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fDiffAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_bJump = false;
 	m_bDis = true;
 	m_state = STATE_NORMAL;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nDisTimer = 0;
+	m_DestRank = -1;
+	m_nChickTimer = 0;
+	m_bAttackS = false;
+
 	return S_OK;
 }
 
@@ -165,13 +180,20 @@ void CChick::Uninit(void)
 //=============================================================================
 void CChick::Update(void)
 {
+	m_pos = CModel3D::GetPosition();
 	// ひよこの動き
 	Move();
+
+	CModel3D::SetPosition(m_pos);
+	CModel3D::SetRot(m_rot);
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
 
 	if (CModel3D::GetDelete() == true) { Uninit(); }
+
+	CDebugProc::Print("%.1f : %.1f : %.1f\n", m_move.x, m_move.y, m_move.z);
+	CDebugProc::Print("%.1f\n", m_rot.y);
 }
 //=============================================================================
 // 描画処理
@@ -200,6 +222,18 @@ void CChick::Draw(void)
 	else if (m_type == TYPE_SPEED)
 	{
 		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
+	}
+	else if (m_type == TYPE_ATTACK_S)
+	{
+		CModel3D::Setcol(D3DXCOLOR(1.0f, 0.0f, 1.0f, 1.0f));
+	}
+	else if (m_type == TYPE_ANNOY_S)
+	{
+		CModel3D::Setcol(D3DXCOLOR(0.0f, 1.0f, 1.0f, 1.0f));
+	}
+	else if (m_type == TYPE_SPEED_S)
+	{
+		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
 	//描画処理
@@ -314,12 +348,10 @@ void CChick::UnLoad(void)
 //===============================================================================
 void CChick::Move(void)
 {
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
-
 	// 使ったとき
-	pos = Item(pos);
+	Item();
 
-	if (m_type != TYPE_ANNOY || m_state != STATE_BULLET)
+	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{
 		m_move.y -= cosf(0) * 0.4f;
 		m_fHeight += m_move.y;
@@ -327,14 +359,13 @@ void CChick::Move(void)
 		// 高さを設定
 		SetHeight();
 
-		pos.y = m_fHeight;
+		m_pos.y = m_fHeight;
+
 	}
 
-	pos.x += m_move.x;
-	pos.z += m_move.z;
-
-	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(D3DXVECTOR3(pos.x, pos.y + 15.0f, pos.z));
+	m_pos.x += m_move.x;
+	m_pos.y += m_move.y;
+	m_pos.z += m_move.z;
 
 	if (m_bDis == false)
 	{
@@ -347,17 +378,19 @@ void CChick::Move(void)
 		}
 	}
 
-	CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+
+	CDebugProc::Print("%.1f\n", m_pos.y);
 }
 
 //===============================================================================
 // ひよこを使用したときの動き
 //===============================================================================
-D3DXVECTOR3 CChick::Item(D3DXVECTOR3 pos)
+void CChick::Item(void)
 {
 	if (m_state == STATE_BULLET)
 	{// 弾の状態の時
 		float fHeight = 0.0f;
+		CPlayer **pPlayer = NULL;
 
 		switch (m_type)
 		{
@@ -367,18 +400,23 @@ D3DXVECTOR3 CChick::Item(D3DXVECTOR3 pos)
 
 			// 減速させる
 		case TYPE_ANNOY:
-			CPlayer **pPlayer = NULL;
 			pPlayer = CGame::GetPlayer();
 
-			pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 50.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 100.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+
+			break;
+
+			// 減速させる(強い)
+		case TYPE_ANNOY_S:
+			/*pPlayer = CGame::GetPlayer();
+
+			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 100.0f, pPlayer[m_nNumPlayer]->GetPos().z);*/
 
 			break;
 		}
 		// 飛んでく動き
 		Bullet();
 	}
-
-	return pos;
 }
 
 //===============================================================================
@@ -408,6 +446,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		fDepth = ANNOY_RANGE;
 	}
 
+#if(1)
 	if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
 	{// Zの範囲内にいる
 		if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
@@ -431,6 +470,8 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	// 位置の代入
 	CModel3D::SetPosition(ModelPos);
 
+#endif
+
 	return bHit;
 }
 
@@ -443,8 +484,6 @@ float CChick::SetHeight(void)
 
 	CScene *pScene = CScene::GetTop(MESH_PRIOTITY);
 
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
-
 	//NULLチェック
 	while (pScene != NULL)
 	{
@@ -455,20 +494,20 @@ float CChick::SetHeight(void)
 		{//タイプが地面だったら
 			CMeshField *pField = (CMeshField*)pScene;
 
-			if (pField->OnField(pos, 0.0f))
+			if (pField->OnField(m_pos, 0.0f))
 			{// 傾斜の計算
 				fHeight = pField->GetHeightMesh(CModel3D::GetPosition());
 
 				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
 				{
-					m_fHeight = fHeight;				//地面の高さを取得
+					m_fHeight = fHeight + 15.0f;				//地面の高さを取得
 					m_move.y = 0.0f;					//移動量を初期化する
 
 														//ジャンプの状態設定
 					m_bJump = false;
 
 					CModel3D::SetMove(m_move);
-					CModel3D::SetPosition(D3DXVECTOR3(pos.x, fHeight, pos.z));
+					CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_fHeight, m_pos.z));
 
 					break;
 				}
@@ -490,7 +529,7 @@ void CChick::Jump(void)
 	if (m_bJump == false)
 	{// ジャンプしていない
 		m_bJump = true;
-		m_move.y += 5.5f;
+		m_move.y += CHICK_JUMP;
 	}
 
 	CModel3D::SetMove(m_move);
@@ -503,89 +542,28 @@ void CChick::Bullet(void)
 {
 	if (m_bulletType == BULLETTYPE_PLAYER)
 	{
-		if (m_type == TYPE_ATTACK)
-		{//タイプが敵だったら
-		 // 1つ前のプレイヤーに飛んでいく
-			CPlayer **pPlayer = CGame::GetPlayer();
-			D3DXVECTOR3 pos = CModel3D::GetPosition();
-
-			int nRank = m_nRank - 1;
-			int nCntChar = 0;
-
-			if (nRank >= 0)
-			{
-				for (nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
-				{// ひとつ前の順位のやつを見つける
-					int nData = CGame::GetRanking(nCntChar);
-
-					if (nRank == nData)
-					{
-						break;
-					}
-				}
-
-				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer[nCntChar]->GetPos().x - pos.x, pPlayer[nCntChar]->GetPos().z - pos.z);
-
-				// 差分
-				m_fDiffAngle = m_fDestAngle - m_rot.y;
-
-				AdjustAngle(m_fDiffAngle);
-
-				m_rot.y += m_fDiffAngle * 0.5f;
-
-				AdjustAngle(m_rot.y);
-			}
-
-			//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-			m_move.x = sinf(m_rot.y) * CHICK_SPEED;
-			m_move.z = cosf(m_rot.y) * CHICK_SPEED;
-
-			m_rot.x = D3DX_PI * 0.5f;
-
-			CModel3D::SetRot(m_rot);
-		}
-	}
-	else if (m_bulletType == BULLETTYPE_ENEMY)
-	{
-		CScene *pScene = CScene::GetTop(3);
-
-		D3DXVECTOR3 pos = CModel3D::GetPosition();
-		m_rot = CModel3D::GetRot();
-
-		//NULLチェック
-		while (pScene != NULL)
+		switch (m_type)
 		{
-			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-			CScene *pSceneNext = pScene->GetNext();
+			// 攻撃ひよこ
+		case TYPE_ATTACK:
+			// 1つ前のプレイヤーに飛んでいく
+			Attack();
+			break;
 
-			if (pScene->GetObjType() == CScene::OBJTYPE_PLAYER && m_type == TYPE_ATTACK)
-			{//タイプが敵だったら
-				CPlayer *pPlayer = (CPlayer*)pScene;
+			// 強い攻撃ひよこ
+		case TYPE_ATTACK_S:
+			// 1位に全体攻撃
+			AttackS();
+			break;
 
-				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer->GetPos().x - pos.x, pPlayer->GetPos().z - pos.z);
-
-				// 差分
-				m_fDiffAngle = m_fDestAngle - m_rot.y;
-
-				AdjustAngle(m_fDiffAngle);
-
-				m_rot.y += m_fDiffAngle * 0.05f;
-
-				AdjustAngle(m_rot.y);
-
-				//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-				m_move.x = sinf(m_rot.y) * CHICK_SPEED;
-				m_move.z = cosf(m_rot.y) * CHICK_SPEED;
-
-				m_rot.x = D3DX_PI * 0.5f;
-			}
-			//Nextに次のSceneを入れる
-			pScene = pSceneNext;
+			// 強い減速ひよこ
+		case TYPE_ANNOY_S:
+			// 1位に全体攻撃
+			AnnoyS();
+			break;
 		}
-		CModel3D::SetRot(m_rot);
 	}
+
 }
 
 //=============================================================================
@@ -600,5 +578,113 @@ void CChick::AdjustAngle(float rot)
 	if (rot < -D3DX_PI)
 	{
 		rot += D3DX_PI * 2.0f;
+	}
+}
+
+//=============================================================================
+// 攻撃ひよこ
+//=============================================================================
+void CChick::Attack(void)
+{
+	CPlayer **pPlayer = CGame::GetPlayer();
+
+	if (m_DestRank >= 0)
+	{
+		// 目的の角度
+		m_fDestAngle.y = atan2f(pPlayer[m_DestRank]->GetPos().x - m_pos.x, pPlayer[m_DestRank]->GetPos().z - m_pos.z);
+
+		// 差分
+		m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
+
+		AdjustAngle(m_fDiffAngle.y);
+
+		m_rot.y += m_fDiffAngle.y * 0.5f;
+
+		AdjustAngle(m_rot.y);
+
+		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+		m_move.x = sinf(m_rot.y) * CHICK_SPEED;
+		m_move.z = cosf(m_rot.y) * CHICK_SPEED;
+	}
+	else
+	{
+		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
+		m_move.x = sinf(m_rot.y) * CHICK_SPEED;
+		m_move.z = cosf(m_rot.y) * CHICK_SPEED;
+	}
+
+	CModel3D::SetRot(m_rot);
+}
+
+//=============================================================================
+// 攻撃ひよこ(強い)
+//=============================================================================
+void CChick::AttackS(void)
+{
+	CPlayer **pPlayer = CGame::GetPlayer();
+
+	if (m_nRank != 0)
+	{
+		if (m_bAttackS == false)
+		{// 上がっていく
+			m_move.x = pPlayer[m_nNumPlayer]->GetMove().x;
+			m_move.y = 5.0f;
+			m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
+
+			if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 300.0f)
+			{// 隕石になるタイミング
+				int fx = rand() % FALL_CHICK_RANGE;
+				int fz = rand() % FALL_CHICK_RANGE;
+
+				m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + ((FALL_CHICK_RANGE / 2) - fx),
+					pPlayer[m_DestRank]->GetPos().y + 300.0f,
+					pPlayer[m_DestRank]->GetPos().z + ((FALL_CHICK_RANGE / 2) - fz));
+				m_bAttackS = true;
+			}
+		}
+		else
+		{
+			m_nChickTimer++;
+
+			if (m_nChickTimer > CHICK_FALL_TIME)
+			{
+				if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
+				{// 5匹まで出す
+				 // 落ちるひよこ出現
+					pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
+						(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().x,
+						pPlayer[m_DestRank]->GetPos().y,
+						(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().z));
+				}
+
+				m_nChickTimer = 0;
+			}
+
+			// 移動量を設定
+			m_move.y = -CHICK_FALL_SPEED;
+
+			if (m_pos.y < -200.0f)
+			{// ある程度下に行ったら消す
+				Uninit();
+			}
+		}
+	}
+
+	CDebugProc::Print("%d\n", m_nChickTimer);
+
+	CModel3D::SetRot(m_rot);
+}
+
+//=============================================================================
+// 減速ひよこ(強い)
+//=============================================================================
+void CChick::AnnoyS(void)
+{
+	CPlayer **pPlayer = CGame::GetPlayer();
+
+	if (m_bAttackS == false)
+	{
+		pPlayer[m_nNumPlayer]->AnnoyChicks();
+		m_bAttackS = true;
 	}
 }

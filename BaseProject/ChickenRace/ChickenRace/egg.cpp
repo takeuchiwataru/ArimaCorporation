@@ -20,6 +20,10 @@
 //*****************************************************************************
 #define EGG_NAME_000	"data\\MODEL\\Weapon\\egg.x"			// 読み込むモデルファイル
 
+#define TEXTURE_EGG_1	"data\\TEXTURE\\modeltex\\egg02.jpg"	//読み込むテクスチャファイル
+#define TEXTURE_EGG_2	"data\\TEXTURE\\modeltex\\egg00.jpg"	//読み込むテクスチャファイル
+#define TEXTURE_EGG_3	"data\\TEXTURE\\modeltex\\egg01.jpg"	//読み込むテクスチャファイル
+
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define PLAYER_HEIGHT			(100.0f)	// プレイヤーの背の高さ
@@ -49,7 +53,7 @@
 LPD3DXMESH CEgg::m_pMeshModel = NULL;						//メッシュ情報へのポインタ
 LPD3DXBUFFER CEgg::m_pBuffMatModel = NULL;					//マテリアルの情報へのポインタ
 DWORD CEgg::m_nNumMatModel = NULL;							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CEgg::m_pMeshTextures = NULL;
+LPDIRECT3DTEXTURE9 CEgg::m_pMeshTextures[MAX_EGG_TEXTURE] = {};
 D3DXVECTOR3 CEgg::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 D3DXVECTOR3 CEgg::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
@@ -89,7 +93,7 @@ CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE
 		if (pEgg != NULL)
 		{
 			// 種類の設定
-			pEgg->BindModel(m_pMeshModel, m_pBuffMatModel, m_nNumMatModel, m_pMeshTextures,
+			pEgg->BindModel(m_pMeshModel, m_pBuffMatModel, m_nNumMatModel, m_pMeshTextures[eggType],
 				m_VtxMaxModel, m_VtxMinModel);
 			// サイズを代入
 			pEgg->m_scale = scale;
@@ -307,6 +311,12 @@ HRESULT CEgg::Load(void)
 	//頂点バッファのアンロック
 	m_pMeshModel->UnlockVertexBuffer();
 
+
+	//使っているテクスチャ
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_1, &m_pMeshTextures[0]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_2, &m_pMeshTextures[1]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_3, &m_pMeshTextures[2]);
+
 	return S_OK;
 }
 
@@ -329,10 +339,14 @@ void CEgg::UnLoad(void)
 	}
 
 	//テクスチャ
-	if (m_pMeshTextures != NULL)
+	for (int nCntTex = 0; nCntTex < MAX_EGG_TEXTURE; nCntTex++)
 	{
-		m_pMeshTextures->Release();
-		m_pMeshTextures = NULL;
+		//テクスチャ
+		if (m_pMeshTextures[nCntTex] != NULL)
+		{
+			m_pMeshTextures[nCntTex]->Release();
+			m_pMeshTextures[nCntTex] = NULL;
+		}
 	}
 }
 
@@ -359,7 +373,7 @@ D3DXVECTOR3 CEgg::Item(D3DXVECTOR3 pos)
 
 			pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y, pPlayer[m_nNumPlayer]->GetPos().z);
 
-			m_scale = D3DXVECTOR3(15.0f, 15.0f, 15.0f);
+			m_scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
 
 			m_rot.z = D3DX_PI * 0.5f;
 

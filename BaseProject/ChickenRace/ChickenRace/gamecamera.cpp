@@ -1,7 +1,7 @@
 //=============================================================================
 //
 // ゲームカメラ処理 [gamecamera.cpp]
-// Author : 佐藤安純
+// Author : 坂川詠祐
 //
 //=============================================================================
 #include "gamecamera.h"
@@ -16,10 +16,10 @@
 //===============================================================================
 //　マクロ定義
 //===============================================================================
-#define MOVE_CAMERA		(500.0f)							//カメラの移動量
+#define MOVE_CAMERA		(200.0f)							//カメラの移動量
 #define MOVE_ANGLE		(0.06f)								//カメラ角度の移動量
-#define HIGHT_V			(130.0f)							//視点の高さ
-#define HIGHT_R			(60.0f)								//注視点の高さ
+#define HIGHT_V			(50.0f)								//視点の高さ
+#define HIGHT_R			(30.0f)								//注視点の高さ
 
 //===============================================================================
 //　コンストラクタ
@@ -87,7 +87,10 @@ void CGameCamera::UpdateCourse(void)
 	int nGameCounter = CGame::GetGameCounter();
 	int nCount = nGameCounter;
 
-	if (nGameCounter < CUORSE_VIEW_TIPE_0)
+	m_posR = D3DXVECTOR3(-150.0f, -30.0f, 0.0f);
+	m_posV = D3DXVECTOR3(500.0f, 80.0f, -1.0f);
+
+	/*if (nGameCounter < CUORSE_VIEW_TIPE_0)
 	{// 1回目
 		nCount = nGameCounter;
 
@@ -129,7 +132,7 @@ void CGameCamera::UpdateCourse(void)
 		{
 			m_posV = D3DXVECTOR3(0.0f, 200.0f, -800.0f + (-2.0f * nCount));
 		}
-	}
+	}*/
 
 	if (nGameCounter == CUORSE_VIEW_TIME)
 		CFade::Create(CGame::GAMEMODE_PLAY);

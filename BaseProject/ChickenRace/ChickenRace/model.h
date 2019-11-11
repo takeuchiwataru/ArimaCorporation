@@ -8,6 +8,7 @@
 #define _MODEL_H_
 
 #include "main.h"
+#include "toonshader.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -46,17 +47,22 @@ public://誰でも扱える
 
 protected://派生クラスでも使える
 	void CreateXFile(char FileName[40]);						//Xファイルの生成
+	D3DMATERIAL9				*m_pMeshMaterials;
 	LPD3DXMESH					m_pMesh;						//メッシュ情報へのポインタ
 	LPD3DXBUFFER				m_pBuffMat;						//マテリアルの情報へのポインタ
 	DWORD						m_nNumMat;						//マテリアルの情報数
 	LPDIRECT3DTEXTURE9			m_pTextures;					//テクスチャ
+	LPDIRECT3DTEXTURE9			*m_pShaderMeshTextures;			//シェーダー用
 	D3DXMATRIX					m_mtxWorld;						//ワールドマトリックス
-	D3DXVECTOR3					m_VtxMin,m_VtxMax;				//モデルの最小値・最大値
+	D3DXVECTOR3					m_VtxMin, m_VtxMax;				//モデルの最小値・最大値
 	D3DXVECTOR3					m_Pos;							//位置
 	D3DXVECTOR3					m_Rot;							//向き
 	D3DXVECTOR3					m_FirstPos;						//初期位置
 	D3DXVECTOR3					m_Scale;						//拡大、縮小率
 	CModel						*m_pParent;						//親モデルへのポインタ
+	bool						m_bTexMat;						//シェーダーに使うテクスチャとマテリアル
+
+	CToonShader					*m_pToonShader;					//シェーダーのポインタ
 
 private://個人のみ使える
 	void SetScale(D3DXVECTOR3 Scale) { m_Scale = Scale; };

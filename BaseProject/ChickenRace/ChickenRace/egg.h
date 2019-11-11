@@ -15,11 +15,12 @@
 // マクロ定義
 //*****************************************************************************
 #define EGG_PRIOTITY	(3)
-#define EGG_SCALE		(10.0f)										//卵の大きさ
+#define EGG_SCALE		(1.0f)										//卵の大きさ
 #define EGG_RANGE		(50.0f)										// 卵とキャラクターの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEED			(1.0f)										// 加速する量
 #define MAX_EGG			(3)											//卵の最大数
+#define MAX_EGG_TEXTURE		(3)									// オブジェクトのテクスチャ数
 #define HATCHING_TIME	(600)										// 孵化するまでの時間
 #define EGGJUMP			(5.5f)										// 卵のジャンプ力
 
@@ -90,7 +91,7 @@ private:
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
 	static DWORD		m_nNumMatModel;			//マテリアルの情報数
-	static LPDIRECT3DTEXTURE9 m_pMeshTextures;	//テクスチャ情報
+	static LPDIRECT3DTEXTURE9 m_pMeshTextures[MAX_EGG_TEXTURE];	//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
 
