@@ -14,6 +14,7 @@
 #include "shadow.h"
 #include "tutorial.h"
 #include "enemy.h"
+#include "ColMesh.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -31,7 +32,6 @@
 #define ANNOY_RANGE				(200.0f)	// 減速させる範囲
 #define CHICK_JUMP				(6.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
-#define CHICK_FALL_NUM			(5)			// 落ちてくるひよこの数
 #define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
 
 //更新範囲
@@ -57,7 +57,6 @@ DWORD CChick::m_nNumMatModel = NULL;							//マテリアルの情報数
 LPDIRECT3DTEXTURE9 CChick::m_pMeshTextures = NULL;
 D3DXVECTOR3 CChick::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 D3DXVECTOR3 CChick::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-int CChick::m_nChickTimer = 0;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -66,15 +65,19 @@ CChick::CChick() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 {
 	m_scale = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	// 大きさ
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_posOld = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fDestAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fDiffAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fHeight = 0.0f;
+	m_fLength = 0.0f;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nDisTimer = 0;
 	m_DestRank = 0;
+	m_nMap = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -134,12 +137,6 @@ HRESULT CChick::Init(void)
 	//3DモデルのInit
 	CModel3D::Init();
 
-	// 位置の初期化
-	D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-
-	//位置の代入
-	CModel3D::SetPosition(pos);
-
 	// 各種情報の代入
 	CModel3D::SetScale(m_scale);
 
@@ -150,6 +147,9 @@ HRESULT CChick::Init(void)
 	m_fDestAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fDiffAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_posOld = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fLength = 3.0f;
 	m_bJump = false;
 	m_bDis = true;
 	m_state = STATE_NORMAL;
@@ -157,7 +157,7 @@ HRESULT CChick::Init(void)
 	m_nNumPlayer = 0;
 	m_nDisTimer = 0;
 	m_DestRank = -1;
-	m_nChickTimer = 0;
+	m_nMap = 0;
 	m_bAttackS = false;
 
 	return S_OK;
@@ -181,7 +181,9 @@ void CChick::Uninit(void)
 void CChick::Update(void)
 {
 	m_pos = CModel3D::GetPosition();
-	// ひよこの動き
+	m_posOld = m_pos;	//前回の位置を保存する
+
+						// ひよこの動き
 	Move();
 
 	CModel3D::SetPosition(m_pos);
@@ -378,6 +380,7 @@ void CChick::Move(void)
 		}
 	}
 
+	m_bJump = CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap);
 
 	CDebugProc::Print("%.1f\n", m_pos.y);
 }
@@ -644,20 +647,13 @@ void CChick::AttackS(void)
 		}
 		else
 		{
-			m_nChickTimer++;
-
-			if (m_nChickTimer > CHICK_FALL_TIME)
-			{
-				if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
-				{// 5匹まで出す
-				 // 落ちるひよこ出現
-					pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
-						(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().x,
-						pPlayer[m_DestRank]->GetPos().y,
-						(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().z));
-				}
-
-				m_nChickTimer = 0;
+			if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
+			{// 5匹まで出す
+			 // 落ちるひよこ出現
+				pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
+					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().x,
+					pPlayer[m_DestRank]->GetPos().y,
+					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 50.0f) + pPlayer[m_DestRank]->GetPos().z));
 			}
 
 			// 移動量を設定
@@ -669,8 +665,6 @@ void CChick::AttackS(void)
 			}
 		}
 	}
-
-	CDebugProc::Print("%d\n", m_nChickTimer);
 
 	CModel3D::SetRot(m_rot);
 }

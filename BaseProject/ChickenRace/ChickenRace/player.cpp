@@ -1936,13 +1936,19 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 	int fx = rand() % FALL_CHICK_RANGE;
 	int fz = rand() % FALL_CHICK_RANGE;
 
-	CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f, pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
-		D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-		CHICK_SCALE,
-		CChick::TYPE_ATTACK_S,
-		CChick::BULLETTYPE_PLAYER,
-		CChick::STATE_BULLET,
-		m_nPlayerNum);
+	for (int nCntChick = 0; nCntChick < CHICK_FALL_NUM; nCntChick++)
+	{
+		// ‚Ð‚æ‚±oŒ»
+		CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f + (nCntChick * 50.0f), pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
+			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+			CHICK_SCALE,
+			CChick::TYPE_ATTACK_S,
+			CChick::BULLETTYPE_PLAYER,
+			CChick::STATE_BULLET,
+			m_nPlayerNum);
+
+		m_nCntChick++;
+	}
 
 	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
 	{
@@ -1967,8 +1973,6 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			pScene = pSceneNext;
 		}
 	}
-
-	m_nCntChick++;
 }
 
 //=============================================================================

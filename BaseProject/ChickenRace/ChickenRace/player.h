@@ -29,6 +29,7 @@
 #define SPEEDDOWN_TIME	(300)	// Œ¸‘¬‚µ‚Ä‚¢‚éŽžŠÔ
 #define FALL_CHICK_RANGE		(400)							// ‚Ð‚æ‚±‚ª~‚é”ÍˆÍ
 #define MAX_EGG		(3)		//—‘‚ÌÅ‘å”
+#define CHICK_FALL_NUM			(5)			// —Ž‚¿‚Ä‚­‚é‚Ð‚æ‚±‚Ì”
 
 //=============================================================================
 // ‘O•ûéŒ¾
