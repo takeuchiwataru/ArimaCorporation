@@ -100,6 +100,7 @@ private:
 	static LPDIRECT3DTEXTURE9 m_pMeshTextures;	//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
+	static int			m_nChickTimer;
 	BULLETTYPE			m_bulletType;			// 弾の種類
 	TYPE				m_type;				// ひよこの種類
 	STATE				m_state;				// ひよこの状態
@@ -107,21 +108,17 @@ private:
 	D3DXVECTOR3			m_rot;					// 回転
 	CShadow				*m_pShadow;				// 影のポインタ
 	CObjBillboad *		m_pObjBill;				// オブジェクトビルボードのポインタ
+	float				m_fHeight;
 	D3DXVECTOR3			m_move;
 	D3DXVECTOR3			m_pos;
-	D3DXVECTOR3			m_posOld;
-	D3DXVECTOR3			m_fDestAngle;			// 目的の角度
-	D3DXVECTOR3			m_fDiffAngle;			// 差分
-	D3DXVECTOR3			m_FNor;					//地面の法線
-	int					m_nRank;				// 向かっていく順位
-	int					m_nNumPlayer;			// プレイヤー何が持っているひよこか
-	int					m_nDisTimer;			// 消すまでの時間
-	int					m_DestRank;				// 目的の順位
-	int					m_nMap;					//判定を取るマップ
-	float				m_fHeight;
-	float				m_fLength;				// 横幅
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bDis;					// 消すかどうか
 	bool				m_bAttackS;
+	D3DXVECTOR3			m_fDestAngle;			// 目的の角度
+	D3DXVECTOR3			m_fDiffAngle;			// 差分
+	int					m_nRank;				// 向かっていく順位
+	int					m_nNumPlayer;			// プレイヤー何が持っているひよこか
+	int					m_nDisTimer;			// 消すまでの時間
+	int					m_DestRank;			// 目的の順位
 };
 #endif

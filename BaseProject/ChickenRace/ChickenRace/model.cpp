@@ -244,27 +244,21 @@ void CModel::Draw(float fAlpha)
 	if (pCamera == NULL)
 	{
 		switch (CManager::GetMode())
-		{
+		{// モード
 		case CManager::MODE_TITLE:
 			break;
 		case CManager::MODE_GAME:
 			switch (CGame::GetGameMode())
-			{
+			{// ゲームモード
 			case CGame::GAMEMODE_CHARSELECT:
 			case CGame::GAMEMODE_COURSESELECT:
 			case CGame::GAMEMODE_COURSE_VIEW:
 				pCamera = CGame::GetCourseCamera();
 				break;
 			case CGame::GAMEMODE_PLAY:
-				int nNum = CGame::GetCameraNumber();
-				//nNum = 1;
-				if (nNum == 0)
-					pCamera = CGame::GetGameCamera(nNum);
-				else
-					pCamera = CGame::GetGameCamera(nNum);
+				pCamera = CGame::GetGameCamera(CGame::GetCameraNumber());
 				break;
 			}
-
 			break;
 		}
 	}

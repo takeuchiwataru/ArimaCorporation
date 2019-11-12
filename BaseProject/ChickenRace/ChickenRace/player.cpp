@@ -58,16 +58,16 @@
 #define EGG_HEIGHT		(40.0f)										// 卵に乗ったように見える高さ
 
 // プレイヤー情報
-#define PLAYER_ACCEL	(0.3f)										//加速値（前進）
-#define PLAYER_BRAKS	(-0.025f)									//加速値（後進）
-#define PLAYER_DOWN		(0.055f)									//減速度
-#define PLAYER_ADDROT	(0.015f)										//回転量
+#define PLAYER_ACCEL	(0.5f)										//加速値（前進）
+#define PLAYER_BRAKS	(-0.2f)										//加速値（後進）
+#define PLAYER_DOWN		(0.08f)										//減速度
+#define PLAYER_ADDROT	(0.02f)										//回転量
 
 //車体の角度
 #define SHAKE_X			(0.007f)									//X軸の揺れ
 #define INPULS_X		(0.01f)										//X軸に加える角度
 #define SHAKE_Z			(0.02f)										//Z軸の揺れ
-#define SHAKE_DRIFT		(0.005f)										//ドリフト時の角度加算
+#define SHAKE_DRIFT		(0.005f)									//ドリフト時の角度加算
 #define SHAKE_BRAK		(0.01f)										//ブレーキ時の角度
 
 //タイヤの番号
@@ -83,7 +83,7 @@
 #define JUMP_ADD_SCORE	(100)										// ジャンプ時のスコア加算量
 #define JUMP_FREAM_TIME	(25)										// ジャンプ時のスコア加算時間
 #define DRIFT_COMBO_TIME (25)										// ドリフト時のスコア加算時間
-#define THROUGH_COMBO_TIME	(1)									// すれすれ時のスコア加算時間
+#define THROUGH_COMBO_TIME	(1)										// すれすれ時のスコア加算時間
 #define DRIFT_SPACE_SMALL	(10)
 #define DRIFT_SPACE_BIG		(250)
 //=============================================================================
@@ -99,7 +99,7 @@ LPDIRECT3DTEXTURE9 CPlayer::m_pTexture = NULL;
 //=============================================================================
 // 生成処理
 //=============================================================================
-CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum, int nControllerNum)
+CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum, int nControllerNum, PLAYERTYPE playerType)
 {
 	//インスタンスの生成
 	CPlayer * pPlayer;
@@ -109,6 +109,7 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 	pPlayer->Init();
 	pPlayer->m_nPlayerNum = nPlayerNum;
 	pPlayer->m_nControllerNum = nControllerNum;
+	pPlayer->m_PlayerType = playerType;
 
 	//設定処理
 	pPlayer->Set(pos, VECTOR_ZERO);
@@ -276,7 +277,7 @@ HRESULT CPlayer::Init(void)
 
 									// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
-		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 80.0f, 0.0f), D3DXVECTOR2(25.0f, 25.0f), 0);
+		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 0);
 
 	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
 	{
@@ -389,7 +390,10 @@ void CPlayer::Update(void)
 
 	if (m_bControl)
 	{//コントロールキー
-		ControlKey();
+		if (m_PlayerType == PLAYERTYPE_PLAYER)
+			ControlKey();
+		else
+			m_rot.y += 0.01f;
 	}
 	else
 	{//ハンドルを握っていない状態にする
@@ -420,8 +424,12 @@ void CPlayer::Update(void)
 
 	if (m_pPlayerNum != NULL)
 	{
-		m_pPlayerNum->SetPosSize(m_pos + D3DXVECTOR3(0.0f, 80.0f, 0.0f), D3DXVECTOR2(25.0f, 25.0f));
-		m_pPlayerNum->SetTexture(m_nPlayerNum, 5, 1, 1);
+		m_pPlayerNum->SetPosSize(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f));
+
+		if (m_PlayerType == CPlayer::PLAYERTYPE_PLAYER)
+			m_pPlayerNum->SetTexture(m_nPlayerNum, 5, 1, 1);
+		else
+			m_pPlayerNum->SetTexture(4, 5, 1, 1);
 	}
 
 	DebugProc();		// デバック表示
@@ -1223,6 +1231,7 @@ void CPlayer::DebugProc(void)
 	*/
 	//位置表示
 	CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
+	CDebugProc::Print("移動 : X %.2f, Y %.2f, Z %.2f\n", m_move.x, m_move.y, m_move.z);
 
 	CDebugProc::Print("ジャンプ：%s\n", m_bJump ? "〇" : "×");
 
@@ -1640,6 +1649,10 @@ void CPlayer::BulletEgg(void)
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
 			m_pChick[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
@@ -1676,6 +1689,10 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
 			m_pEgg[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 	}
 }
@@ -1936,19 +1953,13 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 	int fx = rand() % FALL_CHICK_RANGE;
 	int fz = rand() % FALL_CHICK_RANGE;
 
-	for (int nCntChick = 0; nCntChick < CHICK_FALL_NUM; nCntChick++)
-	{
-		// ひよこ出現
-		CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f + (nCntChick * 50.0f), pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
-			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-			CHICK_SCALE,
-			CChick::TYPE_ATTACK_S,
-			CChick::BULLETTYPE_PLAYER,
-			CChick::STATE_BULLET,
-			m_nPlayerNum);
-
-		m_nCntChick++;
-	}
+	CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f, pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
+		D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+		CHICK_SCALE,
+		CChick::TYPE_ATTACK_S,
+		CChick::BULLETTYPE_PLAYER,
+		CChick::STATE_BULLET,
+		m_nPlayerNum);
 
 	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
 	{
@@ -1973,6 +1984,8 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			pScene = pSceneNext;
 		}
 	}
+
+	m_nCntChick++;
 }
 
 //=============================================================================
@@ -1982,16 +1995,16 @@ void CPlayer::AnnoyChicks(void)
 {
 	CPlayer **pPlayer = CGame::GetPlayer();
 
-	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{
-		if (pPlayer[nCntPlayer] != NULL)
+		if (pPlayer[nCntMember] != NULL)
 		{
-			if (nCntPlayer != m_nPlayerNum)
+			if (nCntMember != m_nPlayerNum)
 			{
-				if (m_pAnnoyChick[nCntPlayer] == NULL)
+				if (m_pAnnoyChick[nCntMember] == NULL)
 				{
-					m_pAnnoyChick[nCntPlayer] = CChick::Create(
-						D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + 100.0f, pPlayer[nCntPlayer]->GetPos().z),
+					m_pAnnoyChick[nCntMember] = CChick::Create(
+						D3DXVECTOR3(pPlayer[nCntMember]->GetPos().x, pPlayer[nCntMember]->GetPos().y + 100.0f, pPlayer[nCntMember]->GetPos().z),
 						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 						CHICK_SCALE,
 						CChick::TYPE_ANNOY_S,
@@ -1999,13 +2012,13 @@ void CPlayer::AnnoyChicks(void)
 						CChick::STATE_BULLET,
 						m_nPlayerNum);
 
-					if (m_pAnnoyChick[nCntPlayer]->GetState() == CChick::STATE_BULLET
-						&& m_pAnnoyChick[nCntPlayer]->GetType() == CChick::TYPE_ANNOY_S
-						&& m_pAnnoyChick[nCntPlayer]->GetAttackS() == false
-						&& m_pAnnoyChick[nCntPlayer]->GetDis() == true)
+					if (m_pAnnoyChick[nCntMember]->GetState() == CChick::STATE_BULLET
+						&& m_pAnnoyChick[nCntMember]->GetType() == CChick::TYPE_ANNOY_S
+						&& m_pAnnoyChick[nCntMember]->GetAttackS() == false
+						&& m_pAnnoyChick[nCntMember]->GetDis() == true)
 					{
-						m_pAnnoyChick[nCntPlayer]->SetAttackS(true);
-						m_pAnnoyChick[nCntPlayer]->SetRank(CGame::GetRanking(m_nPlayerNum));
+						m_pAnnoyChick[nCntMember]->SetAttackS(true);
+						m_pAnnoyChick[nCntMember]->SetRank(CGame::GetRanking(m_nPlayerNum));
 					}
 
 					m_bAnnoyS = true;
@@ -2024,22 +2037,22 @@ void CPlayer::ChaseAnnoyS(void)
 	{
 		CPlayer **pPlayer = CGame::GetPlayer();
 
-		for (int nCntChick = 0; nCntChick < MAX_PLAYER; nCntChick++)
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 		{
-			if (m_pAnnoyChick[nCntChick] != NULL)
+			if (m_pAnnoyChick[nCntMember] != NULL)
 			{
 				// 位置更新
-				m_pAnnoyChick[nCntChick]->SetPosition(
-					D3DXVECTOR3(pPlayer[nCntChick]->GetPos().x, pPlayer[nCntChick]->GetPos().y + 100.0f, pPlayer[nCntChick]->GetPos().z));
+				m_pAnnoyChick[nCntMember]->SetPosition(
+					D3DXVECTOR3(pPlayer[nCntMember]->GetPos().x, pPlayer[nCntMember]->GetPos().y + 100.0f, pPlayer[nCntMember]->GetPos().z));
 
 				// 食らっている時間をカウント
-				pPlayer[nCntChick]->m_nAnnoySTimer++;
+				pPlayer[nCntMember]->m_nAnnoySTimer++;
 
-				if (pPlayer[nCntChick]->m_nAnnoySTimer > 100)
+				if (pPlayer[nCntMember]->m_nAnnoySTimer > 100)
 				{// 一定時間たったら
-					pPlayer[nCntChick]->m_nAnnoySTimer = 0;
-					m_pAnnoyChick[nCntChick]->Uninit();
-					m_pAnnoyChick[nCntChick] = NULL;
+					pPlayer[nCntMember]->m_nAnnoySTimer = 0;
+					m_pAnnoyChick[nCntMember]->Uninit();
+					m_pAnnoyChick[nCntMember] = NULL;
 				}
 			}
 		}
@@ -2053,14 +2066,14 @@ void CPlayer::CollisionCharacter(void)
 {
 	CPlayer **pPlayer = CGame::GetPlayer();
 
-	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{// プレイヤーカウント
-		if (pPlayer[nCntPlayer] != NULL)
+		if (pPlayer[nCntMember] != NULL)
 		{// NULL以外
-			if (pPlayer[nCntPlayer] != this)
+			if (pPlayer[nCntMember] != this)
 			{// 自分以外
-			 // 距離計算
-				D3DXVECTOR3 pos = pPlayer[nCntPlayer]->GetPos();
+				// 距離計算
+				D3DXVECTOR3 pos = pPlayer[nCntMember]->GetPos();
 				float fLenght = sqrtf(powf(pos.x - m_pos.x, 2.0f) + powf(pos.z - m_pos.z, 2.0f));
 
 				if (fLenght < 10.0f)
@@ -2069,7 +2082,7 @@ void CPlayer::CollisionCharacter(void)
 					float fAngle = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
 
 					// 位置調整
-					m_pos = pos + D3DXVECTOR3(sinf(fAngle) * 80.0f, 0.0f, cosf(fAngle) * 80.0f);
+					m_pos = pos + D3DXVECTOR3(sinf(fAngle) * 10.0f, 0.0f, cosf(fAngle) * 10.0f);
 				}
 			}
 		}

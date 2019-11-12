@@ -86,7 +86,7 @@ public:
 	void SetThrow(bool bThrow) { m_bThrow = bThrow; }
 
 private:
-	void Item(D3DXVECTOR3 pos);
+	D3DXVECTOR3 Item(D3DXVECTOR3 pos);
 	void AdjustAngle(float rot);
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
@@ -104,17 +104,12 @@ private:
 	CObjBillboad *		m_pObjBill;				// オブジェクトビルボードのポインタ
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
-	D3DXVECTOR3			m_pos;
-	D3DXVECTOR3			m_posOld;
-	D3DXVECTOR3			m_FNor;					//地面の法線
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bThrow;				// 投げたかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
-	float				m_fLength;				// 横幅
 	int					m_nRank;				// 向かっていく順位
 	int					m_nNumPlayer;			// プレイヤー何が持っている卵か
 	int					m_nHatchingTimer;		// 孵化するまでの時間
-	int					m_nMap;					//判定を取るマップ
 };
 #endif

@@ -15,8 +15,8 @@
 // マクロ定義
 //*****************************************************************************
 #define COL_WALL_PLUS		(2.0f)		//壁の判定のプラス値
-#define COL_RECOIL			(0.0f)		//壁ヒット時の反動	(1.0 = 100％)		
-#define COL_MOVE_SLOWING	(0.5f)		//壁ヒット時の減速　(1.0 = 100％)	
+#define COL_RECOIL			(0.1f)		//壁ヒット時の反動	(1.0 = 100％)		
+#define COL_MOVE_SLOWING	(1.0f)		//壁ヒット時の減速　(1.0 = 100％)	
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -680,7 +680,7 @@ bool CCOL_MESH::MeshField(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &pos
 			{
 			case EFFECT_GRASS:
 			case EFFECT_SWAMP:	//減速
-				if (bJump) { move *= 0.6f; }
+				if (bJump) { move *= 0.95f; }
 				return bLand;
 			case EFFECT_BOOST:	//加速
 				if (bJump) { move *= 1.35f; }
@@ -815,6 +815,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 	D3DXVECTOR3 Wpos3;			//差分縮める用
 	float		fDistance;		//めり込んだ距離
 	float		fPercent;		//距離から出す壁から壁の％
+	float		fPower;
 	float		fCntZ;
 	float		fWKrot = 0.0f;
 	float		fAngle[5];
@@ -862,7 +863,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		 //交点を求める
 			nEnd = 1;
 
-			if (fLength > 5.0f)
+			if (fLength >= 3.0f)
 			{
 				//反射計算
 				//差分を反転させて壁の向きに引く
@@ -904,11 +905,12 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 				if (bReflection) { pos = Wpos0 + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (COL_WALL_PLUS); }
 				else
 				{//主にキャラ向けの反射処理	壁体当たり後に壁沿いに歩け、突っかからないよう調整
+					fPower = ((powf(move.x, 2) + powf(move.z, 2)) * (COL_RECOIL)+2.0f);
+					if (fPower > 12.0f) { fPower = 12.0f; }
 					pos = Wpos0
 						+ D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.5f)) * (0.1f)
-						+ D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (0.25f);
-					move = D3DXVECTOR3(move.x * (1.0f - COL_MOVE_SLOWING), move.y, move.z * (1.0f - COL_MOVE_SLOWING)) + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * ((powf(move.x, 2) + powf(move.z, 2)) * COL_RECOIL + 0.5f);
-
+						+ D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (1.0f);
+					move = D3DXVECTOR3(move.x * (1.0f - COL_MOVE_SLOWING), move.y, move.z * (1.0f - COL_MOVE_SLOWING)) + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * fPower;
 				}
 		}
 		else

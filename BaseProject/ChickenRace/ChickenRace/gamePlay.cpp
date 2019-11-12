@@ -492,54 +492,6 @@ void CGamePlay::Update(void)
 			m_pRanking[nCntPlayer]->SetTexture(pnRanking[nCntPlayer], 8, 1, 1);
 		}
 
-		if (pPlayer[nCntPlayer] != NULL)
-		{
-			for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
-			{// アイテムカウント
-				// アイテム
-				if (m_pItem[nCntPlayer][nCntItem] != NULL)
-				{// NULL以外
-					if ((bOnine == true && nClient == nCntPlayer) || bOnine == false)
-					{// オンラインで自分なら、オンラインじゃない
-						int nNum = pPlayer[nCntPlayer]->GetItemNum();
-						if (nCntItem < nNum)
-						{
-							int nType = pPlayer[nCntPlayer]->GetItemType(nCntItem);
-							switch (nType)
-							{
-							case CPlayer::BULLET_EGG_ATTACK:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
-								break;
-							case CPlayer::BULLET_EGG_ANNOY:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
-								break;
-							case CPlayer::BULLET_EGG_SPEED:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-								break;
-							case CPlayer::BULLET_CHICK_ATTACK:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.3f));
-								break;
-							case CPlayer::BULLET_CHICK_ANNOY:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 0.3f));
-								break;
-							case CPlayer::BULLET_CHICK_SPEED:
-								m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 0.3f));
-								break;
-							}
-						}
-						else
-						{
-							m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-						}
-					}
-					else
-					{
-						m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-					}
-				}
-			}
-		}
-
 		if (pbGoul[nCntPlayer] == true)
 		{
 			if (m_pGoul[nCntPlayer] != NULL)
@@ -553,6 +505,62 @@ void CGamePlay::Update(void)
 				{// オンラインじゃない
 					m_pGoul[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 				}
+			}
+		}
+	}
+
+	int nPlayerNum = 0;
+	for (int nCntMember= 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// プレイヤーカウント
+		if (pPlayer[nCntMember] != NULL)
+		{// NULL以外
+			if (pPlayer[nCntMember]->GetPlayerType() == CPlayer::PLAYERTYPE_PLAYER)
+			{
+				for (int nCntItem =0; nCntItem < MAX_EGG; nCntItem++)
+				{// アイテムカウント
+					// アイテム
+					if (m_pItem[nPlayerNum][nCntItem] != NULL)
+					{// NULL以外
+						if ((bOnine == true && nClient == nPlayerNum) || bOnine == false)
+						{// オンラインで自分なら、オンラインじゃない
+							int nNum = pPlayer[nCntMember]->GetItemNum();
+							if (nCntItem < nNum)
+							{
+								int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
+								switch (nType)
+								{
+								case CPlayer::BULLET_EGG_ATTACK:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
+									break;
+								case CPlayer::BULLET_EGG_ANNOY:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
+									break;
+								case CPlayer::BULLET_EGG_SPEED:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
+									break;
+								case CPlayer::BULLET_CHICK_ATTACK:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.3f));
+									break;
+								case CPlayer::BULLET_CHICK_ANNOY:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 0.3f));
+									break;
+								case CPlayer::BULLET_CHICK_SPEED:
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 0.3f));
+									break;
+								}
+							}
+							else
+							{
+								m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							}
+						}
+						else
+						{
+							m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+						}
+					}
+				}
+				nPlayerNum++;
 			}
 		}
 	}

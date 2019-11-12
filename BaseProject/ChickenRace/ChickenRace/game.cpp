@@ -53,7 +53,7 @@
 CGameCharSelect *CGame::m_pGameCharSelect = NULL;	// ゲーム（キャラ選択）
 CGamePlay *CGame::m_pGamePlay = NULL;				// ゲーム（プレイ）
 
-CPlayer *CGame::m_pPlayer[MAX_PLAYER] = { NULL };
+CPlayer *CGame::m_pPlayer[MAX_MEMBER] = { NULL };
 CPause *CGame::m_pPause = NULL;
 CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
 CGameCamera * CGame::m_pCuorseCamera = NULL;
@@ -143,9 +143,13 @@ HRESULT CGame::Init()
 
 	// デバッグ用
 	if (m_gameMode == GAMEMODE_PLAY)
-		m_nMaxPlayer = 2;
+		m_nMaxPlayer = 1;
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
+
+	// デバッグ用（カウントをなくす）
+	m_nGameCounter = START_SET_TIME;
+
 	return S_OK;
 }
 //=============================================================================
@@ -210,14 +214,17 @@ void CGame::Uninit(void)
 		m_pCuorseCamera = NULL;
 	}
 
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		if (m_pPlayer[nCntMember] != NULL)
+		{// NULL以外
+			m_pPlayer[nCntMember]->Uninit();
+			m_pPlayer[nCntMember] = NULL;
+		}
+	}
+
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{// プレイヤーカウント
-		if (m_pPlayer[nCntPlayer] != NULL)
-		{// NULL以外
-			m_pPlayer[nCntPlayer]->Uninit();
-			m_pPlayer[nCntPlayer] = NULL;
-		}
-
 		if (m_pGameCamera[nCntPlayer] != NULL)
 		{// NULL以外
 			m_pGameCamera[nCntPlayer]->Uninit();
@@ -624,68 +631,69 @@ void CGame::SetStage(void)
 		if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
 		CPlayer::LoadModel();	//モデルの読み込み
 
-		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
-		{// プレイヤーカウント
-			float frot = (-D3DX_PI * 0.5f);
-			float fLeft = 100.0f;
-			float fDiff = (fLeft * 2.0f) / 3.0f;
+		float frot = (-D3DX_PI * 0.5f);
 
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		{// メンバーカウント
 			//プレイヤーの生成
-			if (m_pPlayer[nCntPlayer] == NULL)
-				m_pPlayer[nCntPlayer] = CPlayer::Create(
-					D3DXVECTOR3(-150.0f, -90.0f, -70.0f + (((70.0f * 2.0f) / 3.0f) * nCntPlayer)),
+			if (m_pPlayer[nCntMember] == NULL)
+				m_pPlayer[nCntMember] = CPlayer::Create(
+					D3DXVECTOR3(-150.0f + (100.0f * (nCntMember / 4)), -90.0f, -70.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4)) - 30.0f),
 					D3DXVECTOR3(0.0f, frot, 0.0f),
-					nCntPlayer, m_nControllerNum[nCntPlayer]);
+					nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
 
-			if (m_pPlayer[nCntPlayer] != NULL)
-			{// NULL以外
-			 //ゲームカメラの生成
-				if (m_pGameCamera[nCntPlayer] == NULL)
-				{// NULL
-					m_pGameCamera[nCntPlayer] = new CGameCamera;
+			if (nCntMember < m_nMaxPlayer)
+			{// プレイヤー		
+				if (m_pPlayer[nCntMember] != NULL)
+				{// NULL以外
+				 //ゲームカメラの生成
+					if (m_pGameCamera[nCntMember] == NULL)
+					{// NULL
+						m_pGameCamera[nCntMember] = new CGameCamera;
 
-					if (m_pGameCamera[nCntPlayer] != NULL)
-					{// NULL以外
-					 // 初期化処理
-						m_pGameCamera[nCntPlayer]->Init();
-						// タイプ設定処理
-						m_pGameCamera[nCntPlayer]->SetType(CGameCamera::CAMERA_PLAYER);
-						// 追従プレイヤー設定
-						m_pGameCamera[nCntPlayer]->SetPlayer(m_pPlayer[nCntPlayer]);
+						if (m_pGameCamera[nCntMember] != NULL)
+						{// NULL以外
+						 // 初期化処理
+							m_pGameCamera[nCntMember]->Init();
+							// タイプ設定処理
+							m_pGameCamera[nCntMember]->SetType(CGameCamera::CAMERA_PLAYER);
+							// 追従プレイヤー設定
+							m_pGameCamera[nCntMember]->SetPlayer(m_pPlayer[nCntMember]);
 
-						// ビューポート設定
-						if (bOnine == true)
-						{
-							m_pGameCamera[nCntPlayer]->SetViewPort(
-								(DWORD)(0.0f), 
-								(DWORD)(0.0f), 
-								(DWORD)((SCREEN_WIDTH * 1.0f)),
-								(DWORD)((SCREEN_HEIGHT * 1.0f))
-							);
-						}
-						else
-						{
-							m_pGameCamera[nCntPlayer]->SetViewPort(
-								// 横
-								//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) % 2)), 
-								//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) / 2)), 
-								//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
-								//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
-								// 縦
-								//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntPlayer) / 2)),
-								//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntPlayer) % 2)),
-								//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-								//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-								// 縦->横
-								(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) / 2) : ((nCntPlayer) % 2))),
-								(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntPlayer) % 2) : ((nCntPlayer) / 2))),
-								(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-								(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-							);
+							// ビューポート設定
+							if (bOnine == true)
+							{
+								m_pGameCamera[nCntMember]->SetViewPort(
+									(DWORD)(0.0f),
+									(DWORD)(0.0f),
+									(DWORD)((SCREEN_WIDTH * 1.0f)),
+									(DWORD)((SCREEN_HEIGHT * 1.0f))
+								);
+							}
+							else
+							{
+								m_pGameCamera[nCntMember]->SetViewPort(
+									// 横
+									//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) % 2)), 
+									//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) / 2)), 
+									//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
+									//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
+									// 縦
+									//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) / 2)),
+									//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) % 2)),
+									//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+									//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+									// 縦->横
+									(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) / 2) : ((nCntMember) % 2))),
+									(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) % 2) : ((nCntMember) / 2))),
+									(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+									(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+								);
+							}
 						}
 					}
 				}
-			}
+			}			
 		}
 
 		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)

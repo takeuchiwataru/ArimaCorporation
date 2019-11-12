@@ -60,6 +60,10 @@ private:
 	CScene2D *m_pEnter[MAX_PLAYER];			// 決定
 
 	CScene2D *m_pYor;						// あなた
+	CScene2D *m_pReturn;					// 戻る
+	CScene2D *m_pReturnBG;					// 戻る背景
+	CScene2D *m_pReturnChar;				// 戻るキャラ
+	int		m_nReturnCounter;				// 戻るカウント
 
 	bool	m_bEntry[MAX_PLAYER];			// エントリー
 	bool	m_bEnter[MAX_PLAYER];			// 決定したか

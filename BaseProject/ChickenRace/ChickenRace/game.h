@@ -21,6 +21,7 @@
 #define MAX_POINT			(10)
 #define MAX_SCORE_UI		(6)
 
+#define MAX_MEMBER			(8)
 #define MAX_PLAYER			(4)
 #define MAX_CHARCTER		(8)
 
@@ -122,7 +123,7 @@ public:
 	static bool GetDrawUI(void) { return m_bDrawUI; };
 
 	// プレイヤー最大数
-	static void SetMaxPlayer(int nMaxPlayer) { m_nMaxPlayer = nMaxPlayer; }
+	static void SetMaxPlayer(int nMaxPlayer) { if (0 <= m_nMaxPlayer && m_nMaxPlayer < 4) m_nMaxPlayer = nMaxPlayer; }
 	static int GetMaxPlayer(void) { return m_nMaxPlayer; }
 
 	// キャラ選択番号
@@ -216,7 +217,7 @@ private:
 	static GAMESTATE m_gameState;				//ゲーム状態
 	GAMESTATE m_NowGameState;					//現在のゲーム状況
 	int m_nCounterGameState;					//状態カウンタ
-	static CPlayer *m_pPlayer[MAX_PLAYER];		//プレイヤーのポインタ
+	static CPlayer *m_pPlayer[MAX_MEMBER];		//プレイヤーのポインタ
 	static CPause *m_pPause;					//ポーズのポインタ
 	static CGameCamera * m_pCuorseCamera;		//コースのポインタ
 	static CGameCamera * m_pGameCamera[MAX_PLAYER];//カメラのポインタ

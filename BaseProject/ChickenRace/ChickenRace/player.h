@@ -29,7 +29,6 @@
 #define SPEEDDOWN_TIME	(300)	// 減速している時間
 #define FALL_CHICK_RANGE		(400)							// ひよこが降る範囲
 #define MAX_EGG		(3)		//卵の最大数
-#define CHICK_FALL_NUM			(5)			// 落ちてくるひよこの数
 
 //=============================================================================
 // 前方宣言
@@ -50,6 +49,13 @@ class CBillBoord;
 class CPlayer : public CScene
 {
 public:
+	typedef enum
+	{
+		PLAYERTYPE_PLAYER = 0,
+		PLAYERTYPE_ENEMY,
+		PLAYERTYPE_MAX
+	}PLAYERTYPE;
+
 	//ギアの状態
 	typedef enum
 	{
@@ -114,9 +120,11 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CPlayer * Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum = 0, int nControllerNum = 0);
+	static CPlayer * Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum = 0, int nControllerNum = 0, PLAYERTYPE playerType = PLAYERTYPE_PLAYER);
 	static void LoadModel(void);
 	static void UnloadModel(void);
+
+	PLAYERTYPE GetPlayerType(void) { return m_PlayerType; }
 
 	D3DXVECTOR3 GetPos(void) { return m_pos; };
 	void SetPos(D3DXVECTOR3 pos) { m_pos = pos; };
@@ -188,10 +196,11 @@ private:
 	static int				m_nMaxModel;	//読み込むモデルの最大数
 	static int				m_nMaxParts;	//読み込むパーツの最大数
 
-											//メンバ変数
+	//メンバ変数
 	static int					  m_nMaxMotion;					// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;				// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;					// テクスチャ
+	PLAYERTYPE					  m_PlayerType;					// プレイヤータイプ
 	D3DXVECTOR3				      m_pos;						// 中心座標
 	D3DXVECTOR3					  m_move;						// 移動
 	D3DXVECTOR3					  m_MoveMotion;					// モーションの移動量
@@ -210,7 +219,7 @@ private:
 	CLoadTextPlayer *			  m_pText;						// プレイヤーの情報読み込み
 	CEgg						  *m_pEgg[MAX_EGG];				//卵のポインタ
 	CChick						  *m_pChick[MAX_EGG];			//ひよこのポインタ
-	CChick						  *m_pAnnoyChick[MAX_PLAYER];	//ひよこのポインタ
+	CChick						  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
 	bool						  m_bJump;						//  ジャンプフラグ
 	bool						  m_bControl;					// コントローラーの使用状態
 	int							  m_nCountJumpTime;				// ジャンプ状態の時間をカウントする
