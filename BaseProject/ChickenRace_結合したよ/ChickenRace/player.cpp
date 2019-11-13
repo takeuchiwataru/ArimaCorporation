@@ -47,7 +47,6 @@
 #define DECELERATION	(0.5f)										//減速の割合
 #define START_ENGINE	(200)										//エンジン音の再生時間
 #define START_GEARCHANGE (300)										//スタート時のギア切替時間
-#define EGG_SCALE		(1.0f)										//卵の大きさ
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
@@ -1476,7 +1475,7 @@ void CPlayer::ChaseEgg(void)
 			}
 
 			// 卵の位置設定
-			m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.x,
+			m_pEgg[0]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.x,
 				m_pEgg[0]->SetHeight(),
 				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.z));
 
@@ -1499,7 +1498,7 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME;
 		}
 
-		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.x,
+		m_pEgg[1]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.x,
 			m_pEgg[1]->SetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.z));
 
@@ -1520,7 +1519,7 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME;
 		}
 
-		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.x,
+		m_pEgg[2]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.x,
 			m_pEgg[2]->SetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.z));
 
@@ -1545,7 +1544,7 @@ void CPlayer::ChaseEgg(void)
 			}
 
 			// 卵の位置設定
-			m_pChick[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+			m_pChick[0]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
 				m_pChick[0]->SetHeight(),
 				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
 
@@ -1568,7 +1567,7 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME;
 		}
 
-		m_pChick[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+		m_pChick[1]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
 			m_pChick[1]->SetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
 
@@ -1589,7 +1588,7 @@ void CPlayer::ChaseEgg(void)
 			nData += MAX_FRAME;
 		}
 
-		m_pChick[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+		m_pChick[2]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
 			m_pChick[2]->SetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
 
@@ -1683,10 +1682,6 @@ void CPlayer::BulletEgg(void)
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
 			m_pChick[2] = NULL;
-
-			m_bulletType[0] = m_bulletType[1];
-			m_bulletType[1] = m_bulletType[2];
-			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
@@ -1723,10 +1718,6 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
 			m_pEgg[2] = NULL;
-
-			m_bulletType[0] = m_bulletType[1];
-			m_bulletType[1] = m_bulletType[2];
-			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 	}
 }
@@ -1885,7 +1876,7 @@ void CPlayer::ChickAppear(void)
 				{
 					// 攻撃
 				case CEgg::EGGTYPE_ATTACK:
-					if (CGame::GetRanking(m_nPlayerNum) < 3)
+					if (CGame::GetRanking(m_nPlayerNum) < 1)
 					{
 						m_pChick[m_nNumChick] = CChick::Create(m_pos,
 							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
@@ -1895,7 +1886,7 @@ void CPlayer::ChickAppear(void)
 							CChick::STATE_CHASE,
 							m_nPlayerNum);
 					}
-					else if (CGame::GetRanking(m_nPlayerNum) >= 3)
+					else if (CGame::GetRanking(m_nPlayerNum) >= 1)
 					{
 						m_pChick[m_nNumChick] = CChick::Create(m_pos,
 							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
@@ -1984,16 +1975,22 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 {
 	CScene *pScene;
 
-	int fx = rand() % FALL_CHICK_RANGE;
-	int fz = rand() % FALL_CHICK_RANGE;
+	for (int nCntChick = 0; nCntChick < CHICK_FALL_NUM; nCntChick++)
+	{
+		int fx = rand() % FALL_CHICK_RANGE;
+		int fz = rand() % FALL_CHICK_RANGE;
 
-	CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f, pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
-		D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-		CHICK_SCALE,
-		CChick::TYPE_ATTACK_S,
-		CChick::BULLETTYPE_PLAYER,
-		CChick::STATE_BULLET,
-		m_nPlayerNum);
+		// ひよこ出現
+		CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 200.0f + (nCntChick * 100.0f), pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
+			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+			CHICK_SCALE,
+			CChick::TYPE_ATTACK_S,
+			CChick::BULLETTYPE_PLAYER,
+			CChick::STATE_BULLET,
+			m_nPlayerNum);
+
+		m_nCntChick++;
+	}
 
 	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
 	{
@@ -2018,8 +2015,6 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			pScene = pSceneNext;
 		}
 	}
-
-	m_nCntChick++;
 }
 
 //=============================================================================
@@ -2029,16 +2024,16 @@ void CPlayer::AnnoyChicks(void)
 {
 	CPlayer **pPlayer = CGame::GetPlayer();
 
-	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
-		if (pPlayer[nCntMember] != NULL)
+		if (pPlayer[nCntPlayer] != NULL)
 		{
-			if (nCntMember != m_nPlayerNum)
+			if (nCntPlayer != m_nPlayerNum)
 			{
-				if (m_pAnnoyChick[nCntMember] == NULL)
+				if (m_pAnnoyChick[nCntPlayer] == NULL)
 				{
-					m_pAnnoyChick[nCntMember] = CChick::Create(
-						D3DXVECTOR3(pPlayer[nCntMember]->GetPos().x, pPlayer[nCntMember]->GetPos().y + 100.0f, pPlayer[nCntMember]->GetPos().z),
+					m_pAnnoyChick[nCntPlayer] = CChick::Create(
+						D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + 100.0f, pPlayer[nCntPlayer]->GetPos().z),
 						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 						CHICK_SCALE,
 						CChick::TYPE_ANNOY_S,
@@ -2046,13 +2041,13 @@ void CPlayer::AnnoyChicks(void)
 						CChick::STATE_BULLET,
 						m_nPlayerNum);
 
-					if (m_pAnnoyChick[nCntMember]->GetState() == CChick::STATE_BULLET
-						&& m_pAnnoyChick[nCntMember]->GetType() == CChick::TYPE_ANNOY_S
-						&& m_pAnnoyChick[nCntMember]->GetAttackS() == false
-						&& m_pAnnoyChick[nCntMember]->GetDis() == true)
+					if (m_pAnnoyChick[nCntPlayer]->GetState() == CChick::STATE_BULLET
+						&& m_pAnnoyChick[nCntPlayer]->GetType() == CChick::TYPE_ANNOY_S
+						&& m_pAnnoyChick[nCntPlayer]->GetAttackS() == false
+						&& m_pAnnoyChick[nCntPlayer]->GetDis() == true)
 					{
-						m_pAnnoyChick[nCntMember]->SetAttackS(true);
-						m_pAnnoyChick[nCntMember]->SetRank(CGame::GetRanking(m_nPlayerNum));
+						m_pAnnoyChick[nCntPlayer]->SetAttackS(true);
+						m_pAnnoyChick[nCntPlayer]->SetRank(CGame::GetRanking(m_nPlayerNum));
 					}
 
 					m_bAnnoyS = true;
@@ -2071,22 +2066,22 @@ void CPlayer::ChaseAnnoyS(void)
 	{
 		CPlayer **pPlayer = CGame::GetPlayer();
 
-		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		for (int nCntChick = 0; nCntChick < MAX_PLAYER; nCntChick++)
 		{
-			if (m_pAnnoyChick[nCntMember] != NULL)
+			if (m_pAnnoyChick[nCntChick] != NULL)
 			{
 				// 位置更新
-				m_pAnnoyChick[nCntMember]->SetPosition(
-					D3DXVECTOR3(pPlayer[nCntMember]->GetPos().x, pPlayer[nCntMember]->GetPos().y + 100.0f, pPlayer[nCntMember]->GetPos().z));
+				m_pAnnoyChick[nCntChick]->SetPosition(
+					D3DXVECTOR3(pPlayer[nCntChick]->GetPos().x, pPlayer[nCntChick]->GetPos().y + 100.0f, pPlayer[nCntChick]->GetPos().z));
 
 				// 食らっている時間をカウント
-				pPlayer[nCntMember]->m_nAnnoySTimer++;
+				pPlayer[nCntChick]->m_nAnnoySTimer++;
 
-				if (pPlayer[nCntMember]->m_nAnnoySTimer > 100)
+				if (pPlayer[nCntChick]->m_nAnnoySTimer > 100)
 				{// 一定時間たったら
-					pPlayer[nCntMember]->m_nAnnoySTimer = 0;
-					m_pAnnoyChick[nCntMember]->Uninit();
-					m_pAnnoyChick[nCntMember] = NULL;
+					pPlayer[nCntChick]->m_nAnnoySTimer = 0;
+					m_pAnnoyChick[nCntChick]->Uninit();
+					m_pAnnoyChick[nCntChick] = NULL;
 				}
 			}
 		}

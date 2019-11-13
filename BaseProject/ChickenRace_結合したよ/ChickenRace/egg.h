@@ -15,7 +15,7 @@
 // マクロ定義
 //*****************************************************************************
 #define EGG_PRIOTITY	(3)
-#define EGG_SCALE		(1.0f)										//卵の大きさ
+#define EGG_SCALE		(0.5f)										//卵の大きさ
 #define EGG_RANGE		(50.0f)										// 卵とキャラクターの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEED			(1.0f)										// 加速する量
@@ -79,6 +79,7 @@ public:
 	void SetRank(int nRank) { m_nRank = nRank; }
 	int GetRank(void) { return m_nRank; }
 	void SetRot(D3DXVECTOR3 rot) { m_rot = rot; }
+	void SetPos(D3DXVECTOR3 pos) { m_pos = pos; }
 	int GetHatchingTimer(void) { return m_nHatchingTimer; }
 	void SetHatchingTimer(int nTimer) { m_nHatchingTimer = nTimer; }
 	void Jump(float fJump);
@@ -86,7 +87,7 @@ public:
 	void SetThrow(bool bThrow) { m_bThrow = bThrow; }
 
 private:
-	D3DXVECTOR3 Item(D3DXVECTOR3 pos);
+	void Item(void);
 	void AdjustAngle(float rot);
 	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
@@ -104,12 +105,17 @@ private:
 	CObjBillboad *		m_pObjBill;				// オブジェクトビルボードのポインタ
 	float				m_fHeight;
 	D3DXVECTOR3			m_move;
+	D3DXVECTOR3			m_pos;
+	D3DXVECTOR3			m_posOld;
+	D3DXVECTOR3			m_FNor;					//地面の法線
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bThrow;				// 投げたかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
+	float				m_fLength;				// 横幅
 	int					m_nRank;				// 向かっていく順位
 	int					m_nNumPlayer;			// プレイヤー何が持っている卵か
 	int					m_nHatchingTimer;		// 孵化するまでの時間
+	int					m_nMap;					//判定を取るマップ
 };
 #endif
