@@ -23,7 +23,7 @@
 #define MAX_SCORE_UI		(6)
 
 #define MAX_MEMBER			(8)
-#define MAX_PLAYER			(4)
+#define MAX_PLAYER			(8)
 #define MAX_CHARCTER		(8)
 
 #define CUORSE_VIEW_TIME	(360)

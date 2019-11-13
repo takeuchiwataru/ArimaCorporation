@@ -486,89 +486,89 @@ void CEnemy::EggAppear(CFeed *pFeed)
 //=============================================================================
 void CEnemy::ChaseEgg(void)
 {
-	m_nCntFrame++;
+	//m_nCntFrame++;
 
-	if (m_nCntFrame >= MAX_FRAME)
-	{
-		m_nCntFrame = 0;
-	}
+	//if (m_nCntFrame >= MAX_FRAME)
+	//{
+	//	m_nCntFrame = 0;
+	//}
 
-	// 前のプレイヤーの角度を保存
-	m_OldEggRot[m_nCntFrame] = m_rot;
-	m_abJump[m_nCntFrame] = m_bJumpSave;
+	//// 前のプレイヤーの角度を保存
+	//m_OldEggRot[m_nCntFrame] = m_rot;
+	//m_abJump[m_nCntFrame] = m_bJumpSave;
 
-	if (m_nNumEgg <= 0) { return; }
+	//if (m_nNumEgg <= 0) { return; }
 
-	if (m_nNumEgg >= 1)
-	{// 卵が一個の時
-		if (m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
-		{
-			// 前の向きを代入
-			int nData = m_nCntFrame - EGG_POS;
+	//if (m_nNumEgg >= 1)
+	//{// 卵が一個の時
+	//	if (m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+	//	{
+	//		// 前の向きを代入
+	//		int nData = m_nCntFrame - EGG_POS;
 
-			if (nData < 0)
-			{
-				nData += MAX_FRAME;
-			}
+	//		if (nData < 0)
+	//		{
+	//			nData += MAX_FRAME;
+	//		}
 
-			// 卵の位置設定
-			m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
-				m_pEgg[0]->SetHeight(),
-				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
+	//		// 卵の位置設定
+	//		m_pEgg[0]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
+	//			m_pEgg[0]->SetHeight(),
+	//			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
 
-			// 卵の角度設定
-			m_pEgg[0]->SetRot(m_OldEggRot[nData]);
+	//		// 卵の角度設定
+	//		m_pEgg[0]->SetRot(m_OldEggRot[nData]);
 
-			if (m_abJump[nData] == true)
-			{
-				m_pEgg[0]->Jump(EGGJUMP);
-			}
+	//		if (m_abJump[nData] == true)
+	//		{
+	//			m_pEgg[0]->Jump(EGGJUMP);
+	//		}
 
-			//CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
-		}
-	}
-	if (m_nNumEgg >= 2)
-	{// 卵が二個の時
-	 // 二個目
-		int nData = m_nCntFrame - EGG_POS * 2;
+	//		//CDebugProc::Print("%.1f : %.1f\n", m_OldEggRot[nData].x, m_OldEggRot[nData].z);
+	//	}
+	//}
+	//if (m_nNumEgg >= 2)
+	//{// 卵が二個の時
+	// // 二個目
+	//	int nData = m_nCntFrame - EGG_POS * 2;
 
-		if (nData < 0)
-		{
-			nData += MAX_FRAME;
-		}
+	//	if (nData < 0)
+	//	{
+	//		nData += MAX_FRAME;
+	//	}
 
-		m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
-			m_pEgg[1]->SetHeight(),
-			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
+	//	m_pEgg[1]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
+	//		m_pEgg[1]->SetHeight(),
+	//		(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
 
-		m_pEgg[1]->SetRot(m_OldEggRot[nData]);
+	//	m_pEgg[1]->SetRot(m_OldEggRot[nData]);
 
-		if (m_abJump[nData] == true)
-		{
-			m_pEgg[1]->Jump(EGGJUMP);
-		}
-	}
-	if (m_nNumEgg >= 3)
-	{
-		// 三個目
-		int nData = m_nCntFrame - EGG_POS * 3;
+	//	if (m_abJump[nData] == true)
+	//	{
+	//		m_pEgg[1]->Jump(EGGJUMP);
+	//	}
+	//}
+	//if (m_nNumEgg >= 3)
+	//{
+	//	// 三個目
+	//	int nData = m_nCntFrame - EGG_POS * 3;
 
-		if (nData < 0)
-		{
-			nData += MAX_FRAME;
-		}
+	//	if (nData < 0)
+	//	{
+	//		nData += MAX_FRAME;
+	//	}
 
-		m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
-			m_pEgg[2]->SetHeight(),
-			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
+	//	m_pEgg[2]->SetPosition(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
+	//		m_pEgg[2]->SetHeight(),
+	//		(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
 
-		m_pEgg[2]->SetRot(m_OldEggRot[nData]);
+	//	m_pEgg[2]->SetRot(m_OldEggRot[nData]);
 
-		if (m_abJump[nData] == true)
-		{
-			m_pEgg[2]->Jump(EGGJUMP);
-		}
-	}
+	//	if (m_abJump[nData] == true)
+	//	{
+	//		m_pEgg[2]->Jump(EGGJUMP);
+	//	}
+	//}
 }
 
 //=============================================================================

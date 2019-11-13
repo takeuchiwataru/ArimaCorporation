@@ -14,6 +14,7 @@
 #include "shadow.h"
 #include "tutorial.h"
 #include "enemy.h"
+#include "ColMesh.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -25,13 +26,11 @@
 #define TEXTURE_EGG_3	"data\\TEXTURE\\modeltex\\egg01.jpg"	//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
-#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
-#define PLAYER_HEIGHT			(100.0f)	// プレイヤーの背の高さ
+#define PLAYER_DEPTH			(70)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-
-#define EGG_SPEED				(40.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(20.0f)		// 卵が飛んでくスピード
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -65,12 +64,17 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 	m_scale = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	// 大きさ
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_posOld = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fDestAngle = 0.0f;
 	m_fDiffAngle = 0.0f;
 	m_fHeight = 0.0f;
+	m_fLength = 0.0f;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nHatchingTimer = 0;
+	m_nMap = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -107,6 +111,8 @@ CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE
 			pEgg->Init();
 			// 位置を代入
 			pEgg->SetPosition(pos);
+			pEgg->m_pos = pos;
+			pEgg->m_fHeight = pos.y;
 			// 回転を反映
 			pEgg->SetRot(rot);
 			// 何位の卵か
@@ -127,26 +133,25 @@ HRESULT CEgg::Init(void)
 	//3DモデルのInit
 	CModel3D::Init();
 
-	// 位置の初期化
-	D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-
-	//位置の代入
-	CModel3D::SetPosition(pos);
-
 	// 各種情報の代入
 	CModel3D::SetScale(m_scale);
 
 	//変数の初期化
 	m_pObjBill = NULL;
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_posOld = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fHeight = 0.0f;
 	m_fDestAngle = 0.0f;
 	m_fDiffAngle = 0.0f;
+	m_fLength = 3.0f;
 	m_bJump = false;
 	m_eggState = EGGSTATE_NORMAL;
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nHatchingTimer = 0;
+	m_nMap = 0;
 	m_bThrow = false;
 	return S_OK;
 }
@@ -168,35 +173,44 @@ void CEgg::Uninit(void)
 //=============================================================================
 void CEgg::Update(void)
 {
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
+	//m_pos = CModel3D::GetPosition();
 
 	m_nHatchingTimer++;
 
-	pos = Item(pos);
+	m_posOld = m_pos;	//前回の位置を保存する
 
-	m_move.y -= cosf(0) * 0.4f;
-	m_fHeight += m_move.y;
+	Item();
 
-	SetHeight();
+	m_pos.x += m_move.x;
+	m_pos.z += m_move.z;
 
-	pos.y = m_fHeight;
-	pos.x += m_move.x;
-	pos.z += m_move.z;
+	if (m_eggState == EGGSTATE_CHASE || m_eggType == EGGTYPE_ANNOY || m_eggType == EGGTYPE_ATTACK)
+	{
+		m_move.y -= cosf(0) * 0.4f;
+
+		m_pos.y += m_move.y;
+
+		//マップとの当たり判定
+		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap)) { m_bJump = false; }
+	}
 
 	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(pos);
+	CModel3D::SetPosition(m_pos);
 
-	//CDebugProc::Print("%.1f : %.1f : %.1f\n", pos.x, pos.y, pos.z);
+	//CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
 	//CDebugProc::Print("%.1f\n", m_move.y);
 
-	//if (m_bJump == true)
-	//{
-	//	CDebugProc::Print("ジャンプ : 〇\n");
-	//}
-	//else
-	//{
-	//	CDebugProc::Print("ジャンプ : ×\n");
-	//}
+	if (m_bJump == true)
+	{
+		CDebugProc::Print("ジャンプ : 〇\n");
+	}
+	else
+	{
+		CDebugProc::Print("ジャンプ : ×\n");
+	}
+
+	CDebugProc::Print("%.1f\n", m_fHeight);
+	CDebugProc::Print("%.1f\n", m_move.y);
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -353,7 +367,7 @@ void CEgg::UnLoad(void)
 //=============================================================================
 // 使ったときの処理
 //=============================================================================
-D3DXVECTOR3 CEgg::Item(D3DXVECTOR3 pos)
+void CEgg::Item(void)
 {
 	if (m_eggState == EGGSTATE_BULLET)
 	{
@@ -371,7 +385,7 @@ D3DXVECTOR3 CEgg::Item(D3DXVECTOR3 pos)
 			CPlayer **pPlayer = NULL;
 			pPlayer = CGame::GetPlayer();
 
-			pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y, pPlayer[m_nNumPlayer]->GetPos().z);
+			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 5.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 
 			m_scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
 
@@ -393,8 +407,6 @@ D3DXVECTOR3 CEgg::Item(D3DXVECTOR3 pos)
 
 		Bullet();
 	}
-
-	return pos;
 }
 
 //===============================================================================
@@ -451,63 +463,6 @@ bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 }
 
 //=============================================================================
-// 高さ判定
-//=============================================================================
-float CEgg::SetHeight(void)
-{
-	float fHeight = 0.0f;
-
-	CScene *pScene = CScene::GetTop(MESH_PRIOTITY);
-
-	D3DXVECTOR3 pos = CModel3D::GetPosition();
-
-	//NULLチェック
-	while (pScene != NULL)
-	{
-		//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
-		CScene *pSceneNext = pScene->GetNext();
-
-		if (pScene->GetObjType() == CScene::OBJTYPE_GROUND)
-		{//タイプが地面だったら
-			CMeshField *pField = (CMeshField*)pScene;
-
-			if (pField->OnField(pos, 0.0f))
-			{// 傾斜の計算
-				fHeight = pField->GetHeightMesh(CModel3D::GetPosition());
-
-				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
-				{
-					float fEggHeight = 15.0f;
-
-					if (m_eggType == EGGTYPE_SPEED && m_eggState == EGGSTATE_BULLET)
-					{
-						fEggHeight = 30.0f;
-					}
-					m_fHeight = fHeight + fEggHeight;					//地面の高さを取得
-					m_move.y = 0.0f;					//移動量を初期化する
-
-														//ジャンプの状態設定
-					m_bJump = false;
-					CModel3D::SetMove(m_move);
-					CModel3D::SetPosition(D3DXVECTOR3(pos.x, fHeight, pos.z));
-
-					if (m_bThrow == true)
-					{
-						Uninit();
-					}
-
-					break;
-				}
-			}
-		}
-		//Nextに次のSceneを入れる
-		pScene = pSceneNext;
-	}
-
-	return fHeight;
-}
-
-//=============================================================================
 // ジャンプ
 //=============================================================================
 void CEgg::Jump(float fJump)
@@ -537,6 +492,11 @@ void CEgg::Bullet(void)
 
 			m_rot.x = D3DX_PI * 0.5f;
 
+			if (m_bJump == false)
+			{
+				Uninit();
+			}
+
 			CModel3D::SetRot(m_rot);
 		}
 	}
@@ -544,7 +504,6 @@ void CEgg::Bullet(void)
 	{
 		CScene *pScene = CScene::GetTop(3);
 
-		D3DXVECTOR3 pos = CModel3D::GetPosition();
 		m_rot = CModel3D::GetRot();
 
 		//NULLチェック
@@ -558,7 +517,7 @@ void CEgg::Bullet(void)
 				CPlayer *pPlayer = (CPlayer*)pScene;
 
 				// 目的の角度
-				m_fDestAngle = atan2f(pPlayer->GetPos().x - pos.x, pPlayer->GetPos().z - pos.z);
+				m_fDestAngle = atan2f(pPlayer->GetPos().x - m_pos.x, pPlayer->GetPos().z - m_pos.z);
 
 				// 差分
 				m_fDiffAngle = m_fDestAngle - m_rot.y;

@@ -17,6 +17,7 @@
 #define MAX_OBJECT					(5)				// オブジェクトのモデル数
 #define MAX_OBJECT_TEXTURE			(5)				// オブジェクトのテクスチャ数
 #define OBJECT_PRIOTITY				(3)
+#define PLAYER_HEIGHT			(50.0f)	// プレイヤーの背の高さ
 
 //アップデートを通さないタイプ
 #define UPDATE_TYPE_NUM			(20)		// アップデートしないタイプの最大数
