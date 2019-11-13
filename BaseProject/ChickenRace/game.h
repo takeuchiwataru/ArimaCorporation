@@ -23,7 +23,7 @@
 #define MAX_SCORE_UI		(6)
 
 #define MAX_MEMBER			(8)
-#define MAX_PLAYER			(8)
+#define MAX_PLAYER			(4)
 #define MAX_CHARCTER		(8)
 
 #define CUORSE_VIEW_TIME	(360)
@@ -239,10 +239,10 @@ private:
 
 	static int m_nControllerNum[MAX_PLAYER];	// コントローラー番号
 
-	static int m_nRanking[MAX_PLAYER];			// ランキング
+	static int m_nRanking[MAX_MEMBER];			// ランキング
 	static bool m_bGoul[MAX_PLAYER];			// ゴール判定
 
-	//ウォークスルー用
+												//ウォークスルー用
 	static bool m_bDrawUI;
 
 	static int m_nCameraNumber;					// 現在使用しているカメラ番号

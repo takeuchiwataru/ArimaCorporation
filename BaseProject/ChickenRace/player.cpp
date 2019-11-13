@@ -162,7 +162,7 @@ void CPlayer::LoadModel(void)
 	m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
 	m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
 
-	//モデル情報を取得
+																		//モデル情報を取得
 	CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
 	m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
 	m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
@@ -283,7 +283,7 @@ HRESULT CPlayer::Init(void)
 
 	m_bGoal = false;				// ゴール
 
-	// プレイヤー番号（追従）
+									// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
 		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 0);
 
@@ -435,7 +435,7 @@ void CPlayer::Update(void)
 	CollisionCharacter();	// キャラクター同士の当たり判定
 	CollisionObject();		// オブジェクトとの当たり判定
 
-	//マップとの当たり判定
+							//マップとの当たり判定
 	if (!CCOL_MESH_MANAGER::Collision(m_pos, m_OldPos, m_move, m_fLength, m_FNor, m_bJump, m_nMap)) { m_bJump = false; }
 
 	if (m_pPlayerNum != NULL)
@@ -532,12 +532,12 @@ void CPlayer::ControlKey(void)
 		m_bGoal = true;
 		m_move *= 0.0f;
 		SetStateHandle(HANDLE_MAX);
-		SetStateSpeed(STATE_SPEED_DOWN); 
+		SetStateSpeed(STATE_SPEED_DOWN);
 		return;
 	}
 
 	CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
-	
+
 	//前進後退の設定
 	if (m_bDirive)
 	{
@@ -558,17 +558,17 @@ void CPlayer::ControlKey(void)
 	//向きの設定
 	if (m_StateSpeed != STATE_SPEED_STOP)
 	{
-		if ((bOnline == false && 
+		if ((bOnline == false &&
 			(pInputKeyboard->GetKeyboardPress(DIK_A) == true ||
-			pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true)) ||
+				pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true)) ||
 			pXpad->GetPress(INPUT_LS_L) == true ||
 			pXpad->GetPress(INPUT_LEFT) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
 		}
-		else if ((bOnline == false && 
+		else if ((bOnline == false &&
 			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
-			pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
+				pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
 			pXpad->GetPress(INPUT_LS_R) == true ||
 			pXpad->GetPress(INPUT_RIGHT) == true)
 		{//右ハンドル状態
@@ -594,7 +594,7 @@ void CPlayer::ControlKey(void)
 	else if
 		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
 		(pXpad->GetPress(INPUT_R1) == true) ||
-		(pXpad->GetPress(INPUT_R2) == true))
+			(pXpad->GetPress(INPUT_R2) == true))
 	{ //アクセルを状態
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	}
@@ -639,9 +639,9 @@ void CPlayer::ControlKey(void)
 	{// ジャンプしていない
 		m_bJumpSave = false;
 
-		if ((bOnline == false && 
+		if ((bOnline == false &&
 			(pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
-			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
+				pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
 			pXpad->GetTrigger(INPUT_A) == true)
 		{// ジャンプキー
 			m_bJumpSave = true;
@@ -654,7 +654,7 @@ void CPlayer::ControlKey(void)
 		m_bJumpSave = false;
 	}
 
-	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true || 
+	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true ||
 		pXpad->GetTrigger(INPUT_B) == true)
 	{// 弾発射
 		BulletEgg();
@@ -720,7 +720,7 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL)
@@ -735,7 +735,7 @@ void CPlayer::UpdateMove(void)
 
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		m_fSpeed = m_PlayerInfo.fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
@@ -1305,9 +1305,9 @@ void CPlayer::DebugProc(void)
 
 	//CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
 
-//	CDebugProc::Print("アイテム：%d\n", m_nNumItem);
-//	for (int nCount = 0; nCount < MAX_EGG; nCount++)
-//		CDebugProc::Print("アイテム種類：%d\n", m_bulletType[nCount]);
+	//	CDebugProc::Print("アイテム：%d\n", m_nNumItem);
+	//	for (int nCount = 0; nCount < MAX_EGG; nCount++)
+	//		CDebugProc::Print("アイテム種類：%d\n", m_bulletType[nCount]);
 
 	//CDebugProc::Print("カウント：%f\n", m_PlayerInfo.nCountTime);
 	//
@@ -1661,7 +1661,7 @@ void CPlayer::BulletEgg(void)
 
 				if (nRank >= 0)
 				{
-					for (int nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
+					for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 					{// ひとつ前の順位のやつを見つける
 						int nData = CGame::GetRanking(nCntChar);
 
@@ -1693,7 +1693,7 @@ void CPlayer::BulletEgg(void)
 
 				// 強い攻撃
 			case CChick::TYPE_ATTACK_S:
-				for (int nCntChar = 0; nCntChar < MAX_PLAYER; nCntChar++)
+				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 				{// 1位のやつを見つける
 					int nDestRank = CGame::GetRanking(nCntChar);
 
@@ -1717,6 +1717,10 @@ void CPlayer::BulletEgg(void)
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
 			m_pChick[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
@@ -1753,6 +1757,10 @@ void CPlayer::BulletEgg(void)
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
 			m_pEgg[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
 	}
 }
@@ -2059,7 +2067,7 @@ void CPlayer::AnnoyChicks(void)
 {
 	CPlayer **pPlayer = CGame::GetPlayer();
 
-	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	for (int nCntPlayer = 0; nCntPlayer < MAX_MEMBER; nCntPlayer++)
 	{
 		if (pPlayer[nCntPlayer] != NULL)
 		{
@@ -2101,7 +2109,7 @@ void CPlayer::ChaseAnnoyS(void)
 	{
 		CPlayer **pPlayer = CGame::GetPlayer();
 
-		for (int nCntChick = 0; nCntChick < MAX_PLAYER; nCntChick++)
+		for (int nCntChick = 0; nCntChick < MAX_MEMBER; nCntChick++)
 		{
 			if (m_pAnnoyChick[nCntChick] != NULL)
 			{
@@ -2136,7 +2144,7 @@ void CPlayer::CollisionCharacter(void)
 		{// NULL以外
 			if (pPlayer[nCntMember] != this)
 			{// 自分以外
-				// 距離計算
+			 // 距離計算
 				D3DXVECTOR3 pos = pPlayer[nCntMember]->GetPos();
 				float fLenght = sqrtf(powf(pos.x - m_pos.x, 2.0f) + powf(pos.z - m_pos.z, 2.0f));
 

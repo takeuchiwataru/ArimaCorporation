@@ -21,7 +21,6 @@
 //*****************************************************************************
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
-#define PLAYER_HEIGHT			(100.0f)	// プレイヤーの背の高さ
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
@@ -224,8 +223,8 @@ void CEnemy::Update(void)
 
 		/*if (m_nCountSpeed > SPEEDUP_TIME)
 		{
-			m_State = ENEMYSTATE_NORMAL;
-			m_nCountSpeed = 0;
+		m_State = ENEMYSTATE_NORMAL;
+		m_nCountSpeed = 0;
 		}*/
 	}
 
