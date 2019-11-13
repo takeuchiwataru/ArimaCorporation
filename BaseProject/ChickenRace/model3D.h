@@ -154,5 +154,6 @@ private://個人でのみ使う
 	bool					m_bTexMat;							// シェーダーに使うテクスチャとマテリアル
 	int						m_nType;							//モデルの種類
 	CToonShader				*m_pToonShader;						//シェーダーのポインタ
+	D3DXVECTOR3				m_MapView;							//マップに反映させるカメラ
 };
 #endif

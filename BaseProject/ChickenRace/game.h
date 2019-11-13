@@ -16,6 +16,7 @@
 #define MAX_MAP_CAR			(300)
 #define MAX_MAP_MESH		(1400)
 #define MAX_MAP_WALL		(550)
+#define MAX_MAP_FEED		(100)
 #define MAX_MAP_ROUTE		(300)
 #define MAX_MAP_POINT		(300)
 #define MAX_POINT			(10)
@@ -114,6 +115,7 @@ public:
 	void TextLoad(int nLoadNumber);
 	void MeshTextLoad(int nLoadNumber);
 	void WallTextLoad(int nLoadNumber);
+	void FeedTextLoad(void);
 
 	char *ReadLine(FILE *pFile, char *pDst);	//1行読み込み
 	char *GetLineTop(char *pStr);				//行の先頭を取得
@@ -198,15 +200,10 @@ private:
 	//テキストの値を管理する場所
 	typedef struct
 	{
-		int					m_nType;			// 種類
-		int					m_nTexType;			// テクスチャの種類
-		int					m_nCollision;		// 当たり判定のONOFF
 		D3DXVECTOR3			m_pos;				// 位置
-		D3DXVECTOR3			m_rot;				// 回転
-		D3DXVECTOR3			m_scale;			// サイズ
-		int					m_nRoute;			// ルートの設定
-		bool				bLoop;				// ループするかどうか
-	}Npc;
+		int					m_nZone;			// ゾーン
+		int					m_nType;			// 食べ物の種類
+	}Feed;
 
 	static GAMEMODE m_gameMode;					//ゲームモード
 	static GAMEMODE m_gameModeNext;				//次のゲームモード
@@ -230,9 +227,12 @@ private:
 	int m_nSetObjectNum;						//オブジェクトを置いた数
 	int m_nSetMeshFieldNum;						//メッシュフィールドを置いた数
 	int	m_nSetWallNum;							//壁の置いた数
+	int	m_nSetFeedNum;							//食べ物の置いた数
+
 	Map m_Map[MAX_MAP_OBJECT];					//設置するオブジェクトの構造体
 	Mesh m_Mesh[MAX_MAP_MESH];					//設置するメッシュフィールドの構造体
 	Wall m_aWall[MAX_MAP_WALL];					//設置する壁の構造体
+	Feed m_aFeed[MAX_MAP_FEED];					//設置する食べ物の構造体
 
 	static int m_nMaxPlayer;					// プレイヤー数
 	static int m_nCharSelectNum[MAX_PLAYER];	// キャラ選択番号

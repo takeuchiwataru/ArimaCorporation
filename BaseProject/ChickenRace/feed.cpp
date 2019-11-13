@@ -17,9 +17,13 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FEED_NAME_000	"data\\MODEL\\Item\\cone.x"			// 読み込むモデルファイル
-#define FEED_NAME_001	"data\\MODEL\\Item\\Apple.x"			// 読み込むモデルファイル
-#define FEED_NAME_002	"data\\MODEL\\Item\\Banana.x"			// 読み込むモデルファイル
+#define FEED_NAME_000	"data\\MODEL\\Item\\肉.x"					// 読み込むモデルファイル
+#define FEED_NAME_001	"data\\MODEL\\Item\\ブドウ.x"				// 読み込むモデルファイル
+#define FEED_NAME_002	"data\\MODEL\\Item\\トウモロコシ.x"			// 読み込むモデルファイル
+
+#define TEXTURE_NAME_1  "data\\TEXTURE\\modeltex\\肉.jpg"			//読み込むテクスチャ
+#define TEXTURE_NAME_2  "data\\TEXTURE\\modeltex\\ブドウ.jpg"		//読み込むテクスチャ
+#define TEXTURE_NAME_3  "data\\TEXTURE\\modeltex\\トウモロコシ.jpg"	//読み込むテクスチャ
 
 #define MODEL_SPEED				(5.0f)
 #define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
@@ -48,7 +52,7 @@
 LPD3DXMESH CFeed::m_pMeshModel[FEEDTYPE_MAX] = {};						//メッシュ情報へのポインタ
 LPD3DXBUFFER CFeed::m_pBuffMatModel[FEEDTYPE_MAX] = {};					//マテリアルの情報へのポインタ
 DWORD CFeed::m_nNumMatModel[FEEDTYPE_MAX] = {};							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CFeed::m_pMeshTextures = NULL;
+LPDIRECT3DTEXTURE9 CFeed::m_pMeshTextures[MAX_FEED_TEXTURE] = {};
 D3DXVECTOR3 CFeed::m_VtxMaxModel[FEEDTYPE_MAX] = {};
 D3DXVECTOR3 CFeed::m_VtxMinModel[FEEDTYPE_MAX] = {};
 
@@ -57,8 +61,8 @@ D3DXVECTOR3 CFeed::m_VtxMinModel[FEEDTYPE_MAX] = {};
 //===============================================================================
 CFeed::CFeed() : CModel3D(FEED_PRIOTITY, CScene::OBJTYPE_FEED)
 {
-	m_scale = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	// 大きさ
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_feedType = FEEDTYPE::FEEDTYPE_ATTACK;
 }
 //===============================================================================
 //　デストラクタ
@@ -68,7 +72,7 @@ CFeed::~CFeed() {}
 //===============================================================================
 //　生成
 //===============================================================================
-CFeed * CFeed::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, FEEDTYPE feedType)
+CFeed * CFeed::Create(D3DXVECTOR3 pos, int nZone, int nType)
 {
 	CFeed *pFeed = NULL;
 
@@ -81,20 +85,14 @@ CFeed * CFeed::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, FEEDT
 		if (pFeed != NULL)
 		{
 			// 種類の設定
-			pFeed->BindModel(m_pMeshModel[feedType], m_pBuffMatModel[feedType], m_nNumMatModel[feedType], m_pMeshTextures,
-				m_VtxMaxModel[feedType], m_VtxMinModel[feedType]);
-			// サイズを代入
-			pFeed->m_scale = scale;
-			// サイズを親クラスに代入
-			pFeed->SetScale(scale);
-			// 餌の種類を代入
-			pFeed->m_feedType = feedType;
+			pFeed->BindModel(m_pMeshModel[nType], m_pBuffMatModel[nType], m_nNumMatModel[nType], m_pMeshTextures[nType],
+				m_VtxMaxModel[nType], m_VtxMinModel[nType]);
+			//種類の代入
+			pFeed->m_feedType = (FEEDTYPE)nType;
 			// オブジェクトクラスの生成
 			pFeed->Init();
 			// 位置を代入
 			pFeed->SetPosition(pos);
-			// 回転を反映
-			pFeed->SetRot(rot);
 		}
 	}
 
@@ -114,11 +112,15 @@ HRESULT CFeed::Init(void)
 	// 位置の初期化
 	D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
+	switch (m_feedType)
+	{
+	case FEEDTYPE::FEEDTYPE_ATTACK:	m_rot.x = 0.7f;	break;
+	case FEEDTYPE::FEEDTYPE_ANNOY:	break;
+	case FEEDTYPE::FEEDTYPE_SPEED:	m_rot.x = -0.7f; break;
+	}
+
 	//位置の代入
 	CModel3D::SetPosition(pos);
-
-	// 各種情報の代入
-	CModel3D::SetScale(m_scale);
 
 	//変数の初期化
 	m_pObjBill = NULL;
@@ -147,7 +149,7 @@ void CFeed::Update(void)
 	//距離の取得
 	float fLength = CModel3D::GetLength();
 
-	m_rot.y += 0.005f;
+	m_rot.y += 0.007f;
 
 	CModel3D::SetRot(m_rot);
 
@@ -256,7 +258,9 @@ HRESULT CFeed::Load(void)
 
 
 	//使っているテクスチャ
-	//D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
 
 	return S_OK;
 }
@@ -282,11 +286,14 @@ void CFeed::UnLoad(void)
 		}
 	}
 
-	//テクスチャ
-	if (m_pMeshTextures != NULL)
+	for (int nCount = 0; nCount < MAX_FEED_TEXTURE; nCount++)
 	{
-		m_pMeshTextures->Release();
-		m_pMeshTextures = NULL;
+		//テクスチャ
+		if (m_pMeshTextures[nCount] != NULL)
+		{
+			m_pMeshTextures[nCount]->Release();
+			m_pMeshTextures[nCount] = NULL;
+		}
 	}
 }
 

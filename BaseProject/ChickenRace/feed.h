@@ -14,7 +14,9 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FEED_PRIOTITY				(3)
+#define FEED_PRIOTITY				(3)			// 食べ物の優先順位
+#define MAX_FEED					(3)			// 食べ物のモデル数
+#define MAX_FEED_TEXTURE			(3)			// 食べ物のテクスチャ数
 
 //*****************************************************************************
 // 前方宣言
@@ -43,7 +45,7 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CFeed *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, FEEDTYPE feedType);
+	static CFeed *Create(D3DXVECTOR3 pos, int nZone, int nType);
 	bool CollisionFeed(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	FEEDTYPE GetFeedType(void) { return m_feedType; }
 
@@ -51,10 +53,11 @@ private:
 	static LPD3DXMESH	m_pMeshModel[FEEDTYPE_MAX];		//メッシュ情報へのポインタ
 	static LPD3DXBUFFER m_pBuffMatModel[FEEDTYPE_MAX];	//マテリアルの情報へのポインタ
 	static DWORD		m_nNumMatModel[FEEDTYPE_MAX];	//マテリアルの情報数
-	static LPDIRECT3DTEXTURE9 m_pMeshTextures;			//テクスチャ情報
+	static LPDIRECT3DTEXTURE9 m_pMeshTextures[MAX_FEED_TEXTURE];//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel[FEEDTYPE_MAX];		//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel[FEEDTYPE_MAX];		//モデルの最小値
 
+	int					m_nZone;						// ゾーン
 	FEEDTYPE			m_feedType;						// 餌の種類
 	D3DXVECTOR3			m_scale;						// 大きさ
 	D3DXVECTOR3			m_rot;							// 回転

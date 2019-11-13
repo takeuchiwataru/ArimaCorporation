@@ -67,6 +67,7 @@ CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, o
 	m_bTexMat = false;
 	m_pShaderMeshTextures = NULL;
 	m_pToonShader = NULL;
+	m_MapView = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 }
 //===============================================================================
 //　デストラクタ
@@ -118,7 +119,7 @@ HRESULT CModel3D::Init(void)
 	m_pToonShader = NULL;			// シェーダーのポインタの初期化
 	m_pMeshMaterials = NULL;		// シェーダー用のメッシュマテリアル
 	m_pShaderMeshTextures = NULL;	// シェーダー用のメッシュテクスチャ
-		
+
 	//===================================================
 	//    　　　　　マテリアルとテクスチャの情報
 	//===================================================
@@ -273,7 +274,7 @@ void CModel3D::Draw(void)
 	LPD3DXEFFECT Shader = NULL;						//シェーダー
 	CGameCamera *pCamera = NULL;					//カメラのポイント
 
-													////カメラのポインタに情報を代入
+	//カメラのポインタに情報を代入
 	if (pCamera == NULL)
 	{
 		switch (CManager::GetMode())
@@ -307,6 +308,9 @@ void CModel3D::Draw(void)
 	{
 		LPDIRECT3DTEXTURE9 ShaderTex = m_pToonShader->GetTexture();
 		LPDIRECT3DTEXTURE9 LineTex = m_pToonShader->GetLineTexture();
+
+		LPDIRECT3DTEXTURE9 ShaderMapTex = m_pToonShader->GetMapTexture();
+		LPDIRECT3DTEXTURE9 LineMapTex = m_pToonShader->GetLineMapTexture();
 
 		// ワールドマトリックスの初期化
 		D3DXMatrixIdentity(&m_mtxWorldObject);
@@ -347,7 +351,7 @@ void CModel3D::Draw(void)
 		//===================================================
 		//    　　　　　　シェーダーの情報設定
 		//===================================================
-			//テクニックの設定
+		//テクニックの設定
 		Shader->SetTechnique("ToonShading");
 
 		//マトリックスを渡す
@@ -360,9 +364,16 @@ void CModel3D::Draw(void)
 		Shader->SetMatrix("matView", &mtxView);
 		Shader->SetMatrix("matWorld", &m_mtxWorldObject);
 
-		//テクスチャの割り当て
-		Shader->SetTexture("ShadeTexture", ShaderTex);
-		Shader->SetTexture("LineTexture", LineTex);
+		if (m_nType == 3 || m_nType == 4)
+		{//マップ
+			Shader->SetTexture("ShadeTexture", ShaderMapTex);
+			Shader->SetTexture("LineTexture", LineMapTex);
+		}
+		else if (m_nType != 3 && m_nType != 4)
+		{//それ以外
+			Shader->SetTexture("ShadeTexture", ShaderTex);
+			Shader->SetTexture("LineTexture", LineTex);
+		}
 
 		Shader->SetVector("EyePos", (D3DXVECTOR4*)&ViewPosV);
 
@@ -416,8 +427,7 @@ void CModel3D::Draw(void)
 				//===================================================
 				//    　　　　シェーダーの割り当て作業
 				//===================================================
-
-				if (m_nType != 3 && m_nType != 4)
+				//if (m_nType != 3 && m_nType != 4)
 				{
 					//パスを指定して開始
 					Shader->BeginPass(0);
@@ -920,7 +930,7 @@ bool CModel3D::LengthJudgment(void)
 {
 	bool bReturn = false;	//処理続行フラグ
 
-	//距離を求める
+							//距離を求める
 	D3DXVECTOR3 PlayerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);// CGame::GetPlayer()->GetPos();
 	D3DXVECTOR3 Distance = PlayerPos - m_Pos;
 	m_fLength = sqrtf((Distance.x * Distance.x) + (Distance.z * Distance.z));

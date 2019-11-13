@@ -40,6 +40,7 @@
 #define TEXT_OBJECTNAME1		"data\\TEXT\\ゲームマップ\\objecy.txt"			// 読み込むテキストファイル
 #define TEXT_MESHFIELDNAME1		"data\\TEXT\\ゲームマップ\\meshfield.txt"		// 読み込むテキストファイル
 #define TEXT_WALLNAME1			"data\\TEXT\\ゲームマップ\\wall.txt"			// 読み込むテキストファイル
+#define TEXT_FEEDNAME			"data\\TEXT\\ゲームマップ\\feed.txt"			// 読み込むテキストファイル
 #define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"			// プレイヤーのモーションファイル
 #define VECTOR_ZERO				(D3DXVECTOR3(0.0f, 0.0f, 0.0f))
 
@@ -625,6 +626,7 @@ void CGame::SetStage(void)
 		TextLoad(6);
 		WallTextLoad(6);
 		MeshTextLoad(6);
+		FeedTextLoad();
 
 		//===================================
 		//		Create
@@ -708,32 +710,11 @@ void CGame::SetStage(void)
 			//オブジェクトの生成
 			CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
 		}
-		//for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
-		//{
-		//	//フィールドの生成
-		//	CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
-		//		m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
-		//		m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
-		//		m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
-		//		m_Mesh[nCount].m_nTexType, 0);
-		//}
-		//for (int nCount = 0; nCount < m_nSetWallNum; nCount++)
-		//{
-		//	//壁の生成
-		//	CWall::Create(m_aWall[nCount].m_pos, D3DXVECTOR2(m_aWall[nCount].m_fWidthDivide, m_aWall[nCount].m_fHightDivide), m_aWall[nCount].m_rot, m_aWall[nCount].m_nTexType);
-		//}
-
-		// 餌の生成
-		CFeed::Create(D3DXVECTOR3(-1300.0f, -110.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
-		CFeed::Create(D3DXVECTOR3(-1600.0f, -110.0f, 600.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
-		CFeed::Create(D3DXVECTOR3(-2000.0f, -110.0f, 500.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
-
-		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1700.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ATTACK);
-		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1800.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_ANNOY);
-		//CFeed::Create(D3DXVECTOR3(-300.0f, 1.0f, 1900.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(1.0f, 1.0f, 1.0f), CFeed::FEEDTYPE_SPEED);
-
-		//// 敵の生成
-		//CEnemy::Create(D3DXVECTOR3(-300.0f, 1.0f, 1500.0f));
+		for (int nCount = 0; nCount < m_nSetFeedNum; nCount++)
+		{
+			//食べ物の生成		
+			CFeed::Create(m_aFeed[nCount].m_pos, m_aFeed[nCount].m_nZone, m_aFeed[nCount].m_nType);
+		}
 
 		m_nCntSetStage = 1;
 	}
@@ -1343,6 +1324,115 @@ void CGame::WallTextLoad(int nLoadNumber)
 			}
 		}
 	}
+}
+//===============================================================================
+// 食べ物をファイルからロード
+//===============================================================================
+void CGame::FeedTextLoad(void)
+{
+	//ファイル用変数
+	FILE *pFile;		//ファイルポインタ
+	char *pStrcur;		//現在の先頭の文字列
+	char aLine[256];	//文字列
+	char aStr[256];		//一時保存文字列
+	int nIndex = 0;		//現在のインデックス
+	int nWord = 0;		//ポップで返された値を保持
+
+						//ファイルを開く 読み込み
+	pFile = fopen(TEXT_FEEDNAME, "r");
+
+	//NULLチェック
+	if (pFile != NULL)
+	{
+		//文字列の先頭を設定
+		pStrcur = ReadLine(pFile, &aLine[0]);
+		//文字列を取り出す
+		strcpy(aStr, pStrcur);
+
+		//文字列のデータ 比較する文字列 比較する文字数
+		if (memcmp(pStrcur, "FEED_SETNUM = ", strlen("FEED_SETNUM = ")) == 0)
+		{
+			//頭出し
+			pStrcur += strlen("FEED_SETNUM = ");
+			//文字列の先頭を設定
+			strcpy(aStr, pStrcur);
+			//文字列抜き出し
+			m_nSetFeedNum = atoi(pStrcur);
+		}
+
+		//オブジェクトの数分回す
+		for (int nCntObject = 0; nCntObject < m_nSetFeedNum; nCntObject++)
+		{
+			//文字列の先頭を設定
+			pStrcur = ReadLine(pFile, &aLine[0]);
+			//文字列を取り出す
+			strcpy(aStr, pStrcur);
+
+			if (memcmp(pStrcur, "FEED_START", strlen("FEED_START")) == 0)
+			{
+				while (1)
+				{
+					//文字列の先頭を設定
+					pStrcur = ReadLine(pFile, &aLine[0]);
+
+					//POSを読み込み
+					if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("POS = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.x = (float)atof(pStrcur);
+						//文字数分進める
+						pStrcur += nWord;
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.y = (float)atof(pStrcur);
+						//文字数分進める
+						pStrcur += nWord;
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.z = (float)atof(pStrcur);
+
+					}
+					//ZONEを読み込み
+					if (memcmp(pStrcur, "ZONE = ", strlen("ZONE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("ZONE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_aFeed[nCntObject].m_nZone = atoi(pStrcur);
+					}
+					//TYPEを読み込み
+					if (memcmp(pStrcur, "TYPE = ", strlen("TYPE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("TYPE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_aFeed[nCntObject].m_nType = atoi(pStrcur);
+					}
+					else if (memcmp(pStrcur, "FEED_END", strlen("FEED_END")) == 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	//m_pMarkFeed->SetFeedNum(CMarkFeed::GetFeedNum() + m_nSetFeedNum);
 }
 
 //=============================================================================

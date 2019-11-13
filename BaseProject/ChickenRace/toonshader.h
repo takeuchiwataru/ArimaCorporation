@@ -22,11 +22,15 @@ public:
 	void Uninit(void);
 	LPD3DXEFFECT GetShader(void);
 	LPDIRECT3DTEXTURE9 GetTexture(void);
+	LPDIRECT3DTEXTURE9 GetMapTexture(void);
 	LPDIRECT3DTEXTURE9 GetLineTexture(void);
+	LPDIRECT3DTEXTURE9 GetLineMapTexture(void);
 
 protected:
-	LPDIRECT3DTEXTURE9	m_pTexture;		//テクスチャの情報
-	LPDIRECT3DTEXTURE9	m_pTextureLine;	//テクスチャの情報
-	LPD3DXEFFECT		m_pShader;		//シェーダー情報
+	LPDIRECT3DTEXTURE9	m_pTexture;				//トゥーンテクスチャの情報
+	LPDIRECT3DTEXTURE9	m_pTextureMap;			//マップテクスチャの情報
+	LPDIRECT3DTEXTURE9	m_pTextureLine;			//ラインテクスチャの情報
+	LPDIRECT3DTEXTURE9	m_pTextureMapLine;		//マップテクスチャの情報
+	LPD3DXEFFECT		m_pShader;				//シェーダー情報
 };
 #endif

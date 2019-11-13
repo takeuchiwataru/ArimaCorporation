@@ -13,15 +13,17 @@
 //=============================================================================
 CToonShader::CToonShader()
 {
-	m_pTexture = NULL; 
-	m_pShader = NULL; 
+	m_pTexture = NULL;
+	m_pShader = NULL;
 	m_pTextureLine = NULL;
+	m_pTextureMapLine = NULL;
+	m_pTextureMap = NULL;
 }
 
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CToonShader::~CToonShader(){}
+CToonShader::~CToonShader() {}
 
 //=============================================================================
 // 初期化処理
@@ -41,13 +43,23 @@ void CToonShader::Init(char * FileName)
 		&m_pShader,					//シェーダのポインタ
 		NULL);						//エラー情報
 
-	//シェーダのテクスチャ
+									//シェーダのテクスチャ
 	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade.bmp", &m_pTexture)))
 	{
 		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
 	}
-	//シェーダのテクスチャ
-	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline01.bmp",&m_pTextureLine)))
+	//シェーダのラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline01.bmp", &m_pTextureLine)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+	}
+	//シェーダのマップラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline05.bmp", &m_pTextureMapLine)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+	}
+	//シェーダのマップラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade05.bmp", &m_pTextureMap)))
 	{
 		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
 	}
@@ -69,6 +81,8 @@ void CToonShader::Uninit(void)
 {
 	if (m_pTexture != NULL) { m_pTexture = NULL; }
 	if (m_pTextureLine != NULL) { m_pTextureLine = NULL; }
+	if (m_pTextureMapLine != NULL) { m_pTextureMapLine = NULL; }
+	if (m_pTextureMap != NULL) { m_pTextureMap = NULL; }
 
 	//シェーダー情報の破棄
 	if (m_pShader != NULL)
@@ -100,4 +114,20 @@ LPDIRECT3DTEXTURE9 CToonShader::GetTexture(void)
 LPDIRECT3DTEXTURE9 CToonShader::GetLineTexture(void)
 {
 	return m_pTextureLine;
+}
+
+//=============================================================================
+// アウトラインの情報を渡す窓口
+//=============================================================================
+LPDIRECT3DTEXTURE9 CToonShader::GetLineMapTexture(void)
+{
+	return m_pTextureMapLine;
+}
+
+//=============================================================================
+// トゥーンテクスチャの情報を渡す窓口
+//=============================================================================
+LPDIRECT3DTEXTURE9 CToonShader::GetMapTexture(void)
+{
+	return m_pTextureMap;
 }

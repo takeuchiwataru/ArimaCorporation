@@ -163,7 +163,7 @@ void CPlayer::LoadModel(void)
 	m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
 	m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
 
-																		//モデル情報を取得
+	//モデル情報を取得
 	CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
 	m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
 	m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
@@ -174,7 +174,7 @@ void CPlayer::LoadModel(void)
 		m_pModel = CModel::Create(ModelInfo.pOfSetPos[nCntParts], &ModelInfo.paFileName[nCntParts][0]);
 
 		//テクスチャの割当て
-		//if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
+		if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
 	}
 
 	//モデルの親設定
