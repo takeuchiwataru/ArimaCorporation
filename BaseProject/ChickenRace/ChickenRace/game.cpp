@@ -56,7 +56,7 @@ CGamePlay *CGame::m_pGamePlay = NULL;				// ゲーム（プレイ）
 
 CPlayer *CGame::m_pPlayer[MAX_MEMBER] = { NULL };
 CPause *CGame::m_pPause = NULL;
-CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
+//CLoadTextMotion * CGame::m_pPlayerMotion = NULL;
 CGameCamera * CGame::m_pCuorseCamera = NULL;
 CGameCamera * CGame::m_pGameCamera[MAX_PLAYER] = { NULL };
 bool CGame::m_bHelp = false;
@@ -205,13 +205,13 @@ void CGame::Uninit(void)
 		m_pGamePlay = NULL;
 	}
 
-	//プレイヤーのモーションの破棄
-	if (m_pPlayerMotion != NULL)
-	{
-		m_pPlayerMotion->Uninit();
-		delete m_pPlayerMotion;
-		m_pPlayerMotion = NULL;
-	}
+	////プレイヤーのモーションの破棄
+	//if (m_pPlayerMotion != NULL)
+	//{
+	//	m_pPlayerMotion->Uninit();
+	//	delete m_pPlayerMotion;
+	//	m_pPlayerMotion = NULL;
+	//}
 
 	//カメラの破棄
 	if (m_pCuorseCamera != NULL)
@@ -712,8 +712,8 @@ void CGame::SetStage(void)
 
 		CCOL_MESH_MANAGER::LoadMap();
 
-		if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-		CPlayer::LoadModel();	//モデルの読み込み
+		//if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
+		//CPlayer::LoadModel();	//モデルの読み込み
 
 		float frot = (-D3DX_PI * 0.5f);
 

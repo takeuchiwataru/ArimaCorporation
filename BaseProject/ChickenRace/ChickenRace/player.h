@@ -19,17 +19,23 @@
 //=============================================================================
 // マクロ定義
 //=============================================================================
-#define MAX_PARTS	(7)		//読み込むパーツ数
-#define MAX_LIFE	(15)	//ライフ
-#define MAX_TIRE	(4)		//タイヤの最大数
-#define MAX_EGG		(3)		//卵の最大数
+#define MAX_PARTS	(11)											//読み込むパーツ数
+#define MAX_LIFE	(15)										//ライフ
+#define MAX_TIRE	(4)											//タイヤの最大数
+#define MAX_EGG		(3)											//卵の最大数
 #define MAX_FRAME	(60)
 
-#define DAMAGE_TIME	(60)		// ダメージを食らっている時間
-#define SPEEDDOWN_TIME	(300)	// 減速している時間
+#define DAMAGE_TIME	(60)										// ダメージを食らっている時間
+#define SPEEDDOWN_TIME	(300)									// 減速している時間
 #define FALL_CHICK_RANGE		(400)							// ひよこが降る範囲
-#define CHICK_FALL_NUM			(5)			// 落ちてくるひよこの数
-#define MAX_EGG		(3)		//卵の最大数
+#define CHICK_FALL_NUM			(5)								// 落ちてくるひよこの数
+#define MAX_EGG		(3)											//卵の最大数
+
+#define FILE_NAME_PRISONER		"data\\TEXT\\Player\\Player.txt"//読み込むtxtファイルの名前
+#define MAX_PLAYERANIM			(8)								//アニメーション数
+#define MAX_PLAYERKEY			(8)								//キーフレーム数
+#define MAX_MOTION				(10)							//モーションの最大数
+
 
 //=============================================================================
 // 前方宣言
@@ -50,6 +56,40 @@ class CBillBoord;
 class CPlayer : public CScene
 {
 public:
+	//キー要素
+	typedef struct
+	{
+		float fposX;
+		float fposY;
+		float fposZ;
+		float frotX;
+		float frotY;
+		float frotZ;
+	}KEY;
+
+	//キー情報
+	typedef struct
+	{
+		int nFrame;
+		KEY aKey[MAX_PARTS];
+	}KEY_INFO;
+
+	//モーション情報
+	typedef struct
+	{
+		bool bLoop;
+		int nNumKey;
+		KEY_INFO aKayInfo[MAX_MOTION];
+	}MOTION_INFO;
+
+	//モーション種類
+	typedef enum
+	{
+		PLAYERANIM_NEUTRAL = 0,		//ニュートラルモーション
+		PLAYERANIM_RUN,				//走る
+		PLALYER_MAX					//モーションの最大数
+	}PlayerAnim;
+
 	typedef enum
 	{
 		PLAYERTYPE_PLAYER = 0,
@@ -169,7 +209,20 @@ public:
 
 	bool GetGoal(void) { return m_bGoal; }
 
+	//モーションの更新関数
+	void UpdateMotion(void);
+
+	//ファイル読み込み関数
+	void FileLoad(void);								//ファイル読み込み
+	char *ReadLine(FILE *pFile, char *pDst);			//1行読み込み
+	char *GetLineTop(char *pStr);						//行の先頭を取得
+	int  PopString(char *pStr, char *pDest);			//行の最後を切り捨て
+
 private:
+	static LPD3DXMESH	m_pMesh[MAX_PARTS];				//メッシュ情報へのポインタ
+	static LPD3DXBUFFER	m_pBuffMat[MAX_PARTS];			//マテリアルの情報へのポインタ
+	static DWORD		m_nNumMat[MAX_PARTS];			//マテリアルの情報数
+
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
 	void RemakeCarRot(float * pAngle);
@@ -197,9 +250,13 @@ private:
 	void CollisionCharacter(void);
 	void ChaseAnnoyS(void);
 
-	static CModel *		m_pModel;			//パーツモデルのポインタ
-	static int				m_nMaxModel;	//読み込むモデルの最大数
-	static int				m_nMaxParts;	//読み込むパーツの最大数
+
+	CModel						*m_apModel[MAX_PARTS];			//パーツモデルのポインタ
+	PlayerAnim					m_nAnimnow;						//現在のアニメーション
+
+	//static CModel *		m_pModel;			//パーツモデルのポインタ
+	//static int				m_nMaxModel;	//読み込むモデルの最大数
+	//static int				m_nMaxParts;	//読み込むパーツの最大数
 
 	//メンバ変数
 	static int					  m_nMaxMotion;					// モーションの最大数
@@ -268,6 +325,18 @@ private:
 	float						  m_fRoad;				//IN_OUTの％
 	float						  m_fTilt;				//坂
 	float						  m_fCTilt;				//カメラ用坂
+
+	// モーション関数	新規
+	KEY_INFO						*m_pKeyInfo[MAX_MOTION];	//キー情報へのポインタ
+	int								m_nKey;						//現在のキーナンバー
+	int								m_nCountFlame;				//フレーム数
+	int								m_nNumParts;				//パーツ数
+	int								m_aIndexParent[MAX_PARTS];	//親のインデックス
+	KEY								m_aKayOffset[MAX_PARTS];	//オフセット情報
+	MOTION_INFO						m_aMotionInfo[MAX_MOTION];	//モーション情報
+	int								m_nMotionType;				//モーションのタイプ(int型)
+	bool							m_bMotionEnd;				//モーション終了
+	D3DXVECTOR3						m_OffSetPos[MAX_PARTS];		//パーツごとの最初の位置
 
 	CBillBoord					  *m_pPlayerNum;		// プレイヤー番号（追従）
 	bool						  m_bGoal;				// ゴール

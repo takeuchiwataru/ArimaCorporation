@@ -34,24 +34,16 @@
 //=============================================================================
 #define VECTOR_ZERO		(D3DXVECTOR3(0.0f, 0.0f, 0.0f))				//ベクトルの初期化
 #define FAILE_NAME		("data\\TEXT\\Player\\PlayerState.txt")		//読み込むファイル名
-#define FILE_TEXTURE	("data\\TEXTURE\\modeltex\\ニワトリ.jpg")		//テクスチャの読み込み
-#define LEFT_FRONT_POS	(D3DXVECTOR3(-26.0f, 3.0f, 45.0f))			//左前タイヤ位置
-#define LEFT_BACK_POS	(D3DXVECTOR3(-26.0f, 3.0f, -40.0f))			//左後ろタイヤ位置
-#define RIGHT_FRONT_POS	(D3DXVECTOR3(26.0f, 3.0f, 45.0f))			//右前タイヤ位置
-#define RIGHT_BACK_POS	(D3DXVECTOR3(26.0f, 3.0f, -40.0f))			//右後ろタイヤ位置
-#define ACCLE_TIME		(60.0f * 4)									//加速させる時間
+#define FILE_TEXTURE	("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
 #define AVERAGE			(2.0f)										//平均する値
 #define ROLLOVER_STOP	(0.6f)										//横転防止角度
-#define GRAVITY_FRONT	(0.5f)										//前方の重力
 #define GRAVITY_BACK	(0.2f)										//後方の重力
 #define DECELERATION	(0.5f)										//減速の割合
-#define START_ENGINE	(200)										//エンジン音の再生時間
-#define START_GEARCHANGE (300)										//スタート時のギア切替時間
 #define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
 #define SPEEDDOWN		(0.95f)										// 減速させる値
-#define CHICK_SCALE		(D3DXVECTOR3(2.0f, 2.0f, 2.0f))				//ひよこの大きさ
+#define CHICK_SCALE		(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
 #define THROW			(13.0f)										// 卵を投げる力
 #define EGG_RAND		(2.0f)										// 卵に乗るときのジャンプ力
 #define EGG_HEIGHT		(40.0f)										// 卵に乗ったように見える高さ
@@ -72,32 +64,29 @@
 #define SHAKE_DRIFT		(0.005f)									//ドリフト時の角度加算
 #define SHAKE_BRAK		(0.01f)										//ブレーキ時の角度
 
-//タイヤの番号
-#define LEFT_FRONT		(0)											//左前タイヤ
-#define LEFT_BACK		(1)											//左後ろタイヤ
-#define RIGHT_FRONT		(2)											//右前タイヤ
-#define RIGHT_BACK		(3)											//右後ろタイヤ
-
 #define RIVER_SOUND_RANGE		(1000.0f)							// 川の音が聞こえる範囲
 #define FOUNTAIN_SOUND_RANGE	(1000.0f)							// 噴水の音が聞こえる範囲
 
-// コンボ時のスコア加算
-#define JUMP_ADD_SCORE	(100)										// ジャンプ時のスコア加算量
-#define JUMP_FREAM_TIME	(25)										// ジャンプ時のスコア加算時間
-#define DRIFT_COMBO_TIME (25)										// ドリフト時のスコア加算時間
-#define THROUGH_COMBO_TIME	(1)										// すれすれ時のスコア加算時間
-#define DRIFT_SPACE_SMALL	(10)
-#define DRIFT_SPACE_BIG		(250)
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
-CModel * CPlayer::m_pModel = NULL;		//モデルのパーツポインタ
-int	CPlayer::m_nMaxModel = 0;
-int CPlayer::m_nMaxParts = 0;
-int CPlayer::m_nMaxMotion = 0;
-CMotion::MOTION_INFO * CPlayer::m_pMotionInfo = NULL;
+//CModel * CPlayer::m_pModel = NULL;		//モデルのパーツポインタ
+//int	CPlayer::m_nMaxModel = 0;
+//int CPlayer::m_nMaxParts = 0;
+//int CPlayer::m_nMaxMotion = 0;
+//CMotion::MOTION_INFO * CPlayer::m_pMotionInfo = NULL;
 LPDIRECT3DTEXTURE9 CPlayer::m_pTexture = NULL;
 CChick *CPlayer::m_pAnnoyChick[MAX_MEMBER] = {};
+
+LPD3DXMESH	CPlayer::m_pMesh[MAX_PARTS] = {};					//メッシュ情報の初期化
+LPD3DXBUFFER CPlayer::m_pBuffMat[MAX_PARTS] = {};				//マテリアルの情報の初期化
+DWORD CPlayer::m_nNumMat[MAX_PARTS] = {};						//マテリアルの情報数の初期化
+
+//--------------------------------------------
+//グローバル変数
+//--------------------------------------------
+int g_nNumModel;
+char g_aFileNameModel[MAX_PARTS][256];
 
 //=============================================================================
 // 生成処理
@@ -126,6 +115,12 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 //=============================================================================
 CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER)
 {
+	//値の初期化
+	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	{
+		m_apModel[nCount] = NULL;
+	}
+
 	m_pPlayerNum = NULL;
 	m_pPlayerpos = NULL;
 }
@@ -149,44 +144,37 @@ void CPlayer::LoadModel(void)
 		&m_pTexture);
 
 	//モーション情報の取得
-	CLoadTextMotion * pLoadTextMotion = NULL;
+	//CLoadTextMotion * pLoadTextMotion = NULL;
 	CManager::MODE mode = CManager::GetMode();
 
-	if (mode == CManager::MODE_GAME)
-	{//ゲーム
-		pLoadTextMotion = CGame::GetPlayerMotion();
-	}
-	else if (mode == CManager::MODE_TUTORIAL)
-	{//チュートリアル
-		pLoadTextMotion = CTutorial::GetPlayerMotion();
-	}
+	//pLoadTextMotion = CTutorial::GetPlayerMotion();
 
-	m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
-	m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
+	//m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
+	//m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
 
-																		//モデル情報を取得
-	CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
-	m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
-	m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
+	//																	//モデル情報を取得
+	//CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
+	//m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
+	//m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
 
-										//モデルの生成
-	for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
-	{
-		m_pModel = CModel::Create(ModelInfo.pOfSetPos[nCntParts], &ModelInfo.paFileName[nCntParts][0]);
+	//									//モデルの生成
+	//for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
+	//{
+	//	m_pModel = CModel::Create(ModelInfo.pOfSetPos[nCntParts], &ModelInfo.paFileName[nCntParts][0]);
 
-		//テクスチャの割当て
-		if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
-	}
+	//	//テクスチャの割当て
+	//	if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
+	//}
 
-	//モデルの親設定
-	for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
-	{
-		if (nCntParts == 0)
-		{
-			m_pModel->SetParent(NULL);
-			break;
-		}
-	}
+	////モデルの親設定
+	//for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
+	//{
+	//	if (nCntParts == 0)
+	//	{
+	//		m_pModel->SetParent(NULL);
+	//		break;
+	//	}
+	//}
 }
 
 //=============================================================================
@@ -194,18 +182,11 @@ void CPlayer::LoadModel(void)
 //=============================================================================
 void CPlayer::UnloadModel(void)
 {
-	if (m_pModel != NULL)
-	{
-		m_pModel->Uninit();
-		delete m_pModel;
-		m_pModel = NULL;
-	}
-
-	//モーションデータの破棄
-	if (m_pMotionInfo != NULL)
-	{
-		m_pMotionInfo = NULL;
-	}
+	////モーションデータの破棄
+	//if (m_pMotionInfo != NULL)
+	//{
+	//	m_pMotionInfo = NULL;
+	//}
 
 	//テクスチャの破棄
 	if (m_pTexture != NULL)
@@ -243,8 +224,8 @@ HRESULT CPlayer::Init(void)
 	m_PlayerInfo.fAddRot = PLAYER_ADDROT;	//加える回転値
 	m_PlayerInfo.fDistance = 0.0f;			//距離
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
-	m_bJump = true;						//ジャンプ状態
-	m_bControl = true;						//コントローラーフラグ
+	m_bJump = true;							//ジャンプ状態
+	m_bControl = false;						//コントローラーフラグ
 	m_nCountJumpTime = 0;					//ジャンプ状態の時間を加算
 	m_fvtxMaxY = 0.0f;						//モデル頂点の最大値（Y）
 	m_fMass = 200.0f;						// 質量
@@ -280,10 +261,14 @@ HRESULT CPlayer::Init(void)
 	m_fTilt = 0.0f;
 	m_fCTilt = 0.0f;
 
-	m_nPlayerNum = 0;				// プレイヤー番号
-	m_nControllerNum = 0;			// コントローラー番号
+	m_nPlayerNum = 0;					// プレイヤー番号
+	m_nControllerNum = 0;				// コントローラー番号
 
-	m_bGoal = false;				// ゴール
+	m_nAnimnow = PLAYERANIM_NEUTRAL;	//ニュートラル状態
+	m_nCountFlame = 0;
+	m_nKey = 0;
+
+	m_bGoal = false;					// ゴール
 
 	// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
@@ -312,28 +297,36 @@ HRESULT CPlayer::Init(void)
 		m_pAnnoyChick[nCntChick] = NULL;
 	}
 
-	if (m_pMotion == NULL)	//モーションの生成
+	FileLoad();
+
+	//テクスチャの割当て
+	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
 	{
-		m_pMotion = CMotion::Create();
-
-		if (m_pMotion != NULL)
-		{
-			//モデルデータの設定
-			m_pMotion->SetModel(&m_pModel);			//モーションデータにモデル情報を渡す
-			m_pMotion->SetMaxModel(m_nMaxParts);	//モデルパーツの最大数を渡す
-
-													//モーションデータの設定
-			m_pMotion->SetMotion(m_pMotionInfo);	//モーション情報の取得
-			m_pMotion->SetMaxMotion(m_nMaxMotion);	//モーションの最大数の取得
-
-													//初期化処理
-			m_pMotion->Init();
-		}
+		if (m_apModel[nCount] != NULL) { m_apModel[nCount]->BindTexture(m_pTexture); }
 	}
 
+	//if (m_pMotion == NULL)	//モーションの生成
+	//{
+	//	m_pMotion = CMotion::Create();
+
+	//	if (m_pMotion != NULL)
+	//	{
+	//		//モデルデータの設定
+	//		m_pMotion->SetModel(&m_pModel);			//モーションデータにモデル情報を渡す
+	//		m_pMotion->SetMaxModel(m_nMaxParts);	//モデルパーツの最大数を渡す
+
+	//												//モーションデータの設定
+	//		m_pMotion->SetMotion(m_pMotionInfo);	//モーション情報の取得
+	//		m_pMotion->SetMaxMotion(m_nMaxMotion);	//モーションの最大数の取得
+
+	//												//初期化処理
+	//		m_pMotion->Init();
+	//	}
+	//}
+
 	//モデルの最小値・最大値の取得
-	m_vtxMaxModel = m_pModel->GetVtxMax();
-	m_vtxMinModel = m_pModel->GetVtxMin();
+	//m_vtxMaxModel = m_pModel->GetVtxMax();
+	//m_vtxMinModel = m_pModel->GetVtxMin();
 	return S_OK;
 }
 
@@ -354,13 +347,13 @@ void CPlayer::Uninit(void)
 		m_pPlayerpos = NULL;
 	}
 
-	//モーションの破棄
-	if (m_pMotion != NULL)
-	{
-		m_pMotion->Uninit();
-		delete m_pMotion;
-		m_pMotion = NULL;
-	}
+	////モーションの破棄
+	//if (m_pMotion != NULL)
+	//{
+	//	m_pMotion->Uninit();
+	//	delete m_pMotion;
+	//	m_pMotion = NULL;
+	//}
 
 	//タイヤモデルの破棄
 	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
@@ -381,6 +374,17 @@ void CPlayer::Uninit(void)
 		if (m_pAnnoyChick[nCntChick] != NULL)
 		{
 			m_pChick[nCntChick] = NULL;
+		}
+	}
+
+	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	{
+		if (m_apModel[nCount] != NULL)
+		{
+			//3DモデルのUninit
+			m_apModel[nCount]->Uninit();
+			delete m_apModel[nCount];
+			m_apModel[nCount] = NULL;
 		}
 	}
 
@@ -432,16 +436,16 @@ void CPlayer::Update(void)
 
 	UpdateMove();			// 移動処理
 
-	//UpdateField();
+	UpdateField();
 
-	//CollisionFeed();		// 餌の当たり判定
+	CollisionFeed();		// 餌の当たり判定
 
-	//CollisionEgg();			// 卵との当たり判定
+	CollisionEgg();			// 卵との当たり判定
 
-	//CollisionChick();		// ひよことの当たり判定
+	CollisionChick();		// ひよことの当たり判定
 
 
-	//ChaseEgg();				// 卵がついてくる処理
+	ChaseEgg();				// 卵がついてくる処理
 
 	CollisionCharacter();	// キャラクター同士の当たり判定
 	//CollisionObject();		// オブジェクトとの当たり判定
@@ -474,6 +478,11 @@ void CPlayer::Update(void)
 			m_pPlayerpos->SetColor(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
+	m_nMotionType = m_nAnimnow;
+
+	//モーション更新
+	UpdateMotion();
+
 	DebugProc();		// デバック表示
 }
 
@@ -491,7 +500,7 @@ void CPlayer::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-												// ワールドマトリックスの初期化
+	// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -505,11 +514,13 @@ void CPlayer::Draw(void)
 	// ワールドマトリックスの設定
 	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
 
-	//モデルの描画
-	if (m_pModel != NULL)
-	{
-		//描画する
-		m_pModel->Draw(1.0f);
+	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	{//モデルの描画
+		if (m_apModel[nCount] != NULL)
+		{
+			//描画する
+			m_apModel[nCount]->Draw(1.0f);
+		}
 	}
 }
 //=============================================================================
@@ -530,6 +541,7 @@ void CPlayer::UpdateAI(void)
 
 	if (bGoal == true)
 	{
+		m_nAnimnow = PLAYERANIM_NEUTRAL;
 		m_bGoal = true;
 		m_move *= 0.0f;
 		SetStateHandle(HANDLE_MAX);
@@ -744,7 +756,10 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-							//ジャンプ状態なら
+		//走るモーション
+		m_nAnimnow = PLAYERANIM_RUN;
+
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL)
@@ -782,6 +797,10 @@ void CPlayer::UpdateMove(void)
 			m_move.z += cosf(m_rot.y) * (m_fSpeed);
 		}
 
+		break;
+	default:
+		//走るモーション
+		m_nAnimnow = PLAYERANIM_NEUTRAL;
 		break;
 	}
 
@@ -1153,73 +1172,6 @@ void CPlayer::CollisitionWall(void)
 		//Nextに次のSceneを入れる
 		pScene = pSceneNext;
 	}
-}
-
-//=============================================================================
-// 車体の角度を求める
-//=============================================================================
-void CPlayer::CarCalculate(D3DXVECTOR3 * TirePos)
-{
-	if (m_bJump) { return; }
-	//変数宣言
-	float fHight = 0.0f;
-	float fTireHight = 0.0f;
-	bool bDecisionAngle = false;
-
-	//車体の角度を求める
-	if (!bDecisionAngle) { return; }
-
-	//----------------------
-	// X軸の角度を求める
-	//----------------------
-	float fHight00 = TirePos[LEFT_FRONT].y - TirePos[LEFT_BACK].y;			//左右の高さを求める
-	float fHight01 = TirePos[RIGHT_FRONT].y - TirePos[RIGHT_BACK].y;
-
-	float fLength00 = GetLength(TirePos[LEFT_FRONT], TirePos[LEFT_BACK]);		//２頂点の長さを求める
-	float fLength01 = GetLength(TirePos[RIGHT_FRONT], TirePos[RIGHT_BACK]);
-
-	float fAngleLeft = fHight00 / fLength00;		//角度を求める
-	float fAngleRight = fHight01 / fLength01;
-	RemakeAngle(&fAngleLeft);						//角度修正
-	RemakeAngle(&fAngleRight);
-
-	//平均値を求める
-	float fAngleX = (fAngleLeft + fAngleRight) / AVERAGE;
-	RemakeAngle(&fAngleX);
-
-	//----------------------
-	// Z軸の角度を求める
-	//----------------------
-	fHight00 = TirePos[LEFT_FRONT].y - TirePos[RIGHT_FRONT].y;			//前後の高さを求める
-	fHight01 = TirePos[LEFT_BACK].y - TirePos[RIGHT_BACK].y;
-
-	fLength00 = GetLength(TirePos[LEFT_FRONT], TirePos[RIGHT_FRONT]);		//２頂点の長さを求める
-	fLength01 = GetLength(TirePos[LEFT_BACK], TirePos[RIGHT_BACK]);
-
-	float fAngleFront = fHight00 / fLength00;		//角度を求める
-	float fAngleBack = fHight01 / fLength01;
-	RemakeAngle(&fAngleFront);						//角度修正
-	RemakeAngle(&fAngleBack);
-
-	//平均値を求める
-	float fAngleZ = (fAngleFront + fAngleBack) / AVERAGE;
-	RemakeAngle(&fAngleZ);
-
-	//-------------------------
-	// 向きの値修正(横転防止)
-	//-------------------------
-	fAngleX *= -1;
-	fAngleZ *= -1;
-	RemakeCarRot(&fAngleX);
-	RemakeCarRot(&fAngleZ);
-
-	//向きを設定する
-	m_rot.x = fAngleX;
-	m_rot.z = fAngleZ;
-
-	//CDebugProc::Print("LEFT : %.2f, RIGHT : %.2f\n", fAngleLeft, fAngleRight);
-	//CDebugProc::Print("FRONT : %.2f, BACK : %.2f\n", fAngleFront, fAngleBack);
-	//CDebugProc::Print("ANGLE : X %.2f, Z %.2f\n", fAngleX, fAngleZ);
 }
 
 //=============================================================================
@@ -2168,4 +2120,734 @@ void CPlayer::CollisionCharacter(void)
 			}
 		}
 	}
+}
+//=============================================================================
+// プレイヤーのモーション
+//=============================================================================
+void CPlayer::UpdateMotion(void)
+{
+	//モーション
+	KEY *pKey, *pNextKey;
+	float fRateMotion;
+	float fDiffMotion;
+	D3DXVECTOR3 rotmotion;
+	D3DXVECTOR3 posmotion;
+	//D3DXVECTOR3 posParent;
+
+
+	//キーが最大数を上回らないように
+	if (m_aMotionInfo[m_nMotionType].nNumKey <= m_nKey)
+	{
+		m_nKey = 0;
+	}
+
+	//モーション更新
+	for (int nCntParts = 0; nCntParts < m_nNumParts; nCntParts++)
+	{
+		if (m_apModel[nCntParts] != NULL)
+		{
+			//現在のキーを取得
+			pKey = &m_pKeyInfo[m_nMotionType][m_nKey].aKey[nCntParts];
+			//次のキーを取得
+			pNextKey = &m_pKeyInfo[m_nMotionType][(m_nKey + 1) % m_aMotionInfo[m_nMotionType].nNumKey].aKey[nCntParts];
+
+			//現在のキーから次のキーへの再生フレーム数におけるモーションカウンターの相対値を算出
+			fRateMotion = (float)m_nCountFlame / (float)m_pKeyInfo[m_nMotionType][m_nKey].nFrame;
+
+			//ROT
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->frotX - pKey->frotX;
+			//相対値を差分を使って各要素の値を算出
+			rotmotion.x = pKey->frotX + (fDiffMotion * fRateMotion);
+
+			//POS
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->fposX - pKey->fposX;
+			//相対値を差分を使って各要素の値を算出
+			posmotion.x = pKey->fposX + (fDiffMotion * fRateMotion);
+
+
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->frotY - pKey->frotY;
+			//相対値を差分を使って各要素の値を算出
+			rotmotion.y = pKey->frotY + (fDiffMotion * fRateMotion);
+			//POS
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->fposY - pKey->fposY;
+			//相対値を差分を使って各要素の値を算出
+			posmotion.y = pKey->fposY + (fDiffMotion * fRateMotion);
+
+
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->frotZ - pKey->frotZ;
+			//相対値を差分を使って各要素の値を算出
+			rotmotion.z = pKey->frotZ + (fDiffMotion * fRateMotion);
+			//POS
+			//現在のキーと次のキーの各要素の差分を算出
+			fDiffMotion = pNextKey->fposZ - pKey->fposZ;
+			//相対値を差分を使って各要素の値を算出
+			posmotion.z = pKey->fposZ + (fDiffMotion * fRateMotion);
+
+
+			//パーツを動かす
+			m_apModel[nCntParts]->SetRot(rotmotion);
+
+			//POS
+			m_apModel[nCntParts]->SetPos(D3DXVECTOR3(m_OffSetPos[nCntParts].x + posmotion.x,
+				m_OffSetPos[nCntParts].y + posmotion.y,
+				m_OffSetPos[nCntParts].z + posmotion.z));
+
+		}
+	}
+
+	//ループの判定
+	switch (m_aMotionInfo[m_nMotionType].bLoop)
+	{
+	case true:
+		//ループする
+		//フレームを進める
+		m_nCountFlame++;
+		//キーの更新
+		if (m_nCountFlame >= m_pKeyInfo[m_nMotionType][m_nKey].nFrame)
+		{
+			if (m_aMotionInfo[m_nMotionType].nNumKey - 1 == m_nKey)
+			{
+				m_nKey = 0;
+			}
+			else
+			{
+				m_nKey += 1;
+			}
+			m_nCountFlame = 0;
+		}
+
+		break;
+	case false:
+		//ループしない
+		if (m_aMotionInfo[m_nMotionType].nNumKey - 1 > m_nKey)
+		{//フレームを進める
+			m_nCountFlame++;
+		}
+		else if (m_aMotionInfo[m_nMotionType].nNumKey - 1 == m_nKey)
+		{
+			//if (m_nAnimnow == PLAYERANIM_ATTACK)
+			//{//攻撃モーション
+			//	m_nAttackDelay++;
+			//	if (m_nAttackDelay > 20)
+			//	{
+			//		m_bAttack = false;
+			//		m_nAttackDelay = 0;
+			//	}
+			//}
+			m_bMotionEnd = true;
+		}
+		//キーの更新
+		if (m_nCountFlame >= m_pKeyInfo[m_nMotionType][m_nKey].nFrame)
+		{
+			if (m_aMotionInfo[m_nMotionType].nNumKey > m_nKey)
+			{
+				m_nKey += 1;
+			}
+			m_nCountFlame = 0;
+		}
+		break;
+	}
+
+#ifdef  _DEBUG
+	CDebugProc::Print(" Numキー  : (%d)\n", m_nKey);
+	CDebugProc::Print(" m_nCountFlame  : (%d)\n", m_nCountFlame);
+
+#endif
+
+}
+
+//=============================================================================
+// ファイル読み込み
+//=============================================================================
+void CPlayer::FileLoad(void)
+{
+	//デバイスを取得
+	CRenderer *pRenderer = CManager::GetRenderer();
+	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
+
+	//ファイル読み込み用変数
+	FILE *pFile;		//ファイルポインタ
+	char *pStrcur;		//現在の先頭の文字列
+	char aLine[256];	//文字列
+	char aStr[256];		//一時保存文字列
+	int nIndex = 0;		//現在のインデックス
+	int nWord = 0;		//ポップで返された値を保持
+
+	D3DXVECTOR3 ParentPos;	//親の位置情報を取得
+#if 1
+							//ファイルを開く 読み込み
+	pFile = fopen(FILE_NAME_PRISONER, "r");
+	//NULLチェック
+	if (pFile != NULL)
+	{
+		for (int nCntMotion = 0; nCntMotion < MAX_MOTION; )
+		{
+			//文字列の先頭を設定
+			pStrcur = ReadLine(pFile, &aLine[0]);
+			//文字列を取り出す
+			strcpy(aStr, pStrcur);
+
+			//文字列のデータ 比較する文字列 比較する文字数
+			if (memcmp(pStrcur, "NUM_MODEL = ", strlen("NUM_MODEL = ")) == 0)
+			{
+				//頭出し
+				pStrcur += strlen("NUM_MODEL = ");
+				//文字列の先頭を設定
+				strcpy(aStr, pStrcur);
+				//文字列抜き出し
+				g_nNumModel = atoi(pStrcur);
+
+				for (int nCntModel = 0; nCntModel < g_nNumModel; nCntModel++)
+				{
+					//文字列の先頭を設定
+					pStrcur = ReadLine(pFile, &aLine[0]);
+					//文字列を取り戻す
+					strcpy(aStr, pStrcur);
+					if (memcmp(pStrcur, "MODEL_FILENAME = ", strlen("MODEL_FILENAME = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("MODEL_FILENAME = ");
+
+						//文字列を設定
+						strcpy(aStr, pStrcur);
+
+						//必要な文字列の最後の文字までの文字数を数える
+						int nNullNum = PopString(pStrcur, &aStr[0]);
+
+						//文字列を取り戻す
+						strcpy(aStr, pStrcur);
+
+						//最後の文字にNULL文字を入れる
+						aStr[nNullNum - 1] = '\0';
+
+						//対象の文字列から抜き出し
+						strcpy(&g_aFileNameModel[nCntModel][0], aStr);
+
+						// Xファイルの読み込み
+						D3DXLoadMeshFromX(&g_aFileNameModel[nCntModel][0],
+							D3DXMESH_SYSTEMMEM,
+							pDevice,
+							NULL,
+							&m_pBuffMat[nCntModel],
+							NULL,
+							&m_nNumMat[nCntModel],
+							&m_pMesh[nCntModel]);
+					}
+				}
+				//文字列の先頭を設定
+				pStrcur = ReadLine(pFile, &aLine[0]);
+				//文字列を取り出す
+				strcpy(aStr, pStrcur);
+			}
+
+
+			//文字列のデータ 比較する文字列 比較する文字数
+			if (memcmp(pStrcur, "CHARACTERSET", 12) == 0)
+			{
+				while (1)
+				{
+					//文字列の先頭を設定
+					pStrcur = ReadLine(pFile, &aLine[0]);
+					//文字列を取り出す
+					strcpy(aStr, pStrcur);
+					if (memcmp(pStrcur, "NUM_PARTS = ", strlen("NUM_PARTS = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("NUM_PARTS = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_nNumParts = atoi(pStrcur);
+					}
+					if (memcmp(pStrcur, "PARTSSET", strlen("PARTSSET")) == 0)
+					{
+						while (1)
+						{
+							//文字列の先頭を設定
+							pStrcur = ReadLine(pFile, &aLine[0]);
+
+							//INDEXを読み込み
+							if (memcmp(pStrcur, "INDEX = ", strlen("INDEX = ")) == 0)
+							{
+								//頭出し
+								pStrcur += strlen("INDEX = ");
+								//文字列の先頭を設定
+								strcpy(aStr, pStrcur);
+								//文字列抜き出し
+								nIndex = atoi(pStrcur);
+							}
+							//PARENTを読み込み
+							if (memcmp(pStrcur, "PARENT = ", strlen("PARENT = ")) == 0)
+							{
+								//頭出し
+								pStrcur += strlen("PARENT = ");
+								//文字列の先頭を設定
+								strcpy(aStr, pStrcur);
+								//文字列抜き出し
+								m_aIndexParent[nIndex] = atoi(pStrcur);
+							}
+							//POSを読み込み
+							if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)
+							{
+								//頭出し
+								pStrcur += strlen("POS = ");
+								//文字列の先頭を設定
+								strcpy(aStr, pStrcur);
+
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].fposX = (float)atof(pStrcur);
+								//文字数分進める
+								pStrcur += nWord;
+
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].fposY = (float)atof(pStrcur);
+								//文字数分進める
+								pStrcur += nWord;
+
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].fposZ = (float)atof(pStrcur);
+
+							}
+							//ROTを読み込み
+							if (memcmp(pStrcur, "ROT = ", strlen("ROT = ")) == 0)
+							{
+								//頭出し
+								pStrcur += strlen("ROT = ");
+								//文字列の先頭を設定
+								strcpy(aStr, pStrcur);
+
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].frotX = (float)atof(pStrcur);
+
+								//文字数分進める
+								pStrcur += nWord;
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].frotY = (float)atof(pStrcur);
+
+								//文字数分進める
+								pStrcur += nWord;
+								//文字数を返してもらう
+								nWord = PopString(pStrcur, &aStr[0]);
+								//文字列変換
+								m_aKayOffset[nIndex].frotZ = (float)atof(pStrcur);
+							}
+							//パーツセット終了
+							else if (memcmp(pStrcur, "END_PARTSSET", strlen("END_PARTSSET")) == 0)
+							{
+								//NULLチェック
+								if (m_apModel[nIndex] == NULL)
+								{//動的確保
+									m_apModel[nIndex] = new CModel;
+									//NULLチェック
+									if (m_apModel[nIndex] != NULL)
+									{
+										//モデルの生成
+										m_apModel[nIndex]->BindModel(m_pMesh[nIndex], m_pBuffMat[nIndex], m_nNumMat[nIndex]);
+										m_apModel[nIndex]->Init();
+									}
+								}
+
+								//モデルを生成	オフセット設定
+								/*m_apModel[nIndex] = CModel::Create(
+								D3DXVECTOR3(m_pos.x + m_aKayOffset[nIndex].fposX,
+								m_pos.y + m_aKayOffset[nIndex].fposY,
+								m_pos.z + m_aKayOffset[nIndex].fposZ), m_rot);*/
+
+								m_apModel[nIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nIndex].fposX,
+									m_pos.y + m_aKayOffset[nIndex].fposY,
+									m_pos.z + m_aKayOffset[nIndex].fposZ));
+
+								//posを代入
+								ParentPos = m_apModel[nIndex]->GetPos();
+								m_OffSetPos[nIndex] = m_apModel[nIndex]->GetPos();
+
+								//モデルを割り当て
+								m_apModel[nIndex]->BindModel(m_pMesh[nIndex], m_pBuffMat[nIndex], m_nNumMat[nIndex]);
+
+								if (m_aIndexParent[nIndex] == -1)
+								{
+									//モデルの親を指定
+									m_apModel[nIndex]->SetParent(NULL);
+									ParentPos = m_apModel[nIndex]->GetPos();
+								}
+								else
+								{
+									//モデルの親を指定
+									m_apModel[nIndex]->SetParent(m_apModel[m_aIndexParent[nIndex]]);
+								}
+
+								break;
+							}
+						}
+					}
+					//キャラクターセット終了
+					else if (memcmp(pStrcur, "END_CHARACTERSET", strlen("END_CHARACTERSET")) == 0)
+					{
+						break;
+					}
+				}
+				//文字列の先頭を設定
+				pStrcur = ReadLine(pFile, &aLine[0]);
+				//文字列を取り出す
+				strcpy(aStr, pStrcur);
+			}
+
+			//モーション読み込み
+			if (memcmp(pStrcur, "MOTIONSET", strlen("MOTIONSET")) == 0)
+			{
+				//頭出し
+				pStrcur += strlen("MOTIONSET");
+
+				while (1)
+				{
+					//文字列の先頭を設定
+					pStrcur = ReadLine(pFile, &aLine[0]);
+					//文字列を取り出す
+					strcpy(aStr, pStrcur);
+
+					if (memcmp(pStrcur, "LOOP = ", strlen("LOOP = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("LOOP = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+
+						switch (atoi(pStrcur))
+						{
+						case 0:
+							//文字列抜き出し
+							m_aMotionInfo[nCntMotion].bLoop = false;
+							break;
+						case 1:
+							//文字列抜き出し
+							m_aMotionInfo[nCntMotion].bLoop = true;
+							break;
+						}
+						//文字列の先頭を設定
+						pStrcur = ReadLine(pFile, &aLine[0]);
+					}
+					if (memcmp(pStrcur, "NUM_KEY = ", strlen("NUM_KEY = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("NUM_KEY = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_aMotionInfo[nCntMotion].nNumKey = atoi(pStrcur);
+
+						//文字列の先頭を設定
+						pStrcur = ReadLine(pFile, &aLine[0]);
+						//文字列を取り出す
+						strcpy(aStr, pStrcur);
+					}
+
+					//キーの設定
+					for (int nCntKey = 0; nCntKey < m_aMotionInfo[nCntMotion].nNumKey;)
+					{
+						if (memcmp(pStrcur, "KEYSET", strlen("KEYSET")) == 0)
+						{
+							//頭出し
+							pStrcur += strlen("KEYSET");
+							//文字列の先頭を設定
+							strcpy(aStr, pStrcur);
+							//文字列の先頭を設定
+							pStrcur = ReadLine(pFile, &aLine[0]);
+
+							if (memcmp(pStrcur, "FRAME = ", strlen("FRAME = ")) == 0)
+							{
+								//頭出し
+								pStrcur += strlen("FRAME = ");
+
+								m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].nFrame = atoi(pStrcur);
+
+								//文字列の先頭を設定
+								strcpy(aStr, pStrcur);
+								//文字列の先頭を設定
+								pStrcur = ReadLine(pFile, &aLine[0]);
+							}
+
+							//パーツ分回す
+							for (int nCntParts = 0; nCntParts < m_nNumParts;)
+							{
+								if (memcmp(pStrcur, "KEY", strlen("KEY")) == 0)
+								{
+									//文字列の先頭を設定
+									pStrcur = ReadLine(pFile, &aLine[0]);
+
+									if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)
+									{
+										//頭出し
+										pStrcur += strlen("POS = ");
+										//文字列の先頭を設定
+										strcpy(aStr, pStrcur);
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//POS.X代入
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].fposX = (float)atof(pStrcur);
+										//文字数分進める
+										pStrcur += nWord;
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//POS.Y代入
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].fposY = (float)atof(pStrcur);
+										//文字数分進める
+										pStrcur += nWord;
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//POS.Z代入
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].fposZ = (float)atof(pStrcur);
+										//文字列の先頭を設定
+										pStrcur = ReadLine(pFile, &aLine[0]);
+									}
+									//ROTを読み込み
+									if (memcmp(pStrcur, "ROT = ", strlen("ROT = ")) == 0)
+									{
+										//頭出し
+										pStrcur += strlen("ROT = ");
+										//文字列の先頭を設定
+										strcpy(aStr, pStrcur);
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//RotX
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].frotX = (float)atof(pStrcur);
+										//文字数分進める
+										pStrcur += nWord;
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//RotY
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].frotY = (float)atof(pStrcur);
+										//文字数分進める
+										pStrcur += nWord;
+
+										//文字数を返してもらう
+										nWord = PopString(pStrcur, &aStr[0]);
+										//RotZ
+										m_aMotionInfo[nCntMotion].aKayInfo[nCntKey].aKey[nCntParts].frotZ = (float)atof(pStrcur);
+
+										//文字列の先頭を設定
+										pStrcur = ReadLine(pFile, &aLine[0]);
+									}
+									if (memcmp(pStrcur, "END_KEY", strlen("END_KEY")) == 0)
+									{
+										//頭出し
+										pStrcur += strlen("END_KEY");
+										//文字列の先頭を設定
+										strcpy(aStr, pStrcur);
+										//文字列の先頭を設定
+										pStrcur = ReadLine(pFile, &aLine[0]);
+										//パーツのカウントを進める
+										nCntParts++;
+									}
+								}
+								else
+								{
+									//文字列の先頭を設定
+									pStrcur = ReadLine(pFile, &aLine[0]);
+								}
+							}
+							if (memcmp(pStrcur, "END_KEYSET", strlen("END_KEYSET")) == 0)
+							{
+								//文字列の先頭を設定
+								pStrcur = ReadLine(pFile, &aLine[0]);
+								//カウントを進める
+								nCntKey++;
+							}
+						}
+						else
+						{
+							//文字列の先頭を設定
+							pStrcur = ReadLine(pFile, &aLine[0]);
+						}
+
+					}
+					if (memcmp(pStrcur, "END_MOTIONSET", strlen("END_MOTIONSET")) == 0)
+					{
+						//モーションの情報をセット
+						m_pKeyInfo[nCntMotion] = &m_aMotionInfo[nCntMotion].aKayInfo[0];
+						nCntMotion++;
+						break;
+					}
+				}
+			}
+			//スクリプトの終わり
+			if (memcmp(pStrcur, "END_SCRIPT	", strlen("END_SCRIPT")) == 0)
+			{
+				break;
+			}
+		}
+	}
+	else
+	{	//ファイルが開けなかった
+		printf("ファイルが開けませんでした\n");
+	}
+	//ファイルを閉じる
+	fclose(pFile);
+#endif
+
+}
+
+//=============================================================================
+//　ファイル読み込み無効文を排除
+//=============================================================================
+char *CPlayer::ReadLine(FILE *pFile, char *pDst)
+{
+	while (1)
+	{
+		//１行分読み込み
+		fgets(&pDst[0], 256, pFile);
+
+		//文字列のデータ 比較する文字列 比較する文字数
+		if (memcmp(pDst, "#", strlen("#")) == 0)
+		{
+			pDst += strlen("\n");
+		}
+		//文字列のデータ 比較する文字列 比較する文字数
+		else if (memcmp(pDst, "\t", strlen("\t")) == 0)
+		{
+			pDst += strlen("\t");
+			while (1)
+			{
+				if (memcmp(pDst, "\t", strlen("\t")) == 0)
+				{
+					pDst += strlen("\t");
+				}
+				else
+				{
+					break;
+				}
+			}
+			break;
+		}
+		//文字列のデータ 比較する文字列 比較する文字数
+		else if (memcmp(pDst, " ", strlen(" ")) == 0)
+		{
+			pDst += strlen(" ");
+			while (1)
+			{
+				if (memcmp(pDst, " ", strlen(" ")) == 0)
+				{
+					pDst += strlen(" ");
+				}
+				else
+				{
+					break;
+				}
+				break;
+			}
+		}
+		//文字列のデータ 比較する文字列 比較する文字数
+		else if (memcmp(pDst, "\n", strlen("\n")) == 0)
+		{
+			pDst += strlen("\n");
+		}
+		else
+		{
+			break;
+		}
+	}
+	return pDst;
+}
+
+//=============================================================================
+//　ファイル読み込み先頭を排除
+//=============================================================================
+char * CPlayer::GetLineTop(char * pStr)
+{
+	while (1)
+	{
+		//文字列のデータ 比較する文字列 比較する文字数
+		if (memcmp(pStr, " ", strlen(" ")) == 0)
+		{
+			pStr += strlen(" ");
+			while (1)
+			{
+				if (memcmp(pStr, " ", strlen(" ")) == 0)
+				{
+					pStr += strlen(" ");
+				}
+				else
+				{
+					break;
+				}
+				break;
+			}
+		}
+		//文字列のデータ 比較する文字列 比較する文字数
+		else if (memcmp(pStr, "\t", strlen("\t")) == 0)
+		{
+			pStr += strlen("\t");
+			while (1)
+			{
+				if (memcmp(pStr, "\t", strlen("\t")) == 0)
+				{
+					pStr += strlen("\t");
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+	return pStr;
+}
+
+//=============================================================================
+//　文字数を返す
+//=============================================================================
+int CPlayer::PopString(char * pStr, char * pDest)
+{
+	int nWord = 0;
+
+	while (1)
+	{	//頭出し
+		pStr += 1;
+		nWord += 1;
+		if (memcmp(pStr, " ", strlen(" ")) == 0)
+		{	//頭出し
+			pStr = "\0";
+			nWord += 1;
+			break;
+		}
+		if (memcmp(pStr, "\t", strlen("\t")) == 0)
+		{	//頭出し
+			pStr = "\0";
+			nWord += (int)strlen("\t");
+			break;
+		}
+		//文字列のデータ 比較する文字列 比較する文字数
+		else if (memcmp(pStr, "\n", strlen("\n")) == 0)
+		{
+			//頭出し
+			nWord += (int)strlen("\n");
+			break;
+		}
+	}
+	strcpy(pDest, pStr);
+	//文字列の数を返す
+	return nWord;
 }

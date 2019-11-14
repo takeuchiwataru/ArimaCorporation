@@ -22,7 +22,7 @@ class CModel
 public://’N‚Å‚àˆµ‚¦‚é
 	CModel();
 	~CModel();
-	HRESULT Init(char FileName[40]);
+	HRESULT Init();
 	void Uninit(void);
 	void Update(void);
 	void Draw(float fAlpha);

@@ -33,7 +33,7 @@ CModel * CModel::Create(const D3DXVECTOR3 pos, char FileName[40], D3DXVECTOR3 Sc
 	pModel = new CModel;
 
 	//初期化処理
-	pModel->Init(FileName);
+	pModel->Init();
 
 	//設定処理
 	pModel->SetPos(pos);
@@ -71,11 +71,9 @@ CModel::~CModel() { }
 //=============================================================================
 // 初期化処理
 //=============================================================================
-HRESULT CModel::Init(char FileName[40])
+HRESULT CModel::Init()
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
-	CreateXFile(FileName);		//Xファイルの生成
 
 	int nNumVtx;				//頂点数
 	DWORD sizeFVF;				//頂点フォーマットのサイズ
@@ -86,7 +84,7 @@ HRESULT CModel::Init(char FileName[40])
 	m_VtxMax = D3DXVECTOR3(-10000, -10000, -10000);			//最大値
 	m_VtxMin = D3DXVECTOR3(10000, 10000, 10000);			//最小値
 
-															//頂点数を取得
+	//頂点数を取得
 	nNumVtx = m_pMesh->GetNumVertices();
 
 	//頂点フォーマットのサイズを取得
