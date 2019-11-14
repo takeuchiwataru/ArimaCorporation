@@ -29,7 +29,7 @@
 #define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(30.0f)		// ひよこが飛んでくスピード
 #define ANNOY_RANGE				(200.0f)	// 減速させる範囲
-#define CHICK_JUMP				(6.5f)		// ジャンプ力
+#define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
 
@@ -193,8 +193,6 @@ void CChick::Update(void)
 	float fLength = CModel3D::GetLength();
 
 	if (CModel3D::GetDelete() == true) { Uninit(); }
-
-	CDebugProc::Print("MOVE %.1f : %.1f : %.1f\n", m_move.x, m_move.y, m_move.z);
 }
 //=============================================================================
 // 描画処理
@@ -374,15 +372,14 @@ void CChick::Move(void)
 		}
 	}
 
-	if (m_type != TYPE_ATTACK_S || m_state == STATE_CHASE)
+	if ((m_type != TYPE_ATTACK_S || m_type != TYPE_ANNOY_S) && m_state == STATE_CHASE)
 	{
 		//マップとの当たり判定
-		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap)) { m_bJump = false; }
+		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap, false)) { m_bJump = false; }
 	}
 
 	m_fHeight = m_pos.y;
 
-	CDebugProc::Print("%.1f\n", m_fHeight);
 	//CDebugProc::Print("%.1f\n", m_move.y);
 }
 
@@ -420,54 +417,53 @@ void CChick::Item(void)
 //===============================================================================
 bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 {
-	//入力情報
-	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-
 	//あたっているかあたってないか
 	bool bHit = false;
 
-	// 各種情報の取得
-	D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
-	D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-	D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
-	D3DXVECTOR3 rot = CModel3D::GetRot();
-
-	D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-	D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
-
-	float fDepth = PLAYER_DEPTH;
-
-	if (m_type == TYPE_ANNOY)
+	if (m_state == STATE_BULLET)
 	{
-		fDepth = ANNOY_RANGE;
-	}
+		// 各種情報の取得
+		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
+		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
+		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+		D3DXVECTOR3 rot = CModel3D::GetRot();
+
+		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
+		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
+
+		float fDepth = PLAYER_DEPTH;
+
+		if (m_type == TYPE_ANNOY)
+		{
+			fDepth = ANNOY_RANGE;
+		}
 
 #if(1)
-	if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
-	{// Zの範囲内にいる
-		if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
-		{// Xの範囲内にいる
-			if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
-			{// オブジェクトの上から当たる場合
-				bHit = true;
-			}
-			else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
-			{// オブジェクトの下から当たる場合
-				bHit = true;
-			}
+		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
+		{// Zの範囲内にいる
+			if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
+			{// Xの範囲内にいる
+				if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
+				{// オブジェクトの上から当たる場合
+					bHit = true;
+				}
+				else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
+				{// オブジェクトの下から当たる場合
+					bHit = true;
+				}
 
-			if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
-			{// オブジェクト横との当たり判定
-				bHit = true;
+				if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
+				{// オブジェクト横との当たり判定
+					bHit = true;
+				}
 			}
 		}
-	}
 
-	// 位置の代入
-	CModel3D::SetPosition(ModelPos);
+		// 位置の代入
+		CModel3D::SetPosition(ModelPos);
 
 #endif
-
+	}
 	return bHit;
 }
 
@@ -644,9 +640,9 @@ void CChick::AttackS(void)
 			{// 5匹まで出す
 			 // 落ちるひよこ出現
 				pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
-					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 0.0f) + pPlayer[m_DestRank]->GetPos().x,
+					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().x,
 					pPlayer[m_DestRank]->GetPos().y,
-					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * 0.0f) + pPlayer[m_DestRank]->GetPos().z));
+					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().z));
 			}
 
 			// 移動量を設定

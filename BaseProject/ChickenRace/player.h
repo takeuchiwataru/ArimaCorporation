@@ -224,7 +224,7 @@ private:
 	CLoadTextPlayer *			  m_pText;						// プレイヤーの情報読み込み
 	CEgg						  *m_pEgg[MAX_EGG];				//卵のポインタ
 	CChick						  *m_pChick[MAX_EGG];			//ひよこのポインタ
-	CChick						  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
+	static CChick						  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
 	bool						  m_bJump;						//  ジャンプフラグ
 	bool						  m_bControl;					// コントローラーの使用状態
 	int							  m_nCountJumpTime;				// ジャンプ状態の時間をカウントする

@@ -191,7 +191,7 @@ void CEgg::Update(void)
 		m_pos.y += m_move.y;
 
 		//マップとの当たり判定
-		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap)) { m_bJump = false; }
+		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap, false)) { m_bJump = false; }
 	}
 
 	CModel3D::SetMove(m_move);
@@ -200,17 +200,17 @@ void CEgg::Update(void)
 	//CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
 	//CDebugProc::Print("%.1f\n", m_move.y);
 
-	if (m_bJump == true)
+	/*if (m_bJump == true)
 	{
-		CDebugProc::Print("ジャンプ : 〇\n");
+	CDebugProc::Print("ジャンプ : 〇\n");
 	}
 	else
 	{
-		CDebugProc::Print("ジャンプ : ×\n");
+	CDebugProc::Print("ジャンプ : ×\n");
 	}
 
 	CDebugProc::Print("%.1f\n", m_fHeight);
-	CDebugProc::Print("%.1f\n", m_move.y);
+	CDebugProc::Print("%.1f\n", m_move.y);*/
 
 	//距離の取得
 	float fLength = CModel3D::GetLength();
@@ -414,51 +414,50 @@ void CEgg::Item(void)
 //===============================================================================
 bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 {
-	//入力情報
-	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-
 	//あたっているかあたってないか
 	bool bHit = false;
 
-	// 各種情報の取得
-	D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
-	D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-	D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
-	D3DXVECTOR3 rot = CModel3D::GetRot();
-
-	D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-	D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
-
-	float fDepth = PLAYER_DEPTH;
-
-	if (m_eggType == EGGTYPE_ATTACK)
+	if (m_eggState == EGGSTATE_BULLET)
 	{
-		fDepth = PLAYER_DEPTH/* * 2*/;
-	}
+		// 各種情報の取得
+		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
+		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
+		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+		D3DXVECTOR3 rot = CModel3D::GetRot();
 
-	if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
-	{// Zの範囲内にいる
-		if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
-		{// Xの範囲内にいる
-			if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
-			{// オブジェクトの上から当たる場合
-				bHit = true;
-			}
-			else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
-			{// オブジェクトの下から当たる場合
-				bHit = true;
-			}
+		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
+		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-			if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
-			{// オブジェクト横との当たり判定
-				bHit = true;
+		float fDepth = PLAYER_DEPTH;
+
+		if (m_eggType == EGGTYPE_ATTACK)
+		{
+			fDepth = PLAYER_DEPTH/* * 2*/;
+		}
+
+		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
+		{// Zの範囲内にいる
+			if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
+			{// Xの範囲内にいる
+				if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
+				{// オブジェクトの上から当たる場合
+					bHit = true;
+				}
+				else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
+				{// オブジェクトの下から当たる場合
+					bHit = true;
+				}
+
+				if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
+				{// オブジェクト横との当たり判定
+					bHit = true;
+				}
 			}
 		}
+
+		// 位置の代入
+		CModel3D::SetPosition(ModelPos);
 	}
-
-	// 位置の代入
-	CModel3D::SetPosition(ModelPos);
-
 	return bHit;
 }
 

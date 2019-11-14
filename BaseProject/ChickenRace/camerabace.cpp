@@ -95,7 +95,7 @@ void CCamera::SetCamera()
 		WKValue = m_posR + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * -30.0f;
 		WKmove = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 		int		nCount = 0;
-		CCOL_MESH_MANAGER::Collision(WKposV, WKValue, WKmove, fWKlength, WKnor, bWKJump, nMap);
+		CCOL_MESH_MANAGER::Collision(WKposV, WKValue, WKmove, fWKlength, WKnor, bWKJump, nMap, true);
 		fDistance1 = powf(WKposV.x - m_posR.x, 2) + powf(WKposV.z - m_posR.z, 2);
 		WKposV.y = m_posR.y + (WKposV.y - m_posR.y) * ((fDistance1) / fDistance0);
 	}

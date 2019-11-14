@@ -1167,7 +1167,7 @@ void	CCOL_MESH_MANAGER::Set(TYPE type)
 //==================================================================================================//
 //    * îªíËïtâ¡ä«óùÇÃì«Ç›çûÇ›ä÷êî *
 //==================================================================================================//
-bool	CCOL_MESH_MANAGER::Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap)
+bool	CCOL_MESH_MANAGER::Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap, bool bWHit)
 {
 	//CScene		*pScene;
 	bool		bLand = true;
@@ -1188,11 +1188,16 @@ bool	CCOL_MESH_MANAGER::Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVEC
 	//}
 	for (int nCnt = 0; nCnt < CCOL_MESH_MANAGER::TYPE_MAX; nCnt++)
 	{
-		WNumCollision(nCnt, mypos, pos, posold, move, fLength);
+		if (bWHit == true)
+		{// ï«ÇÃîªíËÇÇ¬ÇØÇÈ
+			WNumCollision(nCnt, mypos, pos, posold, move, fLength);
+		}
+
 		if (nMap >= 0) { if (!FNumCollision(nCnt, mypos, pos, posold, move, FNor, bJump)) { bLand = false; } }
 	}
 	return bLand;
 }
+
 //==================================================================================================//
 //    * îªíËïtâ¡ä«óùÇÃï«îªíËä÷êî *
 //==================================================================================================//

@@ -141,7 +141,7 @@ public:
 	void	Loadtxt(TYPE type);
 	void	Set(TYPE type);
 	static void	WNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength);
-	static bool	Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap);
+	static bool	Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap, bool bWHit);
 	static bool	FNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, D3DXVECTOR3 &FNor, bool &bJump);
 
 	void	WCollision(void);
