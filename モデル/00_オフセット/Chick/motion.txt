@@ -37,35 +37,35 @@ CHARACTERSET
 	PARTSSET						# [1]頭
 		INDEX = 1
 		PARENT = 0					# (親)体
-		POS = 0.0 20.0 -9.0
+		POS = 0.0 8.0 -3.5
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 
 	PARTSSET						# [2]右腿
 		INDEX = 2
 		PARENT = 0					# (親)体
-		POS = -5.0 5.0 5.0
+		POS = -2.5 2.5 2.5
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 
 	PARTSSET						# [3]右足
 		INDEX = 3
 		PARENT = 2					# (親)右腿
-		POS = -1.0 -6.5 0.0
+		POS = -0.5 -2.5 0.0
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 
 	PARTSSET						# [4]左腿
 		INDEX = 4
 		PARENT = 0					# (親)体
-		POS = 5.0 5.0 5.0
+		POS = 2.5 2.5 2.5
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 
 	PARTSSET						# [5]左足
 		INDEX = 5
 		PARENT = 4					# (親)左腿
-		POS = 1.0 -6.5 0.0
+		POS = 0.5 -2.5 0.0
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET	
 END_CHARACTERSET
