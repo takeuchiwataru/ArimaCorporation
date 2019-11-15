@@ -163,7 +163,7 @@ HRESULT CModel::Init()
 	if (m_pToonShader == NULL)
 	{
 		m_pToonShader = new CToonShader;
-		m_pToonShader->Init("ToonShader.fx");
+		m_pToonShader->Init("data\\SHADER\\ToonShader.fx");
 	}
 
 	return S_OK;
