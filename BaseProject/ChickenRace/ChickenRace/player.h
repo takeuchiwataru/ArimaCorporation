@@ -241,6 +241,11 @@ private:
 	void DebugProc(void);
 
 	void UpdateAI(void);
+	void UseItem(void);
+	bool UseATK(int &nRank);
+	bool UseDEF(int &nRank);
+	bool UseSPD(int &nRank);
+	float GetDistance(int nRank);
 	void UpdateKiller(void);
 	void UpdateFEffect(void);
 	void WarpNext(void);

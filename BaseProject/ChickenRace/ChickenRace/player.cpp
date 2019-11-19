@@ -264,6 +264,7 @@ HRESULT CPlayer::Init(void)
 	m_fRoad = 0.0f;
 	m_FNor = INIT_VECTOR;
 	m_fTilt = 0.0f;
+	m_fCTilt = 0.0f;
 	m_fPosY = 0.0f;
 	m_fRotOld = 0.0f;
 	m_nPlayerNum = 0;					// プレイヤー番号
@@ -573,6 +574,119 @@ void CPlayer::UpdateAI(void)
 	m_rot.y += fRot * 0.05f;
 	RemakeAngle(&m_rot.y);
 	SetStateSpeed(STATE_SPEED_ACCEL);
+
+	UseItem();
+}
+//=============================================================================
+// アイテムの使用の更新処理
+//=============================================================================
+void CPlayer::UseItem(void)
+{
+	bool bUse = false;
+
+	//アイテムがないなら
+	if (m_nNumItem <= 0) { return; }
+
+	int nRank = CRoad_Manager::GetManager()->GetRank(m_nPlayerNum);
+	BULLET Type = (BULLET)(m_bulletType[0] % BULLET_CHICK_ATTACK);
+	switch (Type)
+	{//アイテムごとに判断
+	case BULLET_EGG_ATTACK:	UseATK(nRank);	break;
+	case BULLET_EGG_ANNOY:	UseDEF(nRank);	break;
+	case BULLET_EGG_SPEED:	UseSPD(nRank);	break;
+	}
+}
+//=============================================================================
+// 妨害アイテムの攻撃処理
+//=============================================================================
+bool CPlayer::UseATK(int &nRank)
+{
+	if (nRank > 6 && m_nNumItem > 2) { return true; }
+	//敵が近くにいる　次の敵が攻撃を持っていないなら
+	float fWk;
+
+	switch (m_bulletType[0])
+	{
+	case BULLET_CHICK_ATTACK:	//近かったら
+		if (nRank - 1 > 0)
+		{//次の順位のやつ
+			fWk = GetDistance(nRank - 1);
+			if (fWk < 400.0f && fWk > 200.0f) { return true; }
+		}
+		if (nRank + 1 < MAX_RACER - 1)
+		{//前の順位のやつ
+			fWk = GetDistance(nRank + 1);
+			if (fWk < 400.0f && fWk > 200.0f) { return true; }
+		}
+		break;
+	case BULLET_EGG_ATTACK:		//使わない
+		break;
+	default:
+		return true;
+		break;
+	}
+	return false;
+}
+//=============================================================================
+// 妨害アイテムの使用処理
+//=============================================================================
+bool CPlayer::UseDEF(int &nRank)
+{
+	if (m_nNumItem > 2 || nRank <= 0) { return true; }
+	float fWk = m_rot.y - m_fRotOld;
+	RemakeAngle(&fWk);
+
+	switch (m_bulletType[0])
+	{
+	case BULLET_CHICK_ANNOY:	//近かったら
+		if (nRank - 1 > 0)
+		{//次の順位のやつ
+			if (GetDistance(nRank - 1) < 200.0f) { return true; }
+		}
+		if (nRank + 1 < MAX_RACER - 1)
+		{//前の順位のやつ
+			if (GetDistance(nRank + 1) < 200.0f) { return true; }
+		}
+		break;
+	case BULLET_EGG_ANNOY:		//曲がっていたら
+		if (powf(fWk, 2) > powf(D3DX_PI * 0.03f, 2)) { return true; }
+		break;
+	default:
+		return true;
+		break;
+	}
+	return false;
+}
+//=============================================================================
+// 加速アイテムの使用処理
+//=============================================================================
+bool CPlayer::UseSPD(int &nRank)
+{
+	if (m_nNumItem > 2 || nRank <= 0) { return true; }
+
+	switch (m_bulletType[0])
+	{
+	case BULLET_CHICK_ANNOY:	//近かったら
+		return true;
+		break;
+	case BULLET_EGG_ANNOY:		//曲がっていたら
+		break;
+	default:
+		return true;
+		break;
+	}
+	return false;
+}
+//=============================================================================
+// 指定順位との距離の取得処理
+//=============================================================================
+float CPlayer::GetDistance(int nRank)
+{
+	CPlayer **pPlayer = NULL;
+	pPlayer = CGame::GetPlayer();
+	D3DXVECTOR3 pos = CGame::GetPlayer()[nRank]->Getpos();
+
+	return sqrtf(powf(pos.x - m_pos.x, 2) + powf(pos.z - m_pos.z, 2));
 }
 //=============================================================================
 // キラーの更新処理

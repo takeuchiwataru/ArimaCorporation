@@ -93,7 +93,7 @@ void	CCOL_MESH::Draw(void)
 	 //	//if (m_Effect == EFFECT_NORMAL && m_bField) {}
 	 //	m_pMesh->Draw();
 	 //}
-		if (m_Effect != EFFECT_NORMAL)
+		if (m_Effect != EFFECT_NORMAL && m_Effect != EFFECT_DROP)
 		{
 			m_pMesh->Draw();
 		}
