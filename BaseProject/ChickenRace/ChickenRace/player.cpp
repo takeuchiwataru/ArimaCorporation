@@ -52,7 +52,8 @@
 #define PLAYER_ACCEL	(0.5f)										//加速値（前進）
 #define PLAYER_BRAKS	(-0.2f)										//加速値（後進）
 #define PLAYER_DOWN		(0.08f)										//減速度
-#define PLAYER_ADDROT	(0.02f)										//回転量
+#define PLAYER_ADDROT	(0.005f)									//回転量
+#define PLAYER_DOWNROT	(0.2f)										//回転量
 
 #define PLAYER_JUMP		(2.0f)										//回転量
 #define PLAYER_GRAVITY	(0.09f)										//回転量
@@ -214,7 +215,6 @@ HRESULT CPlayer::Init(void)
 	m_vtxMinModel = VECTOR_ZERO;			//モデルの頂点最小値
 	m_pMotion = NULL;						//モーションポインタ
 	m_pText = NULL;							//プレイヤーのテキストポインタ
-	m_MoveState = STATE_DRIVE;					//状態設定
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
 	m_PlayerInfo.nCountTime = 0;			//カウンター
@@ -252,6 +252,8 @@ HRESULT CPlayer::Init(void)
 	m_nAnnoySTimer = 0;
 	m_bAnnoyS = false;
 
+	m_nDriftCounter = 0;		// ドリフトカウント
+
 	m_pPoint = CRoad_Manager::GetManager()->GetTop(0);
 	m_fLength = 5.0f;
 	m_bDivided = false;
@@ -269,6 +271,7 @@ HRESULT CPlayer::Init(void)
 	m_nKey = 0;
 
 	m_bGoal = false;					// ゴール
+	m_fAddRot = 0.0f;					// 加算角度
 
 	// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
@@ -438,7 +441,7 @@ void CPlayer::Update(void)
 
 	UpdateField();
 
-	CollisionFeed();		// 餌の当たり判定
+	/*CollisionFeed();		// 餌の当たり判定
 
 	CollisionEgg();			// 卵との当たり判定
 
@@ -453,7 +456,7 @@ void CPlayer::Update(void)
 	ChickAppear();
 
 	// 強い減速ひよこがくっつく
-	ChaseAnnoyS();
+	ChaseAnnoyS();*/
 
 							//マップとの当たり判定
 	if (!CCOL_MESH_MANAGER::Collision(m_pos, m_OldPos, m_move, m_fLength, m_FNor, m_bJump, m_nMap, true)) { m_bJump = false; }
@@ -571,27 +574,11 @@ void CPlayer::ControlKey(void)
 		m_move *= 0.0f;
 		SetStateHandle(HANDLE_MAX);
 		SetStateSpeed(STATE_SPEED_DOWN);
+		m_nAnimnow = PLAYERANIM_NEUTRAL;
 		return;
 	}
 
 	CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
-
-	//前進後退の設定
-	if (m_bDirive)
-	{
-		if ((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-			(pXpad->GetPress(INPUT_R1) == true) ||
-			(pXpad->GetPress(INPUT_R2) == true))
-		{
-			SetState(STATE_DRIVE);		//前進状態に設定
-		}
-		if ((pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-			(pXpad->GetPress(INPUT_L1) == true) ||
-			(pXpad->GetPress(INPUT_L2) == true))
-		{
-			SetState(STATE_REVERSE);	//後退状態に設定
-		}
-	}
 
 	//向きの設定
 	if (m_StateSpeed != STATE_SPEED_STOP)
@@ -622,46 +609,64 @@ void CPlayer::ControlKey(void)
 		SetStateHandle(HANDLE_MAX);
 	}
 
-	//アクセル
-	if ((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-		(pXpad->GetPress(INPUT_L1) == true) ||
-		(pXpad->GetPress(INPUT_L2) == true))
-	{//減速状態
-		SetStateSpeed(STATE_SPEED_BRAKS);
-	}
-	else if
+	// 操作
+	if (
+		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+		 (pXpad->GetPress(INPUT_L1) == true) ||
+		 (pXpad->GetPress(INPUT_L2) == true)) &&
 		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-		(pXpad->GetPress(INPUT_R1) == true) ||
-			(pXpad->GetPress(INPUT_R2) == true))
-	{ //アクセルを状態
-		SetStateSpeed(STATE_SPEED_ACCEL);
+		 (pXpad->GetPress(INPUT_R1) == true) ||
+		 (pXpad->GetPress(INPUT_R2) == true))		
+		)
+	{// ドリフト
+		if (m_PlayerInfo.nCountTime < 90)
+			SetStateSpeed(STATE_SPEED_ACCEL);
+		else
+			SetStateSpeed(STATE_SPEED_DRIFT);
 	}
 	else
 	{
-		//停止判定
-		D3DXVECTOR3 fDiffuse = m_pos - m_OldPos;
-
-		if (fDiffuse.x < 0.10f && fDiffuse.x > -0.10f)
+		//アクセル
+		if ((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
+			(pXpad->GetPress(INPUT_L1) == true) ||
+			(pXpad->GetPress(INPUT_L2) == true))
+		{//減速状態
+			SetStateSpeed(STATE_SPEED_BRAKS);
+		}
+		else if
+			((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+			(pXpad->GetPress(INPUT_R1) == true) ||
+				(pXpad->GetPress(INPUT_R2) == true))
+		{ //アクセルを状態
+			SetStateSpeed(STATE_SPEED_ACCEL);
+		}
+		else
 		{
-			if (fDiffuse.z < 0.10f && fDiffuse.z > -0.10f)
-			{
-				SetStateSpeed(STATE_SPEED_STOP);
+			//停止判定
+			D3DXVECTOR3 fDiffuse = m_pos - m_OldPos;
 
-				if (m_State == PLAYERSTATE_SPEEDUP)
-				{// スピードアイテムを使ったとき
-				 //進行方向の設定
-					m_move.x += sinf(m_rot.y) * (m_fSpeed);
-					m_move.z += cosf(m_rot.y) * (m_fSpeed);
+			if (fDiffuse.x < 0.10f && fDiffuse.x > -0.10f)
+			{
+				if (fDiffuse.z < 0.10f && fDiffuse.z > -0.10f)
+				{
+					SetStateSpeed(STATE_SPEED_STOP);
+
+					if (m_State == PLAYERSTATE_SPEEDUP)
+					{// スピードアイテムを使ったとき
+					 //進行方向の設定
+						m_move.x += sinf(m_rot.y) * (m_fSpeed);
+						m_move.z += cosf(m_rot.y) * (m_fSpeed);
+					}
+				}
+				else
+				{
+					SetStateSpeed(STATE_SPEED_DOWN);
 				}
 			}
 			else
 			{
 				SetStateSpeed(STATE_SPEED_DOWN);
 			}
-		}
-		else
-		{
-			SetStateSpeed(STATE_SPEED_DOWN);
 		}
 	}
 
@@ -751,6 +756,13 @@ void CPlayer::UpdateMove(void)
 		}
 	}
 
+	float fAccel = m_PlayerInfo.fAccel;
+	float fBraks = m_PlayerInfo.fBraks;
+	float fAddRot = m_PlayerInfo.fAddRot;
+	float fDown = m_PlayerInfo.fDown;
+
+	fAddRot *= 0.65f;
+
 	//状態ごとの更新処理
 	switch (m_StateSpeed)
 	{
@@ -764,20 +776,19 @@ void CPlayer::UpdateMove(void)
 
 		if (m_State == PLAYERSTATE_NORMAL)
 		{
-			m_fSpeed = m_PlayerInfo.fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+			m_fSpeed = fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
 		}
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 		break;
-
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		m_fSpeed = m_PlayerInfo.fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
+		m_fSpeed = fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * m_fSpeed;
@@ -785,6 +796,28 @@ void CPlayer::UpdateMove(void)
 
 		//揺れを無効にする
 		m_bShake = false;
+		break;
+	case STATE_SPEED_DRIFT:	//ドリフト状態
+
+		fAccel *= 0.345f;
+		fAddRot = m_PlayerInfo.fAddRot;
+		fDown *= 0.35f;
+
+		//走るモーション
+		m_nAnimnow = PLAYERANIM_RUN;
+
+		//ジャンプ状態なら
+		if (m_bJump == true) { break; }
+
+		if (m_State == PLAYERSTATE_NORMAL)
+		{
+			m_fSpeed = fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+		}
+
+		//進行方向の設定
+		m_move.x += sinf(m_rot.y) * (m_fSpeed);
+		m_move.z += cosf(m_rot.y) * (m_fSpeed);
+
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
 		m_PlayerInfo.nCountTime = 0;
@@ -866,14 +899,14 @@ void CPlayer::UpdateMove(void)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_rot.y -= m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+			m_fAddRot -= fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
 		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_rot.y += m_PlayerInfo.fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+			m_fAddRot += fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
 		}
 	}
 
@@ -888,78 +921,19 @@ void CPlayer::UpdateMove(void)
 	m_pos.y += m_move.y;
 	m_pos.z += m_move.z;
 
+	m_rot.y += m_fAddRot;
+
 	//減速
 	if (!m_bJump)
 	{
-		m_move.x += (0.0f - m_move.x) * m_PlayerInfo.fDown;
-		m_move.z += (0.0f - m_move.z) * m_PlayerInfo.fDown;
+		m_move.x += (0.0f - m_move.x) * fDown;
+		m_move.z += (0.0f - m_move.z) * fDown;
 	}
 
-	//煙の表示
-	/*if ((fDiffuse.x < 1.5f) && (fDiffuse.x > -1.5f))
-	{
-	if ((fDiffuse.z < 1.5f) && (fDiffuse.z > -1.5f))
-	{
-	m_bSmoke = false;
-	m_bGrassEffect = false;		//草エフェクト非表示
-	}
-	else
-	{
-	m_bSmoke = true;
-	}
-	}
-	else
-	{
-	m_bSmoke = true;
-	}
+	m_fAddRot += (0.0f - m_fAddRot) * PLAYER_DOWNROT;
 
-	//お客さんを乗せるための停止判定
-	if ((fDiffuse.x < 1.0f) && (fDiffuse.x > -1.0f))
-	{
-	if ((fDiffuse.z < 1.0f) && (fDiffuse.z > -1.0f))
-	{
-	m_bCustomrStop = true;
-	}
-	else
-	{
-	m_bCustomrStop = false;
-	}
-	}
-	else
-	{
-	m_bCustomrStop = false;
-	}*/
-
-	/*if ((m_StateSpeed == STATE_SPEED_BRAKS))
-	{
-	//角度を変える
-	m_rot.x += SHAKE_BRAK;
-	}*/
-}
-
-//=============================================================================
-// 揺れの更新処理
-//=============================================================================
-void CPlayer::UpdateShake(void)
-{
-	if (!m_bShake) { return; }
-
-	m_nCntShake++;	//カウンターの加算
-
-	if ((m_nCntShake % 8) == 0)
-	{//車体を揺らす
-		m_rot.x += SHAKE_X;
-
-		if (((m_nCntShake % 24) == 0) && (m_MoveState != STATE_SPEED_STOP))
-		{
-			int nRand = rand() % 5;
-
-			if (nRand == 0)
-			{
-				m_rot.x += INPULS_X;
-			}
-		}
-	}
+	CDebugProc::Print("addrot : %f\n", m_fAddRot);
+	CDebugProc::Print("fSpeed : %f\n", m_fSpeed);
 }
 
 //=============================================================================
@@ -1017,37 +991,6 @@ void CPlayer::UpdateField(void)
 }
 
 //=============================================================================
-// 状態の設定
-//=============================================================================
-void CPlayer::SetState(CPlayer::STATE state)
-{
-	//値の反転
-	if (m_MoveState != state)
-	{
-		//m_PlayerInfo.fAccel *= -0.5f;
-		//m_PlayerInfo.fBraks *= -1;
-		//m_fMaxSpeed *= -1;
-
-		CSound *pSound = CManager::GetSound();
-
-		if (STATE_REVERSE == state)
-		{// バック音
-		 //pSound->StopSound(CSound::SOUND_LABEL_SE_ACCEL);
-		 //pSound->PlaySoundA(CSound::SOUND_LABEL_SE_BACK);
-		}
-		else if (STATE_DRIVE == state)
-		{
-			//pSound->StopSound(CSound::SOUND_LABEL_SE_BACK);
-			//pSound->SetVolume(CSound::SOUND_LABEL_SE_ACCEL, 0.7f);
-			//pSound->PlaySoundA(CSound::SOUND_LABEL_SE_ACCEL);
-		}
-	}
-
-	//状態の設定
-	m_MoveState = state;
-}
-
-//=============================================================================
 // スピードの状態設定
 //=============================================================================
 void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
@@ -1055,7 +998,16 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 	//数値の設定
 	if (m_StateSpeed != state)
 	{
-		m_PlayerInfo.nCountTime = 0;
+		if ((m_StateSpeed == STATE_SPEED_ACCEL && state == STATE_SPEED_DRIFT) ||
+			(state == STATE_SPEED_ACCEL && m_StateSpeed == STATE_SPEED_DRIFT))
+		{
+			m_nDriftCounter = 0;
+		}
+		else
+		{
+			m_PlayerInfo.nCountTime = 0;
+		}
+
 		//CDebugProc::Print("CHANGE***\n");
 
 		CSound *pSound = CManager::GetSound();

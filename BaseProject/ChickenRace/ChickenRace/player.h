@@ -97,19 +97,12 @@ public:
 		PLAYERTYPE_MAX
 	}PLAYERTYPE;
 
-	//ギアの状態
-	typedef enum
-	{
-		STATE_DRIVE = 0,
-		STATE_REVERSE,
-		STATE_MAX,
-	}STATE;
-
 	//走行状態
 	typedef enum
 	{
 		STATE_SPEED_ACCEL = 0,
 		STATE_SPEED_BRAKS,
+		STATE_SPEED_DRIFT,
 		STATE_SPEED_DOWN,
 		STATE_SPEED_STOP,
 	}STATE_SPEED;
@@ -182,7 +175,6 @@ public:
 	PLAYER_INFO * GetPlayerInfoPoint(void) { return &m_PlayerInfo; };
 	STATE_SPEED GetStateSpeed(void) { return m_StateSpeed; };
 	STATE_HANDLE GetStateHandle(void) { return m_StateHandle; };
-	STATE GetState(void) { return m_MoveState; };
 	PLAYERSTATE GetPlayerState(void) { return m_State; }
 
 	void CollisitionWall(void);
@@ -231,11 +223,12 @@ private:
 	void ControlKey(void);
 	void DebugProc(void);
 	void UpdateAI(void);
-	void UpdateShake(void);
 	void UpdateField(void);
-	void SetState(STATE state);
 	void SetStateSpeed(STATE_SPEED state);
-	void SetStateHandle(STATE_HANDLE state) { m_StateHandle = state; };
+	void SetStateHandle(STATE_HANDLE state)
+	{
+		if (m_StateHandle != state) { m_StateHandle = state; if (m_StateSpeed == STATE_SPEED_DRIFT) m_nDriftCounter = 0; }
+	};
 	void CollisionObject(void);
 	void CollisionFeed(void);
 	void CollisionEgg(void);
@@ -274,7 +267,6 @@ private:
 	D3DXVECTOR3					  m_vtxMinModel;				// モデルの頂点最小値
 	D3DXMATRIX					  m_mtxWorld;					// ワールドマトリックス
 	CMotion *					  m_pMotion;					// モーションのポインタ
-	STATE						  m_MoveState;					// 状態設定
 	STATE_SPEED					  m_StateSpeed;					// スピードの状態
 	STATE_HANDLE				  m_StateHandle;				// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;					// プレイヤーの情報
@@ -311,6 +303,8 @@ private:
 	int							  m_nAnnoySTimer;
 	BULLET						  m_bulletType[MAX_EGG];
 
+	int							  m_nDriftCounter;		// ドリフトカウント
+
 	bool						  m_bDamage;
 	PLAYERSTATE					  m_State;
 	int							  m_nCntDamage;
@@ -342,5 +336,6 @@ private:
 	bool						  m_bGoal;				// ゴール
 
 	CBillBoord					  *m_pPlayerpos;		// プレイヤー
+	float						  m_fAddRot;			// 加算角度
 };
 #endif

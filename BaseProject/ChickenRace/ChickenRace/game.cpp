@@ -124,7 +124,7 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
+	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
@@ -146,16 +146,14 @@ HRESULT CGame::Init()
 
 														// デバッグ用
 	if (m_gameMode == GAMEMODE_COURSE_VIEW)
-	{
 		m_nMaxPlayer = 1;
-	}
 	else if (m_gameMode == GAMEMODE_PLAY)
-	{
-		m_nMaxPlayer = 2;
-		m_nGameCounter = START_SET_TIME;
-	}
+		m_nMaxPlayer = 1;
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
+
+	//if (m_gameMode == GAMEMODE_PLAY) 
+	//	m_nGameCounter = START_SET_TIME;
 
 	return S_OK;
 }
@@ -390,6 +388,17 @@ void CGame::Update(void)
 
 	CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
 	CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
+
+	static int nCnt = 0;
+
+	if (m_gameMode == GAMEMODE_PLAY && m_NowGameState == GAMESTATE_NORMAL)
+		nCnt = m_nGameCounter - START_SET_TIME;
+
+	if (0 < nCnt)
+	{
+		CDebugProc::Print("time:%d\n", nCnt);		// ポーズ
+		CDebugProc::Print("time:%3d:%3d:%3d\n", ((nCnt) / 60) / 60, ((nCnt) / 60) % 60, (nCnt) % 60);		// ポーズ
+	}
 }
 
 //=============================================================================
@@ -717,7 +726,7 @@ void CGame::SetStage(void)
 
 		float frot = (-D3DX_PI * 0.5f);
 
-		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		for (int nCntMember = 0; nCntMember < m_nMaxPlayer/*MAX_MEMBER*/; nCntMember++)
 		{// メンバーカウント
 		 //プレイヤーの生成
 			if (m_pPlayer[nCntMember] == NULL)
