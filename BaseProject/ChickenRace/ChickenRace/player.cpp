@@ -39,7 +39,7 @@
 #define ROLLOVER_STOP	(0.6f)										//横転防止角度
 #define GRAVITY_BACK	(0.2f)										//後方の重力
 #define DECELERATION	(0.5f)										//減速の割合
-#define EGG_RANGE		(50.0f)										// 卵とプレイヤーの距離
+#define EGG_RANGE		(25.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME	(60)										// 加速している時間
 #define SPEEDDOWN		(0.95f)										// 減速させる値
@@ -423,7 +423,16 @@ void CPlayer::Update(void)
 		if (m_bGoal == false)
 		{
 			if (m_PlayerType == PLAYERTYPE_PLAYER)
-				ControlKey();
+			{
+				if (m_State != PLAYERSTATE_SPEEDUP_S)
+				{
+					ControlKey();
+				}
+				else
+				{
+					UpdateKiller();
+				}
+			}
 			else
 				UpdateAI();
 		}
@@ -445,7 +454,7 @@ void CPlayer::Update(void)
 
 	UpdateField();
 
-	/*CollisionFeed();		// 餌の当たり判定
+	CollisionFeed();		// 餌の当たり判定
 
 	CollisionEgg();			// 卵との当たり判定
 
@@ -460,7 +469,7 @@ void CPlayer::Update(void)
 	ChickAppear();
 
 	// 強い減速ひよこがくっつく
-	ChaseAnnoyS();*/
+	ChaseAnnoyS();
 
 	//マップとの当たり判定
 	bool bGoal = false;
@@ -793,11 +802,18 @@ void CPlayer::UpdateMove(void)
 	//if (bGoal) { m_move *= 0.0f; }
 
 
-	if (m_State == PLAYERSTATE_SPEEDUP)
+	if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
 	{// スピードアイテムを使ったとき
 		m_nCountSpeed++;
 
-		if (m_nCountSpeed > SPEEDUP_TIME)
+		float fTime = SPEEDUP_TIME;
+
+		if (m_State == PLAYERSTATE_SPEEDUP_S)
+		{
+			fTime = SPEEDUP_TIME * 2;
+		}
+
+		if (m_nCountSpeed > fTime)
 		{
 			m_State = PLAYERSTATE_NORMAL;
 			m_nCountSpeed = 0;
@@ -876,7 +892,7 @@ void CPlayer::UpdateMove(void)
 		m_PlayerInfo.nCountTime = 0;
 		//CDebugProc::Print("DWON***\n");
 
-		if (m_State == PLAYERSTATE_SPEEDUP)
+		if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
 		{// スピードアイテムを使ったとき
 		 //進行方向の設定
 			m_move.x += sinf(m_rot.y) * (m_fSpeed);
@@ -1477,6 +1493,8 @@ void CPlayer::ChaseEgg(void)
 
 	if (m_nNumEgg + m_nNumChick <= 0) { return; }
 
+	//CDebugProc::Print("%d : %d\n", m_nNumEgg, m_nNumChick);
+
 	if (m_nNumEgg >= 1)
 	{// 卵が一個の時
 		if (m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
@@ -1491,7 +1509,7 @@ void CPlayer::ChaseEgg(void)
 
 			// 卵の位置設定
 			m_pEgg[0]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.x,
-				m_pEgg[0]->GetPos().y,
+				m_pEgg[0]->GetHeight(),
 				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (1 + m_nNumChick)) + m_pos.z));
 
 			// 卵の角度設定
@@ -1514,7 +1532,7 @@ void CPlayer::ChaseEgg(void)
 		}
 
 		m_pEgg[1]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.x,
-			m_pEgg[1]->GetPos().y,
+			m_pEgg[1]->GetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (2 + m_nNumChick)) + m_pos.z));
 
 		m_pEgg[1]->SetRot(m_OldEggRot[nData]);
@@ -1535,7 +1553,7 @@ void CPlayer::ChaseEgg(void)
 		}
 
 		m_pEgg[2]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.x,
-			m_pEgg[2]->GetPos().y,
+			m_pEgg[2]->GetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * (3 + m_nNumChick)) + m_pos.z));
 
 		m_pEgg[2]->SetRot(m_OldEggRot[nData]);
@@ -1560,7 +1578,7 @@ void CPlayer::ChaseEgg(void)
 
 			// 卵の位置設定
 			m_pChick[0]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.x,
-				m_pChick[0]->SetHeight(),
+				m_pChick[0]->GetHeight(),
 				(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE) + m_pos.z));
 
 			// 卵の角度設定
@@ -1583,7 +1601,7 @@ void CPlayer::ChaseEgg(void)
 		}
 
 		m_pChick[1]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.x,
-			m_pChick[1]->SetHeight(),
+			m_pChick[1]->GetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 2) + m_pos.z));
 
 		m_pChick[1]->SetRot(m_OldEggRot[nData]);
@@ -1604,7 +1622,7 @@ void CPlayer::ChaseEgg(void)
 		}
 
 		m_pChick[2]->SetPos(D3DXVECTOR3((sinf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.x,
-			m_pChick[2]->SetHeight(),
+			m_pChick[2]->GetHeight(),
 			(cosf(m_OldEggRot[nData].y + D3DX_PI) * EGG_RANGE * 3) + m_pos.z));
 
 		m_pChick[2]->SetRot(m_OldEggRot[nData]);
@@ -1693,6 +1711,16 @@ void CPlayer::BulletEgg(void)
 				// 減速
 			case CChick::TYPE_ANNOY_S:
 				m_pChick[0]->SetDis(false);
+				m_State = PLAYERSTATE_SPEEDDOWN_S;
+				break;
+
+				// 加速
+			case CChick::TYPE_SPEED_S:
+				m_State = PLAYERSTATE_SPEEDUP_S;
+				m_fSpeed += SPEED * 0.6f;
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
 				break;
 			}
 
@@ -1839,7 +1867,7 @@ void CPlayer::CollisionChick(void)
 								m_bDamage = true;
 								m_State = PLAYERSTATE_DAMAGE;
 							}
-							pChick->Uninit();	// ひよこ削除
+							//pChick->Uninit();	// ひよこ削除
 							break;
 
 							// 強い攻撃
@@ -1889,7 +1917,7 @@ void CPlayer::ChickAppear(void)
 					// 攻撃
 				case CEgg::EGGTYPE_ATTACK:
 					if (CGame::GetRanking(m_nPlayerNum) < 3)
-					{
+					{// 4位より上の場合
 						m_pChick[m_nNumChick] = CChick::Create(m_pos,
 							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 							CHICK_SCALE,
@@ -1899,14 +1927,124 @@ void CPlayer::ChickAppear(void)
 							m_nPlayerNum);
 					}
 					else if (CGame::GetRanking(m_nPlayerNum) >= 3)
-					{
-						m_pChick[m_nNumChick] = CChick::Create(m_pos,
-							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-							CHICK_SCALE,
-							CChick::TYPE_ATTACK_S,
-							CChick::BULLETTYPE_PLAYER,
-							CChick::STATE_CHASE,
-							m_nPlayerNum);
+					{// 4位より下の場合
+						int nRank = rand() % 101;
+
+						if (CGame::GetRanking(m_nPlayerNum) == 3)
+						{// 4位（10％）
+							if (nRank <= 10)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 4)
+						{// 5位（20％）
+							if (nRank <= 20)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 5)
+						{// 6位（30％）
+							if (nRank <= 30)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 6)
+						{// 7位（40％）
+							if (nRank <= 40)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 7)
+						{// 8位（50％）
+							if (nRank <= 50)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ATTACK,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
 					}
 
 					m_bulletType[m_nNumChick] = BULLET_CHICK_ATTACK;
@@ -1926,14 +2064,124 @@ void CPlayer::ChickAppear(void)
 							m_nPlayerNum);
 					}
 					else if (CGame::GetRanking(m_nPlayerNum) >= 3)
-					{
-						m_pChick[m_nNumChick] = CChick::Create(m_pos,
-							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-							CHICK_SCALE,
-							CChick::TYPE_ANNOY_S,
-							CChick::BULLETTYPE_PLAYER,
-							CChick::STATE_CHASE,
-							m_nPlayerNum);
+					{// 4位より下の場合
+						int nRank = rand() % 101;
+
+						if (CGame::GetRanking(m_nPlayerNum) == 3)
+						{// 4位（10％）
+							if (nRank <= 10)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 4)
+						{// 5位（20％）
+							if (nRank <= 20)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 5)
+						{// 6位（30％）
+							if (nRank <= 30)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 6)
+						{// 7位（40％）
+							if (nRank <= 40)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
+						else if (CGame::GetRanking(m_nPlayerNum) == 7)
+						{// 8位（50％）
+							if (nRank <= 50)
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY_S,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+							else
+							{
+								m_pChick[m_nNumChick] = CChick::Create(m_pos,
+									D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+									CHICK_SCALE,
+									CChick::TYPE_ANNOY,
+									CChick::BULLETTYPE_PLAYER,
+									CChick::STATE_CHASE,
+									m_nPlayerNum);
+							}
+						}
 					}
 
 					m_bulletType[m_nNumChick] = BULLET_CHICK_ANNOY;
@@ -1947,21 +2195,131 @@ void CPlayer::ChickAppear(void)
 					m_pChick[m_nNumChick] = CChick::Create(m_pos,
 						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 						CHICK_SCALE,
-						CChick::TYPE_SPEED,
+						CChick::TYPE_SPEED_S,
 						CChick::BULLETTYPE_PLAYER,
 						CChick::STATE_CHASE,
 						m_nPlayerNum);
-					/*}*/
-					/*else if (CGame::GetRanking(m_nPlayerNum) >= 3)
-					{
-					m_pChick[m_nNumChick] = CChick::Create(m_pos,
-					D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-					CHICK_SCALE,
-					CChick::TYPE_SPEED_S,
-					CChick::BULLETTYPE_PLAYER,
-					CChick::STATE_CHASE,
-					m_nPlayerNum);
-					}*/
+					//}
+					//else if (CGame::GetRanking(m_nPlayerNum) >= 3)
+					//{// 4位より下の場合
+					//	int nRank = rand() % 101;
+
+					//	if (CGame::GetRanking(m_nPlayerNum) == 3)
+					//	{// 4位（10％）
+					//		if (nRank <= 10)
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED_S,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//		else
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//	}
+					//	else if (CGame::GetRanking(m_nPlayerNum) == 4)
+					//	{// 5位（20％）
+					//		if (nRank <= 20)
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED_S,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//		else
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//	}
+					//	else if (CGame::GetRanking(m_nPlayerNum) == 5)
+					//	{// 6位（30％）
+					//		if (nRank <= 30)
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED_S,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//		else
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//	}
+					//	else if (CGame::GetRanking(m_nPlayerNum) == 6)
+					//	{// 7位（40％）
+					//		if (nRank <= 40)
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED_S,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//		else
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//	}
+					//	else if (CGame::GetRanking(m_nPlayerNum) == 7)
+					//	{// 8位（50％）
+					//		if (nRank <= 50)
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED_S,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//		else
+					//		{
+					//			m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					//				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					//				CHICK_SCALE,
+					//				CChick::TYPE_SPEED,
+					//				CChick::BULLETTYPE_PLAYER,
+					//				CChick::STATE_CHASE,
+					//				m_nPlayerNum);
+					//		}
+					//	}
+					//}
 
 					m_bulletType[m_nNumChick] = BULLET_CHICK_SPEED;
 
@@ -1993,7 +2351,7 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 		int fz = rand() % FALL_CHICK_RANGE;
 
 		// ひよこ出現
-		CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + 50.0f + (nCntChick * 100.0f), pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
+		CChick::Create(D3DXVECTOR3(pos.x + ((FALL_CHICK_RANGE / 2) - fx), pos.y + (nCntChick * 100.0f), pos.z + ((FALL_CHICK_RANGE / 2) - fz)),
 			D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 			CHICK_SCALE,
 			CChick::TYPE_ATTACK_S,
@@ -2016,9 +2374,10 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			{// タイプが障害物だったら
 				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pChick->GetState() == CChick::STATE_BULLET && pChick->GetType() == CChick::TYPE_ATTACK_S && pChick->GetAttackS() == false)
+				if (pChick->GetState() == CChick::STATE_BULLET || pChick->GetType() == CChick::TYPE_ATTACK_S || pChick->GetAttackS() == false || pChick->GetDis() == true)
 				{
 					pChick->SetAttackS(true);
+					pChick->SetDis(false);
 					pChick->SetRank(CGame::GetRanking(m_nPlayerNum));
 					pChick->SetDestRank(m_nDestRank);
 				}
@@ -2045,7 +2404,7 @@ void CPlayer::AnnoyChicks(void)
 				if (m_pAnnoyChick[nCntPlayer] == NULL)
 				{
 					m_pAnnoyChick[nCntPlayer] = CChick::Create(
-						D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + 100.0f, pPlayer[nCntPlayer]->GetPos().z),
+						D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + 50.0f, pPlayer[nCntPlayer]->GetPos().z),
 						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 						CHICK_SCALE,
 						CChick::TYPE_ANNOY_S,
@@ -2092,7 +2451,7 @@ void CPlayer::ChaseAnnoyS(void)
 		if (m_bDamage == false)
 		{
 			m_bDamage = true;
-			m_State = PLAYERSTATE_SPEEDDOWN;
+			m_State = PLAYERSTATE_SPEEDDOWN_S;
 		}
 	}
 }
@@ -2259,8 +2618,8 @@ void CPlayer::UpdateMotion(void)
 	}
 
 #ifdef  _DEBUG
-	CDebugProc::Print(" Numキー  : (%d)\n", m_nKey);
-	CDebugProc::Print(" m_nCountFlame  : (%d)\n", m_nCountFlame);
+	/*CDebugProc::Print(" Numキー  : (%d)\n", m_nKey);
+	CDebugProc::Print(" m_nCountFlame  : (%d)\n", m_nCountFlame);*/
 
 #endif
 

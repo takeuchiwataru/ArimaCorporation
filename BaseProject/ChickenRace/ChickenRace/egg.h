@@ -16,7 +16,6 @@
 //*****************************************************************************
 #define EGG_PRIOTITY	(3)
 #define EGG_SCALE		(0.5f)										//卵の大きさ
-#define EGG_RANGE		(50.0f)										// 卵とキャラクターの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEED			(0.5f)										// 加速する量
 #define MAX_EGG			(3)											//卵の最大数
@@ -85,6 +84,7 @@ public:
 	void Jump(float fJump);
 	void Bullet(void);
 	void SetThrow(bool bThrow) { m_bThrow = bThrow; }
+	float GetHeight(void) { return m_fHeight; }
 
 private:
 	void Item(void);
