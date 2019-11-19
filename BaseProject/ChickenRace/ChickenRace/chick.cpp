@@ -375,10 +375,11 @@ void CChick::Move(void)
 	if ((m_type != TYPE_ATTACK_S || m_type != TYPE_ANNOY_S) && m_state == STATE_CHASE)
 	{
 		//ƒ}ƒbƒv‚Æ‚Ì“–‚½‚è”»’è
-		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap, false)) { m_bJump = false; }
-	}
+		CPlayer **pPlayer = NULL;
+		pPlayer = CGame::GetPlayer();
 
-	m_fHeight = m_pos.y;
+		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+	}
 
 	//CDebugProc::Print("%.1f\n", m_move.y);
 }

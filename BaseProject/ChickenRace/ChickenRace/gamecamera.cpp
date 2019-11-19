@@ -16,9 +16,10 @@
 //===============================================================================
 //　マクロ定義
 //===============================================================================
-#define MOVE_CAMERA		(250.0f)							//カメラの移動量
+#define MOVE_CAMERA		(90.0f)							//カメラの移動量
+#define VECU_CAMERA		(30.0f)							//カメラの移動量
 #define MOVE_ANGLE		(0.06f)								//カメラ角度の移動量
-#define HIGHT_V			(30.0f)							//視点の高さ
+#define HIGHT_V			(40.0f)							//視点の高さ
 #define HIGHT_R			(25.0f)								//注視点の高さ
 
 //===============================================================================
@@ -41,7 +42,7 @@ HRESULT CGameCamera::Init(void)
 	//変数の初期化
 	m_posV = D3DXVECTOR3(0.0f, 500.0f, 0.0f);	//視点の初期値
 	m_posR = VECTOR_ZERO;						//注視点の初期値
-
+	m_fCameraAngle = 90;
 	m_cameraType = CAMERA_NONE;
 	m_pPlayer = NULL;
 	m_fDistance = MOVE_CAMERA;
@@ -146,17 +147,31 @@ void CGameCamera::UpdatePlayer(void)
 {
 	//プレイヤーの情報を取得する
 	CManager::MODE mode = CManager::GetMode();
-	if (m_fBackTime > 0.0f) { m_fBackTime--; }
 
 	if (m_pPlayer != NULL)
 	{
 		D3DXVECTOR3 PlayerPos = m_pPlayer->GetPos();
 		D3DXVECTOR3 PlayerRot = m_pPlayer->GetRot();
 		D3DXVECTOR3 PlayerMove = m_pPlayer->GetMove();
+		D3DXVECTOR3 VecUPos;
 		D3DXVECTOR3 WKPosR;
+		float fDistance = 0.0f;
+		float fRotX = 0.0f;
+		bool bVec = false;
 
-		//注視点の更新
-		WKPosR = D3DXVECTOR3(0.0f, HIGHT_R, 0.0f) + PlayerPos;	//見る場所 + 水平移動分
+
+		float fRotY = m_pPlayer->GetRot().y;
+		float fVecWK = fRotY - m_pPlayer->GetfRotOld();
+		float fVecU = 0.0f;
+		RemakeAngle(&fVecWK);
+		if (fVecWK > 0.01f) { m_vecU.z += 0.015f;  bVec = true; if (m_vecU.z > 0.8f) { m_vecU.z = 0.8f; } }
+		if (fVecWK < -0.01f) { m_vecU.z -= 0.015f; bVec = true; if (m_vecU.z < -0.8f) { m_vecU.z = -0.8f; } }
+		if (!bVec)
+		{
+			m_vecU.z *= 0.985f;
+		}
+
+		fRotY += D3DX_PI * 0.5f;
 
 		//プレイヤーに追従ようにする
 		m_fRotDest = PlayerRot.y - m_rot.y;
@@ -165,35 +180,35 @@ void CGameCamera::UpdatePlayer(void)
 		m_rot.y += m_fRotDest * MOVE_ANGLE;
 		RemakeAngle(&m_rot.y);
 
-		float fTilt = m_pPlayer->GetfTilt() * 0.25f - 0.075f;
-		float fWK = m_pPlayer->GetfTilt();
+		float fTilt = m_pPlayer->GetfTilt() * 0.25f - 0.09f;
+		float fWK = -m_pPlayer->GetfTilt();
 		float fMove = MOVE_CAMERA * (fWK * 1.0f + 1.0f);
+		if (m_pPlayer->GetbJump()) { fMove += MOVE_CAMERA * 0.5f; }
 		fWK += 1.0f;
-		if (fTilt < -0.15f) { fTilt = -0.15f; m_fBackTime = 300.0f; }
-		if (fTilt > 0.1f) { fTilt = 0.1f; }
-		if (fTilt > 0.0f) { m_fBackTime = 0.0f; }
 
-		float fRot = (D3DX_PI * fTilt);
+		CRoad_Pointer::BentRotX(m_pPlayer->Getpos(), m_pPlayer->GetpEnmPoint(), fRotX, fDistance);
+		if (m_pPlayer->GetbJump()) { fRotX -= D3DX_PI * 0.1f; }
+		RemakeAngle(&fRotX);
 
-		if (m_fBackTime > 0) { fMove *= 2.0f; }
-		m_rot.x += (fRot - m_rot.x) * 0.03f;
-
-		if (fMove - m_fDistance < 0.0f && m_fBackTime == 0)
-		{//カメラが寄るなら早く
-			m_fDistance += (fMove - m_fDistance) * 0.1f;
-		}
-		else
-		{//引くのはゆっくり
-			m_fDistance += (fMove - m_fDistance) * 0.025f;
-		}
 		//視点更新
+		fMove -= m_vecU.z * m_vecU.z * MOVE_CAMERA * 0.75f;
+		if (fMove < MOVE_CAMERA * 0.25f) { fMove = MOVE_CAMERA * 0.25f; }
+		VecUPos = D3DXVECTOR3(sinf(fRotY), 0.0f, cosf(fRotY)) * (m_vecU.z * VECU_CAMERA);
+
+		m_rot.x += (fRotX - m_rot.x) * 0.05f;
+		m_fDistance += (fMove - m_fDistance) * 0.05f;
+
+		PlayerPos += VecUPos;
 		m_posV = D3DXVECTOR3(
 			(sinf(m_rot.y) * -m_fDistance) * cosf(m_rot.x),	//X軸
 			sinf(m_rot.x) * -m_fDistance + HIGHT_V,		//Y軸
 			(cosf(m_rot.y) * -m_fDistance) * cosf(m_rot.x)) + PlayerPos;	//Z軸
+																			//注視点の更新
+		WKPosR = D3DXVECTOR3(0.0f, HIGHT_R, 0.0f) + PlayerPos;	//見る場所 + 水平移動分
 		WKPosR += D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * (5.0f * ((-fWK + 2.0f) * 0.5f) + 30.0f);
 		WKPosR.y += (-5.0f * ((fWK - 1.0f) * 1.0f) + 15.0f);
 		m_posR += (WKPosR - m_posR) * 0.2f;
+
 	}
 }
 

@@ -653,6 +653,7 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 				m_pCuorseCamera->SetType(CGameCamera::CAMERA_NONE);
 				m_pCuorseCamera->SetCameraPosR(D3DXVECTOR3(-11004.0f, -3000.0f, -799.0f));
 				m_pCuorseCamera->SetCameraPosV(D3DXVECTOR3(-11000.0f, 54000.0f, -800.0f));
+				m_pCuorseCamera->GetfCameraAngle() = 25.0f;
 				// ビューポート
 				if (m_nMaxPlayer == 1 || m_nMaxPlayer == 2 || bOnine == true)
 				{
