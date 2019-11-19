@@ -752,6 +752,7 @@ bool	CCOL_MESH::GetHeight(D3DXVECTOR3 pos, float &fHeight)
 			case EFFECT_GRASS:
 			case EFFECT_NORMAL:
 				fHeight = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
+				fHeight += WKm_pos.y;
 				return true;
 			}
 		}

@@ -120,7 +120,9 @@ public:
 	{// プレイヤーの状態
 		PLAYERSTATE_NORMAL = 0,	// 通常
 		PLAYERSTATE_SPEEDUP,		// 加速
+		PLAYERSTATE_SPEEDUP_S,		// 自動加速
 		PLAYERSTATE_SPEEDDOWN,	// 減速
+		PLAYERSTATE_SPEEDDOWN_S,	// 全員減速
 		PLAYERSTATE_DAMAGE,		// 攻撃食らう
 		PLAYERSTATE_MAX,			//最大数
 	} PLAYERSTATE;
@@ -183,6 +185,7 @@ public:
 	void SetControl(bool bControl) { m_bControl = bControl; };
 	bool GetControl(void) { return m_bControl; };
 	int GetCntChick(void) { return m_nCntChick; }
+	void SetCntChick(int nCntChick) { m_nCntChick = nCntChick; }
 	CChick **GetAnnoyChick(void) { return m_pAnnoyChick; }
 	void FallChicks(D3DXVECTOR3 pos);
 	void AnnoyChicks(void);

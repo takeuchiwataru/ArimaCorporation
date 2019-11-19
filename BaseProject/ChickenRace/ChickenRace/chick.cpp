@@ -22,13 +22,13 @@
 #define CHICK_NAME	"data\\MODEL\\Weapon\\chick.x"			// 読み込むモデルファイル
 
 #define MODEL_SPEED				(5.0f)
-#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(30.0f)		// ひよこが飛んでくスピード
 #define ANNOY_RANGE				(200.0f)	// 減速させる範囲
+#define ATTACK_RANGE			(200.0f)	// 範囲攻撃の範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
@@ -183,7 +183,7 @@ void CChick::Update(void)
 	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//前回の位置を保存する
 
-						// ひよこの動き
+	// ひよこの動き
 	Move();
 
 	CModel3D::SetPosition(m_pos);
@@ -379,6 +379,30 @@ void CChick::Move(void)
 		pPlayer = CGame::GetPlayer();
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+
+		if (m_bJump == false || (m_bJump == true && m_pos.y < m_fHeight))
+		{
+			m_move.y = 0.0f;
+			m_pos.y = m_fHeight;
+			//ジャンプの状態設定
+			m_bJump = false;
+		}
+	}
+	else if (m_type == TYPE_ATTACK && m_state == STATE_BULLET)
+	{
+		//マップとの当たり判定
+		CPlayer **pPlayer = NULL;
+		pPlayer = CGame::GetPlayer();
+
+		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+
+		if (m_bJump == false || (m_bJump == true && m_pos.y < m_fHeight))
+		{
+			m_move.y = 0.0f;
+			m_pos.y = m_fHeight;
+			//ジャンプの状態設定
+			m_bJump = false;
+		}
 	}
 
 	//CDebugProc::Print("%.1f\n", m_move.y);
@@ -621,7 +645,7 @@ void CChick::AttackS(void)
 		if (m_bAttackS == false)
 		{// 上がっていく
 			m_move.x = pPlayer[m_nNumPlayer]->GetMove().x;
-			m_move.y = 5.0f;
+			m_move.y = 4.0f;
 			m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
 
 			if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 300.0f)
@@ -630,29 +654,26 @@ void CChick::AttackS(void)
 				int fz = rand() % FALL_CHICK_RANGE;
 
 				m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + ((FALL_CHICK_RANGE / 2) - fx),
-					pPlayer[m_DestRank]->GetPos().y + 300.0f,
+					pPlayer[m_DestRank]->GetPos().y + 100.0f,
 					pPlayer[m_DestRank]->GetPos().z + ((FALL_CHICK_RANGE / 2) - fz));
+
+				if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
+				{// 5匹まで出す
+				 // 落ちるひよこ出現
+					pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
+						(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().x,
+						pPlayer[m_DestRank]->GetPos().y,
+						(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().z));
+				}
+
 				m_bAttackS = true;
+				pPlayer[m_nNumPlayer]->SetCntChick(0);
 			}
 		}
 		else
 		{
-			if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
-			{// 5匹まで出す
-			 // 落ちるひよこ出現
-				pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
-					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().x,
-					pPlayer[m_DestRank]->GetPos().y,
-					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().z));
-			}
-
 			// 移動量を設定
 			m_move.y = -CHICK_FALL_SPEED;
-
-			if (m_pos.y < -200.0f)
-			{// ある程度下に行ったら消す
-				Uninit();
-			}
 		}
 	}
 

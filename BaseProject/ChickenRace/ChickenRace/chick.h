@@ -86,6 +86,10 @@ public:
 	bool GetAttackS(void) { return m_bAttackS; }
 	void SetAttackS(bool bAttackS) { m_bAttackS = bAttackS; }
 	void SetDestRank(int nDestRank) { m_DestRank = nDestRank; }
+	void SetExplosion(bool bExplosion) { m_bExplosion = bExplosion; }
+	bool GetExplosion(void) { return m_bExplosion; }
+	D3DXVECTOR3 GetPos(void) { return m_pos; }
+	float GetHeight(void) { return m_fHeight; }
 
 private:
 	void Move(void);
@@ -123,5 +127,6 @@ private:
 	bool				m_bJump;				// ÉWÉÉÉìÉvÇµÇƒÇ¢ÇÈÇ©Ç«Ç§Ç©
 	bool				m_bDis;					// è¡Ç∑Ç©Ç«Ç§Ç©
 	bool				m_bAttackS;
+	bool				m_bExplosion;			// îÕàÕçUåÇÇ…Ç»ÇÈÇ©Ç»ÇÁÇ»Ç¢Ç©
 };
 #endif

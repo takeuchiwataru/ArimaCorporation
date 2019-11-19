@@ -26,7 +26,6 @@
 #define TEXTURE_EGG_3	"data\\TEXTURE\\modeltex\\egg01.jpg"	//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
-#define PLAYER_DEPTH			(70)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
@@ -183,25 +182,34 @@ void CEgg::Update(void)
 
 	m_pos.x += m_move.x;
 	m_pos.z += m_move.z;
+	m_pos.y += m_move.y;
 
-	if (m_eggState == EGGSTATE_CHASE || m_eggType == EGGTYPE_ANNOY || m_eggType == EGGTYPE_ATTACK)
+	if (m_eggState == EGGSTATE_CHASE || m_eggType == EGGTYPE_ANNOY || m_eggType == EGGTYPE_ATTACK || m_eggType == EGGTYPE_SPEED)
 	{
-		m_move.y -= cosf(0) * 0.4f;
-
-		m_pos.y += m_move.y;
-
 		//マップとの当たり判定
 		CPlayer **pPlayer = NULL;
 		pPlayer = CGame::GetPlayer();
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+
+		if (m_bJump == false || (m_bJump == true && m_pos.y < m_fHeight))
+		{
+			m_move.y = 0.0f;
+			m_pos.y = m_fHeight;
+			//ジャンプの状態設定
+			m_bJump = false;
+		}
 	}
+
+	m_move.y -= cosf(0) * 0.4f;
 
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(m_pos);
 
-	//CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
-	//CDebugProc::Print("%.1f\n", m_move.y);
+
+	CDebugProc::Print("%.1f\n", m_move.y);
+	CDebugProc::Print("m_fHeight : %.1f\n", m_fHeight);
+	CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
 
 	/*if (m_bJump == true)
 	{
@@ -494,7 +502,7 @@ void CEgg::Bullet(void)
 
 			m_rot.x = D3DX_PI * 0.5f;
 
-			if (m_bJump == false)
+			if (m_pos.y < -1000.0f)
 			{
 				Uninit();
 			}

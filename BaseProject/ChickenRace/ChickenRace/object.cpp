@@ -30,7 +30,6 @@
 #define TEXTURE_NAME_5	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
-#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
