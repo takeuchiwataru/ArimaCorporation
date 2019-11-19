@@ -1,6 +1,6 @@
 //=============================================================================
 //
-// 道のポインタ処理 [RoadPointer.cpp]
+// 道のポイント処理 [RoadPointer.cpp]
 // Author : Ryo Sugimoto
 //
 //=============================================================================
@@ -17,7 +17,8 @@
 // マクロ定義
 //*****************************************************************************
 #define IGNOR_DIS	(200.0f)
-#define BENT_DIS	(400.0f)
+#define BENT_DIS	(750.0f)
+#define BENTX_DIS	(500.0f)
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************
@@ -49,6 +50,7 @@ HRESULT CRoad_Pointer::Init(void)
 	pManager->GetnNumAll()++;
 
 	if (m_nNumber == 0 && !pManager->GetbWKData()) { pManager->SetTop(this); }
+	pManager->SetCur(this);
 	m_pos = INIT_VECTOR;
 	for (int nCount = 0; nCount < POINT_MAX; nCount++)
 	{
@@ -88,107 +90,84 @@ void	CRoad_Pointer::Uninit(void)
 	if (m_nNumber == 0)
 	{
 		CRoad_Manager *pManager = CRoad_Manager::GetManager();
-		int nData = pManager->GetnWKData();
 		pManager->SetTop(NULL); pManager->GetnNumAll() = 0;
 	}
 	delete this;
 }
 //==================================================================================================//
-//    * 道のポインタ次のポイントまでの角度を返す関数 *
+//    * 判定付加メッシュの生成関数 *
 //==================================================================================================//
-float	CRoad_Pointer::NextPoint(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, int &nNumber, float &fRoad, bool &bDivided, bool &bGoal, int &nMap)
+void	CRoad_Pointer::RankPoint(CPlayer *pPlayer, bool &bGoal)
 {
-	int nNumPoint = 99999;
+	D3DXVECTOR3 pos = pPlayer->GetPos();
+	CRoad_Pointer *&pPoint = pPlayer->GetpPoint();
+	int &nMap = pPlayer->GetnMap();
+	int &nNumber = pPlayer->GetnPlayerNum();
+	bool &bDivided = pPlayer->GetbDivided();
+	float fDistance;
 
-	do
+	BeyondPoint(pPlayer, true, bGoal);
+	BeyondPoint(pPlayer, false, bGoal);
+
+	int nNumPoint = 999999;
+	if (pPoint == NULL) { return; }
+	if (pPoint != NULL) { nNumPoint = pPoint->m_nNumber + (nMap * 1000); }
+	//距離を順位に反映
+	fDistance = -sqrtf(powf(pos.x - pPoint->m_pos.x, 2) + powf(pos.z - pPoint->m_pos.z, 2));
+	if (bDivided)
+	{//分かれ道の途中なら
+		CRoad_Pointer *pPlus = pPoint;
+		//合流地点までの距離を測り加算する
+		while (pPlus->m_pRoadPointer[1] == NULL)
+		{
+			pPlus = pPlus->m_pNextPointer[0];
+			fDistance += pPlus->m_fNextDistance[0];
+		}
+		nNumPoint = pPlus->m_nNumRoad + (nMap * 1000);
+	}
+	CRoad_Manager::GetManager()->SetDistance(nNumber, nNumPoint, fDistance);
+}
+//==================================================================================================//
+//    * 道のポインタの順位付け関数 *
+//==================================================================================================//
+bool	CRoad_Pointer::BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal)
+{
+	CRoad_Pointer *pPoint;
+
+	if (bRank) { pPoint = pPlayer->GetpPoint(); }
+	else { pPoint = pPlayer->GetpEnmPoint(); }
+
+	if (pPoint == NULL) { return false; }
+	for (int nCount = 0; nCount < ROAD_MAX; nCount++)
 	{
-		if (pPoint == NULL)
-		{//ゴール判定
-			CRoad_Manager *pManager = CRoad_Manager::GetManager();
-			if (nMap >= CRoad_Manager::MAP_MAX - 1)
+		if (Beyond(pPlayer, pPoint, nCount, bRank, bGoal))
+		{//越えたなら
+			if (bRank)
 			{
-				bGoal = true;
-				CRoad_Manager::GetManager()->SetDistance(nNumber, nNumPoint, -1.0f);
-				return 0.0f;
+				if (pPoint->m_nNumber == 0) { pPlayer->GetnMap()++; }
+				pPlayer->GetpPoint() = pPoint;
 			}
-			else
-			{
-				nMap++;
-				pPoint = pManager->GetTop(nMap);
-			}
+			else { pPlayer->GetpEnmPoint() = pPoint; }
 		}
-	} while (pPoint == NULL);
-	nNumPoint = pPoint->m_nNumber + (nMap * 1000);
-
-	D3DXVECTOR3 PointPos = pPoint->m_Point[0];
-	float fRot, fDistance;
-	float fPointRot = atan2f(pPoint->m_Point[1].x - pPoint->m_Point[0].x, pPoint->m_Point[1].z - pPoint->m_Point[0].z);
-	float fPosRot = atan2f(pos.x - PointPos.x, pos.z - PointPos.z) - fPointRot;
-
-	if (fPosRot > D3DX_PI) { fPosRot -= D3DX_PI * 2.0f; }
-	if (fPosRot < -D3DX_PI) { fPosRot += D3DX_PI * 2.0f; }
-	fPointRot = 0.0f;
-
-	if (CCOL_MESH::AngleCheck(fPointRot, fPosRot) > 0)
-	{//超えてないなら
-		fPointRot = atan2f(pPoint->m_Point[1].x - pPoint->m_Point[0].x, pPoint->m_Point[1].z - pPoint->m_Point[0].z);
-		if (pPoint->m_pNextPointer[0] != NULL || nMap != CRoad_Manager::MAP_MAX - 1)
-		{//次がゴールでないなら
-			fRot = atan2f(pos.x - pPoint->m_pos.x, pos.z - pPoint->m_pos.z);
-			PointPos += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * IGNOR_DIS;
+		if (!bRank) { continue; }
+		if (Reverse(pPlayer, pPoint, nCount))
+		{
+			if (bRank) { pPlayer->GetpPoint() = pPoint; }
+			else { pPlayer->GetpEnmPoint() = pPoint; }
 		}
-		fPosRot = atan2f(pos.x - PointPos.x, pos.z - PointPos.z) - fPointRot;
-
-		if (fPosRot > D3DX_PI) { fPosRot -= D3DX_PI * 2.0f; }
-		if (fPosRot < -D3DX_PI) { fPosRot += D3DX_PI * 2.0f; }
-		fPointRot = 0.0f;
 	}
-
-	if (CCOL_MESH::AngleCheck(fPointRot, fPosRot) <= 0)
-	{//外積判定で超えているなら
-		if (pPoint->m_pNextPointer[1] != NULL)
-		{//超えたポインタが分かれ道なら
-			bDivided = true;
-		}
-		if (pPoint->m_pRoadPointer[1] != NULL)
-		{//超えたポインタが合流地点なら
-			bDivided = false;
-		}
-		if (pPoint->m_pNextPointer[1] != NULL) { pPoint = pPoint->m_pNextPointer[1]; }
-		else { pPoint = pPoint->m_pNextPointer[0]; }
-
-		fRot = pPoint->NextPoint(pos, pPoint, nNumber, fRoad, bDivided, bGoal, nMap);
-	}
-	else
-	{//超えてないなら
-		fRot = NextRot(pos, pPoint, fRoad);
-		//距離を順位に反映
-		fDistance = sqrtf(powf(pPoint->m_Point[0].x - pos.x, 2) + powf(pPoint->m_Point[0].z - pos.z, 2));
-		if (bDivided)
-		{//分かれ道の途中なら
-			CRoad_Pointer *pPlus = pPoint;
-			//合流地点までの距離を測り加算する
-			do
-			{
-				fDistance += pPlus->m_fNextDistance[0];
-				pPlus = pPlus->m_pNextPointer[0];
-			} while (pPlus->m_pRoadPointer[1] != NULL);
-			nNumPoint = pPlus->m_nNumber + (nMap * 1000);
-		}
-		CRoad_Manager::GetManager()->SetDistance(nNumber, nNumPoint, fDistance);
-	}
-	//fRot += D3DX_PI;
-	//if (fRot > D3DX_PI) { fRot -= D3DX_PI * 2.0f; }
-
-	return fRot;
+	return false;
 }
 //==================================================================================================//
 //    * 道のポインタ保存関数 *
 //==================================================================================================//
-float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, float &fRoad)
+float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber)
 {
 	float fDistance, fRot;
 	D3DXVECTOR3 Point;
+
+	CRoad_Pointer *pPoint = pmyPoint->GetNext(nNumber, nMap, 1);
+	if (pPoint == NULL) { return 0.0f; }
 
 	Point = pPoint->m_pos;
 	//1つ目のポイントとの距離、角度を計算
@@ -244,6 +223,50 @@ float	CRoad_Pointer::BentRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, float &fR
 		if (fRot < -D3DX_PI) { fRot += D3DX_PI * 2.0f; }
 
 		BentRot(pos, pPoint->m_pNextPointer[0], fRot, fDistance, fRoad);
+	}
+	return fRot;
+}
+//==================================================================================================//
+//    * 道のポインタX角度取得関数 *
+//==================================================================================================//
+float	CRoad_Pointer::BentRotX(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, float &fRot, float &fDistance)
+{
+	float fPercent, fAdd;
+	float fARot, fADistance;
+	D3DXVECTOR3 Point, m_pos;
+	bool bStrat = false;
+	//2つ目のポイントとの距離、角度を計算
+	if (pPoint->m_pNextPointer[0] != NULL)
+	{//次がNULLでないなら
+		Point = pPoint->m_pNextPointer[0]->m_pos;
+		m_pos = pPoint->m_pos;
+
+		if (fDistance == 0.0f) { bStrat = true; }
+		fDistance += pPoint->m_fNextDistance[0];
+		fADistance = (Point.y - m_pos.y) * -1.5f;
+		if (fADistance < 0.0f) { fADistance *= 0.5f; }
+
+		fARot = atan2f(sqrtf(powf(Point.x - m_pos.x, 2) + powf(Point.z - m_pos.z, 2)), fADistance) - D3DX_PI * 0.55f;
+		if (fARot > D3DX_PI) { fARot -= D3DX_PI * 2.0f; }
+		if (fARot < -D3DX_PI) { fARot += D3DX_PI * 2.0f; }
+
+		if (bStrat) { fRot = fARot; }
+		else
+		{
+			fAdd = fARot - fRot;
+			if (fAdd > D3DX_PI) { fAdd -= D3DX_PI * 2.0f; }
+			if (fAdd < -D3DX_PI) { fAdd += D3DX_PI * 2.0f; }
+
+			//%分補正
+			fPercent = 1.0f - (fDistance / BENTX_DIS);
+			if (fPercent <= 0.0f) { return fRot; }
+
+			fRot += fAdd * fPercent;
+			if (fRot > D3DX_PI) { fRot -= D3DX_PI * 2.0f; }
+			if (fRot < -D3DX_PI) { fRot += D3DX_PI * 2.0f; }
+		}
+
+		BentRotX(pos, pPoint->m_pNextPointer[0], fRot, fDistance);
 	}
 	return fRot;
 }
@@ -376,6 +399,77 @@ void	CRoad_Pointer::Connect(CRoad_Pointer *pPoint)
 	}
 }
 //==================================================================================================//
+//    * 道のポインタ越えたか関数 *
+//==================================================================================================//
+bool	CRoad_Pointer::Beyond(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nNumber, bool &bRank, bool &bGoal)
+{
+	D3DXVECTOR3 pos = pPlayer->GetPos();
+	int &nMap = pPlayer->GetnMap();
+
+	CRoad_Pointer *pPoint = pmyPoint->GetNext(nNumber, nMap, (bRank ? 0 : 1));
+	if (pPoint == NULL)
+	{
+		if (bRank) { bGoal = true; }
+		return false;
+	}
+
+	//越えたか
+	CRoad_Pointer *pWKPoint = NULL;
+	D3DXVECTOR3 PointPos0 = pPoint->m_Point[0];
+	D3DXVECTOR3 PointPos1 = pPoint->m_Point[1];
+
+	float fRot;
+	bool  bBeyond = false;
+
+	//超える補助
+	if (pPoint->m_pNextPointer[0] != NULL || nMap != CRoad_Manager::MAP_MAX - 1)
+	{//次がゴールでないなら
+		if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && !bRank)
+		{//敵 && ランキングでないなら
+			fRot = atan2f(pos.x - pPoint->m_pos.x, pos.z - pPoint->m_pos.z);
+			pos -= D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * IGNOR_DIS;
+		}
+	}
+
+	float fAngle[2];
+	fAngle[0] = atan2f(pPoint->m_Point[1].x - pPoint->m_Point[0].x, pPoint->m_Point[1].z - pPoint->m_Point[0].z);
+	fAngle[1] = atan2f(pos.x - pPoint->m_Point[0].x, pos.z - pPoint->m_Point[0].z);
+
+	if (CCOL_MESH::AngleCheck(fAngle[0], fAngle[1]) <= 0)
+	{//越えた
+		pmyPoint = pPoint;
+		bBeyond = true;
+	}
+
+	//繰り返す
+	return bBeyond;
+}
+//==================================================================================================//
+//    * 道のポインタ逆走関数 *
+//==================================================================================================//
+bool	CRoad_Pointer::Reverse(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nNumber)
+{
+	D3DXVECTOR3 pos = pPlayer->GetPos();
+	D3DXVECTOR3 posold = pPlayer->GetOldPos();
+	int &nMap = pPlayer->GetnMap();
+
+	CRoad_Pointer *pPoint = pmyPoint;
+
+	//越えたか
+	bool  bBeyond = false;
+
+	if (CCOL_MESH::CrossCheck(pPoint->m_Point[1], pPoint->m_Point[0], pos, posold))
+	{//戻った 交差チェック。しっかりやらないとコースによっては誤動作が生じるため
+		pPoint = pPoint->GetPrev(0, nMap);
+		if (pmyPoint->m_nNumber == 0) { pPlayer->GetnMap()--; }
+		pmyPoint = pPoint;
+		bBeyond = true;
+	}
+
+	//繰り返す
+	return bBeyond;
+}
+//==================================================================================================//
 //    * 道のポインタ解放関数 *
 //==================================================================================================//
 CRoad_Pointer	*CRoad_Pointer::Release(void)
@@ -450,12 +544,60 @@ void	CRoad_Pointer::Scale(POINT point, float fValue)
 //==================================================================================================//
 //    * 道のポインタ設置関数 *
 //==================================================================================================//
-float	CRoad_Pointer::GetRotX(void)
+float	CRoad_Pointer::GetfRotY(void)
 {
-	//D3DXVECTOR3 pos = m_pNextPointer
-	//float fDistance = sqrtf(powf(m_pos.x - , 2))
-	//m_pos.y
-	return m_pos.y;
+	float fRot = atan2f(m_Point[1].x - m_Point[0].x, m_Point[1].z - m_Point[0].z) - (D3DX_PI * 0.5f);
+	float fDistance = 0.0f;
+	float fRoad = 0.0f;
+	CRoad_Pointer *pPoint = this;
+	if (fRot < D3DX_PI) { fRot += D3DX_PI; }
+	fRot = BentRot(m_pos - D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * 0.1f, pPoint, fRot, fDistance, fRoad);
+	return fRot;
+}
+//==================================================================================================//
+//    * 道のポインタ設置関数 *
+//==================================================================================================//
+CRoad_Pointer	*CRoad_Pointer::GetNext(int nNumber, int &nMap, int nRank)
+{
+	CRoad_Pointer *pPoint = NULL;
+	if (m_pNextPointer[nNumber] != NULL) { return m_pNextPointer[nNumber]; }
+	if (m_pNextPointer[0] != NULL) { return m_pNextPointer[0]; }
+	do
+	{
+		CRoad_Manager *pManager = CRoad_Manager::GetManager();
+		if (nMap >= CRoad_Manager::MAP_MAX - 1)
+		{
+			break;
+		}
+		else
+		{
+			pPoint = pManager->GetTop(nRank, nMap + 1);
+		}
+	} while (pPoint == NULL);
+	return pPoint;
+}
+//==================================================================================================//
+//    * 道のポインタ前獲得関数 *
+//==================================================================================================//
+CRoad_Pointer	*CRoad_Pointer::GetPrev(int nNumber, int &nMap)
+{
+	CRoad_Pointer *pPoint = NULL;
+	int				nWKMap = nMap - 1;
+	if (m_pRoadPointer[nNumber] != NULL) { return m_pRoadPointer[nNumber]; }
+
+	do
+	{
+		CRoad_Manager *pManager = CRoad_Manager::GetManager();
+		if (nWKMap < 0)
+		{
+			break;
+		}
+		else
+		{
+			pPoint = pManager->GetCur(nWKMap);
+		}
+	} while (pPoint == NULL);
+	return pPoint;
 }
 //==================================================================================================//
 //    * 道のポインタ設置関数 *
@@ -525,10 +667,14 @@ HRESULT CRoad_Manager::Init(void)
 
 	for (int nCount = 0; nCount < MAX_TOP; nCount++)
 	{
-		m_pTop[nCount] = NULL;
-		m_nNumAll[nCount] = 0;
+		for (int nRank = 0; nRank < MAX_RPOINT; nRank++)
+		{
+			m_pTop[nRank][nCount] = NULL;
+			m_nNumAll[nRank][nCount] = 0;
+		}
 	}
 
+	m_nWKRank = -1;
 	m_nWKData = -1;
 	m_pWKTop = NULL;
 
@@ -541,11 +687,15 @@ void	CRoad_Manager::Uninit(void)
 {
 	for (int nCount = 0; nCount < MAX_TOP; nCount++)
 	{
-		m_nWKData = nCount;
-		if (m_pTop[nCount] != NULL)
-		{//ポイントの削除
-			m_pTop[nCount]->Uninit();
-			m_pTop[nCount] = NULL;
+		for (int nRank = 0; nRank < MAX_RPOINT; nRank++)
+		{
+			m_nWKData = nCount;
+			m_nWKRank = nRank;
+			if (m_pTop[nRank][nCount] != NULL)
+			{//ポイントの削除
+				m_pTop[nRank][nCount]->Uninit();
+				m_pTop[nRank][nCount] = NULL;
+			}
 		}
 	}
 	m_nWKData = -1;
@@ -563,14 +713,14 @@ void	CRoad_Manager::Uninit(void)
 //==================================================================================================//
 void	CRoad_Manager::Save(void)
 {
-	if (m_pTop[0] == NULL) { return; }
+	if (m_pTop[0][0] == NULL) { return; }
 	FILE *pFile = NULL;
 	pFile = fopen("data/TEXT/ROAD_POINT/Save.txt", "w");
 
 	if (pFile != NULL)
 	{//Save　成功
-		fprintf(pFile, "%d\n", m_nNumAll[0]);
-		m_pTop[0]->Save(pFile);
+		fprintf(pFile, "%d\n", m_nNumAll[0][0]);
+		m_pTop[0][0]->Save(pFile);
 		fclose(pFile);
 	}
 }
@@ -589,40 +739,58 @@ void	CRoad_Manager::LoadMap(void)
 //==================================================================================================//
 void	CRoad_Manager::Load(int &nNumber, MAP map)
 {
-	m_nWKData = nNumber;
-
 	FILE			*pFile = NULL;
 	CRoad_Pointer	**pPoint = NULL;
 	int				nNumAll;
-	char			aStr[64] = "data/TEXT/ROAD_POINT/";
+	char			aStr[64];
 
-	switch (map)
+	m_nWKData = nNumber;
+	for (int nRank = 0; nRank < MAX_RPOINT; nRank++)
 	{
-	case MAP_Half0:		strcat(aStr, "Half0.txt"); break;
-	case MAP_Bridge:	strcat(aStr, "Bridge.txt"); break;
-	case MAP_Half1:		strcat(aStr, "Half1.txt"); break;
-	case MAP_MAX:		strcat(aStr, "Save.txt"); break;
-	}
-	if (m_pTop[nNumber] != NULL) { m_pTop[nNumber]->Uninit(); }
-	if (m_pTop[nNumber] == NULL) { CRoad_Pointer::Create(m_pTop[nNumber]); }
+		CRoad_Pointer	*&pTop = m_pTop[nRank][nNumber];
+		m_nWKRank = nRank;
+		strcpy(aStr, "data/TEXT/ROAD_POINT/");
 
-	pFile = fopen(aStr, "r");
+		if (nRank == 1)
+		{
+			switch (map)
+			{
+			case MAP_Half0:		strcat(aStr, "Half0.txt"); break;
+			case MAP_Bridge:	strcat(aStr, "Bridge.txt"); break;
+			case MAP_Half1:		strcat(aStr, "Half1.txt"); break;
+			}
+		}
+		else
+		{
+			switch (map)
+			{
+			case MAP_Half0:		strcat(aStr, "RHalf0.txt"); break;
+			case MAP_Bridge:	strcat(aStr, "RBridge.txt"); break;
+			case MAP_Half1:		strcat(aStr, "RHalf1.txt"); break;
+			}
+		}
 
-	if (pFile != NULL)
-	{//Load　成功
-		fscanf(pFile, "%d\n", &nNumAll);
-		pPoint = new CRoad_Pointer*[nNumAll];
-		m_pTop[nNumber]->Load(pFile, pPoint);
-		delete[] pPoint;
-		fclose(pFile);
+		if (pTop != NULL) { pTop->Uninit(); }
+		if (pTop == NULL) { CRoad_Pointer::Create(pTop); }
 
-		//CPlayer **pPlayer = CGame::GetPlayer();
-		//int nMaxPlayer = CGame::GetMaxPlayer();
-		//for (int nCount = 0;nCount < nMaxPlayer;nCount++)
-		//{
-		//	if (pPlayer[nCount] == NULL) { continue; }
-		//	pPlayer[nCount]->GetpPoint() = m_pTop[0];
-		//}
+		pFile = fopen(aStr, "r");
+
+		if (pFile != NULL)
+		{//Load　成功
+			fscanf(pFile, "%d\n", &nNumAll);
+			pPoint = new CRoad_Pointer*[nNumAll];
+			pTop->Load(pFile, pPoint);
+			delete[] pPoint;
+			fclose(pFile);
+
+			//CPlayer **pPlayer = CGame::GetPlayer();
+			//int nMaxPlayer = CGame::GetMaxPlayer();
+			//for (int nCount = 0;nCount < nMaxPlayer;nCount++)
+			//{
+			//	if (pPlayer[nCount] == NULL) { continue; }
+			//	pPlayer[nCount]->GetpPoint() = m_pTop[0];
+			//}
+		}
 	}
 	m_nWKData = -1;
 }
@@ -672,6 +840,6 @@ void	CRoad_Manager::SetRoad(void)
 		int nNumber = 0;
 		bool bRoad = false;
 
-		m_pTop[nCount]->SetRoad(nNumber, bRoad);
+		m_pTop[0][nCount]->SetRoad(nNumber, bRoad);
 	}
 }
