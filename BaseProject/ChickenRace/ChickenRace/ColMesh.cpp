@@ -569,18 +569,18 @@ void	CCOL_MESH::ResetSelect(void)
 
 	switch (m_Effect)
 	{
-	case EFFECT_NORMAL: col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.4f); break;
-	case EFFECT_GRASS: col = D3DXCOLOR(0.1f, 1.0f, 0.1f, 0.4f); break;
-	case EFFECT_RIVER: col = D3DXCOLOR(0.0f, 0.1f, 1.0f, 0.4f); break;
-	case EFFECT_SWAMP: col = D3DXCOLOR(0.15f, 0.5f, 1.0f, 0.4f); break;
-	case EFFECT_BOOST: col = D3DXCOLOR(0.9f, 0.35f, 0.1f, 0.4f); break;
+	case EFFECT_NORMAL: col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f); break;
+	case EFFECT_GRASS: col = D3DXCOLOR(0.1f, 1.0f, 0.1f, 1.0f); break;
+	case EFFECT_RIVER: col = D3DXCOLOR(0.0f, 0.1f, 1.0f, 0.7f); break;
+	case EFFECT_SWAMP: col = D3DXCOLOR(0.15f, 0.5f, 1.0f, 0.7f); break;
+	case EFFECT_BOOST: col = D3DXCOLOR(0.9f, 0.35f, 0.1f, 0.7f); break;
+	case EFFECT_DROP: col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f); break;
 	}
 	for (int nCount = 0; nCount < m_nNumVtx; nCount++)
 	{
 		m_bSelect[nCount] = false;
 		if (m_bField)
 		{
-
 			pVtx[nCount].col = col;
 		}
 		else { pVtx[nCount].col = D3DXCOLOR(1.0f, 0.98f, 0.02f, 0.75f); }
@@ -654,11 +654,18 @@ void	CCOL_MESH::Load(FILE *pFile)
 //=============================================================================
 //メッシュ床のあたり判定
 //=============================================================================
-bool CCOL_MESH::MeshField(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, D3DXVECTOR3 &FNor, bool &bJump)
+bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 {
+	D3DXVECTOR3 &pos = pPlayer->Getpos();
+	D3DXVECTOR3 &posold = pPlayer->Getposold();
+	D3DXVECTOR3 &move = pPlayer->Getmove();
+	bool		&bJump = pPlayer->GetbJump();
+	D3DXVECTOR3 &FNor = pPlayer->GetFNor();
+	EFFECT		&Effect = pPlayer->GgetFEffect();
+
 	bool		bLand = true;
 	D3DXVECTOR3 WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 WKm_pos = m_pos + mypos;
+	D3DXVECTOR3 WKm_pos = m_pos;
 	D3DXVECTOR3 WKpos = pos - WKm_pos;
 	D3DXVECTOR3 Vec[8];
 
@@ -679,23 +686,25 @@ bool CCOL_MESH::MeshField(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &pos
 			switch (m_Effect)
 			{
 			case EFFECT_BOOST:	//加速
-				if (!bJump) { move *= 1.35f; }
+				if (!bJump) { move *= 1.35f; Effect = m_Effect; }
 				break;
 			case EFFECT_SWAMP:	//減速
-				if (!bJump) { move *= 0.95f; }
+				if (!bJump) { move *= 0.95f; Effect = m_Effect; }
 				return bLand;
 			case EFFECT_GRASS:
-				if (!bJump) { move *= 0.95f; }
 			case EFFECT_NORMAL:
 			case EFFECT_RIVER:
+			case EFFECT_DROP:
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
 				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 10.0f : 0.0f))
 				{//貫通していたら
+					Effect = m_Effect;
+					if (m_Effect == EFFECT_DROP) { return bLand; }
+					if (m_Effect == EFFECT_GRASS) { move *= 0.95f; }
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
 					FNor = WKnor;
-					if (bJump) { bLand = false; }//前Fが空中なら
-					bJump = false;
+					bLand = false;
 					return bLand;
 				}
 				break;
@@ -711,6 +720,51 @@ bool CCOL_MESH::MeshField(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &pos
 		}
 	}
 	return bLand;
+}
+//=============================================================================
+//メッシュ床の高さ獲得判定
+//=============================================================================
+bool	CCOL_MESH::GetHeight(D3DXVECTOR3 pos, float &fHeight)
+{
+	bool		bLand = true;
+	D3DXVECTOR3 WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 WKm_pos = m_pos;
+	D3DXVECTOR3 WKpos = pos - WKm_pos;
+
+	D3DXVECTOR3 Vec[8];
+
+	int				nCntCross = 0;
+	int				nCntVertical = 0;
+	D3DXVECTOR3		VtxPos[4];
+
+	while (1)
+	{
+		VtxPos[0] = m_pVtx[nCntVertical * (m_nNumWidth + 1) + nCntCross];
+		VtxPos[1] = m_pVtx[nCntVertical * (m_nNumWidth + 1) + nCntCross + 1];
+		VtxPos[2] = m_pVtx[(nCntVertical + 1) * (m_nNumWidth + 1) + nCntCross];
+		VtxPos[3] = m_pVtx[(nCntVertical + 1) * (m_nNumWidth + 1) + nCntCross + 1];
+
+		if (FieldCheck(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], WKpos))
+		{//四頂点で範囲内なら
+
+			switch (m_Effect)
+			{
+			case EFFECT_GRASS:
+			case EFFECT_NORMAL:
+				fHeight = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
+				return true;
+			}
+		}
+
+		nCntCross++;
+		if (m_nNumWidth <= nCntCross)
+		{
+			nCntCross = 0;
+			nCntVertical++;
+			if (nCntVertical >= m_nNumVertical) { break; }
+		}
+	}
+	return false;
 }
 //=============================================================================
 //内側外側のチェック判定
@@ -792,16 +846,16 @@ float CCOL_MESH::FieldCollision(D3DXVECTOR3 &FposUL, D3DXVECTOR3 &FposUR, D3DXVE
 //=============================================================================
 //メッシュ壁のあたり判定
 //=============================================================================
-void CCOL_MESH::MeshWall(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float& fLength, int &nCntHit, bool &bReflection)
+void CCOL_MESH::MeshWall(CPlayer *&pPlayer, int &nCntHit, bool bReflection)
 {
 	//上のみ見る(2頂点のうち)
 	int nVtxY = 0;	//比較する頂点を取得
-
+	D3DXVECTOR3& pos = pPlayer->GetPos();
 	for (int nCount = 0; nCount < m_nNumWidth; nCount++)
 	{//メッシュWallのXZのみを見る
-		if (WallCollision(m_pVtx[nVtxY * (m_nNumWidth + 1) + nCount] + m_pos + mypos, m_pVtx[nVtxY * (m_nNumWidth + 1) + nCount + 1] + m_pos
-			, m_pVtx[(nVtxY + 1) * (m_nNumWidth + 1) + nCount] + m_pos + mypos, m_pVtx[(nVtxY + 1) * (m_nNumWidth + 1) + nCount + 1] + m_pos
-			, pos, posold, move, fLength, nCntHit, bReflection) == 2)
+		if (WallCollision(m_pVtx[nVtxY * (m_nNumWidth + 1) + nCount] + m_pos, m_pVtx[nVtxY * (m_nNumWidth + 1) + nCount + 1] + m_pos
+			, m_pVtx[(nVtxY + 1) * (m_nNumWidth + 1) + nCount] + m_pos, m_pVtx[(nVtxY + 1) * (m_nNumWidth + 1) + nCount + 1] + m_pos
+			, pPlayer, nCntHit, bReflection) == 2)
 		{
 			return;
 		}
@@ -810,8 +864,13 @@ void CCOL_MESH::MeshWall(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &poso
 //=============================================================================
 //線と線のあたり判定(壁)判定
 //=============================================================================
-int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 WUpos0, D3DXVECTOR3 WUpos1, D3DXVECTOR3& pos, D3DXVECTOR3 posold, D3DXVECTOR3 &move, float& fLength, int &nCntHit, bool &bReflection)
+int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 WUpos0, D3DXVECTOR3 WUpos1, CPlayer *&pPlayer, int &nCntHit, bool &bReflection)
 {
+	D3DXVECTOR3& pos = pPlayer->Getpos();
+	D3DXVECTOR3 posold = pPlayer->Getposold();
+	D3DXVECTOR3 &move = pPlayer->Getmove();
+	float& fLength = pPlayer->GetfLength();
+
 	D3DXVECTOR3 Wpos2;			//差分縮める用
 	D3DXVECTOR3 Wpos3;			//差分縮める用
 	float		fDistance;		//めり込んだ距離
@@ -828,7 +887,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 	fAngle[0] = atan2f(Wpos1.x - Wpos0.x, Wpos1.z - Wpos0.z);
 
 	//キャラなら貫通対策
-	if (fLength > 5.0f) { posold -= D3DXVECTOR3(sinf(fAngle[0] + D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] + D3DX_PI * 0.5f)) * (COL_WALL_PLUS); }
+	if (fLength >= 3.0f) { posold -= D3DXVECTOR3(sinf(fAngle[0] + D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] + D3DX_PI * 0.5f)) * (COL_WALL_PLUS); }
 
 	//判定対象の幅分壁を伸ばす
 	Wpos2 = pos;
@@ -847,8 +906,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		AngleCheck(fAngle[3], fAngle[4]) >= 0		//移動方向が壁時計回り置く頂点の内側
 		)
 	{//交差チェック
-
-		//距離計算　距離で％も計算
+	 //距離計算　距離で％も計算
 		fDistance = sqrtf(powf((Wpos2.x - Wpos0.x), 2) + powf((Wpos2.z - Wpos0.z), 2));
 		fPercent = fDistance / sqrtf(powf((Wpos1.x - Wpos0.x), 2) + powf((Wpos1.z - Wpos0.z), 2));
 		fPercent = (Wpos1.y - Wpos0.y) * fPercent;
@@ -902,17 +960,17 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 				fDistance = sqrtf(powf((Wpos3.x), 2) + powf((Wpos3.z), 2));
 			}
 			//値代入
-				Wpos0 = D3DXVECTOR3(Wpos0.x, pos.y, Wpos0.z) + D3DXVECTOR3(sinf(fAngle[0]), 0.0f, cosf(fAngle[0])) * fDistance;
-				if (bReflection) { pos = Wpos0 + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (COL_WALL_PLUS); }
-				else
-				{//主にキャラ向けの反射処理	壁体当たり後に壁沿いに歩け、突っかからないよう調整
-					fPower = ((powf(move.x, 2) + powf(move.z, 2)) * (COL_RECOIL)+2.0f);
-					if (fPower > 12.0f) { fPower = 12.0f; }
-					pos = Wpos0
-						+ D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.5f)) * (0.1f)
-						+ D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (1.0f);
-					move = D3DXVECTOR3(move.x * (1.0f - COL_MOVE_SLOWING), move.y, move.z * (1.0f - COL_MOVE_SLOWING)) + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * fPower;
-				}
+			Wpos0 = D3DXVECTOR3(Wpos0.x, pos.y, Wpos0.z) + D3DXVECTOR3(sinf(fAngle[0]), 0.0f, cosf(fAngle[0])) * fDistance;
+			if (bReflection) { pos = Wpos0 + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (COL_WALL_PLUS); }
+			else
+			{//主にキャラ向けの反射処理	壁体当たり後に壁沿いに歩け、突っかからないよう調整
+				fPower = ((powf(move.x, 2) + powf(move.z, 2)) * (COL_RECOIL)+2.0f);
+				if (fPower > 12.0f) { fPower = 12.0f; }
+				pos = Wpos0
+					+ D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.5f)) * (0.1f)
+					+ D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (1.0f);
+				move = D3DXVECTOR3(move.x * (1.0f - COL_MOVE_SLOWING), move.y, move.z * (1.0f - COL_MOVE_SLOWING)) + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * fPower;
+			}
 		}
 		else
 		{
@@ -941,6 +999,29 @@ int CCOL_MESH::AngleCheck(float fAngle0, float fAngle1)
 	if (fAngle0 > fAngle1) { return 1; }
 	else if (fAngle0 < fAngle1) { return -1; }
 	return 0;
+}
+//=============================================================================
+//角度と角度のチェック判定
+//=============================================================================
+bool	CCOL_MESH::CrossCheck(D3DXVECTOR3 &Wpos0, D3DXVECTOR3 &Wpos1, D3DXVECTOR3 &pos, D3DXVECTOR3 &posold)
+{
+	float fAngle[5];
+
+	fAngle[0] = atan2f(Wpos1.x - Wpos0.x, Wpos1.z - Wpos0.z);
+	fAngle[1] = atan2f(pos.x - Wpos0.x, pos.z - Wpos0.z);
+	fAngle[2] = atan2f(Wpos0.x - posold.x, Wpos0.z - posold.z);
+	fAngle[3] = atan2f(pos.x - posold.x, pos.z - posold.z);
+	fAngle[4] = atan2f(Wpos1.x - posold.x, Wpos1.z - posold.z);
+
+	if (AngleCheck(fAngle[0], fAngle[1]) <= 0 &&	//現在の位置が壁の向こうか
+		AngleCheck(fAngle[0], fAngle[2]) <= 0 &&	//前の位置が壁の手前側
+		AngleCheck(fAngle[3], fAngle[2]) <= 0 &&	//移動方向が壁時計回り手前頂点の内側
+		AngleCheck(fAngle[3], fAngle[4]) >= 0		//移動方向が壁時計回り置く頂点の内側
+		)
+	{
+		return true;
+	}
+	return false;
 }
 //==================================================================================================//
 //    * 判定付加管理の全読み込み関数 *
@@ -1152,6 +1233,7 @@ void	CCOL_MESH_MANAGER::Loadtxt(TYPE type)
 			CCOL_MESH::Create(m_pWall[nCount]);
 			m_pWall[nCount]->Load(pFile);
 		}
+		ResetCollar();
 		fclose(pFile);
 	}
 }
@@ -1165,54 +1247,67 @@ void	CCOL_MESH_MANAGER::Set(TYPE type)
 	m_pColMesh[m_Type] = this;
 }
 //==================================================================================================//
+//    * 判定付加管理の静的代入関数 *
+//==================================================================================================//
+void	CCOL_MESH_MANAGER::ResetCollar(void)
+{
+	for (int nCount = 0; nCount < m_nNumField; nCount++)
+	{//フィールドの更新
+		m_pField[nCount]->ResetSelect();
+	}
+}
+//==================================================================================================//
 //    * 判定付加管理の読み込み関数 *
 //==================================================================================================//
-bool	CCOL_MESH_MANAGER::Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap, bool bWHit)
+bool	CCOL_MESH_MANAGER::Collision(CPlayer *pPlayer)
 {
-	//CScene		*pScene;
-	bool		bLand = true;
-	int			nNumber = 0;
-	D3DXVECTOR3 mypos = INIT_VECTOR;
+	bool	bLand = true;
+	int		&nMap = pPlayer->GetnMap();
 
-	//壁、地面の順で判定
-	//pScene = CScene::GetTop(COLMESH_PRIORITY);
-	//while (pScene != NULL)
-	//{//終わるまで
-	//	if (pScene->GetObjType() == OBJTYPE_MESH)
-	//	{//オブジェクト発見
-	//		//描画チェック
-	//		//ナンバーと位置を取得
-	//		if (FNumCollision(nNumber, mypos, pos, posold, move, FNor, bJump)) { bLand = true; }
-	//	}
-	//	pScene = pScene->GetpNext();
-	//}
-	for (int nCnt = 0; nCnt < CCOL_MESH_MANAGER::TYPE_MAX; nCnt++)
-	{
-		if (bWHit == true)
-		{// 壁の判定をつける
-			WNumCollision(nCnt, mypos, pos, posold, move, fLength);
-		}
-
-		if (nMap >= 0) { if (!FNumCollision(nCnt, mypos, pos, posold, move, FNor, bJump)) { bLand = false; } }
-	}
+	WNumCollision(pPlayer);
+	if (nMap >= 0) { if (!FNumCollision(pPlayer)) { bLand = false; } }
 	return bLand;
 }
+//==================================================================================================//
+//    * 判定付加管理の高さ取得関数 *
+//==================================================================================================//
+float	CCOL_MESH_MANAGER::GetHeight(D3DXVECTOR3 &pos, int &nMap)
+{
+	if (nMap >= TYPE_MAX) { return true; }
 
+	bool bHit = false;
+	float fHeight;
+	if (m_pColMesh[nMap] != NULL)
+	{
+		for (int nCount = 0; nCount < m_pColMesh[nMap]->m_nNumField; nCount++)
+		{
+			CCOL_MESH *&pMesh = m_pColMesh[nMap]->GetpField()[nCount];
+			
+			if (pMesh->GetHeight(pos, fHeight))
+			{
+				bHit = true;
+			}
+		}
+	}
+	if (!bHit) { fHeight = pos.y; }
+
+	return fHeight;
+}
 //==================================================================================================//
 //    * 判定付加管理の壁判定関数 *
 //==================================================================================================//
-void	CCOL_MESH_MANAGER::WNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength)
+void	CCOL_MESH_MANAGER::WNumCollision(CPlayer *&pPlayer)
 {
+	int &nNumber = pPlayer->GetnMap();
 	if (nNumber >= TYPE_MAX) { return; }
 
 	if (m_pColMesh[nNumber] != NULL)
 	{
-		bool Reflection = false;
 		int nCntHit = 0;
 		for (int nCount = 0; nCount < m_pColMesh[nNumber]->m_nNumWall; nCount++)
 		{
 			CCOL_MESH *&pMesh = m_pColMesh[nNumber]->GetpWall()[nCount];
-			pMesh->MeshWall(mypos, pos, posold, move, fLength, nCntHit, Reflection);
+			pMesh->MeshWall(pPlayer, nCntHit, false);
 		}
 
 	}
@@ -1220,8 +1315,9 @@ void	CCOL_MESH_MANAGER::WNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTO
 //==================================================================================================//
 //    * 判定付加管理の地面判定関数 *
 //==================================================================================================//
-bool	CCOL_MESH_MANAGER::FNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, D3DXVECTOR3 &FNor, bool &bJump)
+bool	CCOL_MESH_MANAGER::FNumCollision(CPlayer *&pPlayer)
 {
+	int &nNumber = pPlayer->GetnMap();
 	if (nNumber >= TYPE_MAX) { return true; }
 
 	bool bLand = true;
@@ -1230,7 +1326,7 @@ bool	CCOL_MESH_MANAGER::FNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTO
 		for (int nCount = 0; nCount < m_pColMesh[nNumber]->m_nNumField; nCount++)
 		{
 			CCOL_MESH *&pMesh = m_pColMesh[nNumber]->GetpField()[nCount];
-			if (!pMesh->MeshField(mypos, pos, posold, move, FNor, bJump)) { bLand = false; }
+			if (!pMesh->MeshField(pPlayer)) { bLand = false; }
 		}
 
 	}

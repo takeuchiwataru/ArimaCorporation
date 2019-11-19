@@ -255,14 +255,17 @@ HRESULT CPlayer::Init(void)
 	m_nDriftCounter = 0;		// ドリフトカウント
 
 	m_pPoint = CRoad_Manager::GetManager()->GetTop(0);
+	m_pEnmPoint = CRoad_Manager::GetManager()->GetTop(1);
+
+	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
 	m_fLength = 5.0f;
 	m_bDivided = false;
 	m_nMap = 0;
 	m_fRoad = 0.0f;
 	m_FNor = INIT_VECTOR;
 	m_fTilt = 0.0f;
-	m_fCTilt = 0.0f;
-
+	m_fPosY = 0.0f;
+	m_fRotOld = 0.0f;
 	m_nPlayerNum = 0;					// プレイヤー番号
 	m_nControllerNum = 0;				// コントローラー番号
 
@@ -413,6 +416,7 @@ void CPlayer::Update(void)
 	CManager::MODE mode = CManager::GetMode();
 	CGameCamera * pGameCamera = NULL;
 	m_bShake = true;
+	m_fRotOld = m_rot.y;
 
 	if (m_bControl)
 	{//コントロールキー
@@ -458,8 +462,28 @@ void CPlayer::Update(void)
 	// 強い減速ひよこがくっつく
 	ChaseAnnoyS();*/
 
-							//マップとの当たり判定
-	if (!CCOL_MESH_MANAGER::Collision(m_pos, m_OldPos, m_move, m_fLength, m_FNor, m_bJump, m_nMap, true)) { m_bJump = false; }
+	//マップとの当たり判定
+	bool bGoal = false;
+
+	CRoad_Pointer::RankPoint(this, bGoal);
+	bool bLand = CCOL_MESH_MANAGER::Collision(this);
+	UpdateFEffect();
+
+	if (!bLand && m_bJump)
+	{//着地したなら
+	 //着地モーション
+	}
+	m_bJump = bLand;
+
+	if (bGoal == true)
+	{
+		m_bGoal = true;
+		m_move *= 0.0f;
+		SetStateHandle(HANDLE_MAX);
+		SetStateSpeed(STATE_SPEED_DOWN);
+		m_nAnimnow = PLAYERANIM_NEUTRAL;
+		return;
+	}
 
 	if (m_pPlayerNum != NULL)
 	{
@@ -531,26 +555,58 @@ void CPlayer::Draw(void)
 //=============================================================================
 void CPlayer::UpdateAI(void)
 {
-	CGame::GetGameCamera(m_nPlayerNum);
 	m_fRoad = m_nPlayerNum * (140.0f / 8.0f) - 70.0f;
-	bool bGoal = false;
-	float fRot = CRoad_Pointer::NextPoint(m_pos, m_pPoint, m_nPlayerNum, m_fRoad, m_bDivided, bGoal, m_nMap);
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 0);
+
 	fRot = fRot - m_rot.y;
 	RemakeAngle(&fRot);
 
 	m_rot.y += fRot * 0.05f;
 	RemakeAngle(&m_rot.y);
 	SetStateSpeed(STATE_SPEED_ACCEL);
+}
+//=============================================================================
+// キラーの更新処理
+//=============================================================================
+void CPlayer::UpdateKiller(void)
+{
+	m_fRoad = 0.0f;
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 0);
 
-	if (bGoal == true)
+	fRot = fRot - m_rot.y;
+	RemakeAngle(&fRot);
+
+	m_rot.y += fRot * 0.2f;
+	RemakeAngle(&m_rot.y);
+	SetStateSpeed(STATE_SPEED_ACCEL);
+}
+//=============================================================================
+// 地面効果の更新処理
+//=============================================================================
+void CPlayer::UpdateFEffect(void)
+{
+	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP) { m_fPosY += (-5.0f - m_fPosY) * 0.1f; }
+	else { m_fPosY *= 0.9f; }
+
+	if (m_FEffect == CCOL_MESH::EFFECT_DROP)
 	{
-		m_nAnimnow = PLAYERANIM_NEUTRAL;
-		m_bGoal = true;
-		m_move *= 0.0f;
-		SetStateHandle(HANDLE_MAX);
-		SetStateSpeed(STATE_SPEED_DOWN);
-		return;
+		WarpNext();
 	}
+}
+//=============================================================================
+// 落ちた時のワープ処理
+//=============================================================================
+void CPlayer::WarpNext(void)
+{
+	CRoad_Pointer *pNext = m_pPoint->GetNext(0, m_nMap, 0);
+	if (pNext == NULL) { return; }
+
+	m_pos = pNext->Getpos();
+	m_OldPos = m_pos;
+	m_rot.y = pNext->GetfRotY();
+	m_move *= 0.0f;
+	m_PlayerInfo.nCountTime = 0;
+	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
 }
 //=============================================================================
 // コントロールキー
@@ -565,10 +621,7 @@ void CPlayer::ControlKey(void)
 	CInputKeyBoard * pInputKeyboard = CManager::GetInput();		//キーボードの取得
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(m_nControllerNum);		//ジョイパットの取得
 
-	bool bGoal = false;
-	CRoad_Pointer::NextPoint(m_pos, m_pPoint, m_nPlayerNum, m_fRoad, m_bDivided, bGoal, m_nMap);
-
-	if (bGoal == true)
+	if (m_bGoal == true)
 	{
 		m_bGoal = true;
 		m_move *= 0.0f;
@@ -726,7 +779,7 @@ void CPlayer::UpdateMove(void)
 		m_fTilt = (m_FNor.x * Vec2.x) + (m_FNor.y * Vec2.y) + (m_FNor.z * Vec2.z) /
 			(sqrtf(powf(m_FNor.x, 2) + powf(m_FNor.y, 2) + powf(m_FNor.z, 2)) * sqrtf(powf(Vec2.x, 2) + powf(Vec2.y, 2) + powf(Vec2.z, 2)));
 		acosf(m_fTilt);
-		m_fTilt = (m_fTilt * -1.0f) * 1.0f + 0.1f;
+		m_fTilt = (m_fTilt * -1.0f) * 0.5f + 0.1f;
 	}
 	else { m_fTilt = 0.0f; }
 	if (m_fTilt > 0.05f) { m_fTilt = 0.05f; }

@@ -13,6 +13,7 @@
 #include "scene.h"
 #include "NorMesh.h"
 class CCOL_MESH_MANAGER;
+class CPlayer;
 //*****************************************************************************
 // マクロの定義
 //*****************************************************************************
@@ -48,6 +49,7 @@ public:
 		EFFECT_SWAMP,	//水たまり
 		EFFECT_RIVER,	//川
 		EFFECT_BOOST,	//加速床
+		EFFECT_DROP,	//落ちた時の
 		EFFECT_MAX,
 	}EFFECT;
 	CCOL_MESH() {};
@@ -74,19 +76,20 @@ public:
 	void	LineSelectX(int nNumX, int nNumZ, LINE line);
 	void	LineSelectZ(int nNumX, int nNumZ, LINE line);
 	void	ResetSelect(void);
-	
+
 	void	SetPoint(bool bWK);
 
 	void	Save(FILE *pFile);
 	void	Load(FILE *pFile);
 
-	bool	MeshField(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, D3DXVECTOR3 &FNor, bool &bJump);
+	bool	MeshField(CPlayer *&pPlayer);
+	bool	GetHeight(D3DXVECTOR3 pos, float &fHeight);
 	bool	FieldCheck(D3DXVECTOR3 &FposUL, D3DXVECTOR3 &FposUR, D3DXVECTOR3 &FposDL, D3DXVECTOR3 &FposDR, D3DXVECTOR3& pos);
 	float	FieldCollision(D3DXVECTOR3 &FposUL, D3DXVECTOR3 &FposUR, D3DXVECTOR3 &FposDL, D3DXVECTOR3 &FposDR, D3DXVECTOR3 WKpos, D3DXVECTOR3& pos, D3DXVECTOR3 &FNor);
-	void	MeshWall(D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float& fLength, int &nCntHit, bool &bReflection);
-	int		WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 WUpos0, D3DXVECTOR3 WUpos1, D3DXVECTOR3& pos, D3DXVECTOR3 posold, D3DXVECTOR3 &move, float& fLength, int &nCntHit, bool &bReflection);
-	static int		AngleCheck(float fAngle0, float fAngle1);
-
+	void	MeshWall(CPlayer *&pPlayer, int &nCntHit, bool bReflection);
+	int		WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 WUpos0, D3DXVECTOR3 WUpos1, CPlayer *&pPlayer, int &nCntHit, bool &bReflection);
+	static int	AngleCheck(float fAngle0, float fAngle1);
+	static bool	CrossCheck(D3DXVECTOR3 &Wpos0, D3DXVECTOR3 &Wpos1, D3DXVECTOR3 &pos, D3DXVECTOR3 &posold);
 	TYPE		&GetType(void) { return m_Type; }
 	EFFECT		&GetEffect(void) { return m_Effect; }
 	int			&GetnNumVtx(void) { return m_nNumVtx; }
@@ -117,13 +120,13 @@ class CCOL_MESH_MANAGER : public CScene
 public:
 	typedef enum
 	{
-		TYPE_MADE,
+		//TYPE_MADE,
 		TYPE_HALF0,		//始めの半分
 		TYPE_BRIDGE,	//橋
 		TYPE_HALF1,		//終わりの半分
 		TYPE_MAX,
 	}TYPE;
-	CCOL_MESH_MANAGER(int nPrioryity = COLMESH_PRIORITY) : CScene::CScene(nPrioryity, CScene::OBJTYPE_COLMESH) {};
+	CCOL_MESH_MANAGER(int nPrioryity = COLMESH_PRIORITY) : CScene::CScene(nPrioryity) {};
 	~CCOL_MESH_MANAGER() {};
 
 	static void LoadMap(void);
@@ -140,9 +143,9 @@ public:
 	void	Save(void);
 	void	Loadtxt(TYPE type);
 	void	Set(TYPE type);
-	static void	WNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength);
-	static bool	Collision(D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, float &fLength, D3DXVECTOR3 &FNor, bool &bJump, int &nMap, bool bWHit);
-	static bool	FNumCollision(int nNumber, D3DXVECTOR3& mypos, D3DXVECTOR3& pos, D3DXVECTOR3 &posold, D3DXVECTOR3 &move, D3DXVECTOR3 &FNor, bool &bJump);
+	void	ResetCollar(void);
+	static bool	Collision(CPlayer *pPlayer);
+	static float	CCOL_MESH_MANAGER::GetHeight(D3DXVECTOR3 &pos, int &nMap);
 
 	void	WCollision(void);
 
@@ -156,7 +159,9 @@ public:
 	int			&GetnNumField(void) { return m_nNumField; }
 	int			&GetnNumWall(void) { return m_nNumWall; }
 private://*****************************************************************************
-		//変数宣言//***********************************************************************
+	static void	WNumCollision(CPlayer *&pPlayer);
+	static bool	FNumCollision(CPlayer *&pPlayer);
+	//変数宣言//***********************************************************************
 	static CCOL_MESH_MANAGER *m_pColMesh[TYPE_MAX];
 
 	TYPE		m_Type;

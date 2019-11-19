@@ -191,7 +191,10 @@ void CEgg::Update(void)
 		m_pos.y += m_move.y;
 
 		//ƒ}ƒbƒv‚Æ‚Ì“–‚½‚è”»’è
-		if (!CCOL_MESH_MANAGER::Collision(m_pos, m_posOld, m_move, m_fLength, m_FNor, m_bJump, m_nMap, false)) { m_bJump = false; }
+		CPlayer **pPlayer = NULL;
+		pPlayer = CGame::GetPlayer();
+
+		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 	}
 
 	CModel3D::SetMove(m_move);

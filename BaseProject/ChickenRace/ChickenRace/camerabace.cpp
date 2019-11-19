@@ -78,28 +78,6 @@ void CCamera::SetCamera()
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	D3DXVECTOR3	targetpos;
-	D3DXVECTOR3 WKValue, WKmove;
-	D3DXVECTOR3	WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3	WKposV, WKposR;
-	float	fWKlength = 2.0f;
-	float		fDistance0, fDistance1;
-	int		nMap = -1;
-	bool bWKJump = false;
-
-	WKposV = m_posV;
-
-	if (m_bCollCamera == true)
-	{
-		fDistance0 = powf(m_posV.x - m_posR.x, 2) + powf(m_posV.z - m_posR.z, 2);
-		WKValue = m_posR + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * -30.0f;
-		WKmove = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-		int		nCount = 0;
-		CCOL_MESH_MANAGER::Collision(WKposV, WKValue, WKmove, fWKlength, WKnor, bWKJump, nMap, true);
-		fDistance1 = powf(WKposV.x - m_posR.x, 2) + powf(WKposV.z - m_posR.z, 2);
-		WKposV.y = m_posR.y + (WKposV.y - m_posR.y) * ((fDistance1) / fDistance0);
-	}
-
 	// ビューポート設定
 	pDevice->SetViewport(&m_viewport);
 
@@ -124,7 +102,7 @@ void CCamera::SetCamera()
 
 	// ビューマトリックスを作成
 	D3DXMatrixLookAtLH(&m_mtxView,
-		&WKposV,
+		&m_posV,
 		&m_posR,
 		&m_vecU);
 
