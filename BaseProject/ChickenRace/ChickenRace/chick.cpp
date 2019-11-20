@@ -159,6 +159,7 @@ HRESULT CChick::Init(void)
 	m_DestRank = -1;
 	m_nMap = 0;
 	m_bAttackS = false;
+	m_bExplosion = false;
 
 	return S_OK;
 }
@@ -183,7 +184,7 @@ void CChick::Update(void)
 	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//前回の位置を保存する
 
-	// ひよこの動き
+						// ひよこの動き
 	Move();
 
 	CModel3D::SetPosition(m_pos);
@@ -235,8 +236,11 @@ void CChick::Draw(void)
 		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
-	//描画処理
-	CModel3D::Draw();
+	if (m_bExplosion == false)
+	{
+		//描画処理
+		CModel3D::Draw();
+	}
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -428,7 +432,7 @@ void CChick::Item(void)
 		case TYPE_ANNOY:
 			pPlayer = CGame::GetPlayer();
 
-			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 100.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 
 			break;
 		}
@@ -456,14 +460,17 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
 		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-		float fDepth = PLAYER_DEPTH;
+		float fDepth = PLAYER_DEPTH - 10.0f;
 
 		if (m_type == TYPE_ANNOY)
 		{
 			fDepth = ANNOY_RANGE;
 		}
+		if (m_bExplosion == true)
+		{
+			fDepth = ATTACK_RANGE;
+		}
 
-#if(1)
 		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
 		{// Zの範囲内にいる
 			if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
@@ -484,10 +491,14 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 			}
 		}
 
+		if (bHit == true && m_type == TYPE_ATTACK)
+		{
+			m_bExplosion = true;
+			m_bDis = false;
+		}
+
 		// 位置の代入
 		CModel3D::SetPosition(ModelPos);
-
-#endif
 	}
 	return bHit;
 }
