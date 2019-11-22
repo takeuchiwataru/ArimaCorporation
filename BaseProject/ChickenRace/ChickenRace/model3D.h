@@ -98,6 +98,11 @@ public://誰でも扱える
 
 	float GetLength(void) { return m_fLength; }
 
+	D3DXVECTOR3 &GetposR(void) { return m_Pos; }
+	D3DXVECTOR3 &GetRotR(void) { return m_Rot; }
+	D3DXCOLOR &GetColR(void) { return m_col; }
+	void SetType(int nType) { m_nType = nType; }
+
 protected:
 	void SetUpdate(bool bUpadate) { m_bUpdate = bUpadate; };
 	void SetSmallObj(bool bSmallObj) { m_bSmallObjDraw = bSmallObj; };
@@ -105,7 +110,6 @@ protected:
 	void SetOnlyLength(bool bOnlyLength) { m_bOnlyLengthDraw = bOnlyLength; };
 	bool GetDelete(void) { return m_bDelete; };
 	void SetDelete(bool bDelete) { m_bDelete = bDelete; };
-	void SetType(int nType) { m_nType = nType; }
 
 private://個人でのみ使う
 	float CrossingAngle(D3DXVECTOR3 vec0, D3DXVECTOR3 vec1);	// ベクトルのなす角を計算

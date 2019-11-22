@@ -180,9 +180,9 @@ void CGameCamera::UpdatePlayer(void)
 		m_rot.y += m_fRotDest * MOVE_ANGLE;
 		RemakeAngle(&m_rot.y);
 
-		float fTilt = m_pPlayer->GetfTilt() * 0.25f - 0.09f;
-		float fWK = -m_pPlayer->GetfTilt();
-		float fMove = MOVE_CAMERA * (fWK * 1.0f + 1.0f);
+		float fTilt = m_pPlayer->GetfTiltV() * 0.25f - 0.09f;
+		float fWK = -m_pPlayer->GetfTiltV();
+		float fMove = MOVE_CAMERA * (fWK * 1.5f + 1.0f);
 		if (m_pPlayer->GetbJump()) { fMove += MOVE_CAMERA * 0.5f; }
 		fWK += 1.0f;
 
@@ -197,6 +197,10 @@ void CGameCamera::UpdatePlayer(void)
 
 		m_rot.x += (fRotX - m_rot.x) * 0.05f;
 		m_fDistance += (fMove - m_fDistance) * 0.05f;
+		//if ()
+		//{//‰Á‘¬’†‚È‚ç
+
+		//}
 
 		PlayerPos += VecUPos;
 		m_posV = D3DXVECTOR3(

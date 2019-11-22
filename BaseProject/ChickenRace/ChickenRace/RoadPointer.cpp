@@ -146,6 +146,7 @@ bool	CRoad_Pointer::BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal)
 			{
 				if (pPoint->m_nNumber == 0) { pPlayer->GetnMap()++; }
 				pPlayer->GetpPoint() = pPoint;
+				pPlayer->ChangeRoad();
 			}
 			else { pPlayer->GetpEnmPoint() = pPoint; }
 		}

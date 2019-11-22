@@ -22,17 +22,14 @@
 #define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"			//読み込むテクスチャファイル
 #define MODEL_NAME_4	"data\\MODEL\\Map\\Map_First.x"			//読み込むテクスチャファイル
 #define MODEL_NAME_5	"data\\MODEL\\Map\\Map_Second.x"		//読み込むテクスチャファイル
-#define MODEL_NAME_6	"data\\MODEL\\Map\\Map_Mountain.x"		//読み込むテクスチャファイル
 
 #define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\tree000.jpg"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル
 #define TEXTURE_NAME_3	"data\\TEXTURE\\modeltex\\bender.jpg"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_4	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
 #define TEXTURE_NAME_5	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_6	"data\\TEXTURE\\modeltex\\Mountain.jpg"	//読み込むテクスチャファイル
 
 #define MODEL_SPEED				(5.0f)
-#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
@@ -263,7 +260,6 @@ HRESULT CObject::Load(void)
 	D3DXLoadMeshFromX(MODEL_NAME_3, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
 	D3DXLoadMeshFromX(MODEL_NAME_4, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[3], NULL, &m_nNumMatModel[3], &m_pMeshModel[3]);
 	D3DXLoadMeshFromX(MODEL_NAME_5, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[4], NULL, &m_nNumMatModel[4], &m_pMeshModel[4]);
-	D3DXLoadMeshFromX(MODEL_NAME_6, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[5], NULL, &m_nNumMatModel[5], &m_pMeshModel[5]);
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
@@ -335,7 +331,6 @@ HRESULT CObject::Load(void)
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_4, &m_pMeshTextures[3]);
 	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_5, &m_pMeshTextures[4]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_6, &m_pMeshTextures[5]);
 	return S_OK;
 }
 //===============================================================================
@@ -526,4 +521,15 @@ bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVEC
 	}
 
 	return bLand;
+}
+//===============================================================================
+// モデルの設定
+//===============================================================================
+void CObject::SetModel(CModel3D *pModel, int nType, int nTex)
+{
+	// 種類の設定
+	pModel->BindModel(m_pMeshModel[nType], m_pBuffMatModel[nType], m_nNumMatModel[nType], m_pMeshTextures[nTex],
+		m_LoadVtxMaxModel[nType], m_LoadVtxMinModel[nType]);
+	pModel->CModel3D::Init();
+	pModel->SetType(nType);
 }

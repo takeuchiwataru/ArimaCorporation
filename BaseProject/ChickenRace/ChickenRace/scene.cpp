@@ -102,7 +102,10 @@ void CScene::NotFadeReleseAll(void)
 	{
 		while (m_pTop[nPriority] != NULL)
 		{//Œ»Ý‚ªNULLo‚È‚¢ŒÀ‚è‰ñ‚é
-			m_pTop[nPriority]->Uninit();
+			if (!m_pTop[nPriority]->m_pDeath)
+			{
+				m_pTop[nPriority]->Uninit();
+			}
 
 			//íœ
 			m_pTop[nPriority]->Delete();

@@ -9,6 +9,7 @@
 
 #include "main.h"
 #include "scene.h"
+#include "2DPolygon.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -47,6 +48,8 @@ public://誰でも扱える
 	D3DXVECTOR3 GetMove(void) { return m_Move; }
 	D3DXMATRIX GetMatrix(void) { return m_mtxWorld; }
 	int  GetTexType(void) { return m_TexType; }
+	C2D::DRAW_TYPE  &GetDrawType(void) { return m_DrawType; }
+
 	static CScene3D *Create();
 	void SetTypeNumber(TYPE Type) { m_Type = Type; }
 	void SetTexType(int Type) { m_TexType = Type; }
@@ -63,8 +66,10 @@ public://誰でも扱える
 	void SetVtxEffect(float fRadius);
 	void SetRotation(D3DXVECTOR3 rot) { m_rot = rot; }
 	void SetSpin(D3DXVECTOR3 pos, float fAngle, float fLength, D3DXVECTOR3 rot);
+	void Set(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 size);
 
 private://個人でのみ使う
+	C2D::DRAW_TYPE			m_DrawType;		// 描画する方法(加算合成など)
 	LPDIRECT3DTEXTURE9		m_pTexture;						//テクスチャへのポインタ
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuff;						//頂点バッファへのポインタ
 	D3DXVECTOR3				m_pos;							//位置
@@ -74,5 +79,30 @@ private://個人でのみ使う
 	D3DXMATRIX				m_mtxWorld;						//ワールドマトリックス
 	TYPE					m_Type;							//ビルボード：１かエフェクト：２か
 	int						m_TexType;						// テクスチャのタイプ
+};
+//=============================================================================
+// クラス定義
+//=============================================================================
+class C3DPolygon : public CScene3D
+{
+public:
+	typedef enum
+	{
+		TYPE_FootSteps,
+		TYPE_MAX
+	}TYPE;
+	C3DPolygon() {};
+	~C3DPolygon() {};
+
+	static C3DPolygon *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot);
+	void	Set(TYPE &Type, float &fCntState, D3DXCOLOR &col);
+	HRESULT Init(void);
+	void Update(void);
+	void Draw(void);
+
+private:
+	D3DXCOLOR	m_col;			//色
+	TYPE		m_Type;			//種類
+	float		m_fCntState;	//状態管理用
 };
 #endif

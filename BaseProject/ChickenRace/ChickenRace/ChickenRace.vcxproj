@@ -154,11 +154,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="2DPolygon.cpp" />
     <ClCompile Include="billboord.cpp" />
     <ClCompile Include="camerabace.cpp" />
     <ClCompile Include="chick.cpp" />
     <ClCompile Include="ColMesh.cpp" />
     <ClCompile Include="debugproc.cpp" />
+    <ClCompile Include="DispEffect.cpp" />
     <ClCompile Include="egg.cpp" />
     <ClCompile Include="enemy.cpp" />
     <ClCompile Include="fade.cpp" />
@@ -179,6 +181,7 @@
     <ClCompile Include="meshorbit.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="model3D.cpp" />
+    <ClCompile Include="ModelEffect.cpp" />
     <ClCompile Include="motion.cpp" />
     <ClCompile Include="NorMesh.cpp" />
     <ClCompile Include="number.cpp" />
@@ -207,11 +210,13 @@
     <ClCompile Include="wall.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="2DPolygon.h" />
     <ClInclude Include="billboord.h" />
     <ClInclude Include="camerabace.h" />
     <ClInclude Include="chick.h" />
     <ClInclude Include="ColMesh.h" />
     <ClInclude Include="debugproc.h" />
+    <ClInclude Include="DispEffect.h" />
     <ClInclude Include="egg.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="fade.h" />
@@ -232,6 +237,7 @@
     <ClInclude Include="meshorbit.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="model3D.h" />
+    <ClInclude Include="ModelEffect.h" />
     <ClInclude Include="motion.h" />
     <ClInclude Include="NorMesh.h" />
     <ClInclude Include="number.h" />

@@ -8,6 +8,7 @@
 #include "scene3D.h"
 #include "manager.h"
 #include "renderer.h"
+#include "DispEffect.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -47,6 +48,7 @@ HRESULT CScene3D::Init(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
+	m_DrawType = C2D::DRAW_TYPE_NORMAL;
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);			//向き
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);			//位置
 	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);			//動き
@@ -181,6 +183,8 @@ void CScene3D::Draw(void)
 	//テクスチャの設定
 	pDevice->SetTexture(0, m_pTexture);
 
+	C2D::DrawPrepare(m_DrawType, pDevice);
+
 	//ポリゴンの描画
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
@@ -190,6 +194,7 @@ void CScene3D::Draw(void)
 		//カリングしない
 		pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);				
 	}
+	C2D::DrawPrepare(C2D::DRAW_TYPE_NORMAL, pDevice);
 }
 //===============================================================================
 //　クリエイト
@@ -250,7 +255,6 @@ void CScene3D::SetWall(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 nSize)
 void CScene3D::SetPosSize(D3DXVECTOR3 pos,D3DXVECTOR2 nSize)
 {
 	m_pos = pos;
-
 	m_size = nSize;
 
 	// 頂点情報を設定
@@ -418,4 +422,102 @@ void CScene3D::SetSpin(D3DXVECTOR3 pos, float fAngle, float fLength, D3DXVECTOR3
 
 	//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
+}
+//===============================================================================
+// 設定関数
+//===============================================================================
+void CScene3D::Set(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 size)
+{
+	m_Type = TYPE_GROUND;
+	SetPosSize(pos, size);
+	m_rot = rot;
+}
+
+//===============================================================================
+// 生成関数
+//===============================================================================
+C3DPolygon *C3DPolygon::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+{
+	C3DPolygon *p3D = NULL;
+	p3D = new C3DPolygon;
+
+	if (p3D != NULL)
+	{
+		D3DXVECTOR2 size = D3DXVECTOR2(10.0f, 10.0f);
+		D3DXCOLOR col = INIT_COL;
+		float fCntState = 0.0f;
+
+		p3D->Init();
+		p3D->CScene3D::Set(pos, rot, size);
+
+		switch (Type)
+		{
+		case TYPE_FootSteps:
+			p3D->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
+			pos.y += 3.0f;
+			size = D3DXVECTOR2(3.0f, 3.0f);
+			p3D->SetGroundPosSize(pos, size);
+			fCntState = 0.01f;
+			break;
+		}
+		p3D->Set(Type, fCntState, col);
+	}
+
+	return p3D;
+}
+//===============================================================================
+// 設定関数
+//===============================================================================
+void	C3DPolygon::Set(TYPE &Type, float &fCntState, D3DXCOLOR &col)
+{
+	m_Type = Type;
+	m_fCntState = fCntState;
+	m_col = col;
+	SetColor(m_col);
+}
+//===============================================================================
+// 初期化関数
+//===============================================================================
+HRESULT C3DPolygon::Init(void)
+{
+	CScene3D::Init();
+	m_Type = TYPE_MAX;
+	m_fCntState = 0.0f;
+	m_col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	return S_OK;
+}
+//===============================================================================
+// 更新関数
+//===============================================================================
+void C3DPolygon::Update(void)
+{
+	if (m_Type == TYPE_MAX) { return; }
+	switch (m_Type)
+	{
+	case TYPE_FootSteps:
+		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_FootSteps));
+		m_col.a -= m_fCntState;
+		SetColor(m_col);
+		if (m_col.a < 0.0f) { Uninit(); return; }
+		break;
+	}
+}
+//===============================================================================
+// 描画関数
+//===============================================================================
+void C3DPolygon::Draw(void)
+{
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	//アルファテスト処理(透明化による画像の切り取り現象を有効にする)
+	pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+	pDevice->SetRenderState(D3DRS_ALPHAREF, 30);//REF = Reference:参照
+	pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATER);//FUNC = Function:機能 //GREATER = ～より大きい
+	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+
+	CScene3D::Draw();
+
+	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
+	pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);    // 裏面をカリング
+	pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
 }

@@ -19,6 +19,12 @@
     <Filter Include="ヘッダー ファイル\知らん奴">
       <UniqueIdentifier>{9df5f4e7-0b0f-4ba2-b059-968047e33344}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\杉本">
+      <UniqueIdentifier>{ee142da8-68b4-462b-8e14-0f9d91abc61a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\杉本">
+      <UniqueIdentifier>{fe373cce-aaf8-4263-a9e8-466687055a6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="billboord.cpp">
@@ -162,17 +168,26 @@
     <ClCompile Include="player.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ColMesh.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="NorMesh.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="RoadPointer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="toonshader.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ColMesh.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelEffect.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
+    <ClCompile Include="NorMesh.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
+    <ClCompile Include="RoadPointer.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
+    <ClCompile Include="2DPolygon.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
+    <ClCompile Include="DispEffect.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -245,9 +260,6 @@
     <ClInclude Include="model.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
-    <ClInclude Include="model3D.h">
-      <Filter>ヘッダー ファイル\知らん奴</Filter>
-    </ClInclude>
     <ClInclude Include="motion.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
@@ -284,9 +296,6 @@
     <ClInclude Include="scene2D.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
-    <ClInclude Include="scene3D.h">
-      <Filter>ヘッダー ファイル\知らん奴</Filter>
-    </ClInclude>
     <ClInclude Include="select.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
@@ -320,17 +329,32 @@
     <ClInclude Include="player.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="ColMesh.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="NorMesh.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="RoadPointer.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="toonshader.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="scene3D.h">
+      <Filter>ヘッダー ファイル\知らん奴</Filter>
+    </ClInclude>
+    <ClInclude Include="model3D.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ColMesh.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelEffect.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="NorMesh.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="RoadPointer.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="2DPolygon.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="DispEffect.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

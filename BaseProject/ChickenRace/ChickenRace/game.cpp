@@ -124,7 +124,7 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
+	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
@@ -238,10 +238,11 @@ void CGame::Uninit(void)
 		}
 	}
 
+	//マップの破棄
+	CCOL_MESH_MANAGER::EndMap();
+
 	//フェード以外の破棄
 	CScene::NotFadeReleseAll();
-
-	CCOL_MESH_MANAGER::EndMap();
 }
 //=============================================================================
 // 更新処理
@@ -727,7 +728,7 @@ void CGame::SetStage(void)
 
 		float frot = (-D3DX_PI * 0.5f);
 
-		for (int nCntMember = 0; nCntMember < m_nMaxPlayer/*MAX_MEMBER*/; nCntMember++)
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 		{// メンバーカウント
 		 //プレイヤーの生成
 			if (m_pPlayer[nCntMember] == NULL)

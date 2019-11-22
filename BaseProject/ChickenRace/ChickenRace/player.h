@@ -50,6 +50,7 @@ class CFeed;
 class CEgg;
 class CChick;
 class CBillBoord;
+class CDispEffect;
 
 //=============================================================================
 // プレイヤークラス
@@ -198,17 +199,21 @@ public:
 	bool GetDrive(void) { return m_bDirive; }
 	void SetDrive(bool bDrive) { m_bDirive = bDrive; }
 
+	void ChangeRoad(void);
 	CCOL_MESH::EFFECT &GgetFEffect(void) { return m_FEffect; }
 	CRoad_Pointer	*&GetpPoint(void) { return m_pPoint; }
 	CRoad_Pointer	*&GetpEnmPoint(void) { return m_pEnmPoint; }
 	D3DXVECTOR3		&GetFNor(void) { return m_FNor; };
 	D3DXVECTOR3		&Getpos(void) { return m_pos; };
+	D3DXVECTOR3		&Getrot(void) { return m_rot; };
 	D3DXVECTOR3		&Getposold(void) { return m_OldPos; };
 	D3DXVECTOR3		&Getmove(void) { return m_move; };
 	bool			&GetbJump(void) { return m_bJump; };
 	float			&GetfLength(void) { return m_fLength; };
-	float			&GetfTilt(void) { return m_fCTilt; };
+	float			&GetfTiltV(void) { return m_fCTiltV; };
+	float			&GetfTiltW(void) { return m_fCTiltW; };
 	float			&GetfRotOld(void) { return m_fRotOld; };
+	float			&GetfRoad(void) { return m_fRoad; };
 	int				&GetnMap(void) { return m_nMap; };
 	int				&GetnPlayerNum(void) { return m_nPlayerNum; }
 	bool			&GetbDivided(void) { return m_bDivided; };
@@ -248,6 +253,7 @@ private:
 	float GetDistance(int nRank);
 	void UpdateKiller(void);
 	void UpdateFEffect(void);
+	void EffectUp(void);
 	void WarpNext(void);
 
 	void UpdateField(void);
@@ -338,18 +344,22 @@ private:
 	int							  m_nPlayerNum;			// プレイヤー番号
 	int							  m_nControllerNum;		// コントローラー番号
 
-	CCOL_MESH::EFFECT			  m_FEffect;				//地面効果
+	CDispEffect					  *m_pDispEffect;		//画面演出
+	CCOL_MESH::EFFECT			  m_FEffect;			//地面効果
 	CRoad_Pointer				  *m_pPoint;			//次のポイント
 	CRoad_Pointer				  *m_pEnmPoint;			//敵が見る次のポイント
 	D3DXVECTOR3					  m_FNor;				//地面の法線
 	float						  m_fPosY;				//別加算位置Y
-	bool						  m_bDivided;			//分かれ道かどうか
-	int							  m_nMap;				//判定を取るマップ
 	float						  m_fLength;			//横幅
 	float						  m_fRoad;				//IN_OUTの％
 	float						  m_fTilt;				//坂
-	float						  m_fCTilt;				//カメラ用坂
+	float						  m_fCTiltV;				//カメラ用坂
+	float						  m_fCTiltW;				//カメラ用坂
 	float						  m_fRotOld;			//前のRotY
+	int							  m_nMap;				//判定を取るマップ
+	int							  m_nNumRoad;			//道の番号
+	bool						  m_bDivided;			//分かれ道かどうか
+	bool						  m_bJumpOld;			//ジャンプの前F
 
 	// モーション関数	新規
 	KEY_INFO						*m_pKeyInfo[MAX_MOTION];	//キー情報へのポインタ

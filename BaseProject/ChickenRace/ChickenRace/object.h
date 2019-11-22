@@ -14,8 +14,8 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_OBJECT					(6)				// オブジェクトのモデル数
-#define MAX_OBJECT_TEXTURE			(6)				// オブジェクトのテクスチャ数
+#define MAX_OBJECT					(5)				// オブジェクトのモデル数
+#define MAX_OBJECT_TEXTURE			(5)				// オブジェクトのテクスチャ数
 #define OBJECT_PRIOTITY				(3)
 #define PLAYER_HEIGHT			(50.0f)	// プレイヤーの背の高さ
 #define PLAYER_DEPTH			(30.0f)		// プレイヤーの幅調整用
@@ -92,6 +92,7 @@ public://誰でも扱える
 	int GetType(void) { return m_nType; };
 	D3DXVECTOR3 Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move);
 	bool CollisionObject(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld, D3DXVECTOR3 *pMove);
+	static void SetModel(CModel3D *pModel, int nType, int nTex);
 
 private://個人でのみ使う
 	static LPD3DXMESH	m_pMeshModel[MAX_OBJECT];					//メッシュ情報へのポインタ

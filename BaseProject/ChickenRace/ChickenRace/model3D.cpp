@@ -81,6 +81,7 @@ HRESULT CModel3D::Init(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
+	m_nType = 0;
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//向き達する
 
@@ -120,9 +121,9 @@ HRESULT CModel3D::Init(void)
 	m_pMeshMaterials = NULL;		// シェーダー用のメッシュマテリアル
 	m_pShaderMeshTextures = NULL;	// シェーダー用のメッシュテクスチャ
 
-									//===================================================
-									//    　　　　　マテリアルとテクスチャの情報
-									//===================================================
+	//===================================================
+	//    　　　　　マテリアルとテクスチャの情報
+	//===================================================
 	D3DXMATERIAL *d3dxMaterials = (D3DXMATERIAL*)m_pBuffMatObject->GetBufferPointer();
 	m_pMeshMaterials = new D3DMATERIAL9[(int)m_nNumMatObject];
 	m_pShaderMeshTextures = new LPDIRECT3DTEXTURE9[(int)m_nNumMatObject];
@@ -274,7 +275,7 @@ void CModel3D::Draw(void)
 	LPD3DXEFFECT Shader = NULL;						//シェーダー
 	CCamera *pCamera = NULL;						//カメラのポイント
 
-													//カメラのポインタに情報を代入
+	//カメラのポインタに情報を代入
 	if (pCamera == NULL)
 	{
 		switch (CManager::GetMode())
@@ -368,12 +369,12 @@ void CModel3D::Draw(void)
 		Shader->SetMatrix("matView", &mtxView);
 		Shader->SetMatrix("matWorld", &m_mtxWorldObject);
 
-		if (m_nType == 3 || m_nType == 4 || m_nType == 5)
+		if (m_nType == 3 || m_nType == 4)
 		{//マップ
 			Shader->SetTexture("ShadeTexture", ShaderMapTex);
 			Shader->SetTexture("LineTexture", LineMapTex);
 		}
-		else if (m_nType != 3 && m_nType != 4 && m_nType != 5)
+		else if (m_nType != 3 && m_nType != 4)
 		{//それ以外
 			Shader->SetTexture("ShadeTexture", ShaderTex);
 			Shader->SetTexture("LineTexture", LineTex);
@@ -431,7 +432,7 @@ void CModel3D::Draw(void)
 				//===================================================
 				//    　　　　シェーダーの割り当て作業
 				//===================================================
-				//if (m_nType != 3 && m_nType != 4)
+				if (m_nType != 0)
 				{
 					//パスを指定して開始
 					Shader->BeginPass(0);

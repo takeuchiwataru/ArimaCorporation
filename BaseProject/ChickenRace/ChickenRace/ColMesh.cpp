@@ -11,6 +11,7 @@
 #include "RoadPointer.h"
 #include "manager.h"
 #include "player.h"
+#include "DispEffect.h"
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -657,6 +658,7 @@ void	CCOL_MESH::Load(FILE *pFile)
 bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 {
 	D3DXVECTOR3 &pos = pPlayer->Getpos();
+	D3DXVECTOR3 &rot = pPlayer->Getrot();
 	D3DXVECTOR3 &posold = pPlayer->Getposold();
 	D3DXVECTOR3 &move = pPlayer->Getmove();
 	bool		&bJump = pPlayer->GetbJump();
@@ -666,7 +668,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 	bool		bLand = true;
 	D3DXVECTOR3 WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 WKm_pos = m_pos;
-	D3DXVECTOR3 WKpos = pos - WKm_pos;
+	D3DXVECTOR3 WKpos = pos - WKm_pos + D3DXVECTOR3(sinf(rot.y), 0.0f, cosf(rot.y)) * 10.0f;
 	D3DXVECTOR3 Vec[8];
 
 	int				nCntCross = 0;
@@ -690,16 +692,17 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				break;
 			case EFFECT_SWAMP:	//減速
 				if (!bJump) { move *= 0.95f; Effect = m_Effect; }
-				return bLand;
+				break;
 			case EFFECT_GRASS:
 			case EFFECT_NORMAL:
 			case EFFECT_RIVER:
 			case EFFECT_DROP:
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
-				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 10.0f : 0.0f))
+				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 11.5f : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + 30.0f)
 				{//貫通していたら
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
+					if (m_Effect == EFFECT_SWAMP) { move *= 0.95f; Effect = m_Effect; return bLand; }
 					if (m_Effect == EFFECT_GRASS) { move *= 0.95f; }
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
@@ -1031,15 +1034,18 @@ void CCOL_MESH_MANAGER::LoadMap(void)
 {
 	CRoad_Manager *&pManager = CRoad_Manager::GetManager();
 
-	Load(CCOL_MESH_MANAGER::TYPE_HALF0);
-	Load(CCOL_MESH_MANAGER::TYPE_BRIDGE);
-	Load(CCOL_MESH_MANAGER::TYPE_HALF1);
+	Load(TYPE_HALF0);
+	Load(TYPE_BRIDGE);
+	Load(TYPE_HALF1);
 
 	if (pManager == NULL)
 	{//生成
 		CRoad_Manager::Create(pManager);
 	}
 	pManager->LoadMap();
+
+	//画像読み込み
+	CDispEffect::Load();
 }
 //==================================================================================================//
 //    * 判定付加管理の読み込み関数 *
@@ -1048,6 +1054,7 @@ void CCOL_MESH_MANAGER::EndMap(void)
 {
 	CRoad_Manager *&pManager = CRoad_Manager::GetManager();
 	if (pManager != NULL) { pManager->Uninit(); }
+	CDispEffect::UnLoad();
 	UnLoad();
 }
 //==================================================================================================//
