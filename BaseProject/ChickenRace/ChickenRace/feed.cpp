@@ -17,15 +17,8 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FEED_NAME_000	"data\\MODEL\\Item\\肉.x"					// 読み込むモデルファイル
-#define FEED_NAME_001	"data\\MODEL\\Item\\ブドウ.x"				// 読み込むモデルファイル
-#define FEED_NAME_002	"data\\MODEL\\Item\\トウモロコシ.x"			// 読み込むモデルファイル
-
-#define TEXTURE_NAME_1  "data\\TEXTURE\\modeltex\\肉.jpg"			//読み込むテクスチャ
-#define TEXTURE_NAME_2  "data\\TEXTURE\\modeltex\\ブドウ.jpg"		//読み込むテクスチャ
-#define TEXTURE_NAME_3  "data\\TEXTURE\\modeltex\\トウモロコシ.jpg"	//読み込むテクスチャ
-
 #define MODEL_SPEED				(5.0f)
+#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
@@ -47,10 +40,6 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-LPD3DXMESH CFeed::m_pMeshModel[FEEDTYPE_MAX] = {};						//メッシュ情報へのポインタ
-LPD3DXBUFFER CFeed::m_pBuffMatModel[FEEDTYPE_MAX] = {};					//マテリアルの情報へのポインタ
-DWORD CFeed::m_nNumMatModel[FEEDTYPE_MAX] = {};							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CFeed::m_pMeshTextures[MAX_FEED_TEXTURE] = {};
 D3DXVECTOR3 CFeed::m_VtxMaxModel[FEEDTYPE_MAX] = {};
 D3DXVECTOR3 CFeed::m_VtxMinModel[FEEDTYPE_MAX] = {};
 
@@ -82,9 +71,10 @@ CFeed * CFeed::Create(D3DXVECTOR3 pos, int nZone, int nType)
 
 		if (pFeed != NULL)
 		{
-			// 種類の設定
-			pFeed->BindModel(m_pMeshModel[nType], m_pBuffMatModel[nType], m_nNumMatModel[nType], m_pMeshTextures[nType],
-				m_VtxMaxModel[nType], m_VtxMinModel[nType]);
+			// モデルの設定
+			pFeed->SetModelType(nType + MODEL_TYPE_FEED_K);
+			// テクスチャの設定
+			pFeed->SetTextureType(nType + TEXTURE_TYPE_FEED_K);
 			//種類の代入
 			pFeed->m_feedType = (FEEDTYPE)nType;
 			// オブジェクトクラスの生成
@@ -144,14 +134,9 @@ void CFeed::Update(void)
 {
 	CModel3D::Update();
 
-	//距離の取得
-	float fLength = CModel3D::GetLength();
-
 	m_rot.y += 0.007f;
 
 	CModel3D::SetRot(m_rot);
-
-	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
 //=============================================================================
 // 描画処理
@@ -182,83 +167,76 @@ HRESULT CFeed::Load(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	//マテリアルデータへのポインタ
-	D3DXMATERIAL *pMat;
+	int			nNumVtx = 0;						//頂点数
+	DWORD		sizeFVF;							//頂点フォーマットのサイズ
+	BYTE		*pVtxBuff;							//頂点バッファへのポインタ
 
-	// Xファイルの読み込み
-	D3DXLoadMeshFromX(FEED_NAME_000, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
-	D3DXLoadMeshFromX(FEED_NAME_001, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
-	D3DXLoadMeshFromX(FEED_NAME_002, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
-
-	for (int nCount = 0; nCount < FEEDTYPE_MAX; nCount++)
-	{
-		//マテリアル情報からテクスチャの取得
-		pMat = (D3DXMATERIAL*)m_pBuffMatModel[nCount]->GetBufferPointer();
-	}
-
-	int nNumVtx;		//頂点数
-	DWORD sizeFVF;		//頂点フォーマットのサイズ
-	BYTE *pVtxBuff;		//頂点バッファへのポインタ
-
-						//モデルの最大値・最小値を取得する
+													//モデルの最大値・最小値を取得する
 	for (int nCntModel = 0; nCntModel < FEEDTYPE_MAX; nCntModel++)
 	{
 		m_VtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
 		m_VtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-																		//頂点数を取得
-		nNumVtx = m_pMeshModel[nCntModel]->GetNumVertices();
-
-		//頂点フォーマットのサイズを取得
-		sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel[nCntModel]->GetFVF());
-
-		//頂点バッファのロック
-		m_pMeshModel[nCntModel]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
-
-		for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+		CModel3D::MODEL_TYPE type;
+		switch (nCntModel)
 		{
-			D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
-
-															//最大値
-			if (vtx.x > m_VtxMaxModel[nCntModel].x)
-			{
-				m_VtxMaxModel[nCntModel].x = vtx.x;
-			}
-			if (vtx.y > m_VtxMaxModel[nCntModel].y)
-			{
-				m_VtxMaxModel[nCntModel].y = vtx.y;
-			}
-			if (vtx.z > m_VtxMaxModel[nCntModel].z)
-			{
-				m_VtxMaxModel[nCntModel].z = vtx.z;
-			}
-			//最小値
-			if (vtx.x < m_VtxMinModel[nCntModel].x)
-			{
-				m_VtxMinModel[nCntModel].x = vtx.x;
-			}
-			if (vtx.y < m_VtxMinModel[nCntModel].y)
-			{
-				m_VtxMinModel[nCntModel].y = vtx.y;
-			}
-			if (vtx.z < m_VtxMinModel[nCntModel].z)
-			{
-				m_VtxMinModel[nCntModel].z = vtx.z;
-			}
-
-			//サイズ文のポインタを進める
-			pVtxBuff += sizeFVF;
+		case FEEDTYPE_ATTACK:	type = MODEL_TYPE_FEED_K;	break;
+		case FEEDTYPE_ANNOY:	type = MODEL_TYPE_FEED_B;	break;
+		case FEEDTYPE_SPEED:	type = MODEL_TYPE_FEED_S;	break;
 		}
 
-		//頂点バッファのアンロック
-		m_pMeshModel[nCntModel]->UnlockVertexBuffer();
+		LPD3DXMESH &Mesh = MeshLoad(type);
+
+		if (Mesh != NULL)
+		{
+			//頂点数を取得
+			nNumVtx = Mesh->GetNumVertices();
+
+			//頂点フォーマットのサイズを取得
+			sizeFVF = D3DXGetFVFVertexSize(Mesh->GetFVF());
+
+			//頂点バッファのロック
+			Mesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+
+			for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+			{
+				D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+
+																//最大値
+				if (vtx.x > m_VtxMaxModel[nCntModel].x)
+				{
+					m_VtxMaxModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y > m_VtxMaxModel[nCntModel].y)
+				{
+					m_VtxMaxModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z > m_VtxMaxModel[nCntModel].z)
+				{
+					m_VtxMaxModel[nCntModel].z = vtx.z;
+				}
+				//最小値
+				if (vtx.x < m_VtxMinModel[nCntModel].x)
+				{
+					m_VtxMinModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y < m_VtxMinModel[nCntModel].y)
+				{
+					m_VtxMinModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z < m_VtxMinModel[nCntModel].z)
+				{
+					m_VtxMinModel[nCntModel].z = vtx.z;
+				}
+
+				//サイズ文のポインタを進める
+				pVtxBuff += sizeFVF;
+			}
+
+			//頂点バッファのアンロック
+			Mesh->UnlockVertexBuffer();
+		}
 	}
-
-
-	//使っているテクスチャ
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
 
 	return S_OK;
 }
@@ -268,31 +246,7 @@ HRESULT CFeed::Load(void)
 //===============================================================================
 void CFeed::UnLoad(void)
 {
-	for (int nCount = 0; nCount < FEEDTYPE_MAX; nCount++)
-	{
-		// メッシュの開放
-		if (m_pMeshModel[nCount] != NULL)
-		{
-			m_pMeshModel[nCount]->Release();
-			m_pMeshModel[nCount] = NULL;
-		}
-		// マテリアルの開放
-		if (m_pBuffMatModel[nCount] != NULL)
-		{
-			m_pBuffMatModel[nCount]->Release();
-			m_pBuffMatModel[nCount] = NULL;
-		}
-	}
 
-	for (int nCount = 0; nCount < MAX_FEED_TEXTURE; nCount++)
-	{
-		//テクスチャ
-		if (m_pMeshTextures[nCount] != NULL)
-		{
-			m_pMeshTextures[nCount]->Release();
-			m_pMeshTextures[nCount] = NULL;
-		}
-	}
 }
 
 
@@ -309,12 +263,12 @@ bool CFeed::CollisionFeed(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 
 	// 各種情報の取得
 	D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
-	D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-	D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+	D3DXVECTOR3 VtxMax = m_VtxMaxModel[m_feedType];			// モデルの最大値
+	D3DXVECTOR3 VtxMin = m_VtxMinModel[m_feedType];			// モデルの最小値
 	D3DXVECTOR3 rot = CModel3D::GetRot();
 
-	D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-	D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
+	D3DXVECTOR3 ModelMax = ModelPos + VtxMax;	// 位置込みの最大値
+	D3DXVECTOR3 ModelMin = ModelPos + VtxMin;	// 位置込みの最小値
 
 	if (pPos->x >= ModelMin.x - PLAYER_DEPTH && pPos->x <= ModelMax.x + PLAYER_DEPTH)
 	{// Zの範囲内にいる

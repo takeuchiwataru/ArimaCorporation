@@ -8,7 +8,7 @@
 #----------------------------------------------------
 #　オブジェクトの設置数
 #----------------------------------------------------
-OBJECT_SETNUM = 3
+OBJECT_SETNUM = 5
 
 #----------------------------------------------------
 #　オブジェクトの設置情報
@@ -27,6 +27,24 @@ OBJECT_START
 	TEXTURETYPE = 4
 	COLLISION = 0
 	POS = 0.00 0.00 0.00
+	ROT = 0.00 0.00 0.00
+	SIZ = 1.00 1.00 1.00
+OBJECT_END
+
+OBJECT_START
+	TYPE = 5
+	TEXTURETYPE = 5
+	COLLISION = 0
+	POS = 0.00 0.00 0.00
+	ROT = 0.00 0.00 0.00
+	SIZ = 1.00 1.00 1.00
+OBJECT_END
+
+OBJECT_START
+	TYPE = 6
+	TEXTURETYPE = 6
+	COLLISION = 0
+	POS = -10000.00 -10000.00 -1000.00
 	ROT = 0.00 0.00 0.00
 	SIZ = 1.00 1.00 1.00
 OBJECT_END

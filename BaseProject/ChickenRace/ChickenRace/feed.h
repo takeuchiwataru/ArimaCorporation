@@ -50,10 +50,6 @@ public:
 	FEEDTYPE GetFeedType(void) { return m_feedType; }
 
 private:
-	static LPD3DXMESH	m_pMeshModel[FEEDTYPE_MAX];		//メッシュ情報へのポインタ
-	static LPD3DXBUFFER m_pBuffMatModel[FEEDTYPE_MAX];	//マテリアルの情報へのポインタ
-	static DWORD		m_nNumMatModel[FEEDTYPE_MAX];	//マテリアルの情報数
-	static LPDIRECT3DTEXTURE9 m_pMeshTextures[MAX_FEED_TEXTURE];//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel[FEEDTYPE_MAX];		//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel[FEEDTYPE_MAX];		//モデルの最小値
 

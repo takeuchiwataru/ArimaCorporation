@@ -772,7 +772,7 @@ void CTutorial::ObjectCreate(void)
 					}
 					else if (memcmp(pStrcur, "OBJECT_END", strlen("OBJECT_END")) == 0)
 					{
-						CObject::Create(pos, rot, scale, 0.0f, nTexType,nType, CModel3D::MOVETYPE_NOT, nCollision);
+						CObject::Create(pos, rot, scale, 0.0f, nTexType,nType, nCollision);
 						break;
 					}
 				}

@@ -116,7 +116,7 @@ HRESULT CTitle::Init()
 	for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
 	{
 		//オブジェクトの生成
-		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
+		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType,m_Map[nCount].m_nCollision);
 	}
 
 	CManager::OnlineSeting(false);	// オンライン設定

@@ -42,9 +42,6 @@
     <ClCompile Include="egg.cpp">
       <Filter>ソース ファイル\知らん奴</Filter>
     </ClCompile>
-    <ClCompile Include="enemy.cpp">
-      <Filter>ソース ファイル\知らん奴</Filter>
-    </ClCompile>
     <ClCompile Include="fade.cpp">
       <Filter>ソース ファイル\知らん奴</Filter>
     </ClCompile>
@@ -204,9 +201,6 @@
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
     <ClInclude Include="egg.h">
-      <Filter>ヘッダー ファイル\知らん奴</Filter>
-    </ClInclude>
-    <ClInclude Include="enemy.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
     <ClInclude Include="fade.h">

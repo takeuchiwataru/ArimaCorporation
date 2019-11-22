@@ -13,13 +13,12 @@
 #include "fade.h"
 #include "shadow.h"
 #include "tutorial.h"
-#include "enemy.h"
 #include "ColMesh.h"
+#include "egg.h"
 
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define CHICK_NAME	"data\\MODEL\\Weapon\\chick.x"			// 読み込むモデルファイル
 
 #define MODEL_SPEED				(5.0f)
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
@@ -50,10 +49,6 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-LPD3DXMESH CChick::m_pMeshModel = NULL;						//メッシュ情報へのポインタ
-LPD3DXBUFFER CChick::m_pBuffMatModel = NULL;					//マテリアルの情報へのポインタ
-DWORD CChick::m_nNumMatModel = NULL;							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CChick::m_pMeshTextures = NULL;
 D3DXVECTOR3 CChick::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 D3DXVECTOR3 CChick::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
@@ -98,9 +93,9 @@ CChick * CChick::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYP
 
 		if (pChick != NULL)
 		{
-			// 種類の設定
-			pChick->BindModel(m_pMeshModel, m_pBuffMatModel, m_nNumMatModel, m_pMeshTextures,
-				m_VtxMaxModel, m_VtxMinModel);
+			pChick->SetModelType(MODEL_TYPE_CHICK);
+			// テクスチャの設定
+			pChick->SetTextureType(type + TEXTURE_TYPE_CHICK_K);
 			// サイズを代入
 			pChick->m_scale = scale;
 			// サイズを親クラスに代入
@@ -159,6 +154,7 @@ HRESULT CChick::Init(void)
 	m_DestRank = -1;
 	m_nMap = 0;
 	m_bAttackS = false;
+	m_bExplosion = false;
 
 	return S_OK;
 }
@@ -183,16 +179,11 @@ void CChick::Update(void)
 	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//前回の位置を保存する
 
-	// ひよこの動き
+						// ひよこの動き
 	Move();
 
 	CModel3D::SetPosition(m_pos);
 	CModel3D::SetRot(m_rot);
-
-	//距離の取得
-	float fLength = CModel3D::GetLength();
-
-	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
 //=============================================================================
 // 描画処理
@@ -201,42 +192,14 @@ void CChick::Draw(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	//位置の初期化
-	D3DXVECTOR3 Modelpos = CModel3D::GetPosition();
-	//ゲームの情報
-	CManager::MODE pMode = CManager::GetMode();
-
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
-	// 色変更
-	if (m_type == TYPE_ATTACK)
+	if (m_bExplosion == false)
 	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
+		//描画処理
+		CModel3D::Draw();
 	}
-	else if (m_type == TYPE_ANNOY)
-	{
-		CModel3D::Setcol(D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
-	}
-	else if (m_type == TYPE_SPEED)
-	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-	}
-	else if (m_type == TYPE_ATTACK_S)
-	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 0.0f, 1.0f, 1.0f));
-	}
-	else if (m_type == TYPE_ANNOY_S)
-	{
-		CModel3D::Setcol(D3DXCOLOR(0.0f, 1.0f, 1.0f, 1.0f));
-	}
-	else if (m_type == TYPE_SPEED_S)
-	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
-	}
-
-	//描画処理
-	CModel3D::Draw();
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -250,68 +213,65 @@ HRESULT CChick::Load(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	//マテリアルデータへのポインタ
-	D3DXMATERIAL *pMat;
+	//D3DXMATERIAL *pMat;
 
-	// Xファイルの読み込み
-	D3DXLoadMeshFromX(CHICK_NAME, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel, NULL, &m_nNumMatModel, &m_pMeshModel);
+	////マテリアル情報からテクスチャの取得
+	//pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
 
-	//マテリアル情報からテクスチャの取得
-	pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
+	//int nNumVtx;		//頂点数
+	//DWORD sizeFVF;		//頂点フォーマットのサイズ
+	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
 
-	int nNumVtx;		//頂点数
-	DWORD sizeFVF;		//頂点フォーマットのサイズ
-	BYTE *pVtxBuff;		//頂点バッファへのポインタ
+	////モデルの最大値・最小値を取得する
+	//m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
+	//m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-						//モデルの最大値・最小値を取得する
-	m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
-	m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
+	////頂点数を取得
+	//nNumVtx = m_pMeshModel->GetNumVertices();
 
-														//頂点数を取得
-	nNumVtx = m_pMeshModel->GetNumVertices();
+	////頂点フォーマットのサイズを取得
+	//sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
 
-	//頂点フォーマットのサイズを取得
-	sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
+	////頂点バッファのロック
+	//m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
 
-	//頂点バッファのロック
-	m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+	//for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+	//{
+	//	D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-	for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-	{
-		D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+	//	//最大値
+	//	if (vtx.x > m_VtxMaxModel.x)
+	//	{
+	//		m_VtxMaxModel.x = vtx.x;
+	//	}
+	//	if (vtx.y > m_VtxMaxModel.y)
+	//	{
+	//		m_VtxMaxModel.y = vtx.y;
+	//	}
+	//	if (vtx.z > m_VtxMaxModel.z)
+	//	{
+	//		m_VtxMaxModel.z = vtx.z;
+	//	}
+	//	//最小値
+	//	if (vtx.x < m_VtxMinModel.x)
+	//	{
+	//		m_VtxMinModel.x = vtx.x;
+	//	}
+	//	if (vtx.y < m_VtxMinModel.y)
+	//	{
+	//		m_VtxMinModel.y = vtx.y;
+	//	}
+	//	if (vtx.z < m_VtxMinModel.z)
+	//	{
+	//		m_VtxMinModel.z = vtx.z;
+	//	}
 
-														//最大値
-		if (vtx.x > m_VtxMaxModel.x)
-		{
-			m_VtxMaxModel.x = vtx.x;
-		}
-		if (vtx.y > m_VtxMaxModel.y)
-		{
-			m_VtxMaxModel.y = vtx.y;
-		}
-		if (vtx.z > m_VtxMaxModel.z)
-		{
-			m_VtxMaxModel.z = vtx.z;
-		}
-		//最小値
-		if (vtx.x < m_VtxMinModel.x)
-		{
-			m_VtxMinModel.x = vtx.x;
-		}
-		if (vtx.y < m_VtxMinModel.y)
-		{
-			m_VtxMinModel.y = vtx.y;
-		}
-		if (vtx.z < m_VtxMinModel.z)
-		{
-			m_VtxMinModel.z = vtx.z;
-		}
+	//	//サイズ文のポインタを進める
+	//	pVtxBuff += sizeFVF;
+	//}
 
-		//サイズ文のポインタを進める
-		pVtxBuff += sizeFVF;
-	}
-
-	//頂点バッファのアンロック
-	m_pMeshModel->UnlockVertexBuffer();
+	////頂点バッファのアンロック
+	//m_pMeshModel->UnlockVertexBuffer();
 
 	return S_OK;
 }
@@ -321,25 +281,7 @@ HRESULT CChick::Load(void)
 //===============================================================================
 void CChick::UnLoad(void)
 {
-	// メッシュの開放
-	if (m_pMeshModel != NULL)
-	{
-		m_pMeshModel->Release();
-		m_pMeshModel = NULL;
-	}
-	// マテリアルの開放
-	if (m_pBuffMatModel != NULL)
-	{
-		m_pBuffMatModel->Release();
-		m_pBuffMatModel = NULL;
-	}
 
-	//テクスチャ
-	if (m_pMeshTextures != NULL)
-	{
-		m_pMeshTextures->Release();
-		m_pMeshTextures = NULL;
-	}
 }
 
 //===============================================================================
@@ -428,7 +370,7 @@ void CChick::Item(void)
 		case TYPE_ANNOY:
 			pPlayer = CGame::GetPlayer();
 
-			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 100.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 
 			break;
 		}
@@ -456,14 +398,17 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
 		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
 
-		float fDepth = PLAYER_DEPTH;
+		float fDepth = PLAYER_DEPTH - 10.0f;
 
 		if (m_type == TYPE_ANNOY)
 		{
 			fDepth = ANNOY_RANGE;
 		}
+		if (m_bExplosion == true)
+		{
+			fDepth = ATTACK_RANGE;
+		}
 
-#if(1)
 		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
 		{// Zの範囲内にいる
 			if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
@@ -484,10 +429,14 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 			}
 		}
 
+		if (bHit == true && m_type == TYPE_ATTACK)
+		{
+			m_bExplosion = true;
+			m_bDis = false;
+		}
+
 		// 位置の代入
 		CModel3D::SetPosition(ModelPos);
-
-#endif
 	}
 	return bHit;
 }

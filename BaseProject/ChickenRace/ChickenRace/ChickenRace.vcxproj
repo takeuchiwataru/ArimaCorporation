@@ -162,7 +162,6 @@
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="DispEffect.cpp" />
     <ClCompile Include="egg.cpp" />
-    <ClCompile Include="enemy.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="feed.cpp" />
     <ClCompile Include="game.cpp" />
@@ -218,7 +217,6 @@
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="DispEffect.h" />
     <ClInclude Include="egg.h" />
-    <ClInclude Include="enemy.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="feed.h" />
     <ClInclude Include="game.h" />

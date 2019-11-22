@@ -19,7 +19,7 @@
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEED			(0.5f)										// 加速する量
 #define MAX_EGG			(3)											//卵の最大数
-#define MAX_EGG_TEXTURE		(3)									// オブジェクトのテクスチャ数
+#define MAX_EGG_TEXTURE		(3)										// オブジェクトのテクスチャ数
 #define HATCHING_TIME	(600)										// 孵化するまでの時間
 #define EGGJUMP			(3.5f)										// 卵のジャンプ力
 
@@ -89,10 +89,6 @@ public:
 private:
 	void Item(void);
 	void AdjustAngle(float rot);
-	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
-	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
-	static DWORD		m_nNumMatModel;			//マテリアルの情報数
-	static LPDIRECT3DTEXTURE9 m_pMeshTextures[MAX_EGG_TEXTURE];	//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
 

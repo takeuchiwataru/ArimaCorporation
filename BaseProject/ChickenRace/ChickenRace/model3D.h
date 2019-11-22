@@ -21,143 +21,101 @@
 //=====================
 class CModel3D : public CScene
 {
-public://誰でも扱える
+public:
 	typedef enum
-	{
-		MOVETYPE_NONE = 0,
-		MOVETYPE_NOT,
-		MOVETYPE_CONT,
-		MOVETYPE_X_MOVE,
-		MOVETYPE_Y_MOVE,
-		MOVETYPE_Z_MOVE,
-		MOVETYPE_ROTATION_X,
-		MOVETYPE_ROTATION_Y,
-		MOVETYPE_ROTATION_Z,
-		MOVETYPE_HOUSE,
-		MOVETYPE_MAX
-	}MOVETYPE;
+	{// オブジェクトの種類
+		MODEL_TYPE_TREE = 0,		//木
+		MODEL_TYPE_SAKU,			//柵
+		MODEL_TYPE_BOX,				//箱
+		MODEL_TYPE_MAP_FIRST,		//1番目
+		MODEL_TYPE_MAP_SECOND,		//2番目
+		MODEL_TYPE_MAP_MOUNTAIN,	//山
+		MODEL_TYPE_MAP_SKY,			//空
+		MODEL_TYPE_FEED_K,			//攻撃餌
+		MODEL_TYPE_FEED_B,			//妨害餌
+		MODEL_TYPE_FEED_S,			//速度餌
+		MODEL_TYPE_EGG,				//卵
+		MODEL_TYPE_CHICK,			//ヒヨコ
+		MODEL_TYPE_MAX,				//最大数
+	}MODEL_TYPE;
 
 	typedef enum
-	{// ボックスの角８つ
-		VTX_CORNER_LDF = 0,		// 左下前
-		VTX_CORNER_LUF,			// 左上前
-		VTX_CORNER_RDF,			// 右下前
-		VTX_CORNER_RUF,			// 右上前
-		VTX_CORNER_RDB,			// 右下奥
-		VTX_CORNER_RUB,			// 右上奥
-		VTX_CORNER_LDB,			// 左下奥
-		VTX_CORNER_LUB,			// 左上奥
-		VTX_CORNER_MAX,
-	}VTX_CORNER;
+	{// テクスチャの種類
+		TEXTURE_TYPE_TREE = 0,		//木
+		TEXTURE_TYPE_SAKU,			//柵
+		TEXTURE_TYPE_BOX,			//箱
+		TEXTURE_TYPE_MAP_FIRST,		//1番目
+		TEXTURE_TYPE_MAP_SECOND,	//2番目
+		TEXTURE_TYPE_MAP_MOUNTAIN,	//山
+		TEXTURE_TYPE_MAP_SKY,		//空
+		TEXTURE_TYPE_FEED_K,		//攻撃餌
+		TEXTURE_TYPE_FEED_B,		//妨害餌
+		TEXTURE_TYPE_FEED_S,		//速度餌
+		TEXTURE_TYPE_EGG_K,			//攻撃卵
+		TEXTURE_TYPE_EGG_B,			//妨害卵
+		TEXTURE_TYPE_EGG_S,			//速度卵
+		TEXTURE_TYPE_CHICK_K,		//攻撃ヒヨコ
+		TEXTURE_TYPE_CHICK_B,		//妨害ヒヨコ
+		TEXTURE_TYPE_CHICK_S,		//速度ヒヨコ
+		TEXTURE_TYPE_MAX,			//最大数
+	}TEXTURE_TYPE;
 
 	CModel3D(int nPriority = 3, CScene::OBJTYPE objType = CScene::OBJTYPE_3DMODEL);
 	~CModel3D();
-	HRESULT Init(void);
-	void Uninit(void);
-	void Update(void);
-	void Draw(void);
-	D3DXVECTOR3 GetPosition(void) { return m_Pos; }
-	D3DXVECTOR3 &GetRot(void) { return m_Rot; }
-	MOVETYPE GetMoveType(void) { return m_nMoveType; }
-	D3DXVECTOR3 GetMove(void) { return m_Move; }
-	D3DXVECTOR3 GetScale(void) { return m_Scale; }
-	D3DXMATRIX GetMtx(void) { return m_mtxWorldObject; }
-	void BindModel(LPD3DXMESH pMeshObject, LPD3DXBUFFER	pBuffMatObject, DWORD nNumMatObject, LPDIRECT3DTEXTURE9	pMeshTextures, D3DXVECTOR3 VtxMax, D3DXVECTOR3 VtxMin);
-	D3DXVECTOR3 GetVtxMin(void) { return m_VtxMinModel; }
-	D3DXVECTOR3 GetVtxMax(void) { return m_VtxMaxModel; }
-	static CModel3D *Create(void);
-	void SetMove(D3DXVECTOR3 m_move) { m_Move = m_move; }
-	void SetScale(D3DXVECTOR3 Scale) { m_Scale = Scale; }
-	void SetPosition(D3DXVECTOR3 pos) { m_Pos = pos; }
-	void SetRot(D3DXVECTOR3 rot) { m_Rot = rot; };
-	void SetMoveType(MOVETYPE MoveType) { m_nMoveType = MoveType; }
-	void RecalculationVtx(void);							// 頂点の最大値と最小値を再計算
-	D3DXVECTOR3 BlowOff(D3DXVECTOR3 pos, D3DXVECTOR3 move, float fHeavy);
-	bool Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
-	void Landing(D3DXVECTOR3 posOld);						// 地面に着いたとき
-
-	bool GetBoolBlowOff(void) { return m_bBlowOff; };
-	void SetBoolBlowOff(bool bBlowOff) { m_bBlowOff = bBlowOff; };
-
-	float GetHeavy(void) { return m_fMass; };
-	void SetHeavy(float fMass) { m_fMass = fMass; };
-	void Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }// カラー設定
-
-	void InitRot(void);
-
-	bool GetBoolRoll(void) { return m_bRoll; }
-	void SetBoolRoll(bool bRoll) { m_bRoll = bRoll; }
-
-	bool GetBoolBlow(void) { return m_bBlow; }
-	void SetBoolBlow(bool bBlow) { m_bBlow = bBlow; }
-
-	void ScaleVtxCornerPos(D3DXVECTOR3 scale);
-
-	bool GetStateRoll(void) { return m_bStateRoll; }
-	void SetStateRoll(bool bStateRoll) { m_bStateRoll = bStateRoll; }
-
-	float GetLength(void) { return m_fLength; }
-
-	D3DXVECTOR3 &GetposR(void) { return m_Pos; }
-	D3DXVECTOR3 &GetRotR(void) { return m_Rot; }
-	D3DXCOLOR &GetColR(void) { return m_col; }
-	void SetType(int nType) { m_nType = nType; }
+	HRESULT				Init(void);
+	void				Uninit(void);
+	void				Update(void);
+	void				Draw(void);
+	static void			ModelShaderDeleter(void);
+	static LPD3DXMESH	&MeshLoad(MODEL_TYPE modeltype);
+	static void			UnLoad(void);
+	D3DXVECTOR3			GetPosition(void) { return m_Pos; }
+	D3DXVECTOR3			&GetRot(void) { return m_Rot; }
+	D3DXVECTOR3			GetMove(void) { return m_Move; }
+	D3DXVECTOR3			GetScale(void) { return m_Scale; }
+	D3DXMATRIX			GetMtx(void) { return m_mtxWorldObject; }
+	D3DXVECTOR3			GetVtxMin(void) { return m_VtxMinModel; }
+	D3DXVECTOR3			GetVtxMax(void) { return m_VtxMaxModel; }
+	D3DXVECTOR3			&GetposR(void) { return m_Pos; }
+	static CModel3D		*Create(void);
+	void				SetMove(D3DXVECTOR3 m_move) { m_Move = m_move; }
+	void				SetScale(D3DXVECTOR3 Scale) { m_Scale = Scale; }
+	void				SetPosition(D3DXVECTOR3 pos) { m_Pos = pos; }
+	void				SetRot(D3DXVECTOR3 rot) { m_Rot = rot; };
+	bool				Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
+	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
 
 protected:
-	void SetUpdate(bool bUpadate) { m_bUpdate = bUpadate; };
-	void SetSmallObj(bool bSmallObj) { m_bSmallObjDraw = bSmallObj; };
-	void SetHightObj(bool bHightObj) { m_bHightObjDraw = bHightObj; };
-	void SetOnlyLength(bool bOnlyLength) { m_bOnlyLengthDraw = bOnlyLength; };
-	bool GetDelete(void) { return m_bDelete; };
-	void SetDelete(bool bDelete) { m_bDelete = bDelete; };
+	void				SetModelType(int nModelType) { m_nModelType = nModelType; }
+	void				SetTextureType(int nTextureType) { m_nTextureType = nTextureType; }
 
-private://個人でのみ使う
-	float CrossingAngle(D3DXVECTOR3 vec0, D3DXVECTOR3 vec1);	// ベクトルのなす角を計算
-	void RotCalculation(void);									// 衝突時の角度計算
-	bool LengthJudgment(void);									//距離判定
-
-	D3DMATERIAL9			*m_pMeshMaterials = NULL;
-
-	LPD3DXMESH				m_pMeshObject;						//メッシュ情報へのポインタ
-	LPD3DXBUFFER			m_pBuffMatObject;					//マテリアルの情報へのポインタ
-	DWORD					m_nNumMatObject;					//マテリアルの情報数
-	LPDIRECT3DTEXTURE9		m_pMeshTextures;
-	LPDIRECT3DTEXTURE9		*m_pShaderMeshTextures;				//シェーダー用
-	D3DXMATRIX				m_mtxWorldObject;					//ワールドマトリックス
-	D3DXMATRIX				m_mtxRot;							//回転マトリックス(保存用)
-	D3DXQUATERNION			m_quat;								//クォータニオン
-	D3DXVECTOR3				m_VecAxis;							//回転軸
-	float					m_fValueRot;						//回転角(回転量)
-	D3DXVECTOR3				m_VtxMinModel, m_VtxMaxModel;		//モデルの最小値・最大値
-	D3DXVECTOR3				m_Pos;								//位置
-	D3DXVECTOR3				m_Rot;								//向き
-	D3DXVECTOR3				m_Scale;							//サイズ
-	D3DXVECTOR3				m_Move;								//動き
-	MOVETYPE				m_nMoveType;						//動きの種類
-	bool					m_bBlowOff;							// 吹っ飛ばされているかどうか
-	float					m_fMass;							// 重さ
-	float					m_fRotY;							// 衝突時の回転方向
-	D3DXVECTOR3				m_aVtxCornerPos[VTX_CORNER_MAX];	// 当たり判定用ボックスの角８つの頂点座標
-	D3DXVECTOR3				m_aVtxPosStorage[VTX_CORNER_MAX];	// 当たり判定用ボックスの角８つの頂点座標の保存用
-	D3DXVECTOR3				m_blowOff;							// 吹っ飛ぶ距離
-	int						m_nIdxCornerPosMinY;				// ボックスの角８つの頂点座標の中で一番低い
-	int						m_nCountTime;						// 時間の可算
-	bool					m_bUpdate;							// アップデートを通すかどうか
-	bool					m_bUpdateBlow;						// 吹っ飛ばす処理を行うかどうか
-	bool					m_bBlow;							// 吹っ飛ばすかどうか
-	bool					m_bDelete;							// 破棄するかどうか
-	bool					m_bcolChange;						// カラー変更
-	bool					m_bSmallObjDraw;					// 小さいオブジェクトの描画フラグ
-	bool					m_bHightObjDraw;					// 高いオブジェクトの描画フラグ
-	D3DXCOLOR				m_col;								// カラー
-	bool					m_bRoll;							// 転がるかどうか
-	bool					m_bStateRoll;						// 転がっているかどうか
-	bool					m_bOnlyLengthDraw;					// 描画距離だけ求める
-	D3DXVECTOR3				m_scale;							// スケール変更の倍率
-	float					m_fLength;							// 距離
-	bool					m_bTexMat;							// シェーダーに使うテクスチャとマテリアル
-	int						m_nType;							//モデルの種類
-	CToonShader				*m_pToonShader;						//シェーダーのポインタ
-	D3DXVECTOR3				m_MapView;							//マップに反映させるカメラ
+private:
+	static const char			*m_apModelFile[];								// モデルの文字を格納する
+	static const char			*m_apTextureFile[];								// テクスチャの文字を格納する
+	static LPD3DXMESH			m_pMeshModel[MODEL_TYPE_MAX];					// メッシュ情報へのポインタ
+	static LPD3DXBUFFER			m_pBuffMatModel[MODEL_TYPE_MAX];				// マテリアルの情報へのポインタ
+	static DWORD				m_nNumMatModel[MODEL_TYPE_MAX];					// マテリアルの情報数
+	static LPDIRECT3DTEXTURE9	m_pMeshTextures[TEXTURE_TYPE_MAX];					// テクスチャの情報
+	static D3DMATERIAL9			*m_pMeshMaterials[MODEL_TYPE_MAX];				// メッシュマテリアルの情報
+	static LPDIRECT3DTEXTURE9	*m_pShaderMeshTextures[MODEL_TYPE_MAX];			// シェーダー用
+	D3DXMATRIX					m_mtxWorldObject;								// ワールドマトリックス
+	D3DXMATRIX					m_mtxRot;										// 回転マトリックス(保存用)
+	D3DXQUATERNION				m_quat;											// クォータニオン
+	D3DXVECTOR3					m_VecAxis;										// 回転軸
+	float						m_fValueRot;									// 回転角(回転量)
+	D3DXVECTOR3					m_VtxMinModel, m_VtxMaxModel;					// モデルの最小値・最大値
+	D3DXVECTOR3					m_Pos;											// 位置
+	D3DXVECTOR3					m_Rot;											// 向き
+	D3DXVECTOR3					m_Scale;										// サイズ
+	D3DXVECTOR3					m_Move;											// 動き
+	bool						m_bcolChange;									// カラー変更
+	D3DXCOLOR					m_col;											// カラー
+	float						m_fLength;										// 距離
+	bool						m_bTexMat;										// シェーダーに使うテクスチャとマテリアル
+	int							m_nModelType;									// モデルの種類
+	int							m_nTextureType;									// テクスチャの種類
+	static CToonShader			*m_pToonShader;									// シェーダーのポインタ
+	D3DXVECTOR3					m_MapView;										// マップに反映させるカメラ
+	MODEL_TYPE					m_modeltype;									// モデル種類
 };
 #endif

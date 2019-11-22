@@ -40,15 +40,15 @@ public:
 		TYPE_ATTACK_S,		// 強い攻撃
 		TYPE_ANNOY_S,		// 強い妨害
 		TYPE_SPEED_S,		// 強い加速
-		TYPE_MAX,			//最大数
+		TYPE_MAX,			// 最大数
 	} TYPE;
 
 	typedef enum
 	{// ひよこの状態
 		STATE_NORMAL = 0,	// 通常
-		STATE_CHASE,			// ついていく
+		STATE_CHASE,		// ついていく
 		STATE_BULLET,		// 飛んでいく
-		STATE_MAX,			//最大数
+		STATE_MAX,			// 最大数
 	} STATE;
 
 	typedef enum
@@ -98,10 +98,6 @@ private:
 	void AttackS(void);
 	void Item(void);
 	void AdjustAngle(float rot);
-	static LPD3DXMESH	m_pMeshModel;			//メッシュ情報へのポインタ
-	static LPD3DXBUFFER m_pBuffMatModel;		//マテリアルの情報へのポインタ
-	static DWORD		m_nNumMatModel;			//マテリアルの情報数
-	static LPDIRECT3DTEXTURE9 m_pMeshTextures;	//テクスチャ情報
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
 	BULLETTYPE			m_bulletType;			// 弾の種類

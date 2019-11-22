@@ -1289,15 +1289,6 @@ void CPlayer::CollisionObject(void)
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
 
-	//吹っ飛ば差ないオブジェクト番号の登録
-	/*int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
-	TYPE_BILL02, TYPE_TVBILL, TYPE_FLOWER, TYPE_TANUKI,
-	TYPE_OCLOCK, TYPE_REDBILL, TYPE_TREE02,  TYPE_CORN2,
-	TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
-	TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL,
-	TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD , TYPE_TAPIOCA, TYPE_HOSPITAL };*/
-
-	int anUpdateType[UPDATE_TYPE_NUM + HIGHT_OBJ_NUM + 2] = { 0 };	// 仮
 	bool bType = false;	//タイプのフラグ
 
 	for (int nCntPriority = 2; nCntPriority <= OBJECT_PRIOTITY; nCntPriority++)

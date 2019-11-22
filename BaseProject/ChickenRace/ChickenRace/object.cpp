@@ -17,19 +17,8 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MODEL_NAME_1	"data\\MODEL\\Object\\tree4.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_2	"data\\MODEL\\Object\\柵.x"				//読み込むテクスチャファイル
-#define MODEL_NAME_3	"data\\MODEL\\Collision\\box.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_4	"data\\MODEL\\Map\\Map_First.x"			//読み込むテクスチャファイル
-#define MODEL_NAME_5	"data\\MODEL\\Map\\Map_Second.x"		//読み込むテクスチャファイル
-
-#define TEXTURE_NAME_1	"data\\TEXTURE\\modeltex\\tree000.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_2	"data\\TEXTURE\\modeltex\\柵.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_3	"data\\TEXTURE\\modeltex\\bender.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_NAME_4	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
-#define TEXTURE_NAME_5	"data\\TEXTURE\\modeltex\\meat.jpg"		//読み込むテクスチャファイル
-
 #define MODEL_SPEED				(5.0f)
+#define PLAYER_DEPTH			(50)		// プレイヤーの幅調整用
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
@@ -51,10 +40,6 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-LPD3DXMESH CObject::m_pMeshModel[MAX_OBJECT] = {};						//メッシュ情報へのポインタ
-LPD3DXBUFFER CObject::m_pBuffMatModel[MAX_OBJECT] = {};					//マテリアルの情報へのポインタ
-DWORD CObject::m_nNumMatModel[MAX_OBJECT] = {};							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CObject::m_pMeshTextures[MAX_OBJECT_TEXTURE] = {};
 D3DXVECTOR3 CObject::m_LoadVtxMaxModel[MAX_OBJECT] = {};
 D3DXVECTOR3 CObject::m_LoadVtxMinModel[MAX_OBJECT] = {};
 
@@ -78,25 +63,6 @@ CObject::~CObject() {}
 //=============================================================================
 HRESULT CObject::Init(void)
 {
-	//アップデートを通さないオブジェクトのタイプ
-	//int anUpdateType[UPDATE_TYPE_NUM] = { TYPE_TREE00, TYPE_TREE01, TYPE_BILL00, TYPE_BILL01,
-	//									  TYPE_BILL02, TYPE_TVBILL, TYPE_TANUKI,
-	//									  TYPE_OCLOCK, TYPE_REDBILL, TYPE_CORN2,
-	//									  TYPE_STATION, TYPE_ESTA, TYPE_DAIMAL, TYPE_APIA,
-	//									  TYPE_TOWER, TYPE_FOUNTAIN, TYPE_FERRISWGEEL, TYPE_TAPIOCA, TYPE_HOSPITAL, TYPE_LCDPANEL };
-
-	////小さいオブジェクトのタイプ
-	//int anSmallObjType[SMALL_OBJ_NUM] = { TYPE_DRINKMACHINE, TYPE_GRASS, TYPE_CARDBORD, TYPE_CORN,
-	//									  TYPE_BENCH, TYPE_PHONEBOX, TYPE_LEAF, TYPE_SIGNBOARD, TYPE_BEERBOX, TYPE_FENCE};
-
-	////高いオブジェクトのタイプ
-	//int anHightObjType[HIGHT_OBJ_NUM] = { TYPE_STREETLIGHT, TYPE_TRAFFICLIGHT00, TYPE_TRAFFICLIGHT01, TYPE_ROAD};
-
-	// 仮
-	int anUpdateType[UPDATE_TYPE_NUM] = {};
-	int anSmallObjType[SMALL_OBJ_NUM] = {};
-	int anHightObjType[HIGHT_OBJ_NUM] = {};
-
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	//3DモデルのInit
@@ -114,43 +80,6 @@ HRESULT CObject::Init(void)
 	// 各種情報の代入
 	CModel3D::SetScale(m_scale);
 
-	//アップデートを通すかどうかの判定
-	bool bUpdate = false;
-	for (int nCntType = 0; nCntType < UPDATE_TYPE_NUM; nCntType++)
-	{
-		if (m_nType == anUpdateType[nCntType])
-		{
-			CModel3D::SetUpdate(false);
-			bUpdate = true;
-			break;
-		}
-	}
-
-	if (!bUpdate)
-	{
-		bool bSmallObj = false;
-		for (int nCntType = 0; nCntType < SMALL_OBJ_NUM; nCntType++)
-		{// 小さいオブジェクトかどうかの判定
-			if (m_nType == anSmallObjType[nCntType])
-			{
-				CModel3D::SetSmallObj(true);
-				bSmallObj = true;
-				break;
-			}
-		}
-
-		for (int nCntType = 0; nCntType < HIGHT_OBJ_NUM; nCntType++)
-		{// 高いオブジェクトのタイプかどうかの判定
-			if (m_nType == anHightObjType[nCntType])
-			{
-				CModel3D::SetHightObj(true);
-				break;
-			}
-		}
-	}
-
-	//変数の初期化
-	m_pObjBill = NULL;
 	return S_OK;
 }
 
@@ -174,9 +103,12 @@ void CObject::Update(void)
 	CModel3D::Update();
 
 	//距離の取得
-	float fLength = CModel3D::GetLength();
+	D3DXVECTOR3 &m_rot = CModel3D::GetRot();
 
-	if (CModel3D::GetDelete() == true) { Uninit(); }
+	if (m_nType == 6)
+	{
+		m_rot.y -= 0.0004f;
+	}
 }
 //=============================================================================
 // 描画処理
@@ -204,7 +136,7 @@ void CObject::Draw(void)
 //===============================================================================
 //　クリエイト
 //===============================================================================
-CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, float move, int nTexType, int nObjectType, MOVETYPE nMovetype, int nCollision)
+CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, float move, int nTexType, int nObjectType, int nCollision)
 {
 	CObject *pObject = NULL;
 
@@ -216,10 +148,10 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 
 		if (pObject != NULL)
 		{
-			// 種類の設定
-			pObject->BindModel(m_pMeshModel[nObjectType], m_pBuffMatModel[nObjectType], m_nNumMatModel[nObjectType], m_pMeshTextures[nTexType],
-				m_LoadVtxMaxModel[nObjectType], m_LoadVtxMinModel[nObjectType]);
-			pObject->SetType(nObjectType);
+			// モデルの設定
+			pObject->SetModelType(nObjectType);
+			// テクスチャの設定
+			pObject->SetTextureType(nTexType);
 			// オブジェクトごとの設定用タイプ
 			pObject->m_nType = nObjectType;
 			// サイズを代入
@@ -234,8 +166,6 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 			pObject->SetPosition(pos);
 			// 回転を反映
 			pObject->SetRot(rot);
-			// 動きの種類と移動量を設定
-			pObject->SetMoveType(nMovetype);
 			//pObject->m_move = D3DXVECTOR3(move, move, move);
 			// コリジョンをONOFF
 			pObject->m_nCollision = nCollision;
@@ -252,85 +182,72 @@ HRESULT CObject::Load(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	//マテリアルデータへのポインタ
-	D3DXMATERIAL *pMat;
-
-	// Xファイルの読み込み
-	D3DXLoadMeshFromX(MODEL_NAME_1, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[0], NULL, &m_nNumMatModel[0], &m_pMeshModel[0]);
-	D3DXLoadMeshFromX(MODEL_NAME_2, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[1], NULL, &m_nNumMatModel[1], &m_pMeshModel[1]);
-	D3DXLoadMeshFromX(MODEL_NAME_3, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[2], NULL, &m_nNumMatModel[2], &m_pMeshModel[2]);
-	D3DXLoadMeshFromX(MODEL_NAME_4, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[3], NULL, &m_nNumMatModel[3], &m_pMeshModel[3]);
-	D3DXLoadMeshFromX(MODEL_NAME_5, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel[4], NULL, &m_nNumMatModel[4], &m_pMeshModel[4]);
+	//D3DXMATERIAL *pMat;
 
 	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
 	{
 		//マテリアル情報からテクスチャの取得
-		pMat = (D3DXMATERIAL*)m_pBuffMatModel[nCount]->GetBufferPointer();
+		//pMat = (D3DXMATERIAL*)m_pBuffMatModel[nCount]->GetBufferPointer();
 	}
 
-	int nNumVtx;		//頂点数
-	DWORD sizeFVF;		//頂点フォーマットのサイズ
-	BYTE *pVtxBuff;		//頂点バッファへのポインタ
+	//int nNumVtx;		//頂点数
+	//DWORD sizeFVF;		//頂点フォーマットのサイズ
+	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
 
-						//モデルの最大値・最小値を取得する
-	for (int nCntModel = 0; nCntModel < MAX_OBJECT; nCntModel++)
-	{
-		m_LoadVtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
-		m_LoadVtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
+	//					//モデルの最大値・最小値を取得する
+	//for (int nCntModel = 0; nCntModel < MAX_OBJECT; nCntModel++)
+	//{
+	//	m_LoadVtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
+	//	m_LoadVtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-																			//頂点数を取得
-		nNumVtx = m_pMeshModel[nCntModel]->GetNumVertices();
+	//																		//頂点数を取得
+	//	nNumVtx = m_pMeshModel[nCntModel]->GetNumVertices();
 
-		//頂点フォーマットのサイズを取得
-		sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel[nCntModel]->GetFVF());
+	//	//頂点フォーマットのサイズを取得
+	//	sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel[nCntModel]->GetFVF());
 
-		//頂点バッファのロック
-		m_pMeshModel[nCntModel]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+	//	//頂点バッファのロック
+	//	m_pMeshModel[nCntModel]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
 
-		for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-		{
-			D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+	//	for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+	//	{
+	//		D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-															//最大値
-			if (vtx.x > m_LoadVtxMaxModel[nCntModel].x)
-			{
-				m_LoadVtxMaxModel[nCntModel].x = vtx.x;
-			}
-			if (vtx.y > m_LoadVtxMaxModel[nCntModel].y)
-			{
-				m_LoadVtxMaxModel[nCntModel].y = vtx.y;
-			}
-			if (vtx.z > m_LoadVtxMaxModel[nCntModel].z)
-			{
-				m_LoadVtxMaxModel[nCntModel].z = vtx.z;
-			}
-			//最小値
-			if (vtx.x < m_LoadVtxMinModel[nCntModel].x)
-			{
-				m_LoadVtxMinModel[nCntModel].x = vtx.x;
-			}
-			if (vtx.y < m_LoadVtxMinModel[nCntModel].y)
-			{
-				m_LoadVtxMinModel[nCntModel].y = vtx.y;
-			}
-			if (vtx.z < m_LoadVtxMinModel[nCntModel].z)
-			{
-				m_LoadVtxMinModel[nCntModel].z = vtx.z;
-			}
+	//														//最大値
+	//		if (vtx.x > m_LoadVtxMaxModel[nCntModel].x)
+	//		{
+	//			m_LoadVtxMaxModel[nCntModel].x = vtx.x;
+	//		}
+	//		if (vtx.y > m_LoadVtxMaxModel[nCntModel].y)
+	//		{
+	//			m_LoadVtxMaxModel[nCntModel].y = vtx.y;
+	//		}
+	//		if (vtx.z > m_LoadVtxMaxModel[nCntModel].z)
+	//		{
+	//			m_LoadVtxMaxModel[nCntModel].z = vtx.z;
+	//		}
+	//		//最小値
+	//		if (vtx.x < m_LoadVtxMinModel[nCntModel].x)
+	//		{
+	//			m_LoadVtxMinModel[nCntModel].x = vtx.x;
+	//		}
+	//		if (vtx.y < m_LoadVtxMinModel[nCntModel].y)
+	//		{
+	//			m_LoadVtxMinModel[nCntModel].y = vtx.y;
+	//		}
+	//		if (vtx.z < m_LoadVtxMinModel[nCntModel].z)
+	//		{
+	//			m_LoadVtxMinModel[nCntModel].z = vtx.z;
+	//		}
 
-			//サイズ文のポインタを進める
-			pVtxBuff += sizeFVF;
-		}
+	//		//サイズ文のポインタを進める
+	//		pVtxBuff += sizeFVF;
+	//	}
 
-		//頂点バッファのアンロック
-		m_pMeshModel[nCntModel]->UnlockVertexBuffer();
-	}
+	//	//頂点バッファのアンロック
+	//	m_pMeshModel[nCntModel]->UnlockVertexBuffer();
+	//}
 
-	//使っているテクスチャ
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pMeshTextures[0]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pMeshTextures[1]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pMeshTextures[2]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_4, &m_pMeshTextures[3]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_5, &m_pMeshTextures[4]);
 	return S_OK;
 }
 //===============================================================================
@@ -338,30 +255,7 @@ HRESULT CObject::Load(void)
 //===============================================================================
 void CObject::UnLoad(void)
 {
-	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
-	{
-		// メッシュの開放
-		if (m_pMeshModel[nCount] != NULL)
-		{
-			m_pMeshModel[nCount]->Release();
-			m_pMeshModel[nCount] = NULL;
-		}
-		// マテリアルの開放
-		if (m_pBuffMatModel[nCount] != NULL)
-		{
-			m_pBuffMatModel[nCount]->Release();
-			m_pBuffMatModel[nCount] = NULL;
-		}
-	}
-	//テクスチャ
-	for (int nCntTex = 0; nCntTex < MAX_OBJECT_TEXTURE; nCntTex++)
-	{
-		if (m_pMeshTextures[nCntTex] != NULL)
-		{
-			m_pMeshTextures[nCntTex]->Release();
-			m_pMeshTextures[nCntTex] = NULL;
-		}
-	}
+
 }
 //=============================================================================
 //	ステージ移動時に初期化するため
@@ -449,7 +343,6 @@ bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVEC
 		// 各種情報の取得
 		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
 		D3DXVECTOR3 ModelMove = CModel3D::GetMove();		// 移動量
-		MOVETYPE ModelMoveType = CModel3D::GetMoveType();	// 動きのタイプ
 		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
 		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
 		D3DXVECTOR3 rot = CModel3D::GetRot();
@@ -521,15 +414,4 @@ bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVEC
 	}
 
 	return bLand;
-}
-//===============================================================================
-// モデルの設定
-//===============================================================================
-void CObject::SetModel(CModel3D *pModel, int nType, int nTex)
-{
-	// 種類の設定
-	pModel->BindModel(m_pMeshModel[nType], m_pBuffMatModel[nType], m_nNumMatModel[nType], m_pMeshTextures[nTex],
-		m_LoadVtxMaxModel[nType], m_LoadVtxMinModel[nType]);
-	pModel->CModel3D::Init();
-	pModel->SetType(nType);
 }

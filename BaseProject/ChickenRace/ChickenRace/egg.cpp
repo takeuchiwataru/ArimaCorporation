@@ -13,18 +13,11 @@
 #include "fade.h"
 #include "shadow.h"
 #include "tutorial.h"
-#include "enemy.h"
 #include "ColMesh.h"
 
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define EGG_NAME_000	"data\\MODEL\\Weapon\\egg.x"			// 読み込むモデルファイル
-
-#define TEXTURE_EGG_1	"data\\TEXTURE\\modeltex\\egg02.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_EGG_2	"data\\TEXTURE\\modeltex\\egg00.jpg"	//読み込むテクスチャファイル
-#define TEXTURE_EGG_3	"data\\TEXTURE\\modeltex\\egg01.jpg"	//読み込むテクスチャファイル
-
 #define MODEL_SPEED				(5.0f)
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
@@ -48,10 +41,6 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-LPD3DXMESH CEgg::m_pMeshModel = NULL;						//メッシュ情報へのポインタ
-LPD3DXBUFFER CEgg::m_pBuffMatModel = NULL;					//マテリアルの情報へのポインタ
-DWORD CEgg::m_nNumMatModel = NULL;							//マテリアルの情報数
-LPDIRECT3DTEXTURE9 CEgg::m_pMeshTextures[MAX_EGG_TEXTURE] = {};
 D3DXVECTOR3 CEgg::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 D3DXVECTOR3 CEgg::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
@@ -95,9 +84,10 @@ CEgg * CEgg::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, EGGTYPE
 
 		if (pEgg != NULL)
 		{
-			// 種類の設定
-			pEgg->BindModel(m_pMeshModel, m_pBuffMatModel, m_nNumMatModel, m_pMeshTextures[eggType],
-				m_VtxMaxModel, m_VtxMinModel);
+			// モデルの設定
+			pEgg->SetModelType(MODEL_TYPE_EGG);
+			// テクスチャの設定
+			pEgg->SetTextureType(eggType + TEXTURE_TYPE_EGG_K);
 			// サイズを代入
 			pEgg->m_scale = scale;
 			// サイズを親クラスに代入
@@ -223,10 +213,6 @@ void CEgg::Update(void)
 	CDebugProc::Print("%.1f\n", m_fHeight);
 	CDebugProc::Print("%.1f\n", m_move.y);*/
 
-	//距離の取得
-	float fLength = CModel3D::GetLength();
-
-	if (CModel3D::GetDelete() == true) { Uninit(); }
 }
 
 //=============================================================================
@@ -272,75 +258,67 @@ HRESULT CEgg::Load(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	//マテリアルデータへのポインタ
-	D3DXMATERIAL *pMat;
+	////マテリアルデータへのポインタ
+	//D3DXMATERIAL *pMat;
 
-	// Xファイルの読み込み
-	D3DXLoadMeshFromX(EGG_NAME_000, D3DXMESH_SYSTEMMEM, pDevice, NULL, &m_pBuffMatModel, NULL, &m_nNumMatModel, &m_pMeshModel);
+	////マテリアル情報からテクスチャの取得
+	//pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
 
-	//マテリアル情報からテクスチャの取得
-	pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
+	//int nNumVtx;		//頂点数
+	//DWORD sizeFVF;		//頂点フォーマットのサイズ
+	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
 
-	int nNumVtx;		//頂点数
-	DWORD sizeFVF;		//頂点フォーマットのサイズ
-	BYTE *pVtxBuff;		//頂点バッファへのポインタ
-
-						//モデルの最大値・最小値を取得する
+	//モデルの最大値・最小値を取得する
 	m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
 	m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
 														//頂点数を取得
-	nNumVtx = m_pMeshModel->GetNumVertices();
+														//nNumVtx = m_pMeshModel->GetNumVertices();
 
-	//頂点フォーマットのサイズを取得
-	sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
+														////頂点フォーマットのサイズを取得
+														//sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
 
-	//頂点バッファのロック
-	m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+														////頂点バッファのロック
+														//m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
 
-	for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-	{
-		D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+														//for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+														//{
+														//	D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-														//最大値
-		if (vtx.x > m_VtxMaxModel.x)
-		{
-			m_VtxMaxModel.x = vtx.x;
-		}
-		if (vtx.y > m_VtxMaxModel.y)
-		{
-			m_VtxMaxModel.y = vtx.y;
-		}
-		if (vtx.z > m_VtxMaxModel.z)
-		{
-			m_VtxMaxModel.z = vtx.z;
-		}
-		//最小値
-		if (vtx.x < m_VtxMinModel.x)
-		{
-			m_VtxMinModel.x = vtx.x;
-		}
-		if (vtx.y < m_VtxMinModel.y)
-		{
-			m_VtxMinModel.y = vtx.y;
-		}
-		if (vtx.z < m_VtxMinModel.z)
-		{
-			m_VtxMinModel.z = vtx.z;
-		}
+														//	//最大値
+														//	if (vtx.x > m_VtxMaxModel.x)
+														//	{
+														//		m_VtxMaxModel.x = vtx.x;
+														//	}
+														//	if (vtx.y > m_VtxMaxModel.y)
+														//	{
+														//		m_VtxMaxModel.y = vtx.y;
+														//	}
+														//	if (vtx.z > m_VtxMaxModel.z)
+														//	{
+														//		m_VtxMaxModel.z = vtx.z;
+														//	}
+														//	//最小値
+														//	if (vtx.x < m_VtxMinModel.x)
+														//	{
+														//		m_VtxMinModel.x = vtx.x;
+														//	}
+														//	if (vtx.y < m_VtxMinModel.y)
+														//	{
+														//		m_VtxMinModel.y = vtx.y;
+														//	}
+														//	if (vtx.z < m_VtxMinModel.z)
+														//	{
+														//		m_VtxMinModel.z = vtx.z;
+														//	}
 
-		//サイズ文のポインタを進める
-		pVtxBuff += sizeFVF;
-	}
+														//	//サイズ文のポインタを進める
+														//	pVtxBuff += sizeFVF;
+														//}
 
-	//頂点バッファのアンロック
-	m_pMeshModel->UnlockVertexBuffer();
+														////頂点バッファのアンロック
+														//m_pMeshModel->UnlockVertexBuffer();
 
-
-	//使っているテクスチャ
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_1, &m_pMeshTextures[0]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_2, &m_pMeshTextures[1]);
-	D3DXCreateTextureFromFile(pDevice, TEXTURE_EGG_3, &m_pMeshTextures[2]);
 
 	return S_OK;
 }
@@ -350,29 +328,7 @@ HRESULT CEgg::Load(void)
 //===============================================================================
 void CEgg::UnLoad(void)
 {
-	// メッシュの開放
-	if (m_pMeshModel != NULL)
-	{
-		m_pMeshModel->Release();
-		m_pMeshModel = NULL;
-	}
-	// マテリアルの開放
-	if (m_pBuffMatModel != NULL)
-	{
-		m_pBuffMatModel->Release();
-		m_pBuffMatModel = NULL;
-	}
 
-	//テクスチャ
-	for (int nCntTex = 0; nCntTex < MAX_EGG_TEXTURE; nCntTex++)
-	{
-		//テクスチャ
-		if (m_pMeshTextures[nCntTex] != NULL)
-		{
-			m_pMeshTextures[nCntTex]->Release();
-			m_pMeshTextures[nCntTex] = NULL;
-		}
-	}
 }
 
 //=============================================================================
@@ -407,7 +363,6 @@ void CEgg::Item(void)
 			AdjustAngle(m_rot.x);
 
 			CModel3D::SetRot(m_rot);
-			CModel3D::ScaleVtxCornerPos(m_scale);
 
 			if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_NORMAL)
 			{// 加速状態じゃなくなったら削除

@@ -30,7 +30,6 @@
 #include "egg.h"
 #include "gameCharSelect.h"
 #include "gamePlay.h"
-#include "enemy.h"
 #include "chick.h"
 #include "ColMesh.h"
 
@@ -113,7 +112,6 @@ HRESULT CGame::Init()
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
 	CFeed::Load();				//食べ物のテクスチャの読み込み
 	CEgg::Load();				//卵のテクスチャの読み込み
-	CEnemy::Load();				//敵（仮）のテクスチャの読み込み
 	CChick::Load();				//ひよこのテクスチャの読み込み
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
 
@@ -174,7 +172,6 @@ void CGame::Uninit(void)
 	CShadow::UnLoad();				//影のテクスチャの破棄
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
-	CEnemy::UnLoad();				//敵のテクスチャの破棄
 	CChick::UnLoad();				//ひよこのテクスチャの破棄
 
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
@@ -797,7 +794,7 @@ void CGame::SetStage(void)
 		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
 		{
 			//オブジェクトの生成
-			CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
+			CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, m_Map[nCount].m_nCollision);
 		}
 		for (int nCount = 0; nCount < m_nSetFeedNum; nCount++)
 		{

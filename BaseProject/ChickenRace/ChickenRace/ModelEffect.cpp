@@ -51,7 +51,7 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, TYPE &type, STATE &state)
 	switch (m_Type)
 	{
 	case TYPE_SMOKE:	
-		CObject::SetModel(this, 0, 0);
+		//CObject::SetModel(this, 0, 0);
 		m_pos = *pos;
 		m_move.y = 10.0f;
 		break;
