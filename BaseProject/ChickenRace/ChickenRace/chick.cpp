@@ -179,10 +179,10 @@ void CChick::Update(void)
 	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//前回の位置を保存する
 
-						// ひよこの動き
+	// ひよこの動き
 	Move();
 
-	CModel3D::SetPosition(m_pos);
+	CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_pos.y + 5.0f, m_pos.z));
 	CModel3D::SetRot(m_rot);
 }
 //=============================================================================
@@ -294,9 +294,7 @@ void CChick::Move(void)
 
 	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{
-		m_move.y -= cosf(0) * 0.4f;
-
-		/*m_pos.y = m_fHeight;*/
+		m_move.y -= cosf(0) * 0.1f;
 	}
 
 	m_pos.x += m_move.x;
@@ -322,10 +320,10 @@ void CChick::Move(void)
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 
-		if (m_bJump == false || (m_bJump == true && m_pos.y < m_fHeight))
+		if (m_pos.y < m_fHeight)
 		{
 			m_move.y = 0.0f;
-			m_pos.y = m_fHeight;
+			m_pos.y = m_fHeight/* + 10.0f*/;
 			//ジャンプの状態設定
 			m_bJump = false;
 		}
@@ -338,10 +336,10 @@ void CChick::Move(void)
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 
-		if (m_bJump == false || (m_bJump == true && m_pos.y < m_fHeight))
+		if (m_pos.y < m_fHeight)
 		{
 			m_move.y = 0.0f;
-			m_pos.y = m_fHeight;
+			m_pos.y = m_fHeight/* + 10.0f*/;
 			//ジャンプの状態設定
 			m_bJump = false;
 		}
@@ -497,8 +495,6 @@ void CChick::Jump(float fJump)
 		m_bJump = true;
 		m_move.y += fJump;
 	}
-
-	CModel3D::SetMove(m_move);
 }
 
 //=============================================================================
@@ -575,8 +571,8 @@ void CChick::Attack(void)
 	else
 	{
 		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-		m_move.x = sinf(m_rot.y) * CHICK_SPEED;
-		m_move.z = cosf(m_rot.y) * CHICK_SPEED;
+		m_move.x = sinf(m_rot.y) * -CHICK_SPEED * 0.6f;
+		m_move.z = cosf(m_rot.y) * -CHICK_SPEED * 0.6f;
 	}
 
 	CModel3D::SetRot(m_rot);

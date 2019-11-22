@@ -153,6 +153,7 @@ public:
 	static bool *GetGoul(void) { return m_bGoul; }
 
 	static int GetCameraNumber(void) { return m_nCameraNumber; }
+	static int GetTime(void) { return m_nTime; }	// 時間
 
 private:
 	//テキストの値を管理する場所
@@ -223,6 +224,7 @@ private:
 	static int	m_nCntSetStage;					// ステージセットカウンタ
 	static CLoadTextMotion * m_pPlayerMotion;	//プレイヤーのモーション読み込み
 	static int m_nGameCounter;					//ゲームのカウンター
+	static int m_nTime;							// 経過時間
 
 	int m_nSetObjectNum;						//オブジェクトを置いた数
 	int m_nSetMeshFieldNum;						//メッシュフィールドを置いた数

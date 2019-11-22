@@ -16,6 +16,7 @@
 #include "RoadPointer.h"
 #include "ColMesh.h"
 #include "game.h"
+#include "chick.h"
 
 //=============================================================================
 // マクロ定義
@@ -275,7 +276,8 @@ private:
 	void BulletEgg(void);
 	void CollisionCharacter(void);
 	void ChaseAnnoyS(void);
-
+	void EggJump(void);
+	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
 
 	CModel						*m_apModel[MAX_PARTS];			//パーツモデルのポインタ
 	PlayerAnim					m_nAnimnow;						//現在のアニメーション
@@ -331,6 +333,7 @@ private:
 	int							  m_nDestRank;					// 狙う順位
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
+	bool						  m_bJumpFlag;
 	bool						  m_bAnnoyS;
 	int							  m_nNumItem;
 	int							  m_nAnnoySTimer;

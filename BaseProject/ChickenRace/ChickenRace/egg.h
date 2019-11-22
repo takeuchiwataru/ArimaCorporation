@@ -88,6 +88,7 @@ public:
 
 private:
 	void Item(void);
+	void Move(void);
 	void AdjustAngle(float rot);
 	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値

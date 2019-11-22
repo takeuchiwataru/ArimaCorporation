@@ -65,6 +65,7 @@ CGame::GAMEMODE CGame::m_gameModeNext = CGame::GAMEMODE_NONE;
 CGame::GAMESTATE CGame::m_gameState = CGame::GAMESTATE_NONE;
 int	CGame::m_nCntSetStage = 0;
 int CGame::m_nGameCounter = 0;
+int CGame::m_nTime = 0;
 
 //ウォークスルー用
 bool CGame::m_bDrawUI = false;
@@ -128,6 +129,7 @@ HRESULT CGame::Init()
 	m_nCntSetStage = 0;					//どこのステージから開始するか
 	m_bPause = false;					//ポーズを初期化
 	m_nGameCounter = 0;					//カウンターの初期化
+	m_nTime = 0;
 
 	m_nCameraNumber = 0;				// 現在使用しているカメラ番号
 
@@ -387,15 +389,13 @@ void CGame::Update(void)
 	CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
 	CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
 
-	static int nCnt = 0;
-
 	if (m_gameMode == GAMEMODE_PLAY && m_NowGameState == GAMESTATE_NORMAL)
-		nCnt = m_nGameCounter - START_SET_TIME;
+		m_nTime = m_nGameCounter - START_SET_TIME;
 
-	if (0 < nCnt)
+	if (0 < m_nTime)
 	{
-		CDebugProc::Print("time:%d\n", nCnt);		// ポーズ
-		CDebugProc::Print("time:%3d:%3d:%3d\n", ((nCnt) / 60) / 60, ((nCnt) / 60) % 60, (nCnt) % 60);		// ポーズ
+		//CDebugProc::Print("time:%d\n", m_nTime);		// ポーズ
+		CDebugProc::Print("time:%3d:%3d:%3d\n", ((m_nTime) / 60) / 60, ((m_nTime) / 60) % 60, (m_nTime) % 60);		// ポーズ
 	}
 }
 
