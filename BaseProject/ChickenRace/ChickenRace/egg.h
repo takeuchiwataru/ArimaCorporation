@@ -15,7 +15,7 @@
 // マクロ定義
 //*****************************************************************************
 #define EGG_PRIOTITY	(3)
-#define EGG_SCALE		(0.5f)										//卵の大きさ
+#define EGG_SCALE		(1.0f)										//卵の大きさ
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEED			(0.5f)										// 加速する量
 #define MAX_EGG			(3)											//卵の最大数
@@ -90,8 +90,8 @@ private:
 	void Item(void);
 	void Move(void);
 	void AdjustAngle(float rot);
-	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
-	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
+	static D3DXVECTOR3 m_VtxMaxModel[MAX_EGG];	//モデルの最大値
+	static D3DXVECTOR3 m_VtxMinModel[MAX_EGG];	//モデルの最小値
 
 	BULLETTYPE			m_bulletType;			// 弾の種類
 	EGGTYPE				m_eggType;				// 卵の種類

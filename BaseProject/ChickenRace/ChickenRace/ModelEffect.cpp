@@ -55,8 +55,8 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, D3DXVECTOR3 &move, TYPE &type, STATE &
 	case TYPE_SMOKE:	
 		//CObject::SetModel(this, 0, 0);
 		GetScaleR().x = 0.125f;
-		SetModelType(MODEL_TYPE_EGG);
-		SetTextureType(TEXTURE_TYPE_EGG_K);
+		SetModelType(MODEL_TYPE_EFFECT);
+		SetTextureType(TEXTURE_TYPE_DRIT);
 		CModel3D::Init();
 		m_pos = *pos;
 		m_pos += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fSize;

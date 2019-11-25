@@ -41,9 +41,9 @@ CToonShader		   *CModel3D::m_pToonShader = NULL;							// シェーダーのポインタ
 D3DMATERIAL9	   *CModel3D::m_pMeshMaterials[MODEL_TYPE_MAX] = {};		// メッシュマテリアルの情報
 LPDIRECT3DTEXTURE9 *CModel3D::m_pShaderMeshTextures[MODEL_TYPE_MAX] = {};	// シェーダー用のメッシュテクスチャ
 
-																			//*****************************************************************************
-																			//					 モデルの読み込みファイル名
-																			//*****************************************************************************
+//*****************************************************************************
+//					 モデルの読み込みファイル名
+//*****************************************************************************
 const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 {
 	//=============================
@@ -72,7 +72,12 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	//=============================
 	//　          ヒヨコ
 	//=============================
-	"data\\MODEL\\Weapon\\chick.x"
+	"data\\MODEL\\Weapon\\chick.x",
+
+	//=============================
+	//　          エフェクト
+	//=============================
+	"data\\MODEL\\Effect\\Dirt.x"
 };
 //*****************************************************************************
 //						 テクスチャの読み込みファイル名
@@ -107,9 +112,17 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	//=============================
 	//　          ヒヨコ
 	//=============================
-	"data\\TEXTURE\\modeltex\\egg02.jpg"
-	"data\\TEXTURE\\modeltex\\egg00.jpg"
-	"data\\TEXTURE\\modeltex\\egg01.jpg"
+	"data\\TEXTURE\\modeltex\\egg02.jpg",
+	"data\\TEXTURE\\modeltex\\egg00.jpg",
+	"data\\TEXTURE\\modeltex\\egg01.jpg",
+	"data\\TEXTURE\\modeltex\\egg02.jpg",
+	"data\\TEXTURE\\modeltex\\egg00.jpg",
+	"data\\TEXTURE\\modeltex\\egg01.jpg",
+
+	//=============================
+	//　          エフェクト
+	//=============================
+	"data\\TEXTURE\\modeltex\\ModelEffect.jpg"
 };
 //===============================================================================
 //　オーバーロードコンストラクタ
@@ -343,7 +356,7 @@ void CModel3D::Draw(void)
 		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &m_mtxRot);
 
 		//// 拡大縮小行列の作成
-		//D3DXMatrixScaling(&mtxScale, 1.0f, m_Scale.y, m_Scale.z);
+		//D3DXMatrixScaling(&mtxScale, m_Scale.x, m_Scale.y, m_Scale.z);
 		//D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxScale);
 
 		// 位置を反映

@@ -36,6 +36,7 @@ public:
 		MODEL_TYPE_FEED_S,			//速度餌
 		MODEL_TYPE_EGG,				//卵
 		MODEL_TYPE_CHICK,			//ヒヨコ
+		MODEL_TYPE_EFFECT,			//エフェクト
 		MODEL_TYPE_MAX,				//最大数
 	}MODEL_TYPE;
 
@@ -57,7 +58,10 @@ public:
 		TEXTURE_TYPE_CHICK_K,		//攻撃ヒヨコ
 		TEXTURE_TYPE_CHICK_B,		//妨害ヒヨコ
 		TEXTURE_TYPE_CHICK_S,		//速度ヒヨコ
-
+		TEXTURE_TYPE_CHICK_K_S,		//強い攻撃ヒヨコ
+		TEXTURE_TYPE_CHICK_B_S,		//強い妨害ヒヨコ
+		TEXTURE_TYPE_CHICK_S_S,		//強い速度ヒヨコ
+		TEXTURE_TYPE_DRIT,			//土煙エフェクト
 		TEXTURE_TYPE_MAX,			//最大数
 	}TEXTURE_TYPE;
 

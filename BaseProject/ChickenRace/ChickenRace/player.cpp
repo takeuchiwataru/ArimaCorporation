@@ -485,16 +485,13 @@ void CPlayer::Update(void)
 
 	CollisionChick();		// ひよことの当たり判定
 
-
 	ChaseEgg();				// 卵がついてくる処理
 
 	CollisionCharacter();	// キャラクター同士の当たり判定
-	//CollisionObject();		// オブジェクトとの当たり判定
 
-	ChickAppear();
+	ChickAppear();			// 
 
-	// 強い減速ひよこがくっつく
-	ChaseAnnoyS();
+	ChaseAnnoyS();			// 強い減速ひよこがくっつく
 
 	//マップとの当たり判定
 	bool bGoal = false;

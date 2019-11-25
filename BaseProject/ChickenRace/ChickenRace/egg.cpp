@@ -41,8 +41,8 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-D3DXVECTOR3 CEgg::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-D3DXVECTOR3 CEgg::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+D3DXVECTOR3 CEgg::m_VtxMaxModel[MAX_EGG] = {};
+D3DXVECTOR3 CEgg::m_VtxMinModel[MAX_EGG] = {};
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -242,67 +242,76 @@ HRESULT CEgg::Load(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	////マテリアルデータへのポインタ
-	//D3DXMATERIAL *pMat;
+	int			nNumVtx = 0;						//頂点数
+	DWORD		sizeFVF;							//頂点フォーマットのサイズ
+	BYTE		*pVtxBuff;							//頂点バッファへのポインタ
 
-	////マテリアル情報からテクスチャの取得
-	//pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
+													//モデルの最大値・最小値を取得する
+	for (int nCntModel = 0; nCntModel < MAX_EGG; nCntModel++)
+	{
+		m_VtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
+		m_VtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-	//int nNumVtx;		//頂点数
-	//DWORD sizeFVF;		//頂点フォーマットのサイズ
-	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
+		CModel3D::MODEL_TYPE type;
+		switch (nCntModel)
+		{
+		case EGGTYPE_ATTACK:type = MODEL_TYPE_EGG;	break;
+		case EGGTYPE_ANNOY:	type = MODEL_TYPE_EGG;	break;
+		case EGGTYPE_SPEED:	type = MODEL_TYPE_EGG;	break;
+		}
 
-	//モデルの最大値・最小値を取得する
-	m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
-	m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
+		LPD3DXMESH &Mesh = MeshLoad(type);
 
-														//頂点数を取得
-														//nNumVtx = m_pMeshModel->GetNumVertices();
+		if (Mesh != NULL)
+		{
+			//頂点数を取得
+			nNumVtx = Mesh->GetNumVertices();
 
-														////頂点フォーマットのサイズを取得
-														//sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
+			//頂点フォーマットのサイズを取得
+			sizeFVF = D3DXGetFVFVertexSize(Mesh->GetFVF());
 
-														////頂点バッファのロック
-														//m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+			//頂点バッファのロック
+			Mesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
 
-														//for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-														//{
-														//	D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+			for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+			{
+				D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-														//	//最大値
-														//	if (vtx.x > m_VtxMaxModel.x)
-														//	{
-														//		m_VtxMaxModel.x = vtx.x;
-														//	}
-														//	if (vtx.y > m_VtxMaxModel.y)
-														//	{
-														//		m_VtxMaxModel.y = vtx.y;
-														//	}
-														//	if (vtx.z > m_VtxMaxModel.z)
-														//	{
-														//		m_VtxMaxModel.z = vtx.z;
-														//	}
-														//	//最小値
-														//	if (vtx.x < m_VtxMinModel.x)
-														//	{
-														//		m_VtxMinModel.x = vtx.x;
-														//	}
-														//	if (vtx.y < m_VtxMinModel.y)
-														//	{
-														//		m_VtxMinModel.y = vtx.y;
-														//	}
-														//	if (vtx.z < m_VtxMinModel.z)
-														//	{
-														//		m_VtxMinModel.z = vtx.z;
-														//	}
+																//最大値
+				if (vtx.x > m_VtxMaxModel[nCntModel].x)
+				{
+					m_VtxMaxModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y > m_VtxMaxModel[nCntModel].y)
+				{
+					m_VtxMaxModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z > m_VtxMaxModel[nCntModel].z)
+				{
+					m_VtxMaxModel[nCntModel].z = vtx.z;
+				}
+				//最小値
+				if (vtx.x < m_VtxMinModel[nCntModel].x)
+				{
+					m_VtxMinModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y < m_VtxMinModel[nCntModel].y)
+				{
+					m_VtxMinModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z < m_VtxMinModel[nCntModel].z)
+				{
+					m_VtxMinModel[nCntModel].z = vtx.z;
+				}
 
-														//	//サイズ文のポインタを進める
-														//	pVtxBuff += sizeFVF;
-														//}
+				//サイズ文のポインタを進める
+				pVtxBuff += sizeFVF;
+			}
 
-														////頂点バッファのアンロック
-														//m_pMeshModel->UnlockVertexBuffer();
-
+			//頂点バッファのアンロック
+			Mesh->UnlockVertexBuffer();
+		}
+	}
 
 	return S_OK;
 }
@@ -414,12 +423,12 @@ bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	{
 		// 各種情報の取得
 		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
-		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+		D3DXVECTOR3 VtxMax = m_VtxMaxModel[m_eggType];		// モデルの最大値
+		D3DXVECTOR3 VtxMin = m_VtxMinModel[m_eggType];		// モデルの最小値
 		D3DXVECTOR3 rot = CModel3D::GetRot();
 
-		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
+		D3DXVECTOR3 ModelMax = ModelPos + VtxMax;			// 位置込みの最大値
+		D3DXVECTOR3 ModelMin = ModelPos + VtxMin;			// 位置込みの最小値
 
 		float fDepth = PLAYER_DEPTH;
 

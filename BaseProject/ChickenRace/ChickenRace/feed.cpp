@@ -170,7 +170,7 @@ HRESULT CFeed::Load(void)
 	DWORD		sizeFVF;							//頂点フォーマットのサイズ
 	BYTE		*pVtxBuff;							//頂点バッファへのポインタ
 
-													//モデルの最大値・最小値を取得する
+	//モデルの最大値・最小値を取得する
 	for (int nCntModel = 0; nCntModel < FEEDTYPE_MAX; nCntModel++)
 	{
 		m_VtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
