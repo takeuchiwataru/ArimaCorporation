@@ -22,7 +22,7 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define EGG_SPEED				(20.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -142,6 +142,7 @@ HRESULT CEgg::Init(void)
 	m_nHatchingTimer = 0;
 	m_nMap = 0;
 	m_bThrow = false;
+	m_bExplosion = false;
 	return S_OK;
 }
 
@@ -177,8 +178,8 @@ void CEgg::Update(void)
 
 
 	/*CDebugProc::Print("%.1f\n", m_move.y);
-	CDebugProc::Print("m_fHeight : %.1f\n", m_fHeight);
-	CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);*/
+	CDebugProc::Print("m_fHeight : %.1f\n", m_fHeight);*/
+	//CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
 
 	/*if (m_bJump == true)
 	{
@@ -223,8 +224,12 @@ void CEgg::Draw(void)
 		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
 	}
 
-	//描画処理
-	CModel3D::Draw();
+	if (m_bExplosion == false)
+	{
+		//描画処理
+		CModel3D::Draw();
+	}
+
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -387,6 +392,12 @@ void CEgg::Move(void)
 
 			m_move.y = 0.0f;
 			m_pos.y = m_fHeight;
+
+			if (m_eggType == EGGTYPE_ATTACK && m_eggState == EGGSTATE_BULLET)
+			{// 卵を消す
+				m_bExplosion = true;
+				Uninit();
+			}
 		}
 	}
 }

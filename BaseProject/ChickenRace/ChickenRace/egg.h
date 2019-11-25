@@ -107,6 +107,7 @@ private:
 	D3DXVECTOR3			m_FNor;					//地面の法線
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bThrow;				// 投げたかどうか
+	bool				m_bExplosion;			// 範囲攻撃になるかならないか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
 	float				m_fLength;				// 横幅

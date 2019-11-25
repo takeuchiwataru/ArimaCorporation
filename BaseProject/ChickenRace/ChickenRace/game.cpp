@@ -165,7 +165,8 @@ void CGame::Uninit(void)
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
-
+	CModel3D::ModelShaderDeleter();
+	CModel3D::UnLoad();
 	CMeshField::UnLoad();			//メッシュフィールドテクスチャの破棄
 	CFade::UnLoad();				//フェードのテクスチャの破棄
 	CBillBoord::UnLoad();			//ビルボードテクスチャの破棄

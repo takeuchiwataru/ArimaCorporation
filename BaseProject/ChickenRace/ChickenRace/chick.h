@@ -86,8 +86,6 @@ public:
 	bool GetAttackS(void) { return m_bAttackS; }
 	void SetAttackS(bool bAttackS) { m_bAttackS = bAttackS; }
 	void SetDestRank(int nDestRank) { m_DestRank = nDestRank; }
-	void SetExplosion(bool bExplosion) { m_bExplosion = bExplosion; }
-	bool GetExplosion(void) { return m_bExplosion; }
 	D3DXVECTOR3 GetPos(void) { return m_pos; }
 	float GetHeight(void) { return m_fHeight; }
 
@@ -98,8 +96,8 @@ private:
 	void AttackS(void);
 	void Item(void);
 	void AdjustAngle(float rot);
-	static D3DXVECTOR3 m_VtxMaxModel;			//モデルの最大値
-	static D3DXVECTOR3 m_VtxMinModel;			//モデルの最小値
+	static D3DXVECTOR3 m_VtxMaxModel[MAX_CHICK];   //モデルの最大値
+	static D3DXVECTOR3 m_VtxMinModel[MAX_CHICK];   //モデルの最小値
 	BULLETTYPE			m_bulletType;			// 弾の種類
 	TYPE				m_type;				// ひよこの種類
 	STATE				m_state;				// ひよこの状態
@@ -123,6 +121,5 @@ private:
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bDis;					// 消すかどうか
 	bool				m_bAttackS;
-	bool				m_bExplosion;			// 範囲攻撃になるかならないか
 };
 #endif

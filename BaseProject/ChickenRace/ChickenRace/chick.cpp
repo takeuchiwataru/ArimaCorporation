@@ -25,7 +25,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define DISTIME					(100)		// 消えるまでの時間
-#define CHICK_SPEED				(30.0f)		// ひよこが飛んでくスピード
+#define CHICK_SPEED				(20.0f)		// ひよこが飛んでくスピード
 #define ANNOY_RANGE				(200.0f)	// 減速させる範囲
 #define ATTACK_RANGE			(200.0f)	// 範囲攻撃の範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
@@ -49,8 +49,8 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-D3DXVECTOR3 CChick::m_VtxMaxModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-D3DXVECTOR3 CChick::m_VtxMinModel = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+D3DXVECTOR3 CChick::m_VtxMaxModel[MAX_CHICK] = {};
+D3DXVECTOR3 CChick::m_VtxMinModel[MAX_CHICK] = {};
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -154,7 +154,6 @@ HRESULT CChick::Init(void)
 	m_DestRank = -1;
 	m_nMap = 0;
 	m_bAttackS = false;
-	m_bExplosion = false;
 
 	return S_OK;
 }
@@ -195,11 +194,8 @@ void CChick::Draw(void)
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
-	if (m_bExplosion == false)
-	{
-		//描画処理
-		//CModel3D::Draw();
-	}
+	//描画処理
+	CModel3D::Draw();
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -212,66 +208,80 @@ HRESULT CChick::Load(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	//マテリアルデータへのポインタ
-	//D3DXMATERIAL *pMat;
+	int			nNumVtx = 0;						//頂点数
+	DWORD		sizeFVF;							//頂点フォーマットのサイズ
+	BYTE		*pVtxBuff;							//頂点バッファへのポインタ
 
-	////マテリアル情報からテクスチャの取得
-	//pMat = (D3DXMATERIAL*)m_pBuffMatModel->GetBufferPointer();
+													//モデルの最大値・最小値を取得する
+	for (int nCntModel = 0; nCntModel < MAX_CHICK; nCntModel++)
+	{
+		m_VtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
+		m_VtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
 
-	//int nNumVtx;		//頂点数
-	//DWORD sizeFVF;		//頂点フォーマットのサイズ
-	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
+		CModel3D::MODEL_TYPE type;
 
-	////モデルの最大値・最小値を取得する
-	//m_VtxMaxModel = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
-	//m_VtxMinModel = D3DXVECTOR3(10000, 10000, 10000);	//最小値
+		switch (nCntModel)
+		{
+		case TYPE_ATTACK:	type = MODEL_TYPE_CHICK;	break;
+		case TYPE_ANNOY:	type = MODEL_TYPE_CHICK;	break;
+		case TYPE_SPEED:	type = MODEL_TYPE_CHICK;	break;
+		case TYPE_ATTACK_S:	type = MODEL_TYPE_CHICK;	break;
+		case TYPE_ANNOY_S:	type = MODEL_TYPE_CHICK;	break;
+		case TYPE_SPEED_S:	type = MODEL_TYPE_CHICK;	break;
+		}
 
-	////頂点数を取得
-	//nNumVtx = m_pMeshModel->GetNumVertices();
+		LPD3DXMESH &Mesh = MeshLoad(type);
 
-	////頂点フォーマットのサイズを取得
-	//sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel->GetFVF());
+		if (Mesh != NULL)
+		{
+			//頂点数を取得
+			nNumVtx = Mesh->GetNumVertices();
 
-	////頂点バッファのロック
-	//m_pMeshModel->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+			//頂点フォーマットのサイズを取得
+			sizeFVF = D3DXGetFVFVertexSize(Mesh->GetFVF());
 
-	//for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-	//{
-	//	D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+			//頂点バッファのロック
+			Mesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
 
-	//	//最大値
-	//	if (vtx.x > m_VtxMaxModel.x)
-	//	{
-	//		m_VtxMaxModel.x = vtx.x;
-	//	}
-	//	if (vtx.y > m_VtxMaxModel.y)
-	//	{
-	//		m_VtxMaxModel.y = vtx.y;
-	//	}
-	//	if (vtx.z > m_VtxMaxModel.z)
-	//	{
-	//		m_VtxMaxModel.z = vtx.z;
-	//	}
-	//	//最小値
-	//	if (vtx.x < m_VtxMinModel.x)
-	//	{
-	//		m_VtxMinModel.x = vtx.x;
-	//	}
-	//	if (vtx.y < m_VtxMinModel.y)
-	//	{
-	//		m_VtxMinModel.y = vtx.y;
-	//	}
-	//	if (vtx.z < m_VtxMinModel.z)
-	//	{
-	//		m_VtxMinModel.z = vtx.z;
-	//	}
+			for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+			{
+				D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
 
-	//	//サイズ文のポインタを進める
-	//	pVtxBuff += sizeFVF;
-	//}
+																//最大値
+				if (vtx.x > m_VtxMaxModel[nCntModel].x)
+				{
+					m_VtxMaxModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y > m_VtxMaxModel[nCntModel].y)
+				{
+					m_VtxMaxModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z > m_VtxMaxModel[nCntModel].z)
+				{
+					m_VtxMaxModel[nCntModel].z = vtx.z;
+				}
+				//最小値
+				if (vtx.x < m_VtxMinModel[nCntModel].x)
+				{
+					m_VtxMinModel[nCntModel].x = vtx.x;
+				}
+				if (vtx.y < m_VtxMinModel[nCntModel].y)
+				{
+					m_VtxMinModel[nCntModel].y = vtx.y;
+				}
+				if (vtx.z < m_VtxMinModel[nCntModel].z)
+				{
+					m_VtxMinModel[nCntModel].z = vtx.z;
+				}
 
-	////頂点バッファのアンロック
-	//m_pMeshModel->UnlockVertexBuffer();
+				//サイズ文のポインタを進める
+				pVtxBuff += sizeFVF;
+			}
+
+			//頂点バッファのアンロック
+			Mesh->UnlockVertexBuffer();
+		}
+	}
 
 	return S_OK;
 }
@@ -389,22 +399,18 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 	{
 		// 各種情報の取得
 		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
-		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+		D3DXVECTOR3 VtxMax = m_VtxMaxModel[m_type];   // モデルの最大値
+		D3DXVECTOR3 VtxMin = m_VtxMinModel[m_type];   // モデルの最小値
 		D3DXVECTOR3 rot = CModel3D::GetRot();
 
-		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
+		D3DXVECTOR3 ModelMax = ModelPos + VtxMax; // 位置込みの最大値
+		D3DXVECTOR3 ModelMin = ModelPos + VtxMin; // 位置込みの最小値
 
 		float fDepth = PLAYER_DEPTH - 10.0f;
 
 		if (m_type == TYPE_ANNOY)
 		{
 			fDepth = ANNOY_RANGE;
-		}
-		if (m_bExplosion == true)
-		{
-			fDepth = ATTACK_RANGE;
 		}
 
 		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
@@ -429,7 +435,6 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 
 		if (bHit == true && m_type == TYPE_ATTACK)
 		{
-			m_bExplosion = true;
 			m_bDis = false;
 		}
 

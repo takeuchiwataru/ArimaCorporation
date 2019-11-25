@@ -2062,7 +2062,7 @@ void CPlayer::CollisionChick(void)
 								m_State = PLAYERSTATE_DAMAGE;
 								/*}*/
 							}
-							//pChick->Uninit();	// ひよこ削除
+							pChick->Uninit();	// ひよこ削除
 							break;
 
 							// 強い攻撃
@@ -2261,7 +2261,7 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			{// タイプが障害物だったら
 				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pChick->GetState() == CChick::STATE_BULLET || pChick->GetType() == CChick::TYPE_ATTACK_S || pChick->GetAttackS() == false || pChick->GetDis() == true)
+				if (pChick->GetState() == CChick::STATE_BULLET && pChick->GetType() == CChick::TYPE_ATTACK_S && pChick->GetAttackS() == false && pChick->GetDis() == true)
 				{
 					pChick->SetAttackS(true);
 					pChick->SetDis(false);
