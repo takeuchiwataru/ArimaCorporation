@@ -1,18 +1,4 @@
-newmtl initialShadingGroup
-illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-map_Kd 001_スナップ.jpg
-Ni 1.00
-newmtl lambert2SG
-illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-map_Kd Mountain_Tex_Collar_Sample.jpg
-Ni 1.00
-newmtl set3
+newmtl Mountain_CompletePack:lambert2SG
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
