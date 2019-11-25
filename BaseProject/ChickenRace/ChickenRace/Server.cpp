@@ -233,7 +233,7 @@ int	CServer::Rand(void)
 {
 	if (m_pmyServer != NULL)
 	{
-		m_nRand++;
+		m_nRand += 1234;
 		return m_nRand;
 	}
 	else

@@ -342,16 +342,16 @@ void CModel3D::Draw(void)
 		// 掛け合わせる
 		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &m_mtxRot);
 
-		// 拡大縮小行列の作成
-		D3DXMatrixScaling(&mtxScale, m_Scale.x, m_Scale.y, m_Scale.z);
-		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxScale);
+		//// 拡大縮小行列の作成
+		//D3DXMatrixScaling(&mtxScale, 1.0f, m_Scale.y, m_Scale.z);
+		//D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxScale);
 
 		// 位置を反映
 		D3DXMatrixTranslation(&mtxTrans, m_Pos.x, m_Pos.y, m_Pos.z);
 		D3DXMatrixMultiply(&m_mtxWorldObject, &m_mtxWorldObject, &mtxTrans);
 
 		//拡大処理
-		m_mtxWorldObject._44 = (1.0f / 1.0f);
+		m_mtxWorldObject._44 = (1.0f / m_Scale.x);
 		m_mtxWorldObject._41 *= m_mtxWorldObject._44;
 		m_mtxWorldObject._42 *= m_mtxWorldObject._44;
 		m_mtxWorldObject._43 *= m_mtxWorldObject._44;
@@ -410,14 +410,14 @@ void CModel3D::Draw(void)
 
 				if (m_bcolChange == true)
 				{// カラー変更(透明度)
-					fcol_a = pMat[nCntMat].MatD3D.Diffuse.a;
-					pMat[nCntMat].MatD3D.Diffuse.a = m_col.a;
-					fcol_r = pMat[nCntMat].MatD3D.Diffuse.r;
-					pMat[nCntMat].MatD3D.Diffuse.r = m_col.r;
-					fcol_g = pMat[nCntMat].MatD3D.Diffuse.g;
-					pMat[nCntMat].MatD3D.Diffuse.g = m_col.g;
-					fcol_b = pMat[nCntMat].MatD3D.Diffuse.b;
-					pMat[nCntMat].MatD3D.Diffuse.b = m_col.b;
+					fcol_a = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a = m_col.a;
+					fcol_r = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r = m_col.r;
+					fcol_g = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g = m_col.g;
+					fcol_b = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b = m_col.b;
 				}
 
 				//マテリアルの設定
@@ -427,13 +427,13 @@ void CModel3D::Draw(void)
 				pDevice->SetTexture(0, m_pShaderMeshTextures[m_modeltype][nCntMat]);
 
 				// カラー変更
-				if (m_bcolChange == true)
-				{
-					pMat[nCntMat].MatD3D.Diffuse.a = fcol_a;
-					pMat[nCntMat].MatD3D.Diffuse.r = fcol_r;
-					pMat[nCntMat].MatD3D.Diffuse.g = fcol_g;
-					pMat[nCntMat].MatD3D.Diffuse.b = fcol_b;
-				}
+				//if (m_bcolChange == true)
+				//{
+				//	pMat[nCntMat].MatD3D.Diffuse.a = fcol_a;
+				//	pMat[nCntMat].MatD3D.Diffuse.r = fcol_r;
+				//	pMat[nCntMat].MatD3D.Diffuse.g = fcol_g;
+				//	pMat[nCntMat].MatD3D.Diffuse.b = fcol_b;
+				//}
 
 				//===================================================
 				//    　　　　シェーダーの割り当て作業
@@ -474,10 +474,19 @@ void CModel3D::Draw(void)
 
 				//パスの終了
 				Shader->EndPass();
+
+				if (m_bcolChange == true)
+				{// カラー変更(透明度)
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r = fcol_r;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g = fcol_g;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b = fcol_b;
+					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a = fcol_a;
+				}
 			}
 
 			// マテリアルをデフォルトに戻す
 			pDevice->SetMaterial(&matDef);
+			m_mtxWorldObject._44 = 1.0f;
 
 			m_bcolChange = false;	// 変更終了
 

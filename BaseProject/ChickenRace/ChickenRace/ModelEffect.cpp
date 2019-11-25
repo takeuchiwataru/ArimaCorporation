@@ -24,7 +24,7 @@
 //==================================================================================================//
 //    * モデル演出の生成関数 *
 //==================================================================================================//
-CModelEffect	*CModelEffect::Create(D3DXVECTOR3 *pos, TYPE type, STATE state)
+CModelEffect	*CModelEffect::Create(D3DXVECTOR3 *pos, D3DXVECTOR3 &move, TYPE type, STATE state)
 {
 	CModelEffect *pEffect = NULL;
 	pEffect = new CModelEffect;
@@ -32,7 +32,7 @@ CModelEffect	*CModelEffect::Create(D3DXVECTOR3 *pos, TYPE type, STATE state)
 	if (pEffect != NULL) 
 	{
 		pEffect->Init();
-		pEffect->Set(pos, type, state);
+		pEffect->Set(pos, move, type, state);
 	}
 
 	return pEffect;
@@ -40,9 +40,11 @@ CModelEffect	*CModelEffect::Create(D3DXVECTOR3 *pos, TYPE type, STATE state)
 //==================================================================================================//
 //    * モデル演出の生成関数 *
 //==================================================================================================//
-void	CModelEffect::Set(D3DXVECTOR3 *&pos, TYPE &type, STATE &state)
+void	CModelEffect::Set(D3DXVECTOR3 *&pos, D3DXVECTOR3 &move, TYPE &type, STATE &state)
 {
 	D3DXVECTOR3 &m_pos = GetposR();
+	float fRot = (CServer::Rand() % 628) * 0.01f;
+	float fSize = 10.0f * (1.0f + (CServer::Rand() % 100) * 0.005f);
 
 	Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	m_Type = type;
@@ -52,8 +54,14 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, TYPE &type, STATE &state)
 	{
 	case TYPE_SMOKE:	
 		//CObject::SetModel(this, 0, 0);
+		GetScaleR().x = 0.125f;
+		SetModelType(MODEL_TYPE_EGG);
+		SetTextureType(TEXTURE_TYPE_EGG_K);
+		CModel3D::Init();
 		m_pos = *pos;
-		m_move.y = 10.0f;
+		m_pos += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fSize;
+		m_move = move;
+		m_move.y = 1.0f;
 		break;
 	}
 }
@@ -66,6 +74,7 @@ HRESULT CModelEffect::Init(void)
 	m_move = INIT_VECTOR;
 	m_fCntState = 0.0f;
 	m_Type = TYPE_MAX;
+	m_DrawType = C2D::DRAW_TYPE_NORMAL;
 	return S_OK;
 }
 //==================================================================================================//
@@ -79,8 +88,12 @@ void	CModelEffect::Update(void)
 	switch (m_Type)
 	{
 	case TYPE_SMOKE:
-		if (m_fCntState > 30.0f) { Uninit(); return; }
-		m_move *= 0.99f;
+		if (m_fCntState > SMOKE_TIME) { Uninit(); return; }
+		Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (m_fCntState / SMOKE_TIME)));
+		m_move.x *= 0.99f;
+		m_move.z *= 0.99f;
+		m_move.y *= 0.95f;
+		GetScaleR().x += (1.0f - (m_fCntState / SMOKE_TIME)) * 0.02f;
 		break;
 	}
 	m_fCntState += 1.0f;
@@ -90,13 +103,11 @@ void	CModelEffect::Update(void)
 //==================================================================================================//
 void	CModelEffect::Draw(void)
 {
-	//switch (m_Type)
-	//{//合成方法を代入
-	//default:
-	//	break;
-	//}
+	LPDIRECT3DDEVICE9	pD3DDevice = CManager::GetRenderer()->GetDevice();
 
-	//CModel3D::Draw();
+	C2D::DrawPrepare(m_DrawType, pD3DDevice);
+	CModel3D::Draw();
 
 	//合成を戻す
+	C2D::DrawPrepare(C2D::DRAW_TYPE_NORMAL, pD3DDevice);
 }

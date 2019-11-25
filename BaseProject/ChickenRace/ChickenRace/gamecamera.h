@@ -38,6 +38,7 @@ public:
 
 	void SetType(CAMERA camera) { m_cameraType = camera; }
 	void SetPlayer(CPlayer *pPlayer) { m_pPlayer = pPlayer; }
+	void UseBoost(void) { m_fPlusDis = 1.5f; }
 
 private:
 	void UpdateCourse(void);
@@ -49,5 +50,6 @@ private:
 	float		m_fDistance;
 	float		m_fBackTime;
 	float		m_fCntTime;
+	float		m_fPlusDis;
 };
 #endif

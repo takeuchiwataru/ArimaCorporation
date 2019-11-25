@@ -14,7 +14,12 @@ class CPlayer;
 //*****************************************************************************
 // マクロの定義
 //*****************************************************************************
-#define DISP_ANIM_MAX	(12)
+#define DISP_ANIM_MAX	(32)		//同時に存在できるアニメーション数
+#define DISP_SSET		(5)			//水溜まりにはいった時の汚す数
+#define DISP_SSIZE		(60.0f)		//水溜まりの一つの基本サイズ
+#define DISP_STIME		(20.0f)		//水溜まりの一つの出現時間
+#define DISP_BTIME		(60.0f)		//加速演出の終了時間
+
 //*****************************************************************************
 // クラスの定義
 //*****************************************************************************
@@ -53,8 +58,9 @@ private://**********************************************************************
 	void	SetDispSwmp(void);
 	void	SetDispBoost(void);
 
-	void	SetAnim(void);
-	void	SetSwmp(C2DAnim *&pAnim);
+	void	ChangeEffect(void);
+	C2DAnim	*&SetAnim(bool bSet = true);
+	void	SetSwmp(C2DAnim *&pAnim, float fRot = -99.9f);
 		//変数宣言//***********************************************************************
 	static LPDIRECT3DTEXTURE9	m_pTexAll[TEX_MAX];			// テクスチャ番号
 

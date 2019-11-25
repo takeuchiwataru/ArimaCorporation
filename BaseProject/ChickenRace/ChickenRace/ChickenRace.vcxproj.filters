@@ -360,6 +360,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="ToonShader.fx" />
+    <FxCompile Include="data\SHADER\ToonShader.fx" />
   </ItemGroup>
 </Project>

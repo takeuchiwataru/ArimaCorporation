@@ -48,6 +48,7 @@ HRESULT CGameCamera::Init(void)
 	m_fDistance = MOVE_CAMERA;
 	m_fBackTime = 0.0f;
 	m_fCntTime = 0.0f;
+	m_fPlusDis = 0.0f;
 	return S_OK;
 }
 
@@ -147,6 +148,7 @@ void CGameCamera::UpdatePlayer(void)
 {
 	//ƒvƒŒƒCƒ„[‚Ìî•ñ‚ğæ“¾‚·‚é
 	CManager::MODE mode = CManager::GetMode();
+	m_fPlusDis *= 0.95f;
 
 	if (m_pPlayer != NULL)
 	{
@@ -195,12 +197,9 @@ void CGameCamera::UpdatePlayer(void)
 		if (fMove < MOVE_CAMERA * 0.25f) { fMove = MOVE_CAMERA * 0.25f; }
 		VecUPos = D3DXVECTOR3(sinf(fRotY), 0.0f, cosf(fRotY)) * (m_vecU.z * VECU_CAMERA);
 
+		fMove *= (1.0f + m_fPlusDis);
 		m_rot.x += (fRotX - m_rot.x) * 0.05f;
 		m_fDistance += (fMove - m_fDistance) * 0.05f;
-		//if ()
-		//{//‰Á‘¬’†‚È‚ç
-
-		//}
 
 		PlayerPos += VecUPos;
 		m_posV = D3DXVECTOR3(

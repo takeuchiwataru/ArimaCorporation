@@ -133,8 +133,8 @@ void C2D::Update(void)
 //=============================================================================
 void C2D::Draw(void)
 {
-	LPDIRECT3DDEVICE9		pD3DDevice = CManager::GetRenderer()->GetDevice();
-
+	LPDIRECT3DDEVICE9	pD3DDevice = CManager::GetRenderer()->GetDevice();
+	int					nNumDraw = 1;
 	DrawPrepare(m_DrawType, pD3DDevice);
 	//頂点BUFFERをデバイスのデータストリームに設定
 	pD3DDevice->SetStreamSource(0, m_pVtxBuff, 0, sizeof(VERTEX_2D));
@@ -145,8 +145,13 @@ void C2D::Draw(void)
 	//テクスチャの設定
 	pD3DDevice->SetTexture(0, m_pTex);
 
+	if (m_DrawType == DRAW_TYPE_ADD) { nNumDraw = 1; }
 	//ポリゴンの描画
-	pD3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+	for (int nCount = 0; nCount < nNumDraw; nCount++)
+	{//指定回数分
+		pD3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+	}
+
 	pD3DDevice->SetTexture(0, NULL);
 	DrawPrepare(DRAW_TYPE_NORMAL, pD3DDevice);
 }
@@ -452,6 +457,7 @@ void	C2DAnim::SetState(STATE state, float fCntState)
 	}
 	m_fCntState = fCntState;
 	if (m_state == STATE_FADEIN) { m_fCntSize = 0.3f; }
+	if (m_state == STATE_FADEIN_D) { m_fCntSize = -0.3f; }
 }
 //=============================================================================
 // アニメーションポリゴンの更新処理
@@ -476,6 +482,20 @@ void	C2DAnim::Update(void)
 		if (m_col.a < 0.0f) { m_col.a = 0.0f; }
 		SetColor(m_col);
 		m_fCntSize += (0.1f - m_fCntSize) * 0.02f;
+		SetPosition2(1.0f + m_fCntSize);
+		break;
+	case 	STATE_FADEIN_D:
+		m_col.a += m_fCntState * m_fStateSpd;
+		if (m_col.a > 1.0f) { m_col.a = 1.0f; m_state = STATE_FADEOUT_D; }
+		SetColor(m_col);
+		m_fCntSize += (1.0f - m_fCntSize) * 0.25f;
+		SetPosition2(1.0f + m_fCntSize);
+		break;
+	case	STATE_FADEOUT_D:
+		m_col.a -= m_fCntState * m_fStateSpd * 0.5f;
+		if (m_col.a < 0.0f) { m_animation = ANIMATION_END; return; }
+		SetColor(m_col);
+		m_fCntSize += (0.0f - m_fCntSize) * 0.005f;
 		SetPosition2(1.0f + m_fCntSize);
 		break;
 	}

@@ -914,7 +914,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		fDistance = sqrtf(powf((Wpos2.x - Wpos0.x), 2) + powf((Wpos2.z - Wpos0.z), 2));
 		fPercent = fDistance / sqrtf(powf((Wpos1.x - Wpos0.x), 2) + powf((Wpos1.z - Wpos0.z), 2));
 		fPercent = (Wpos1.y - Wpos0.y) * fPercent;
-		if (pos.y < Wpos0.y + fPercent - 30.0f || pos.y > fPercent + WUpos0.y)
+		if (pos.y < Wpos0.y + fPercent - 30.0f || pos.y > fPercent + WUpos0.y + 10.0f)
 		{//YŽ²‚ª”ÍˆÍŠO‚È‚ç
 			nEnd = 1;
 			return nEnd;

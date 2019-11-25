@@ -256,6 +256,7 @@ private:
 	void UpdateFEffect(void);
 	void EffectUp(void);
 	void WarpNext(void);
+	void UseBoost(void);
 
 	void UpdateField(void);
 	void SetStateSpeed(STATE_SPEED state);

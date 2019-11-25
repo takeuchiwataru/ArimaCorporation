@@ -459,7 +459,12 @@ bool	CRoad_Pointer::Reverse(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nN
 	//越えたか
 	bool  bBeyond = false;
 
-	if (CCOL_MESH::CrossCheck(pPoint->m_Point[1], pPoint->m_Point[0], pos, posold))
+	float fAngle[2];
+	fAngle[0] = atan2f(pPoint->m_Point[0].x - pPoint->m_Point[1].x, pPoint->m_Point[0].z - pPoint->m_Point[1].z);
+	fAngle[1] = atan2f(pos.x - pPoint->m_Point[1].x, pos.z - pPoint->m_Point[1].z);
+
+	//if (CCOL_MESH::CrossCheck(pPoint->m_Point[1], pPoint->m_Point[0], pos, posold))
+	if (CCOL_MESH::AngleCheck(fAngle[0], fAngle[1]) <= 0)
 	{//戻った 交差チェック。しっかりやらないとコースによっては誤動作が生じるため
 		pPoint = pPoint->GetPrev(0, nMap);
 		if (pmyPoint->m_nNumber == 0) { pPlayer->GetnMap()--; }

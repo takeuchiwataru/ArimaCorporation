@@ -274,7 +274,7 @@ HRESULT CPlayer::Init(void)
 
 	m_pDispEffect = NULL;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
-	m_fLength = 5.0f;
+	m_fLength = 20.0f;
 	m_bDivided = false;
 	m_nMap = 0;
 	m_nNumRoad = 0;
@@ -733,21 +733,23 @@ void CPlayer::UpdateFEffect(void)
 	CDispEffect::EFFECT Effect = CDispEffect::EFFECT_MAX;
 
 	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP) 
-	{
+	{//水溜まり
 		Effect = CDispEffect::EFFECT_SWAMP;
 		m_fPosY += (-10.0f - m_fPosY) * 0.1f;
 	}
 	else { m_fPosY *= 0.9f; }
 
 	if (m_FEffect == CCOL_MESH::EFFECT_GRASS)
-	{
-
+	{//ダート
+		//Effect = CDispEffect::EFFECT_SWAMP;
 	}
 
 	if (m_FEffect == CCOL_MESH::EFFECT_DROP)
-	{
+	{//落下
 		WarpNext();
 	}
+
+	if (m_bJump) { Effect = CDispEffect::EFFECT_MAX; }
 	if (m_pDispEffect != NULL) { m_pDispEffect->SetEffect(Effect); }
 }
 //=============================================================================
@@ -758,12 +760,21 @@ void CPlayer::WarpNext(void)
 	CRoad_Pointer *pNext = m_pPoint->GetNext(0, m_nMap, 0);
 	if (pNext == NULL) { return; }
 
-	m_pos = pNext->Getpos();
-	m_OldPos = m_pos;
 	m_rot.y = pNext->GetfRotY();
+	m_pos = pNext->Getpos() + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * 5.0f;
+	m_OldPos = m_pos;
 	m_move *= 0.0f;
 	m_PlayerInfo.nCountTime = 0;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
+}
+//=============================================================================
+// 加速使用処理
+//=============================================================================
+void CPlayer::UseBoost(void)
+{
+	CGameCamera *pCamera = CGame::GetGameCamera(m_nPlayerNum);
+	if (pCamera != NULL) { pCamera->UseBoost(); }
+	if (m_pDispEffect != NULL) { m_pDispEffect->SetEffect(CDispEffect::EFFECT_BOOST); }
 }
 //=============================================================================
 // エフェクトの更新処理
@@ -775,13 +786,15 @@ void CPlayer::EffectUp(void)
 	{//地面にいる && 歩きモーション
 		if(m_nCountFlame == 0)
 		{//キーが変わったなら
+			D3DXVECTOR3 pos = m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f);
 			//煙
-			//CModelEffect::Create(&m_pos, CModelEffect::TYPE_SMOKE);
+			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
 
 			if (m_nKey % 2 == 0)
 			{//足が付いたなら足跡
-				C3DPolygon::Create(C3DPolygon::TYPE_FootSteps
-					, m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f)
+				C3DPolygon::Create(C3DPolygon::TYPE_FootSteps, pos
 					, D3DXVECTOR3(-m_fCTiltV * D3DX_PI * 0.5f, m_rot.y, m_fCTiltW * D3DX_PI * 0.25f))->SetTexture(m_nKey / 2, 2, 1, 1);
 			}
 		}
@@ -1844,6 +1857,7 @@ void CPlayer::BulletEgg(void)
 
 					// 加速
 				case CChick::TYPE_SPEED:
+					UseBoost();
 					m_State = PLAYERSTATE_SPEEDUP;
 					m_fSpeed += SPEED_CHICK;
 
@@ -1880,6 +1894,7 @@ void CPlayer::BulletEgg(void)
 
 					// 加速
 				case CChick::TYPE_SPEED_S:
+					UseBoost();
 					m_State = PLAYERSTATE_SPEEDUP_S;
 					m_fSpeed += SPEED_EGG * 0.8f;
 
@@ -1918,6 +1933,7 @@ void CPlayer::BulletEgg(void)
 
 					// 加速
 				case CEgg::EGGTYPE_SPEED:
+					UseBoost();
 					m_State = PLAYERSTATE_SPEEDUP;
 					m_fSpeed += 0.2f;
 					break;

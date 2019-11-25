@@ -57,6 +57,7 @@ public:
 		TEXTURE_TYPE_CHICK_K,		//çUåÇÉqÉàÉR
 		TEXTURE_TYPE_CHICK_B,		//ñWäQÉqÉàÉR
 		TEXTURE_TYPE_CHICK_S,		//ë¨ìxÉqÉàÉR
+
 		TEXTURE_TYPE_MAX,			//ç≈ëÂêî
 	}TEXTURE_TYPE;
 
@@ -84,6 +85,8 @@ public:
 	void				SetRot(D3DXVECTOR3 rot) { m_Rot = rot; };
 	bool				Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
 	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
+	
+	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
 
 protected:
 	void				SetModelType(int nModelType) { m_nModelType = nModelType; }

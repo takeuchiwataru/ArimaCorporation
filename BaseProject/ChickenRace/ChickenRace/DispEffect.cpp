@@ -39,8 +39,9 @@ void CDispEffect::Load(void)
 		{//読み込んでないなら
 			switch (nCount)
 			{//読み込み 
-			case TEX_SWAMP:		strcat(aStr, "DispEffect_Water.jpg");		break;
-			case TEX_FootSteps:	strcat(aStr, "Footsteps.jpg");		break;
+			case TEX_SWAMP:		strcat(aStr, "DispEffect_Water.jpg");	break;
+			case TEX_BOOST:		strcat(aStr, "DispEffect_Boost.jpg");	break;
+			case TEX_FootSteps:	strcat(aStr, "Footsteps.jpg");			break;
 			}
 			D3DXCreateTextureFromFile(pD3DDevice, aStr, &m_pTexAll[nCount]);
 		}
@@ -127,10 +128,17 @@ void	CDispEffect::Update(void)
 	switch (m_Effect)
 	{
 	case EFFECT_SWAMP:
-		if (m_fCntState > 60.0f)
+		if (m_fCntState > DISP_STIME)
 		{//汚す
 			m_fCntState = 0.0f;
 			SetAnim();
+		}
+		break;
+	case EFFECT_BOOST:
+		if (m_fCntState > DISP_BTIME)
+		{//戻す
+			m_Effect = EFFECT_SWAMP;
+			SetEffect(EFFECT_MAX);
 		}
 		break;
 	}
@@ -197,7 +205,11 @@ void	CDispEffect::AnimUp(void)
 		if (m_pAnim[nCount] != NULL)
 		{//個別演出の更新
 			m_pAnim[nCount]->Update();
-			if (m_pAnim[nCount]->GetAnim() == C2DAnim::ANIMATION_END) { m_pAnim[nCount]->Uninit(); }
+			if (m_pAnim[nCount]->GetAnim() == C2DAnim::ANIMATION_END) 
+			{//エフェクトの終了
+				m_pAnim[nCount]->Uninit(); 
+				m_pAnim[nCount] = NULL;
+			}
 		}
 	}
 	for (nCount = 0; nCount < EFFECT_MAX; nCount++)
@@ -253,7 +265,10 @@ void	CDispEffect::GetSize(D3DXVECTOR3 &pos, float &fSizeX, float &fSizeY)
 void CDispEffect::SetEffect(EFFECT Effect)
 {
 	int nCount;
+
+	if (m_Effect == EFFECT_BOOST || m_Effect == Effect) { return; }
 	m_Effect = Effect;
+	m_fCntState = 0.0f;
 
 	for (nCount = 0; nCount < EFFECT_MAX; nCount++)
 	{
@@ -273,6 +288,24 @@ void CDispEffect::SetEffect(EFFECT Effect)
 			if (m_Effect == nCount || m_Effect == EFFECT_MAX) { m_pAnim[nCount]->GetfStateSpd() = 1.0f; }
 			else { m_pAnim[nCount]->GetfStateSpd() = 2.0f; }
 		}
+	}
+	ChangeEffect();
+}
+//==================================================================================================//
+//    * エフェクト変更時設置関数 *
+//==================================================================================================//
+void	CDispEffect::ChangeEffect(void)
+{
+	switch (m_Effect)
+	{
+	case EFFECT_SWAMP:
+		float fRot = (CServer::Rand() % 628) * 0.01f;
+		for (int nCount = 0; nCount < DISP_SSET; nCount++) 
+		{
+			SetSwmp(SetAnim(false), fRot);
+			fRot += (D3DX_PI * 2.0f) / DISP_SSET;
+		}
+		break;
 	}
 }
 //==================================================================================================//
@@ -303,18 +336,21 @@ void	CDispEffect::SetDispBoost(void)
 	GetSize(pos, fSizeX, fSizeY);
 	m_pDispAnim[EFFECT_BOOST] = C2DAnim::Create();
 	m_pDispAnim[EFFECT_BOOST]->Set(pos, SCREEN_WIDTH * 0.5f * fSizeX, SCREEN_HEIGHT * 0.5f * fSizeY, D3DX_PI,
-		0, 8, 1, 10, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-	m_pDispAnim[EFFECT_BOOST]->SetState(C2DAnim::STATE_FADEOUT, 0.1f);
+		0, 1, 4, 4, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), C2D::DRAW_TYPE_ADD);
+	m_pDispAnim[EFFECT_BOOST]->SetState(C2DAnim::STATE_FADEOUT, 0.05f);
+	m_pDispAnim[EFFECT_BOOST]->BindTexture(m_pTexAll[TEX_BOOST]);
 }
 //==================================================================================================//
 //    * エフェクト(個別効果)設置関数 *
 //==================================================================================================//
-void	CDispEffect::SetAnim(void)
+C2DAnim	*&CDispEffect::SetAnim(bool bSet)
 {
 	for (int nCount = 0; nCount < DISP_ANIM_MAX; nCount++)
 	{
 		if (m_pAnim[nCount] == NULL)
 		{//空きを見つけて生成
+
+			if (!bSet) { return m_pAnim[nCount]; }
 			switch (m_Effect)
 			{
 			case EFFECT_SWAMP:	SetSwmp(m_pAnim[nCount]);	break;
@@ -323,11 +359,36 @@ void	CDispEffect::SetAnim(void)
 			break;
 		}
 	}
+	return m_pAnim[0];
 }
 //==================================================================================================//
 //    * 水溜まりエフェクト(個別効果)設置関数 *
 //==================================================================================================//
-void	CDispEffect::SetSwmp(C2DAnim *&pAnim)
+void	CDispEffect::SetSwmp(C2DAnim *&pAnim, float fRot)
 {
+	if (pAnim != NULL) { return; }
+	D3DXVECTOR3 pos, plus;
+	float fSizeX, fSizeY, fSize;
+	float fDisX, fDisY, fCol;
 
+	fCol = 0.025f;
+	fSize = DISP_SSIZE * (1.0f + (CServer::Rand() % 100) * 0.005f);
+	if (fRot <= -10.0f) { fRot = (CServer::Rand() % 628) * 0.01f; }
+	else { fSize *= 1.15f; fCol *= 0.75f; }
+
+	fDisX = 0.3f + (CServer::Rand() % 10) * 0.006f;
+	fDisY = 0.3f + (CServer::Rand() % 10) * 0.006f;
+
+	GetSize(pos, fSizeX, fSizeY);
+	plus = D3DXVECTOR3(
+		sinf(fRot) * SCREEN_WIDTH * fDisX,
+		cosf(fRot) * SCREEN_HEIGHT * fDisY, 
+		0.0f);
+
+	pos += plus;
+	pAnim = C2DAnim::Create();
+	pAnim->Set(pos, fSize * fSizeX, fSize * fSizeY, D3DX_PI,
+		0, 1, 5, 6, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), C2D::DRAW_TYPE_NORMAL);
+	pAnim->SetState(C2DAnim::STATE_FADEIN_D, fCol);
+	//pAnim->BindTexture(m_pTexAll[TEX_SWAMP]);
 }

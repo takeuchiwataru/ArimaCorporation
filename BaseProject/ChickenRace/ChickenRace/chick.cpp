@@ -198,7 +198,7 @@ void CChick::Draw(void)
 	if (m_bExplosion == false)
 	{
 		//•`‰æˆ—
-		CModel3D::Draw();
+		//CModel3D::Draw();
 	}
 
 	//’¸“_–@ü‚Ì©“®³‹K‰»
