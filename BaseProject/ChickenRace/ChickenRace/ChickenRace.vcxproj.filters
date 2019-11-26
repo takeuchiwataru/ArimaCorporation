@@ -186,6 +186,9 @@
     <ClCompile Include="DispEffect.cpp">
       <Filter>ソース ファイル\杉本</Filter>
     </ClCompile>
+    <ClCompile Include="particle.cpp">
+      <Filter>ソース ファイル\知らん奴</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboord.h">
@@ -349,6 +352,9 @@
     </ClInclude>
     <ClInclude Include="DispEffect.h">
       <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="particle.h">
+      <Filter>ヘッダー ファイル\知らん奴</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

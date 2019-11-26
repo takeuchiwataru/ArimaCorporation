@@ -15,6 +15,7 @@
 #include "tutorial.h"
 #include "ColMesh.h"
 #include "egg.h"
+#include "particle.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -26,7 +27,7 @@
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(20.0f)		// ひよこが飛んでくスピード
-#define ANNOY_RANGE				(200.0f)	// 減速させる範囲
+#define ANNOY_RANGE				(120.0f)	// 減速させる範囲
 #define ATTACK_RANGE			(200.0f)	// 範囲攻撃の範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
@@ -72,6 +73,7 @@ CChick::CChick() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_nDisTimer = 0;
 	m_DestRank = 0;
 	m_nMap = 0;
+	m_nExplosion = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -154,7 +156,8 @@ HRESULT CChick::Init(void)
 	m_DestRank = -1;
 	m_nMap = 0;
 	m_bAttackS = false;
-
+	m_bExplosion = false;
+	m_nExplosion = 0;
 	return S_OK;
 }
 
@@ -194,8 +197,11 @@ void CChick::Draw(void)
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
-	//描画処理
-	CModel3D::Draw();
+	if (m_bExplosion == false)
+	{
+		//描画処理
+		CModel3D::Draw();
+	}
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -338,7 +344,7 @@ void CChick::Move(void)
 			m_bJump = false;
 		}
 	}
-	else if (m_type == TYPE_ATTACK && m_state == STATE_BULLET)
+	else if ((m_type == TYPE_ATTACK || m_type == TYPE_ATTACK_S) && m_state == STATE_BULLET)
 	{
 		//マップとの当たり判定
 		CPlayer **pPlayer = NULL;
@@ -349,9 +355,31 @@ void CChick::Move(void)
 		if (m_pos.y < m_fHeight)
 		{
 			m_move.y = 0.0f;
-			m_pos.y = m_fHeight/* + 10.0f*/;
+			m_pos.y = m_fHeight;
 			//ジャンプの状態設定
 			m_bJump = false;
+
+			if (m_type == TYPE_ATTACK_S)
+			{
+				if (m_bExplosion == false)
+				{
+					m_bExplosion = true;
+					D3DXVECTOR2 fSize;
+
+					for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+					{// パーティクル生成
+						fSize.x = 5.0f + (float)(rand() % 5);
+						fSize.y = 5.0f + (float)(rand() % 5);
+
+						CParticle::Create(m_pos,
+							D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
+							fSize,
+							20,
+							CParticle::TYPE_NORMAL);
+					}
+				}
+			}
 		}
 	}
 
@@ -372,6 +400,20 @@ void CChick::Item(void)
 		{
 			// 攻撃
 		case TYPE_ATTACK:
+			break;
+
+			// 攻撃
+		case TYPE_ATTACK_S:
+			if (m_bExplosion == true)
+			{// 爆発中
+				m_nExplosion++;
+
+				if (m_nExplosion > EXPLOSION_TIME)
+				{// 削除
+					m_nExplosion = 0;
+					Uninit();
+				}
+			}
 			break;
 
 			// 減速させる
@@ -406,11 +448,15 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		D3DXVECTOR3 ModelMax = ModelPos + VtxMax; // 位置込みの最大値
 		D3DXVECTOR3 ModelMin = ModelPos + VtxMin; // 位置込みの最小値
 
-		float fDepth = PLAYER_DEPTH - 10.0f;
+		float fDepth = PLAYER_DEPTH;
 
 		if (m_type == TYPE_ANNOY)
 		{
 			fDepth = ANNOY_RANGE;
+		}
+		if (m_bExplosion == true)
+		{
+			fDepth = 80.0f;
 		}
 
 		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)

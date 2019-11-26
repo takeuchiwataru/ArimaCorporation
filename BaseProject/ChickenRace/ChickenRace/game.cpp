@@ -32,6 +32,7 @@
 #include "gamePlay.h"
 #include "chick.h"
 #include "ColMesh.h"
+#include "particle.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -114,6 +115,7 @@ HRESULT CGame::Init()
 	CFeed::Load();				//食べ物のテクスチャの読み込み
 	CEgg::Load();				//卵のテクスチャの読み込み
 	CChick::Load();				//ひよこのテクスチャの読み込み
+	CParticle::Load();			// パーティクルのテクスチャのロード
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
 
 	CGameCharSelect::Load();	// ゲーム（キャラ選択）
@@ -152,8 +154,8 @@ HRESULT CGame::Init()
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
 
-	if (m_gameMode == GAMEMODE_PLAY) 
-		m_nGameCounter = START_SET_TIME;
+	//if (m_gameMode == GAMEMODE_PLAY) 
+	//	m_nGameCounter = START_SET_TIME;
 
 	return S_OK;
 }
@@ -176,6 +178,7 @@ void CGame::Uninit(void)
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
 	CChick::UnLoad();				//ひよこのテクスチャの破棄
+	CParticle::UnLoad();				// パーティクルのテクスチャのロード
 
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）

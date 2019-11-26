@@ -17,8 +17,8 @@
 #define MAX_OBJECT					(7)				// オブジェクトのモデル数
 #define MAX_OBJECT_TEXTURE			(7)				// オブジェクトのテクスチャ数
 #define OBJECT_PRIOTITY				(3)				// オブジェクトの優先順位
-#define PLAYER_HEIGHT			(50.0f)				// プレイヤーの背の高さ
-#define PLAYER_DEPTH			(30.0f)				// プレイヤーの幅調整用
+#define PLAYER_HEIGHT			(80.0f)				// プレイヤーの背の高さ
+#define PLAYER_DEPTH			(20.0f)				// プレイヤーの幅調整用
 
 //*****************************************************************************
 // 前方宣言

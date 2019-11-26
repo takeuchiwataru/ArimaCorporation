@@ -120,13 +120,13 @@ public:
 
 	typedef enum
 	{// プレイヤーの状態
-		PLAYERSTATE_NORMAL = 0,	// 通常
+		PLAYERSTATE_NORMAL = 0,		// 通常
 		PLAYERSTATE_SPEEDUP,		// 加速
 		PLAYERSTATE_SPEEDUP_S,		// 自動加速
-		PLAYERSTATE_SPEEDDOWN,	// 減速
+		PLAYERSTATE_SPEEDDOWN,		// 減速
 		PLAYERSTATE_SPEEDDOWN_S,	// 全員減速
-		PLAYERSTATE_DAMAGE,		// 攻撃食らう
-		PLAYERSTATE_MAX,			//最大数
+		PLAYERSTATE_DAMAGE,			// 攻撃食らう
+		PLAYERSTATE_MAX,			// 最大数
 	} PLAYERSTATE;
 
 	typedef enum
@@ -143,13 +143,13 @@ public:
 	//テキスト情報
 	typedef struct
 	{
-		float fAccel;			//加速値（前進）
-		float fBraks;			//加速値（後進）
-		float fDown;			//減速値
-		float fAddRot;			//加える回転値
-		float fDistance;		//移動距離
-		float nCountTime;		//時間の計算
-		D3DXVECTOR3 FirstPos;	//初期位置
+		float fAccel;				//加速値（前進）
+		float fBraks;				//加速値（後進）
+		float fDown;				//減速値
+		float fAddRot;				//加える回転値
+		float fDistance;			//移動距離
+		float nCountTime;			//時間の計算
+		D3DXVECTOR3 FirstPos;		//初期位置
 	}PLAYER_INFO;
 
 	//色の状態の種類
@@ -240,11 +240,8 @@ private:
 
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
-	void RemakeCarRot(float * pAngle);
-	float GetLength(D3DXVECTOR3 StartPos, D3DXVECTOR3 EndPos);
 	void UpdateMove(void);
 	void ControlKey(void);
-	void DebugProc(void);
 
 	void UpdateAI(void);
 	void UseItem(void);
@@ -268,9 +265,6 @@ private:
 	void CollisionFeed(void);
 	void CollisionEgg(void);
 	void CollisionChick(void);
-	void CarCalculate(D3DXVECTOR3 * TirePos);
-	void UpdateStateJump(void);
-	void PlaySoundObj(int nType, CSound * pSound);
 	void EggAppear(CFeed *pFeed);
 	void ChickAppear(void);
 	void ChaseEgg(void);
@@ -309,23 +303,17 @@ private:
 	CLoadTextPlayer *			  m_pText;						// プレイヤーの情報読み込み
 	CEgg						  *m_pEgg[MAX_EGG];				//卵のポインタ
 	CChick						  *m_pChick[MAX_EGG];			//ひよこのポインタ
-	static CChick						  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
+	static CChick				  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
 	bool						  m_bJump;						//  ジャンプフラグ
 	bool						  m_bControl;					// コントローラーの使用状態
-	int							  m_nCountJumpTime;				// ジャンプ状態の時間をカウントする
 	float						  m_fvtxMaxY;					// モデル頂点の最大値（Y）
-	float						  m_fMaxSpeed;					// スピードの最大値
-	float						  m_fMass;						// 質量
 	float						  m_fSpeed;						// 速さ
 	int							  m_nCountTime;					// 時間の加算
 	int							  m_nCountSpeed;				// 時間の加算
 	bool						  m_bCrcleCarIn;				// 車が範囲内に入っているかどうか
 	CLoadEffect *				  m_pLoadEffect;				// ロードエフェクトのポインタ変数
-	int							  m_nCntCombo;
-	int							  m_nCntShake;					//揺れの時間をカウントする
 	bool						  m_bShake;						//揺れのオンオフ
 	bool						  m_bDirive;					//前進、後退の操作フラグ
-	int							  m_nCntFlag;
 	int							  m_nNumEgg;
 	int							  m_nNumChick;
 	int							  m_nCntFrame;					// 卵のついてくる処理に使う

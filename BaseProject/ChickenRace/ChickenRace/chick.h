@@ -116,10 +116,12 @@ private:
 	int					m_nDisTimer;			// 消すまでの時間
 	int					m_DestRank;				// 目的の順位
 	int					m_nMap;					//判定を取るマップ
+	int					m_nExplosion;			// 爆発している時間
 	float				m_fHeight;
 	float				m_fLength;				// 横幅
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bDis;					// 消すかどうか
 	bool				m_bAttackS;
+	bool				m_bExplosion;			// 範囲攻撃になるかならないか
 };
 #endif

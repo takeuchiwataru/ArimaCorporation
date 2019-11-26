@@ -33,21 +33,26 @@ public:
 		SOUND_LABEL_BGM_GAME,				//ゲームの曲
 		SOUND_LABEL_BGM_RANKING,			//ランキングの曲
 
-		//==========================
-		//            SE
-		//==========================
-		SOUND_LABEL_SE_CHARACTERSERECT,		//キャラクター選択音
-		SOUND_LABEL_SE_STARTCOUNT,			//スタートカウント
-		SOUND_LABEL_SE_SPEEDDOWN,			//スピードダウン
-		SOUND_LABEL_SE_TITLEFADE,			//タイトル決定音
-		SOUND_LABEL_SE_DAMAGE,				//ダメージ
-		SOUND_LABEL_SE_HITKICK,				//殴る蹴る
-		SOUND_LABEL_SE_ATTACKWARNING,		//攻撃警告
-		SOUND_LABEL_SE_RAN,					//走る
-		SOUND_LABEL_SE_EGGBREAK,			//卵が割れる
-		SOUND_LABEL_SE_EGGLAY,				//卵が産まれる
+											//==========================
+											//            SE
+											//==========================
+											SOUND_LABEL_SE_CHARACTERSERECT,		//キャラクター選択音
+											SOUND_LABEL_SE_STARTCOUNT,			//スタートカウント
+											SOUND_LABEL_SE_SPEEDDOWN,			//スピードダウン
+											SOUND_LABEL_SE_TITLEFADE,			//タイトル決定音
+											SOUND_LABEL_SE_DAMAGE,				//ダメージ
+											SOUND_LABEL_SE_HITKICK,				//殴る蹴る
+											SOUND_LABEL_SE_ATTACKWARNING,		//攻撃警告
+											SOUND_LABEL_SE_RAN,					//走る
+											SOUND_LABEL_SE_EGGBREAK,			//卵が割れる
+											SOUND_LABEL_SE_EGGLAY,				//卵が産まれる
 
-		SOUND_LABEL_MAX
+											SOUND_LABEL_SE_THROW,				//卵を投げる
+											SOUND_LABEL_SE_JUMP,				//ジャンプ
+											SOUND_LABEL_SE_EAT,					//餌を食べる
+											SOUND_LABEL_SE_CURSORMOVEMENT,		//メニュー選択音
+											SOUND_LABEL_SE_CHICKEXPLOSION,		//爆発に巻き込まれ
+											SOUND_LABEL_MAX
 	}SOUND_LABEL;
 
 	CSound();
@@ -77,7 +82,7 @@ private:
 	BYTE					*m_apDataAudio[SOUND_LABEL_MAX];		// オーディオデータへのポインタ
 	DWORD					m_aSizeAudio[SOUND_LABEL_MAX];			// オーディオデータサイズ
 
-	// 各音素材のパラメータ
+																	// 各音素材のパラメータ
 	SOUNDPARAM m_aSoundParam[SOUND_LABEL_MAX] =
 	{
 		//-1はループ　　0は単発
@@ -101,7 +106,12 @@ private:
 		{ "data/SOUND/SE/AttackWarning_SE.wav", 0 },
 		{ "data/SOUND/SE/Ran_SE.wav", 0 },
 		{ "data/SOUND/SE/EggBreak_SE.wav", 0 },
-		{ "data/SOUND/SE/EggLay_SE.wav", 0 }
+		{ "data/SOUND/SE/EggLay_SE.wav", 0 },
+		{ "data/SOUND/SE/Throw_SE.wav", 0 },
+		{ "data/SOUND/SE/Jump_SE.wav", 0 },
+		{ "data/SOUND/SE/Eat_SE.wav", 0 },
+		{ "data/SOUND/SE/Cursormovement_SE.wav", 0 },
+		{ "data/SOUND/SE/Chickexplosion_SE.wav", 0 }
 	};
 };
 

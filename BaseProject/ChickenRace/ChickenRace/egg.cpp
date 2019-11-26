@@ -14,6 +14,7 @@
 #include "shadow.h"
 #include "tutorial.h"
 #include "ColMesh.h"
+#include "particle.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -23,6 +24,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
+#define EXPLOSION_RANGE			(100)		// 爆発の範囲
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -62,6 +64,7 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 	m_nRank = 0;
 	m_nNumPlayer = 0;
 	m_nHatchingTimer = 0;
+	m_nExplosion = 0;
 	m_nMap = 0;
 }
 //===============================================================================
@@ -141,6 +144,7 @@ HRESULT CEgg::Init(void)
 	m_nNumPlayer = 0;
 	m_nHatchingTimer = 0;
 	m_nMap = 0;
+	m_nExplosion = 0;
 	m_bThrow = false;
 	m_bExplosion = false;
 	return S_OK;
@@ -174,7 +178,7 @@ void CEgg::Update(void)
 	Move();
 
 	CModel3D::SetMove(m_move);
-	CModel3D::SetPosition(m_pos);
+	CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_pos.y + 10.0f, m_pos.z));
 
 
 	/*CDebugProc::Print("%.1f\n", m_move.y);
@@ -331,13 +335,20 @@ void CEgg::Item(void)
 {
 	if (m_eggState == EGGSTATE_BULLET)
 	{
-		float fHeight = 0.0f;
-
 		switch (m_eggType)
 		{
 			// 攻撃
 		case EGGTYPE_ATTACK:
-			fHeight = 30.0f;
+			if (m_bExplosion == true)
+			{// 爆発中
+				m_nExplosion++;
+
+				if (m_nExplosion > EXPLOSION_TIME)
+				{// 削除
+					m_nExplosion = 0;
+					Uninit();
+				}
+			}
 			break;
 
 			// 加速
@@ -404,8 +415,24 @@ void CEgg::Move(void)
 
 			if (m_eggType == EGGTYPE_ATTACK && m_eggState == EGGSTATE_BULLET)
 			{// 卵を消す
-				m_bExplosion = true;
-				Uninit();
+				if (m_bExplosion == false)
+				{
+					m_bExplosion = true;
+					D3DXVECTOR2 fSize;
+
+					for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+					{
+						fSize.x = 5.0f + (float)(rand() % 5);
+						fSize.y = 5.0f + (float)(rand() % 5);
+
+						CParticle::Create(m_pos,
+							D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
+							fSize,
+							20,
+							CParticle::TYPE_NORMAL);
+					}
+				}
 			}
 		}
 	}
@@ -434,11 +461,14 @@ bool CEgg::CollisionEgg(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 
 		if (m_eggType == EGGTYPE_ATTACK)
 		{
-			fDepth = PLAYER_DEPTH/* * 2*/;
+			if (m_bExplosion == true)
+			{
+				fDepth = EXPLOSION_RANGE;
+			}
 		}
 
 		if (pPos->x >= ModelMin.x - fDepth && pPos->x <= ModelMax.x + fDepth)
-		{// Zの範囲内にいる
+		{// Zの範囲内にいるw
 			if (pPos->z >= ModelMin.z - fDepth && pPos->z <= ModelMax.z + fDepth)
 			{// Xの範囲内にいる
 				if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
@@ -486,8 +516,15 @@ void CEgg::Bullet(void)
 		if (m_eggType == EGGTYPE_ATTACK)
 		{//タイプが敵だったら
 		 //モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
-			m_move.x = sinf(m_rot.y) * EGG_SPEED;
-			m_move.z = cosf(m_rot.y) * EGG_SPEED;
+			float fEggSpeed = EGG_SPEED;
+
+			if (m_bExplosion == true)
+			{
+				fEggSpeed = 0.0f;
+			}
+
+			m_move.x = sinf(m_rot.y) * fEggSpeed;
+			m_move.z = cosf(m_rot.y) * fEggSpeed;
 
 			m_rot.x = D3DX_PI * 0.5f;
 

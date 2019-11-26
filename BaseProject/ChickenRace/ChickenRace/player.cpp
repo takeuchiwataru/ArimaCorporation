@@ -30,6 +30,7 @@
 #include "ColMesh.h"
 #include "ModelEffect.h"
 #include "DispEffect.h"
+#include "particle.h"
 
 //=============================================================================
 // マクロ定義
@@ -37,9 +38,7 @@
 #define VECTOR_ZERO		(D3DXVECTOR3(0.0f, 0.0f, 0.0f))				//ベクトルの初期化
 #define FAILE_NAME		("data\\TEXT\\Player\\PlayerState.txt")		//読み込むファイル名
 #define FILE_TEXTURE	("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
-#define AVERAGE			(2.0f)										//平均する値
 #define ROLLOVER_STOP	(0.6f)										//横転防止角度
-#define GRAVITY_BACK	(0.2f)										//後方の重力
 #define DECELERATION	(0.5f)										//減速の割合
 #define EGG_RANGE		(25.0f)										// 卵とプレイヤーの距離
 #define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
@@ -62,24 +61,9 @@
 #define PLAYER_JUMP		(2.0f)										//回転量
 #define PLAYER_GRAVITY	(0.09f)										//回転量
 
-//車体の角度
-#define SHAKE_X			(0.007f)									//X軸の揺れ
-#define INPULS_X		(0.01f)										//X軸に加える角度
-#define SHAKE_Z			(0.02f)										//Z軸の揺れ
-#define SHAKE_DRIFT		(0.005f)									//ドリフト時の角度加算
-#define SHAKE_BRAK		(0.01f)										//ブレーキ時の角度
-
-#define RIVER_SOUND_RANGE		(1000.0f)							// 川の音が聞こえる範囲
-#define FOUNTAIN_SOUND_RANGE	(1000.0f)							// 噴水の音が聞こえる範囲
-
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
-//CModel * CPlayer::m_pModel = NULL;		//モデルのパーツポインタ
-//int	CPlayer::m_nMaxModel = 0;
-//int CPlayer::m_nMaxParts = 0;
-//int CPlayer::m_nMaxMotion = 0;
-//CMotion::MOTION_INFO * CPlayer::m_pMotionInfo = NULL;
 LPDIRECT3DTEXTURE9 CPlayer::m_pTexture = NULL;
 CChick *CPlayer::m_pAnnoyChick[MAX_MEMBER] = {};
 
@@ -151,42 +135,11 @@ void CPlayer::LoadModel(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	// テクスチャの生成
-	D3DXCreateTextureFromFile(pDevice,
-		FILE_TEXTURE,
-		&m_pTexture);
+	D3DXCreateTextureFromFile(pDevice, FILE_TEXTURE, &m_pTexture);
 
 	//モーション情報の取得
 	//CLoadTextMotion * pLoadTextMotion = NULL;
 	CManager::MODE mode = CManager::GetMode();
-
-	//pLoadTextMotion = CTutorial::GetPlayerMotion();
-
-	//m_pMotionInfo = pLoadTextMotion->GetMotionInfo();					//モーション情報の取得
-	//m_nMaxMotion = pLoadTextMotion->GetMaxMotion();						//モーションの最大数の取得
-
-	//																	//モデル情報を取得
-	//CLoadTextMotion::MODEL_INFO ModelInfo = pLoadTextMotion->GetModelInfo();
-	//m_nMaxModel = ModelInfo.nMaxModel;	//モデルの最大数の取得
-	//m_nMaxParts = ModelInfo.nMaxParts;	//モデルのパーツ最大数の取得
-
-	//									//モデルの生成
-	//for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
-	//{
-	//	m_pModel = CModel::Create(ModelInfo.pOfSetPos[nCntParts], &ModelInfo.paFileName[nCntParts][0]);
-
-	//	//テクスチャの割当て
-	//	if (m_pModel != NULL) { m_pModel->BindTexture(m_pTexture); }
-	//}
-
-	////モデルの親設定
-	//for (int nCntParts = 0; nCntParts < ModelInfo.nMaxParts; nCntParts++)
-	//{
-	//	if (nCntParts == 0)
-	//	{
-	//		m_pModel->SetParent(NULL);
-	//		break;
-	//	}
-	//}
 }
 
 //=============================================================================
@@ -194,12 +147,6 @@ void CPlayer::LoadModel(void)
 //=============================================================================
 void CPlayer::UnloadModel(void)
 {
-	////モーションデータの破棄
-	//if (m_pMotionInfo != NULL)
-	//{
-	//	m_pMotionInfo = NULL;
-	//}
-
 	//テクスチャの破棄
 	if (m_pTexture != NULL)
 	{
@@ -214,18 +161,13 @@ void CPlayer::UnloadModel(void)
 HRESULT CPlayer::Init(void)
 {
 	//変数の初期化
-	m_pos = VECTOR_ZERO;				//中心座標
-	m_OldPos = VECTOR_ZERO;				//前回の座標
-	m_move = VECTOR_ZERO;				//移動
-	m_pos = VECTOR_ZERO;
-	m_rot = VECTOR_ZERO;				//向き
-	m_nCntFrame = -1;				//向き
-	m_OldDiffuse = VECTOR_ZERO;				//前回の差分
-	m_MoveMotion = VECTOR_ZERO;				//モーションの移動
-	m_vtxMaxModel = VECTOR_ZERO;			//モデルの頂点最大値
-	m_vtxMinModel = VECTOR_ZERO;			//モデルの頂点最小値
+	m_pos = VECTOR_ZERO;					//中心座標
+	m_OldPos = VECTOR_ZERO;					//前回の座標
+	m_move = VECTOR_ZERO;					//移動
+	m_pos = VECTOR_ZERO;					//位置
+	m_rot = VECTOR_ZERO;					//向き
+	m_nCntFrame = -1;						//向き
 	m_pMotion = NULL;						//モーションポインタ
-	m_pText = NULL;							//プレイヤーのテキストポインタ
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
 	m_PlayerInfo.nCountTime = 0;			//カウンター
@@ -237,19 +179,12 @@ HRESULT CPlayer::Init(void)
 	m_PlayerInfo.FirstPos = VECTOR_ZERO;	//初期位置
 	m_bJump = true;							//ジャンプ状態
 	m_bControl = false;						//コントローラーフラグ
-	m_nCountJumpTime = 0;					//ジャンプ状態の時間を加算
 	m_fvtxMaxY = 0.0f;						//モデル頂点の最大値（Y）
-	m_fMass = 200.0f;						// 質量
 	m_fSpeed = 0.0f;						// 速さ
 	m_nCountSpeed = 0;
 	m_nCountTime = 0;						// 時間カウンター
 	m_bCrcleCarIn = false;
-	m_pLoadEffect = NULL;					// エフェクトツールポインタ
-	m_nCntCombo = 0;
-	m_nCntShake = 0;
 	m_bShake = true;
-	m_nCntFlag = 0;
-	m_bDirive = true;
 	m_nNumEgg = 0;
 	m_nNumChick = 0;
 	m_nNumItem = 0;
@@ -329,28 +264,6 @@ HRESULT CPlayer::Init(void)
 		if (m_apModel[nCount] != NULL) { m_apModel[nCount]->BindTexture(m_pTexture); }
 	}
 
-	//if (m_pMotion == NULL)	//モーションの生成
-	//{
-	//	m_pMotion = CMotion::Create();
-
-	//	if (m_pMotion != NULL)
-	//	{
-	//		//モデルデータの設定
-	//		m_pMotion->SetModel(&m_pModel);			//モーションデータにモデル情報を渡す
-	//		m_pMotion->SetMaxModel(m_nMaxParts);	//モデルパーツの最大数を渡す
-
-	//												//モーションデータの設定
-	//		m_pMotion->SetMotion(m_pMotionInfo);	//モーション情報の取得
-	//		m_pMotion->SetMaxMotion(m_nMaxMotion);	//モーションの最大数の取得
-
-	//												//初期化処理
-	//		m_pMotion->Init();
-	//	}
-	//}
-
-	//モデルの最小値・最大値の取得
-	//m_vtxMaxModel = m_pModel->GetVtxMax();
-	//m_vtxMinModel = m_pModel->GetVtxMin();
 	return S_OK;
 }
 
@@ -370,14 +283,6 @@ void CPlayer::Uninit(void)
 		m_pPlayerpos->Uninit();
 		m_pPlayerpos = NULL;
 	}
-
-	////モーションの破棄
-	//if (m_pMotion != NULL)
-	//{
-	//	m_pMotion->Uninit();
-	//	delete m_pMotion;
-	//	m_pMotion = NULL;
-	//}
 
 	//タイヤモデルの破棄
 	for (int nCntEgg = 0; nCntEgg < MAX_EGG; nCntEgg++)
@@ -410,14 +315,6 @@ void CPlayer::Uninit(void)
 			delete m_apModel[nCount];
 			m_apModel[nCount] = NULL;
 		}
-	}
-
-	//テキストの破棄
-	if (m_pText != NULL)
-	{
-		m_pText->Uninit();
-		delete m_pText;
-		m_pText = NULL;
 	}
 
 	if (m_pDispEffect != NULL)
@@ -541,8 +438,6 @@ void CPlayer::Update(void)
 	//モーション更新
 	UpdateMotion();
 	EffectUp();
-
-	DebugProc();		// デバック表示
 }
 
 //=============================================================================
@@ -997,11 +892,6 @@ void CPlayer::UpdateMove(void)
 		{
 			m_State = PLAYERSTATE_NORMAL;
 			m_nCountSpeed = 0;
-
-			// ジャンプ
-			m_bJumpSave = true;
-			m_bJump = true;
-			m_move.y += EGG_RAND;
 		}
 	}
 
@@ -1102,6 +992,17 @@ void CPlayer::UpdateMove(void)
 
 		break;
 
+	case PLAYERSTATE_SPEEDDOWN_S:
+		//進行方向の設定
+		m_move.x *= SPEEDDOWN;
+		m_move.z *= SPEEDDOWN;
+
+		//スピードダウンの音
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_SPEEDDOWN, 2.0f);
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_SPEEDDOWN);
+
+		break;
+
 	case PLAYERSTATE_DAMAGE:
 
 		m_fSpeed = 0.0f;
@@ -1125,6 +1026,10 @@ void CPlayer::UpdateMove(void)
 			nDamageTime = DAMAGE_TIME;
 		}
 		else if (m_State == PLAYERSTATE_SPEEDDOWN)
+		{// スピードダウンを食らったとき
+			nDamageTime = SPEEDDOWN_TIME;
+		}
+		else if (m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{// スピードダウンを食らったとき
 			nDamageTime = SPEEDDOWN_TIME;
 		}
@@ -1320,16 +1225,6 @@ void CPlayer::CollisionObject(void)
 			pScene = pSceneNext;
 		}
 	}
-
-	//デバック表示
-	/*if (m_bCrcleCarIn == true)
-	{
-	CDebugProc::Print("入っている\n");
-	}
-	else if (m_bCrcleCarIn == false)
-	{
-	CDebugProc::Print("入っていない\n");
-	}*/
 }
 
 //=============================================================================
@@ -1369,65 +1264,6 @@ void CPlayer::CollisitionWall(void)
 }
 
 //=============================================================================
-// ジャンプ状態の更新処理
-//=============================================================================
-void CPlayer::UpdateStateJump(void)
-{
-	if (m_bJump)
-	{//ジャンプ状態の時間を加算
-		m_nCountJumpTime++;
-
-		/*//X軸の角度制限
-		if (m_rot.x > 0.5f)
-		{
-		m_rot.x = 0.5f;
-		}
-		else if (m_rot.x < -0.5f)
-		{
-		m_rot.x = -0.5f;
-		}
-
-		//Z軸の角度制限
-		if (m_rot.z > 0.5f)
-		{
-		m_rot.z = 0.5f;
-		}
-		else if (m_rot.z < -0.5f)
-		{
-		m_rot.z = -0.5f;
-		}*/
-		return;
-	}
-	m_nCountJumpTime = 0;
-}
-
-//=============================================================================
-// 辺の長さを求める
-//=============================================================================
-float CPlayer::GetLength(D3DXVECTOR3 StartPos, D3DXVECTOR3 EndPos)
-{
-	D3DXVECTOR3 Distance = StartPos - EndPos;
-	float fLength = sqrtf((Distance.x * Distance.x) + (Distance.z * Distance.z));
-
-	return fLength;
-}
-
-//=============================================================================
-// 車の角度修正
-//=============================================================================
-void CPlayer::RemakeCarRot(float * pAngle)
-{
-	if (*pAngle > ROLLOVER_STOP)
-	{
-		*pAngle = ROLLOVER_STOP;
-	}
-	else if (*pAngle < -ROLLOVER_STOP)
-	{
-		*pAngle = -ROLLOVER_STOP;
-	}
-}
-
-//=============================================================================
 // 角度修正
 //=============================================================================
 void CPlayer::RemakeAngle(float * pAngle)
@@ -1441,123 +1277,6 @@ void CPlayer::RemakeAngle(float * pAngle)
 	{
 		*pAngle -= D3DX_PI * 2.0f;
 	}
-}
-
-//=============================================================================
-// デバック表示
-//=============================================================================
-void CPlayer::DebugProc(void)
-{
-	//状態の表示
-	/*if (m_MoveState == STATE_DRIVE)
-	{
-	CDebugProc::Print("状態 : STATE_DRIVE\n");
-	}
-	else
-	{
-	CDebugProc::Print("状態 : STATE_REVERSE\n");
-	}
-
-	//走行状態の標示
-	if (m_StateSpeed == STATE_SPEED_STOP)
-	{
-	CDebugProc::Print("停止状態\n");
-	}
-	*/
-	//位置表示
-	//CDebugProc::Print("位置 : X %.2f, Y %.2f, Z %.2f\n", m_pos.x, m_pos.y, m_pos.z);
-	//CDebugProc::Print("移動 : X %.2f, Y %.2f, Z %.2f\n", m_move.x, m_move.y, m_move.z);
-	//
-	//CDebugProc::Print("ジャンプ：%s\n", m_bJump ? "〇" : "×");
-
-	//CDebugProc::Print("カウント : %f\n", m_PlayerInfo.nCountTime);
-
-	//	CDebugProc::Print("アイテム：%d\n", m_nNumItem);
-	//	for (int nCount = 0; nCount < MAX_EGG; nCount++)
-	//		CDebugProc::Print("アイテム種類：%d\n", m_bulletType[nCount]);
-
-	//CDebugProc::Print("カウント：%f\n", m_PlayerInfo.nCountTime);
-	//
-	//switch (m_StateSpeed)
-	//{
-	//case STATE_SPEED_ACCEL:
-	//	CDebugProc::Print("STATE_SPEED_ACCEL\n");
-	//	break;
-	//case STATE_SPEED_BRAKS:
-	//	CDebugProc::Print("STATE_SPEED_BRAKS\n");
-	//	break;
-	//case STATE_SPEED_DOWN:
-	//	CDebugProc::Print("STATE_SPEED_DOWN\n");
-	//	break;
-	//case STATE_SPEED_STOP:
-	//	CDebugProc::Print("STATE_SPEED_STOP\n");
-	//	break;
-	//}
-}
-
-//=============================================================================
-// 音の再生
-//=============================================================================
-void CPlayer::PlaySoundObj(int nType, CSound * pSound)
-{
-	/*switch (nType)
-	{*/
-	/*case TYPE_PHONEBOX: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_STEAL); break;
-	case TYPE_CARDBORD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX); break;
-	case TYPE_CORN:
-	pSound->SetVolume(CSound::SOUND_LABEL_SE_SMALLBOX, 0.5f);
-	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_SMALLBOX);
-	break;
-	case TYPE_LEAF:
-
-	break;
-	case TYPE_FENCE:*/
-	//if ((m_nCountSound % 5) == 0) { m_nCountSound = 0; }
-
-	//if (m_nCountSound == 0)
-	//{//フェンス00
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-	//}
-	//else if (m_nCountSound == 1)
-	//{//フェンス01
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-	//}
-	//else if (m_nCountSound == 2)
-	//{//フェンス02
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-	//}
-	//else if (m_nCountSound == 3)
-	//{//フェンス02
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-	//}
-	//else if (m_nCountSound == 4)
-	//{//フェンス02
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_FANCE00);
-	//}
-
-	//m_nCountSound++;	//カウンターの加算
-	//break;
-
-	//case TYPE_BENCH:
-	//if ((m_nCountWood % 2) == 0) { m_nCountWood = 0; }	//カウンターをリセットする
-
-	////音の再生
-	//if (m_nCountWood == 0)
-	//{
-	//	pSound->SetVolume(CSound::SOUND_LABEL_SE_WOOD00, 2.0f);
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD00);
-	//}
-	//else if (m_nCountWood)
-	//{
-	//	pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01);
-	//}
-
-	////カウンターの加算
-	//m_nCountWood++;
-	//break;
-
-	//case TYPE_SIGNBOARD: pSound->PlaySoundA(CSound::SOUND_LABEL_SE_WOOD01); break;
-	//}
 }
 //=============================================================================
 // 餌との当たり判定
@@ -1606,6 +1325,8 @@ void CPlayer::CollisionFeed(void)
 //=============================================================================
 void CPlayer::EggAppear(CFeed *pFeed)
 {
+	CSound *pSound = CManager::GetSound();
+
 	if (m_pEgg[m_nNumEgg] == NULL)
 	{
 		if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ATTACK)
@@ -1618,6 +1339,11 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				m_nPlayerNum);
 
 			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_ATTACK;
+
+			//卵が産まれる音
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_EGGLAY);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_EGGLAY, 7.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_EGGLAY, 0.7f);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_ANNOY)
 		{// 妨害の卵生成
@@ -1629,6 +1355,11 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				m_nPlayerNum);
 
 			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_ANNOY;
+
+			//卵が産まれる音
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_EGGLAY);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_EGGLAY, 7.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_EGGLAY, 0.7f);
 		}
 		else if (pFeed->GetFeedType() == CFeed::FEEDTYPE_SPEED)
 		{// 加速の卵生成
@@ -1640,6 +1371,11 @@ void CPlayer::EggAppear(CFeed *pFeed)
 				m_nPlayerNum);
 
 			m_bulletType[m_nNumChick + m_nNumEgg] = BULLET_EGG_SPEED;
+
+			//卵が産まれる音
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_EGGLAY);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_EGGLAY, 7.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_EGGLAY, 0.7f);
 		}
 	}
 
@@ -1811,6 +1547,8 @@ void CPlayer::ChaseEgg(void)
 //=============================================================================
 void CPlayer::BulletEgg(void)
 {
+	CSound *pSound = CManager::GetSound();
+
 	if (m_bDamage == false && m_State == PLAYERSTATE_NORMAL)
 	{// ダメージを食らっているときは使えない
 		if (m_nNumEgg + m_nNumChick > 0)
@@ -1945,6 +1683,10 @@ void CPlayer::BulletEgg(void)
 				m_bulletType[1] = m_bulletType[2];
 				m_bulletType[2] = BULLET_EGG_ATTACK;
 			}
+
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
 		}
 	}
 }
@@ -1992,6 +1734,20 @@ void CPlayer::CollisionEgg(void)
 							{
 								m_bDamage = true;
 								m_State = PLAYERSTATE_SPEEDDOWN;
+								D3DXVECTOR2 fPos;
+
+								for (int nCntParticle = 0; nCntParticle < 10; nCntParticle++)
+								{// エフェクト生成
+									fPos.x = 30.0f - (float)(rand() % 60);
+									fPos.y = 30.0f - (float)(rand() % 60);
+
+									CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
+										D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+										D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+										D3DXVECTOR2(2.0f,10.0f),
+										20,
+										CParticle::TYPE_DOWN);
+								}
 							}
 							pEgg->Uninit();	// 卵削除
 							break;
@@ -2078,6 +1834,21 @@ void CPlayer::CollisionChick(void)
 							{
 								m_bDamage = true;
 								m_State = PLAYERSTATE_SPEEDDOWN;
+
+								D3DXVECTOR2 fPos;
+
+								for (int nCntParticle = 0; nCntParticle < 10; nCntParticle++)
+								{// エフェクト生成
+									fPos.x = 30.0f - (float)(rand() % 60);
+									fPos.y = 30.0f - (float)(rand() % 60);
+
+									CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
+										D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+										D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+										D3DXVECTOR2(2.0f, 10.0f),
+										20,
+										CParticle::TYPE_DOWN);
+								}
 							}
 							break;
 						}
@@ -2167,6 +1938,13 @@ void CPlayer::ChickAppear(void)
 					CChick::BULLETTYPE_PLAYER,
 					CChick::STATE_CHASE,
 					m_nPlayerNum);
+				/*m_pChick[m_nNumChick] = CChick::Create(m_pos,
+					D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+					CHICK_SCALE,
+					CChick::TYPE_ATTACK_S,
+					CChick::BULLETTYPE_PLAYER,
+					CChick::STATE_CHASE,
+					m_nPlayerNum);*/
 			}
 
 			m_pEgg[0]->Uninit();
@@ -2336,6 +2114,21 @@ void CPlayer::ChaseAnnoyS(void)
 		{
 			m_bDamage = true;
 			m_State = PLAYERSTATE_SPEEDDOWN_S;
+
+			D3DXVECTOR2 fPos;
+
+			for (int nCntParticle = 0; nCntParticle < 20; nCntParticle++)
+			{// エフェクト生成
+				fPos.x = 30.0f - (float)(rand() % 60);
+				fPos.y = 30.0f - (float)(rand() % 60);
+
+				CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
+					D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+					D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+					D3DXVECTOR2(2.0f, 10.0f),
+					20,
+					CParticle::TYPE_DOWN);
+			}
 		}
 	}
 }
