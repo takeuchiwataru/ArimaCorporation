@@ -181,11 +181,13 @@ void CChick::Update(void)
 	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//‘O‰ñ‚ÌˆÊ’u‚ð•Û‘¶‚·‚é
 
-	// ‚Ð‚æ‚±‚Ì“®‚«
+						// ‚Ð‚æ‚±‚Ì“®‚«
 	Move();
 
 	CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_pos.y + 5.0f, m_pos.z));
 	CModel3D::SetRot(m_rot);
+
+	//CDebugProc::Print("m_rot x : %.1f y : %.1f z : %.1f\n", m_rot.x, m_rot.y, m_rot.z);
 }
 //=============================================================================
 // •`‰æˆ—
@@ -421,6 +423,7 @@ void CChick::Item(void)
 			pPlayer = CGame::GetPlayer();
 
 			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
+			m_rot = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetRot().x, pPlayer[m_nNumPlayer]->GetRot().y, pPlayer[m_nNumPlayer]->GetRot().z);
 
 			break;
 		}
@@ -582,7 +585,7 @@ void CChick::Bullet(void)
 //=============================================================================
 // Šp“x‚Ì’²ß
 //=============================================================================
-void CChick::AdjustAngle(float rot)
+float CChick::AdjustAngle(float rot)
 {
 	if (rot > D3DX_PI)
 	{
@@ -592,6 +595,8 @@ void CChick::AdjustAngle(float rot)
 	{
 		rot += D3DX_PI * 2.0f;
 	}
+
+	return rot;
 }
 
 //=============================================================================
@@ -609,15 +614,18 @@ void CChick::Attack(void)
 		// ·•ª
 		m_fDiffAngle.y = m_fDestAngle.y - m_rot.y;
 
-		AdjustAngle(m_fDiffAngle.y);
+		m_fDiffAngle.y = AdjustAngle(m_fDiffAngle.y);
 
 		m_rot.y += m_fDiffAngle.y * 0.5f;
 
-		AdjustAngle(m_rot.y);
+		m_rot.y = AdjustAngle(m_rot.y);
 
 		//ƒ‚ƒfƒ‹‚ÌˆÚ“®	ƒ‚ƒfƒ‹‚ÌˆÚ“®‚·‚éŠp“x(ƒJƒƒ‰‚ÌŒü‚« + Šp“x) * ˆÚ“®—Ê
 		m_move.x = sinf(m_rot.y) * CHICK_SPEED;
 		m_move.z = cosf(m_rot.y) * CHICK_SPEED;
+
+		CDebugProc::Print("m_DestRank : %d\n", m_DestRank);
+		CDebugProc::Print("m_DestRank : %.1f  %.1f\n", m_move.x, m_move.z);
 	}
 	else
 	{
@@ -685,6 +693,10 @@ void CChick::AnnoyS(void)
 
 	if (m_bAttackS == false)
 	{
+		m_move.x = pPlayer[m_nNumPlayer]->GetMove().x;
+		m_move.y = 3.0f;
+		m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
+
 		pPlayer[m_nNumPlayer]->AnnoyChicks();
 		m_bAttackS = true;
 	}

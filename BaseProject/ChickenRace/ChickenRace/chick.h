@@ -96,7 +96,7 @@ private:
 	void AnnoyS(void);
 	void AttackS(void);
 	void Item(void);
-	void AdjustAngle(float rot);
+	float AdjustAngle(float rot);
 	static D3DXVECTOR3 m_VtxMaxModel[MAX_CHICK];   //モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel[MAX_CHICK];   //モデルの最小値
 	BULLETTYPE			m_bulletType;			// 弾の種類

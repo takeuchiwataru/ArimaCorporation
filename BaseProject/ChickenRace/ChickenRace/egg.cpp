@@ -364,7 +364,7 @@ void CEgg::Item(void)
 
 			m_rot.x += 0.5f;
 
-			AdjustAngle(m_rot.x);
+			m_rot.x = AdjustAngle(m_rot.x);
 
 			CModel3D::SetRot(m_rot);
 
@@ -389,6 +389,10 @@ void CEgg::Move(void)
 	if (m_eggType == EGGTYPE_ATTACK && m_eggState == EGGSTATE_BULLET)
 	{
 		fGravity = 0.4f;
+	}
+	else if (m_eggType == EGGTYPE_ANNOY && m_eggState == EGGSTATE_BULLET)
+	{
+		fGravity = 0.0f;
 	}
 
 	m_move.y -= cosf(0) * fGravity;
@@ -541,7 +545,7 @@ void CEgg::Bullet(void)
 //=============================================================================
 // Šp“x‚Ì’²ß
 //=============================================================================
-void CEgg::AdjustAngle(float rot)
+float CEgg::AdjustAngle(float rot)
 {
 	if (rot > D3DX_PI)
 	{
@@ -551,4 +555,6 @@ void CEgg::AdjustAngle(float rot)
 	{
 		rot += D3DX_PI * 2.0f;
 	}
+
+	return rot;
 }

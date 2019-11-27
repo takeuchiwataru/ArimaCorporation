@@ -268,10 +268,10 @@ void CPause::Update(void)
 
 
 	//頂点設定
-	pVtx[(4 * 4) + 0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 - 50 + (m_SelectNum * 200), 0.0f);		//左上
-	pVtx[(4 * 4) + 1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 - 50 + (m_SelectNum * 200), 0.0f);		//右上
-	pVtx[(4 * 4) + 2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 + 50 + (m_SelectNum * 200), 0.0f);		//左下
-	pVtx[(4 * 4) + 3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 + 50 + (m_SelectNum * 200), 0.0f);		//右下
+	pVtx[(4 * 4) + 0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320.0f, (SCREEN_HEIGHT / 2) - 195.0f - 50.0f + (m_SelectNum * 200.0f), 0.0f);		//左上
+	pVtx[(4 * 4) + 1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320.0f, (SCREEN_HEIGHT / 2) - 195.0f - 50.0f + (m_SelectNum * 200.0f), 0.0f);		//右上
+	pVtx[(4 * 4) + 2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320.0f, (SCREEN_HEIGHT / 2) - 195.0f + 50.0f + (m_SelectNum * 200.0f), 0.0f);		//左下
+	pVtx[(4 * 4) + 3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320.0f, (SCREEN_HEIGHT / 2) - 195.0f + 50.0f + (m_SelectNum * 200.0f), 0.0f);		//右下
 
 
 	//頂点バッファをアンロック

@@ -37,21 +37,22 @@
 //=============================================================================
 // マクロ定義
 //=============================================================================
-#define VECTOR_ZERO		(D3DXVECTOR3(0.0f, 0.0f, 0.0f))				//ベクトルの初期化
-#define FAILE_NAME		("data\\TEXT\\Player\\PlayerState.txt")		//読み込むファイル名
-#define FILE_TEXTURE	("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
-#define ROLLOVER_STOP	(0.6f)										//横転防止角度
-#define DECELERATION	(0.5f)										//減速の割合
-#define EGG_RANGE		(25.0f)										// 卵とプレイヤーの距離
-#define EGG_POS			(7)											// 卵同士の間隔の広さ（増やすと広くなる）
-#define SPEEDUP_TIME	(60)										// 加速している時間
-#define SPEEDDOWN		(0.95f)										// 減速させる値
-#define CHICK_SCALE		(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
-#define THROW			(13.0f)										// 卵を投げる力
-#define EGG_RAND		(2.0f)										// 卵に乗るときのジャンプ力
-#define EGG_HEIGHT		(40.0f)										// 卵に乗ったように見える高さ
-#define SPEED_CHICK		(0.5f)										// 加速する量ひよこ
-#define SPEED_EGG		(0.2f)										// 加速する量卵
+#define VECTOR_ZERO			(D3DXVECTOR3(0.0f, 0.0f, 0.0f))				//ベクトルの初期化
+#define FAILE_NAME			("data\\TEXT\\Player\\PlayerState.txt")		//読み込むファイル名
+#define FILE_TEXTURE		("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
+#define ROLLOVER_STOP		(0.6f)										//横転防止角度
+#define DECELERATION		(0.5f)										//減速の割合
+#define EGG_RANGE			(25.0f)										// 卵とプレイヤーの距離
+#define EGG_POS				(7)											// 卵同士の間隔の広さ（増やすと広くなる）
+#define SPEEDUP_TIME		(60)										// 加速している時間
+#define CHICK_SCALE			(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
+#define THROW				(13.0f)										// 卵を投げる力
+#define EGG_RAND			(2.0f)										// 卵に乗るときのジャンプ力
+#define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
+#define SPEED_CHICK			(0.5f)										// 加速する量ひよこ
+#define SPEED_EGG			(0.2f)										// 加速する量卵
+#define SPEED_COUNT_SPEED	(130)										// 加速状態
+#define SPEED_COUNT_ANNOY	(50)										// 減速状態
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(0.5f)										//加速値（前進）
@@ -73,9 +74,9 @@ LPD3DXMESH	CPlayer::m_pMesh[MAX_PARTS] = {};					//メッシュ情報の初期化
 LPD3DXBUFFER CPlayer::m_pBuffMat[MAX_PARTS] = {};				//マテリアルの情報の初期化
 DWORD CPlayer::m_nNumMat[MAX_PARTS] = {};						//マテリアルの情報数の初期化
 
-//--------------------------------------------
-//グローバル変数
-//--------------------------------------------
+																//--------------------------------------------
+																//グローバル変数
+																//--------------------------------------------
 int g_nNumModel;
 char g_aFileNameModel[MAX_PARTS][256];
 
@@ -91,7 +92,7 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 	//初期化処理
 	pPlayer->Init();
 	pPlayer->m_nPlayerNum = nPlayerNum;
-	
+
 	if (playerType == PLAYERTYPE_PLAYER)
 	{//画面エフェクトの生成
 		pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer);
@@ -170,7 +171,7 @@ HRESULT CPlayer::Init(void)
 	m_pMotion = NULL;						//モーションポインタ
 	m_StateSpeed = STATE_SPEED_STOP;		//スピードの状態設定
 	m_StateHandle = HANDLE_MAX;				//ハンドルの状態
-	m_PlayerInfo.nCountTime = 0;			//カウンター
+	m_PlayerInfo.fCountTime = 0;			//カウンター
 	m_PlayerInfo.fAccel = PLAYER_ACCEL;		//加速値（前進）
 	m_PlayerInfo.fBraks = PLAYER_BRAKS;		//加速値（後進）
 	m_PlayerInfo.fDown = PLAYER_DOWN;		//減速値
@@ -197,6 +198,7 @@ HRESULT CPlayer::Init(void)
 	m_nCntChick = 0;
 	m_nDestRank = 0;
 	m_nAnnoySTimer = 0;
+	m_nCntParticle = 0;
 	m_bAnnoyS = false;
 
 	m_nDriftCounter = 0;		// ドリフトカウント
@@ -215,7 +217,7 @@ HRESULT CPlayer::Init(void)
 	m_bDivided = false;
 	m_nMap = 0;
 	m_nNumRoad = 0;
-	
+
 	m_FNor = INIT_VECTOR;
 	m_fTilt = 0.0f;
 	m_fCTiltV = 0.0f;
@@ -231,7 +233,7 @@ HRESULT CPlayer::Init(void)
 	m_bGoal = false;					// ゴール
 	m_fAddRot = 0.0f;					// 加算角度
 
-	// プレイヤー番号（追従）
+										// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
 		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 1);
 
@@ -389,7 +391,7 @@ void CPlayer::Update(void)
 
 	ChaseAnnoyS();			// 強い減速ひよこがくっつく
 
-	//マップとの当たり判定
+							//マップとの当たり判定
 	bool bGoal = false;
 
 	CRoad_Pointer::RankPoint(this, bGoal);
@@ -453,7 +455,7 @@ void CPlayer::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-	// ワールドマトリックスの初期化
+												// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -623,7 +625,7 @@ void CPlayer::UpdateFEffect(void)
 {
 	CDispEffect::EFFECT Effect = CDispEffect::EFFECT_MAX;
 
-	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP) 
+	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP)
 	{//水溜まり
 		Effect = CDispEffect::EFFECT_SWAMP;
 		m_fPosY += (-10.0f - m_fPosY) * 0.1f;
@@ -632,7 +634,7 @@ void CPlayer::UpdateFEffect(void)
 
 	if (m_FEffect == CCOL_MESH::EFFECT_GRASS)
 	{//ダート
-		//Effect = CDispEffect::EFFECT_SWAMP;
+	 //Effect = CDispEffect::EFFECT_SWAMP;
 	}
 
 	if (m_FEffect == CCOL_MESH::EFFECT_DROP)
@@ -678,7 +680,7 @@ void CPlayer::WarpNext(void)
 	m_pos = pNext->Getpos() + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * 5.0f;
 	m_OldPos = m_pos;
 	m_move *= 0.0f;
-	m_PlayerInfo.nCountTime = 0;
+	m_PlayerInfo.fCountTime = 0;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
 }
 //=============================================================================
@@ -698,7 +700,7 @@ void CPlayer::EffectUp(void)
 	//煙、足跡更新
 	if (!m_bJump && m_nMotionType == PLAYERANIM_RUN)
 	{//地面にいる && 歩きモーション
-		if(m_nCountFlame == 0)
+		if (m_nCountFlame == 0)
 		{//キーが変わったなら
 			D3DXVECTOR3 pos = m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f);
 			//煙
@@ -771,14 +773,14 @@ void CPlayer::ControlKey(void)
 	// 操作
 	if (
 		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_K) == true) ||
-		 (pXpad->GetPress(INPUT_L1) == true) ||
-		 (pXpad->GetPress(INPUT_L2) == true)) &&
-		((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
-		 (pXpad->GetPress(INPUT_R1) == true) ||
-		 (pXpad->GetPress(INPUT_R2) == true))		
+		(pXpad->GetPress(INPUT_L1) == true) ||
+			(pXpad->GetPress(INPUT_L2) == true)) &&
+			((bOnline == false && pInputKeyboard->GetKeyboardPress(DIK_L) == true) ||
+		(pXpad->GetPress(INPUT_R1) == true) ||
+				(pXpad->GetPress(INPUT_R2) == true))
 		)
 	{// ドリフト
-		if (m_PlayerInfo.nCountTime < 90)
+		if (m_PlayerInfo.fCountTime < 90)
 			SetStateSpeed(STATE_SPEED_ACCEL);
 		else
 			SetStateSpeed(STATE_SPEED_DRIFT);
@@ -884,7 +886,7 @@ void CPlayer::UpdateMove(void)
 		m_fCTiltW = (m_FNor.x * Vec2.x) + (m_FNor.y * Vec2.y) + (m_FNor.z * Vec2.z) /
 			(sqrtf(powf(m_FNor.x, 2) + powf(m_FNor.y, 2) + powf(m_FNor.z, 2)) * sqrtf(powf(Vec2.x, 2) + powf(Vec2.y, 2) + powf(Vec2.z, 2)));
 		acosf(m_fCTiltW);
-		m_fCTiltW= (m_fTilt * -1.0f) * 0.5f;
+		m_fCTiltW = (m_fTilt * -1.0f) * 0.5f;
 	}
 	else { m_fTilt = 0.0f; }
 	if (m_fTilt > 0.05f) { m_fTilt = 0.05f; }
@@ -926,31 +928,31 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-		//走るモーション
+							//走るモーション
 		m_nAnimnow = PLAYERANIM_RUN;
 
 		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		if (m_State == PLAYERSTATE_NORMAL)
+		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+			m_fSpeed = fAccel * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
 		}
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
-		if (m_PlayerInfo.nCountTime < 90)
-			m_PlayerInfo.nCountTime++;
+		if (m_PlayerInfo.fCountTime < 90)
+			m_PlayerInfo.fCountTime++;
 
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		m_fSpeed = fBraks * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f);
+		m_fSpeed = fBraks * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f);
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * m_fSpeed;
@@ -959,8 +961,8 @@ void CPlayer::UpdateMove(void)
 		//揺れを無効にする
 		m_bShake = false;
 
-		if (m_PlayerInfo.nCountTime < 90)
-			m_PlayerInfo.nCountTime++;
+		if (m_PlayerInfo.fCountTime < 90)
+			m_PlayerInfo.fCountTime++;
 
 		break;
 	case STATE_SPEED_DRIFT:	//ドリフト状態
@@ -975,38 +977,38 @@ void CPlayer::UpdateMove(void)
 		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		if (m_State == PLAYERSTATE_NORMAL)
+		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+			m_fSpeed = fAccel * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
 		}
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
-		if (m_PlayerInfo.nCountTime < 90)
-			m_PlayerInfo.nCountTime++;
+		if (m_PlayerInfo.fCountTime < 90)
+			m_PlayerInfo.fCountTime++;
 
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
-	//CDebugProc::Print("DWON***\n");
+						   //CDebugProc::Print("DWON***\n");
 
-		m_fSpeed += (0.0f - m_fSpeed) * ((1.0f - (m_PlayerInfo.nCountTime < 90 ? (m_PlayerInfo.nCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
+		m_fSpeed += (0.0f - m_fSpeed) * ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
-		 //進行方向の設定
+		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
-		if (0 < m_PlayerInfo.nCountTime)
-			m_PlayerInfo.nCountTime -= 0.3f;
+		if (0 < m_PlayerInfo.fCountTime)
+			m_PlayerInfo.fCountTime -= 0.3f;
 
 		break;
 	default:
 		//走るモーション
 		m_nAnimnow = PLAYERANIM_NEUTRAL;
 
-		if (0 < m_PlayerInfo.nCountTime)
-			m_PlayerInfo.nCountTime--;
+		if (0 < m_PlayerInfo.fCountTime)
+			m_PlayerInfo.fCountTime--;
 
 		break;
 	}
@@ -1018,34 +1020,62 @@ void CPlayer::UpdateMove(void)
 
 	case PLAYERSTATE_SPEEDDOWN:
 		//進行方向の設定
-		m_move.x *= SPEEDDOWN;
-		m_move.z *= SPEEDDOWN;
+		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// 減速
+
+		if (m_nCntParticle > 5)
+		{
+			D3DXVECTOR2 fPos;
+			fPos.x = 30.0f - (float)(rand() % 60);
+			fPos.y = 30.0f - (float)(rand() % 60);
+
+			CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 30.0f, m_pos.z + fPos.y),
+				D3DXVECTOR3(-m_move.x, 1.0f, -m_move.z),
+				D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+				D3DXVECTOR2(0.5f, 5.0f),
+				20,
+				CParticle::TYPE_DOWN);
+
+			m_nCntParticle = 0;
+		}
 
 		//スピードダウンの音
 		pSound->SetVolume(CSound::SOUND_LABEL_SE_SPEEDDOWN, 2.0f);
 		pSound->PlaySound(CSound::SOUND_LABEL_SE_SPEEDDOWN);
+
+		m_nCntParticle++;
 
 		break;
 
 	case PLAYERSTATE_SPEEDDOWN_S:
 		//進行方向の設定
-		m_move.x *= SPEEDDOWN;
-		m_move.z *= SPEEDDOWN;
+		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// 減速
+
+		if (m_nCntParticle > 5)
+		{
+			D3DXVECTOR2 fPos;
+			fPos.x = 20.0f - (float)(rand() % 40);
+			fPos.y = 20.0f - (float)(rand() % 40);
+
+			CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 30.0f, m_pos.z + fPos.y),
+				D3DXVECTOR3(-m_move.x, 1.0f, -m_move.z),
+				D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+				D3DXVECTOR2(0.5f, 5.0f),
+				20,
+				CParticle::TYPE_DOWN);
+
+			m_nCntParticle = 0;
+		}
 
 		//スピードダウンの音
 		pSound->SetVolume(CSound::SOUND_LABEL_SE_SPEEDDOWN, 2.0f);
 		pSound->PlaySound(CSound::SOUND_LABEL_SE_SPEEDDOWN);
 
+		m_nCntParticle++;
 		break;
 
 	case PLAYERSTATE_DAMAGE:
-
-		m_fSpeed = 0.0f;
-
 		//進行方向の設定
-		m_move.x = sinf(m_rot.y) * (m_fSpeed);
-		m_move.z = cosf(m_rot.y) * (m_fSpeed);
-		
+		m_fSpeed = 0.0f;
 		break;
 	}
 
@@ -1079,15 +1109,23 @@ void CPlayer::UpdateMove(void)
 
 	//if (m_PlayerType == PLAYERTYPE_PLAYER)
 	{
-		CDebugProc::Print("m_bDamage : %d\n", m_bDamage);
+		/*CDebugProc::Print("m_bDamage : %d\n", m_bDamage);
 		CDebugProc::Print("m_State : %s\n",
 			(m_State == PLAYERSTATE_NORMAL ? "PLAYERSTATE_NORMAL" :
 			(m_State == PLAYERSTATE_SPEEDUP ? "PLAYERSTATE_SPEEDUP" :
-			(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
-			(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
-			(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
-			(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));
-		CDebugProc::Print("m_nCntDamage : %d\n", m_nCntDamage);
+				(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
+				(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
+					(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
+					(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));*/
+		//CDebugProc::Print("m_nCntDamage : %d\n", m_nCntDamage);
+
+		//CDebugProc::Print("m_StateSpeed : %s\n",
+		//	(m_StateSpeed == STATE_SPEED_ACCEL ? "STATE_SPEED_ACCEL" :
+		//	(m_StateSpeed == STATE_SPEED_BRAKS ? "STATE_SPEED_BRAKS" :
+		//	(m_StateSpeed == STATE_SPEED_DRIFT ? "STATE_SPEED_DRIFT" :
+		//	(m_StateSpeed == STATE_SPEED_DOWN ? "STATE_SPEED_DOWN" :
+		//	(m_StateSpeed == STATE_SPEED_STOP ? "STATE_SPEED_STOP" : ""))))));
+		//CDebugProc::Print("m_rot x : %.1f y : %.1f z : %.1f\n", m_rot.x, m_rot.y, m_rot.z);
 	}
 
 	//CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
@@ -1098,14 +1136,14 @@ void CPlayer::UpdateMove(void)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot -= fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+			m_fAddRot -= fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f);
 		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot += fAddRot * (m_PlayerInfo.nCountTime < 45 ? (m_PlayerInfo.nCountTime / 45) : 1.0f);
+			m_fAddRot += fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f);
 		}
 	}
 
@@ -1206,7 +1244,7 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 		}
 		/*else
 		{
-			m_PlayerInfo.nCountTime = 0;
+		m_PlayerInfo.fCountTime = 0;
 		}*/
 
 		//CDebugProc::Print("CHANGE***\n");
@@ -1297,7 +1335,7 @@ void CPlayer::CollisitionWall(void)
 				if (bTouch)
 				{ //当たっているなら減速する
 					m_PlayerInfo.fAccel = m_PlayerInfo.fAccel * DECELERATION;
-					m_PlayerInfo.nCountTime = 0;
+					m_PlayerInfo.fCountTime = 0;
 					break;
 				}
 			}
@@ -1594,8 +1632,8 @@ void CPlayer::BulletEgg(void)
 {
 	CSound *pSound = CManager::GetSound();
 
-	if (m_bDamage == false && m_State == PLAYERSTATE_NORMAL)
-	{// ダメージを食らっているときは使えない
+	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
+	//{// ダメージを食らっているときは使えない
 		if (m_nNumEgg + m_nNumChick > 0)
 		{// 卵かひよこを持っているとき
 			if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
@@ -1621,8 +1659,8 @@ void CPlayer::BulletEgg(void)
 
 							if (nRank == nData)
 							{
-								m_nDestRank = nCntChar;
-								m_pChick[0]->SetDestRank(nCntChar);
+								m_nDestRank = nData;
+								m_pChick[0]->SetDestRank(nData);
 								break;
 							}
 						}
@@ -1669,14 +1707,13 @@ void CPlayer::BulletEgg(void)
 					// 減速
 				case CChick::TYPE_ANNOY_S:
 					m_pChick[0]->SetDis(false);
-					m_State = PLAYERSTATE_SPEEDDOWN_S;
 					break;
 
 					// 加速
 				case CChick::TYPE_SPEED_S:
 					UseBoost();
 					m_State = PLAYERSTATE_SPEEDUP_S;
-					m_fSpeed += SPEED_EGG * 0.8f;
+					m_fSpeed += SPEED_CHICK;
 
 					m_pChick[0]->Uninit();
 					m_pChick[0] = NULL;
@@ -1715,7 +1752,7 @@ void CPlayer::BulletEgg(void)
 				case CEgg::EGGTYPE_SPEED:
 					UseBoost();
 					m_State = PLAYERSTATE_SPEEDUP;
-					m_fSpeed += 0.2f;
+					m_fSpeed += SPEED_EGG;
 					break;
 				}
 
@@ -1733,7 +1770,7 @@ void CPlayer::BulletEgg(void)
 			pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
 			pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
 		}
-	}
+	//}
 }
 
 //=============================================================================
@@ -1765,11 +1802,26 @@ void CPlayer::CollisionEgg(void)
 							// 攻撃
 						case CEgg::EGGTYPE_ATTACK:
 							// ダメージ状態にする
-							if (m_bDamage == false)
+							if (m_State != PLAYERSTATE_DAMAGE)
 							{
 								m_bDamage = true;
 								m_nCntDamage = 0;
 								m_State = PLAYERSTATE_DAMAGE;
+
+								D3DXVECTOR2 fSize;
+
+								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								{
+									fSize.x = 5.0f + (float)(rand() % 5);
+									fSize.y = 5.0f + (float)(rand() % 5);
+
+									CParticle::Create(m_pos,
+										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+										fSize,
+										20,
+										CParticle::TYPE_NORMAL);
+								}
 							}
 							pEgg->Uninit();	// 卵削除
 							break;
@@ -1781,20 +1833,6 @@ void CPlayer::CollisionEgg(void)
 								m_bDamage = true;
 								m_nCntDamage = 0;
 								m_State = PLAYERSTATE_SPEEDDOWN;
-								D3DXVECTOR2 fPos;
-
-								for (int nCntParticle = 0; nCntParticle < 10; nCntParticle++)
-								{// エフェクト生成
-									fPos.x = 30.0f - (float)(rand() % 60);
-									fPos.y = 30.0f - (float)(rand() % 60);
-
-									CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
-										D3DXVECTOR3(1.0f, 1.0f, 1.0f),
-										D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
-										D3DXVECTOR2(2.0f, 10.0f),
-										20,
-										CParticle::TYPE_DOWN);
-								}
 							}
 							pEgg->Uninit();	// 卵削除
 							break;
@@ -1838,7 +1876,7 @@ void CPlayer::CollisionChick(void)
 							// 攻撃
 						case CChick::TYPE_ATTACK:
 							// ダメージ状態にする
-							if (m_bDamage == false)
+							if (m_State != PLAYERSTATE_DAMAGE)
 							{
 								/*if (m_pEgg[m_nNumItem] != NULL)
 								{
@@ -1862,6 +1900,21 @@ void CPlayer::CollisionChick(void)
 								m_nCntDamage = 0;
 								m_State = PLAYERSTATE_DAMAGE;
 								/*}*/
+
+								D3DXVECTOR2 fSize;
+
+								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								{
+									fSize.x = 5.0f + (float)(rand() % 5);
+									fSize.y = 5.0f + (float)(rand() % 5);
+
+									CParticle::Create(m_pos,
+										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+										fSize,
+										20,
+										CParticle::TYPE_NORMAL);
+								}
 							}
 							pChick->Uninit();	// ひよこ削除
 							break;
@@ -1869,11 +1922,25 @@ void CPlayer::CollisionChick(void)
 							// 強い攻撃
 						case CChick::TYPE_ATTACK_S:
 							// ダメージ状態にする
-							if (m_bDamage == false && pChick->GetAttackS() == true)
+							if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true)
 							{
 								m_bDamage = true;
 								m_nCntDamage = 0;
-								m_State = PLAYERSTATE_DAMAGE;
+
+								D3DXVECTOR2 fSize;
+
+								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								{
+									fSize.x = 5.0f + (float)(rand() % 5);
+									fSize.y = 5.0f + (float)(rand() % 5);
+
+									CParticle::Create(m_pos,
+										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+										fSize,
+										20,
+										CParticle::TYPE_NORMAL);
+								}
 							}
 							break;
 
@@ -1884,21 +1951,6 @@ void CPlayer::CollisionChick(void)
 								m_bDamage = true;
 								m_nCntDamage = 0;
 								m_State = PLAYERSTATE_SPEEDDOWN;
-
-								D3DXVECTOR2 fPos;
-
-								for (int nCntParticle = 0; nCntParticle < 10; nCntParticle++)
-								{// エフェクト生成
-									fPos.x = 30.0f - (float)(rand() % 60);
-									fPos.y = 30.0f - (float)(rand() % 60);
-
-									CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
-										D3DXVECTOR3(1.0f, 1.0f, 1.0f),
-										D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
-										D3DXVECTOR2(2.0f, 10.0f),
-										20,
-										CParticle::TYPE_DOWN);
-								}
 							}
 							break;
 						}
@@ -1988,13 +2040,13 @@ void CPlayer::ChickAppear(void)
 					CChick::BULLETTYPE_PLAYER,
 					CChick::STATE_CHASE,
 					m_nPlayerNum);
-				/*m_pChick[m_nNumChick] = CChick::Create(m_pos,
-					D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-					CHICK_SCALE,
-					CChick::TYPE_ATTACK_S,
-					CChick::BULLETTYPE_PLAYER,
-					CChick::STATE_CHASE,
-					m_nPlayerNum);*/
+				//m_pChick[m_nNumChick] = CChick::Create(m_pos,
+				//	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				//	CHICK_SCALE,
+				//	CChick::TYPE_ANNOY_S,
+				//	CChick::BULLETTYPE_PLAYER,
+				//	CChick::STATE_CHASE,
+				//	m_nPlayerNum);
 			}
 
 			m_pEgg[0]->Uninit();
@@ -2133,6 +2185,8 @@ void CPlayer::AnnoyChicks(void)
 						m_pAnnoyChick[nCntPlayer]->SetRank(CGame::GetRanking(m_nPlayerNum));
 					}
 
+					pPlayer[nCntPlayer]->SetPlayerState(PLAYERSTATE_SPEEDDOWN_S);
+
 					m_bAnnoyS = true;
 				}
 			}
@@ -2148,12 +2202,13 @@ void CPlayer::ChaseAnnoyS(void)
 	if (m_pAnnoyChick[m_nPlayerNum] != NULL)
 	{
 		// 位置更新
-		m_pAnnoyChick[m_nPlayerNum]->SetPos(D3DXVECTOR3(m_pos.x, m_pos.y + 60.0f, m_pos.z));
+		m_pAnnoyChick[m_nPlayerNum]->SetPos(D3DXVECTOR3(m_pos.x, m_pos.y + 60.0f, m_pos.z));	// 少し上に位置更新
+		m_pAnnoyChick[m_nPlayerNum]->SetRot(D3DXVECTOR3(m_rot.x, m_rot.y + -D3DX_PI, m_rot.z));		// 向きを画面に向ける
 
-		// 食らっている時間をカウント
+																									// 食らっている時間をカウント
 		m_nAnnoySTimer++;
 
-		if (m_nAnnoySTimer > 100)
+		if (m_nAnnoySTimer > SPEEDDOWN_TIME)
 		{// 一定時間たったら
 			m_nAnnoySTimer = 0;
 			m_pAnnoyChick[m_nPlayerNum]->Uninit();
@@ -2166,20 +2221,20 @@ void CPlayer::ChaseAnnoyS(void)
 			m_nCntDamage = 0;
 			m_State = PLAYERSTATE_SPEEDDOWN_S;
 
-			D3DXVECTOR2 fPos;
+			//D3DXVECTOR2 fPos;
 
-			for (int nCntParticle = 0; nCntParticle < 20; nCntParticle++)
-			{// エフェクト生成
-				fPos.x = 30.0f - (float)(rand() % 60);
-				fPos.y = 30.0f - (float)(rand() % 60);
+			//for (int nCntParticle = 0; nCntParticle < 20; nCntParticle++)
+			//{// エフェクト生成
+			//	fPos.x = 30.0f - (float)(rand() % 60);
+			//	fPos.y = 30.0f - (float)(rand() % 60);
 
-				CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
-					D3DXVECTOR3(1.0f, 1.0f, 1.0f),
-					D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
-					D3DXVECTOR2(2.0f, 10.0f),
-					20,
-					CParticle::TYPE_DOWN);
-			}
+			//	CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
+			//		D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+			//		D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
+			//		D3DXVECTOR2(2.0f, 10.0f),
+			//		20,
+			//		CParticle::TYPE_DOWN);
+			//}
 		}
 	}
 }
@@ -2260,8 +2315,8 @@ void CPlayer::ChangeRoad(void)
 	float fWKRoad = m_fRoad;
 	float fPlus = (float)(CServer::Rand() % 4) * 7.5f;
 	bool bPlus;
-	if (m_nMap == 0)	{ bPlus = (m_nNumRoad == 0 ? false : true); }
-	else				{ bPlus = (m_nNumRoad == 0 ? true : false); }
+	if (m_nMap == 0) { bPlus = (m_nNumRoad == 0 ? false : true); }
+	else { bPlus = (m_nNumRoad == 0 ? true : false); }
 
 	if (bPlus)
 	{

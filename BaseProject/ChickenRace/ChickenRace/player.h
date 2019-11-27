@@ -28,7 +28,7 @@
 #define MAX_FRAME	(60)
 
 #define DAMAGE_TIME	(60)										// ダメージを食らっている時間
-#define SPEEDDOWN_TIME	(300)									// 減速している時間
+#define SPEEDDOWN_TIME	(180)									// 減速している時間
 #define FALL_CHICK_RANGE		(400)							// ひよこが降る範囲
 #define CHICK_FALL_NUM			(5)								// 落ちてくるひよこの数
 #define MAX_EGG		(3)											//卵の最大数
@@ -150,7 +150,7 @@ public:
 		float fDown;				//減速値
 		float fAddRot;				//加える回転値
 		float fDistance;			//移動距離
-		float nCountTime;			//時間の計算
+		float fCountTime;			//時間の計算
 		D3DXVECTOR3 FirstPos;		//初期位置
 	}PLAYER_INFO;
 
@@ -180,12 +180,13 @@ public:
 
 	PLAYER_INFO GetPlayerInfo(void) { return m_PlayerInfo; };
 	PLAYER_INFO * GetPlayerInfoPoint(void) { return &m_PlayerInfo; };
-	void SetSpeedCounter(float fCounter) { m_PlayerInfo.nCountTime = fCounter; }
-	float GetSpeedCounter(void) { return m_PlayerInfo.nCountTime; }
+	void SetSpeedCounter(float fCounter) { m_PlayerInfo.fCountTime = fCounter; }
+	float GetSpeedCounter(void) { return m_PlayerInfo.fCountTime; }
 
 	STATE_SPEED GetStateSpeed(void) { return m_StateSpeed; };
 	STATE_HANDLE GetStateHandle(void) { return m_StateHandle; };
 	PLAYERSTATE GetPlayerState(void) { return m_State; }
+	void SetPlayerState(PLAYERSTATE state) { m_State = state; }
 
 	void CollisitionWall(void);
 
@@ -285,11 +286,11 @@ private:
 	CModel						*m_apModel[MAX_PARTS];			//パーツモデルのポインタ
 	PlayerAnim					m_nAnimnow;						//現在のアニメーション
 
-	//static CModel *		m_pModel;			//パーツモデルのポインタ
-	//static int				m_nMaxModel;	//読み込むモデルの最大数
-	//static int				m_nMaxParts;	//読み込むパーツの最大数
+																//static CModel *		m_pModel;			//パーツモデルのポインタ
+																//static int				m_nMaxModel;	//読み込むモデルの最大数
+																//static int				m_nMaxParts;	//読み込むパーツの最大数
 
-	//メンバ変数
+																//メンバ変数
 	static int					  m_nMaxMotion;					// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;				// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;					// テクスチャ
@@ -328,6 +329,7 @@ private:
 	int							  m_nPlayerRank;				// 順位保存用
 	int							  m_nCntChick;
 	int							  m_nDestRank;					// 狙う順位
+	int							  m_nCntParticle;
 	bool						  m_abJump[MAX_FRAME];
 	bool						  m_bJumpSave;
 	bool						  m_bJumpFlag;
@@ -363,7 +365,7 @@ private:
 	bool						  m_bDivided;			//分かれ道かどうか
 	bool						  m_bJumpOld;			//ジャンプの前F
 
-	// モーション関数	新規
+														// モーション関数	新規
 	KEY_INFO						*m_pKeyInfo[MAX_MOTION];	//キー情報へのポインタ
 	int								m_nKey;						//現在のキーナンバー
 	int								m_nCountFlame;				//フレーム数
