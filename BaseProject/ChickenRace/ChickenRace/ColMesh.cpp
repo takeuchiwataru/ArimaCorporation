@@ -691,7 +691,13 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				if (!bJump) { move *= 1.35f; Effect = m_Effect; }
 				break;
 			case EFFECT_SWAMP:	//Œ¸‘¬
-				if (!bJump) { move *= 0.95f; Effect = m_Effect; }
+				if (!bJump)
+				{
+					move *= 0.93f; Effect = m_Effect;
+
+					if (60 < pPlayer->GetSpeedCounter())
+						pPlayer->SetSpeedCounter(60);
+				}
 				break;
 			case EFFECT_GRASS:
 			case EFFECT_NORMAL:
@@ -702,8 +708,22 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				{//ŠÑ’Ê‚µ‚Ä‚¢‚½‚ç
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
-					if (m_Effect == EFFECT_SWAMP) { move *= 0.95f; Effect = m_Effect; return bLand; }
-					if (m_Effect == EFFECT_GRASS) { move *= 0.95f; }
+					if (m_Effect == EFFECT_SWAMP)
+					{
+						move *= 0.93f; Effect = m_Effect; 
+						
+						if (60 < pPlayer->GetSpeedCounter())
+							pPlayer->SetSpeedCounter(60); 
+						
+						return bLand;
+					}
+					if (m_Effect == EFFECT_GRASS)
+					{
+						move *= 0.93f;
+
+						if (60 < pPlayer->GetSpeedCounter())
+							pPlayer->SetSpeedCounter(60);
+					}					
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
 					FNor = WKnor;

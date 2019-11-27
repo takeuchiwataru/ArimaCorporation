@@ -1,28 +1,3 @@
-﻿  ColMesh.cpp
-  コードを生成中...
-  コンパイル中...
-  wall.cpp
-  tutorial.cpp
-  result.cpp
-  player.cpp
-c:\users\game126\desktop\chickenrace\chickenrace\player.cpp(508): error C3861: 'DebugProc': 識別子が見つかりませんでした
-  particle.cpp
-  object.cpp
-  motion.cpp
-  model3D.cpp
-  meshfield.cpp
-  loadText.cpp
-  gamecamera.cpp
-  gamePlay.cpp
-  game.cpp
-  feed.cpp
-  egg.cpp
-  chick.cpp
-  camerabace.cpp
-  billboord.cpp
-  RoadPointer.cpp
-  NorMesh.cpp
-  コードを生成中...
-  コンパイル中...
-  DispEffect.cpp
-  コードを生成中...
+﻿  DispEffect.cpp
+  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\03_AI\ChickenRace07\\ChickenRace\ChickenRace.exe
+  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\03_AI\ChickenRace07\\ChickenRace\ChickenRace.pdb (Full PDB)

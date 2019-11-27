@@ -193,6 +193,7 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="result.cpp" />
     <ClCompile Include="resultcamera.cpp" />
+    <ClCompile Include="resultui.cpp" />
     <ClCompile Include="RoadPointer.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="scene2D.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="shadow.cpp" />
     <ClCompile Include="sound.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="titlecamera.cpp" />
     <ClCompile Include="titlemenu.cpp" />
@@ -250,6 +252,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="result.h" />
     <ClInclude Include="resultcamera.h" />
+    <ClInclude Include="resultui.h" />
     <ClInclude Include="RoadPointer.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="scene2D.h" />
@@ -258,6 +261,7 @@
     <ClInclude Include="Server.h" />
     <ClInclude Include="shadow.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="time.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="titlecamera.h" />
     <ClInclude Include="titlemenu.h" />

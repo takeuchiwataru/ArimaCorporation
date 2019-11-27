@@ -10,6 +10,7 @@
 #include "model3D.h"
 #include "camerabace.h"
 #include "shadow.h"
+#include "model3D.h"
 
 //*****************************************************************************
 // É}ÉNÉçíËã`

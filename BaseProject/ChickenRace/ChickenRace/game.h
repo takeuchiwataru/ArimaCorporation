@@ -149,11 +149,15 @@ public:
 	static int GetRanking(int nPlayerNum) { return m_nRanking[nPlayerNum]; }
 	static int *GetRanking(void) { return m_nRanking; }
 
+	static int GetRankingSort(int nPlayerNum) { return m_nRankingSort[nPlayerNum]; }
+	static int *GetRankingSort(void) { return m_nRankingSort; }
+
 	// ゴール
 	static bool *GetGoul(void) { return m_bGoul; }
 
 	static int GetCameraNumber(void) { return m_nCameraNumber; }
-	static int GetTime(void) { return m_nTime; }	// 時間
+	
+	static int *GetTimer(void) { return m_nTime; }
 
 private:
 	//テキストの値を管理する場所
@@ -224,7 +228,6 @@ private:
 	static int	m_nCntSetStage;					// ステージセットカウンタ
 	static CLoadTextMotion * m_pPlayerMotion;	//プレイヤーのモーション読み込み
 	static int m_nGameCounter;					//ゲームのカウンター
-	static int m_nTime;							// 経過時間
 
 	int m_nSetObjectNum;						//オブジェクトを置いた数
 	int m_nSetMeshFieldNum;						//メッシュフィールドを置いた数
@@ -242,11 +245,15 @@ private:
 	static int m_nControllerNum[MAX_PLAYER];	// コントローラー番号
 
 	static int m_nRanking[MAX_MEMBER];			// ランキング
+	static int m_nRankingSort[MAX_MEMBER];		// ランキング
 	static bool m_bGoul[MAX_PLAYER];			// ゴール判定
 
 												//ウォークスルー用
 	static bool m_bDrawUI;
 
 	static int m_nCameraNumber;					// 現在使用しているカメラ番号
+
+	static int m_nTime[MAX_MEMBER];				// タイム
+
 };
 #endif

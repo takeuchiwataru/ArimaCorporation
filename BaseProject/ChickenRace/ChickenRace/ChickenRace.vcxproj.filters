@@ -189,6 +189,12 @@
     <ClCompile Include="particle.cpp">
       <Filter>ソース ファイル\知らん奴</Filter>
     </ClCompile>
+    <ClCompile Include="resultui.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboord.h">
@@ -355,6 +361,12 @@
     </ClInclude>
     <ClInclude Include="particle.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
+    </ClInclude>
+    <ClInclude Include="resultui.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="time.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

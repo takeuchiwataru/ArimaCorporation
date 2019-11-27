@@ -13,6 +13,7 @@
 #include "scene2D.h"
 #include "input.h"
 #include "fade.h"
+#include "time.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -41,6 +42,9 @@ LPDIRECT3DTEXTURE9	CGamePlay::m_pTexture[CGamePlay::TEXTURE_MAX] = { NULL };
 //=============================================================================
 CGamePlay::CGamePlay()
 {
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+		m_pFade[nCntPlayer] = NULL;
+
 	for (int nCntLine = 0; nCntLine < MAX_LINE; nCntLine++)
 	{// 線カウント
 		m_pLine[nCntLine] = NULL;					// 線
@@ -62,6 +66,7 @@ CGamePlay::CGamePlay()
 		}
 
 		m_pGoul[nCntPlayer] = NULL;					// ランキング
+		m_pTime[nCntPlayer] = NULL;					// タイム
 	}
 }
 //=============================================================================
@@ -153,6 +158,41 @@ HRESULT CGamePlay::Init()
 
 	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
+
+	for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
+	{// プレイヤーカウント
+	 // フェードak
+		if (m_pFade[nCntPlayer] == NULL)
+		{// NULL
+			m_pFade[nCntPlayer] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+			m_pFade[nCntPlayer]->Init();
+			// 各ビューポートの中心点から計算（中心点 -> 指定の位置へ）
+			if (bOnine == true)
+			{// オンライン
+				m_pFade[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+						SCREEN_WIDTH * 0.5f,
+						SCREEN_HEIGHT * 0.5f,
+						0.0f),
+					D3DXVECTOR2(
+						SCREEN_WIDTH * 0.5f,
+						SCREEN_HEIGHT * 0.5f));
+			}
+			else
+			{// オンラインじゃない
+				m_pFade[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+					((nMaxPlayer - 1) / 2 == 0 ? (SCREEN_WIDTH * 0.5f) : (SCREEN_WIDTH * 0.25f) + ((SCREEN_WIDTH * 0.5f) * (nCntPlayer % 2))),
+						((nMaxPlayer - 1) == 0 ? (SCREEN_HEIGHT * 0.5f) : (SCREEN_HEIGHT * 0.25f) + ((SCREEN_HEIGHT * 0.5f) * (((nMaxPlayer - 1) / 2 == 0 ? nCntPlayer : nCntPlayer / 2)))),
+						0.0f),
+					D3DXVECTOR2(
+					((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f))),
+						((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)))));
+			}
+
+			m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(((nCntPlayer) % 2 == 0 ? 1.0f : 0.0f), ((nCntPlayer) / 2 == 1 ? 1.0f : 0.0f), ((nCntPlayer) == 1 ? 1.0f : 0.0f), 0.0f));
+		}
+	}
 
 	if (bOnine == false)
 	{// オンラインじゃない
@@ -374,6 +414,44 @@ HRESULT CGamePlay::Init()
 			//m_pGoul[nCntPlayer]->SetTexture(nCntDown, 3, 1, 1);
 			m_pGoul[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		}
+
+		// タイム
+		if (m_pTime[nCntPlayer] == NULL)
+		{// NULL
+			D3DXVECTOR3 pos, size;
+
+			if (bOnine == true)
+			{// オンライン
+				pos = D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_X)) * -1.0f) + (((SCREEN_HEIGHT * 0.02f) * 2.0f) * 10.0f),
+					(SCREEN_HEIGHT * 0.5f) + ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_Y)) + (SCREEN_HEIGHT * 0.04f),
+					0.0f);
+
+				size = D3DXVECTOR3(
+					(SCREEN_HEIGHT * 0.02f),
+					(SCREEN_HEIGHT * 0.04f),
+					0.0f);
+			}
+			else
+			{// オンラインじゃない
+				pos = D3DXVECTOR3(
+					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_X : RANKING_SIZE_4P_X))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntPlayer % 2 == 0 ? -1.0f : 1.0f)))
+					+ ((2 < (nMaxPlayer) && nCntPlayer % 2 == 1) ? -(((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.02f : 0.01f)) * 2.0f) * 4.0f) : (((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.02f : 0.01f)) * 2.0f) * 10.0f)),
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) + ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
+					(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? RANKING_SIZE_1P_Y : RANKING_SIZE_4P_Y)))
+					+ (SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.04f : 0.02f)),
+					0.0f);
+
+				size = D3DXVECTOR3(
+					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.02f : 0.01f),
+					SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.04f : 0.02f),
+					0.0f);
+			}
+
+			m_pTime[nCntPlayer] = CTime::Create(pos, size);
+			m_pTime[nCntPlayer]->TexTime(0, true);
+		}
 	}
 
 	return S_OK;
@@ -383,6 +461,15 @@ HRESULT CGamePlay::Init()
 //=============================================================================
 void CGamePlay::Uninit(void)
 {
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{// プレイヤーカウント
+		if (m_pFade[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pFade[nCntPlayer]->Uninit();
+			m_pFade[nCntPlayer] = NULL;
+		}
+	}
+
 	for (int nCntLine = 0; nCntLine < MAX_LINE; nCntLine++)
 	{// 線カウント
 		if (m_pLine[nCntLine] != NULL)
@@ -428,6 +515,12 @@ void CGamePlay::Uninit(void)
 			m_pGoul[nCntPlayer]->Uninit();
 			m_pGoul[nCntPlayer] = NULL;
 		}
+
+		if (m_pTime[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pTime[nCntPlayer]->Uninit();
+			m_pTime[nCntPlayer] = NULL;
+		}
 	}
 
 	//自身の削除
@@ -455,6 +548,8 @@ void CGamePlay::Update(void)
 	int nGameCounter = CGame::GetGameCounter();
 	int nCounter = nGameCounter - (START_SET_TIME - START_COUNT_TIME);
 	bool *pbGoul = CGame::GetGoul();
+
+	int *nTimer = CGame::GetTimer();
 
 	CSound *pSound = CManager::GetSound();
 
@@ -516,6 +611,33 @@ void CGamePlay::Update(void)
 		{// NULL以外
 			if (pPlayer[nCntMember]->GetPlayerType() == CPlayer::PLAYERTYPE_PLAYER)
 			{
+				if (m_pFade[nPlayerNum] != NULL)
+				{// NULL以外
+					if (pPlayer[nCntMember]->GetDrop() == true)
+					{
+						int nCounter = pPlayer[nCntMember]->GetDropCounter();
+						float fcol_a = 1.0f;
+						float fDiff = 1.0f;
+
+						int nNum = (((nCounter + (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT ? 0 : -MAX_FALL_WAIT)) % MAX_FALL_FADE) + 1);
+
+						if (nCounter < MAX_FALL_FADE)
+							fDiff = (float)((float)((nCounter % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
+						else if (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT)
+							fDiff = 1.0f;
+						else
+							fDiff = 1.0f - (float)((float)(((nCounter - MAX_FALL_WAIT) % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
+
+						fcol_a *= fDiff;
+
+						m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
+					}
+					else
+					{
+						m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+					}
+				}
+
 				for (int nCntItem =0; nCntItem < MAX_EGG; nCntItem++)
 				{// アイテムカウント
 					// アイテム
@@ -560,6 +682,12 @@ void CGamePlay::Update(void)
 						}
 					}
 				}
+
+				if (m_pTime[nPlayerNum] != NULL)
+				{// NULL以外
+					m_pTime[nPlayerNum]->TexTime(nTimer[nCntMember], true);
+				}
+
 				nPlayerNum++;
 			}
 		}

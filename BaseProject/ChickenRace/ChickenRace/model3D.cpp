@@ -318,6 +318,9 @@ void CModel3D::Draw(void)
 				break;
 			}
 			break;
+		case CManager::MODE_RESULT:
+			pCamera = (CCamera*)CResult::GetResultCamera();
+			break;
 		}
 	}
 

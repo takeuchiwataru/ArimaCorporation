@@ -11,12 +11,14 @@
 //=============================================================================
 //	静的メンバ変数
 //=============================================================================
+LPDIRECT3DTEXTURE9 CNumber::m_pTexture = NULL;
 
 //=============================================================================
 //	マクロ定義
 //=============================================================================
 #define NUMBER_SIZE_X		(30.0f)									// 数字の横幅
 #define NUMBER_SIZE_Y		(50.0f)									// 数字の縦幅
+#define FILE_TEXTURE	("data\\TEXTURE\\number\\number.png")	//テクスチャの読み込み
 
 //=============================================================================
 // コンストラクタ
@@ -32,9 +34,36 @@ CNumber::CNumber()
 CNumber::~CNumber(){}
 
 //=============================================================================
+// ロード
+//=============================================================================
+void CNumber::Load(void)
+{
+	//デバイスの取得
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	// テクスチャの生成
+	D3DXCreateTextureFromFile(pDevice,
+		FILE_TEXTURE,
+		&m_pTexture);
+}
+
+//=============================================================================
+// アンロード
+//=============================================================================
+void CNumber::Unload(void)
+{
+	//テクスチャの破棄
+	if (m_pTexture != NULL)
+	{
+		m_pTexture->Release();
+		m_pTexture = NULL;
+	}
+}
+
+//=============================================================================
 // 初期化処理
 //=============================================================================
-HRESULT CNumber::Init(D3DXVECTOR3 pos, int nType)
+HRESULT CNumber::Init(D3DXVECTOR3 pos, D3DXVECTOR3 size, int nType)
 {
 	// デバイス取得
 	CRenderer *pRenderer = CManager::GetRenderer();
@@ -61,20 +90,10 @@ HRESULT CNumber::Init(D3DXVECTOR3 pos, int nType)
 	// 頂点バッファをロックし、頂点データへのポインタを取得
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
-	if ((pMode == CManager::MODE_GAME) || (pMode == CManager::MODE_TUTORIAL))
-	{
-		pVtx[0].pos = D3DXVECTOR3(pos.x - NUMBER_SIZE_X, pos.y - NUMBER_SIZE_Y, 0.0f);
-		pVtx[1].pos = D3DXVECTOR3(pos.x + NUMBER_SIZE_X, pos.y - NUMBER_SIZE_Y, 0.0f);
-		pVtx[2].pos = D3DXVECTOR3(pos.x - NUMBER_SIZE_X, pos.y + NUMBER_SIZE_Y, 0.0f);
-		pVtx[3].pos = D3DXVECTOR3(pos.x + NUMBER_SIZE_X, pos.y + NUMBER_SIZE_Y, 0.0f);
-	}
-	else if (pMode == CManager::MODE_RANKING)
-	{
-		pVtx[0].pos = D3DXVECTOR3(pos.x - 15.0f, pos.y - 25.0f, 0.0f);
-		pVtx[1].pos = D3DXVECTOR3(pos.x + 15.0f, pos.y - 25.0f, 0.0f);
-		pVtx[2].pos = D3DXVECTOR3(pos.x - 15.0f, pos.y + 25.0f, 0.0f);
-		pVtx[3].pos = D3DXVECTOR3(pos.x + 15.0f, pos.y + 25.0f, 0.0f);
-	}
+	pVtx[0].pos = D3DXVECTOR3(pos.x - size.x, pos.y - size.y, 0.0f);
+	pVtx[1].pos = D3DXVECTOR3(pos.x + size.x, pos.y - size.y, 0.0f);
+	pVtx[2].pos = D3DXVECTOR3(pos.x - size.x, pos.y + size.y, 0.0f);
+	pVtx[3].pos = D3DXVECTOR3(pos.x + size.x, pos.y + size.y, 0.0f);
 
 	for (int nCntrhw = 0; nCntrhw < 4; nCntrhw++)
 	{
@@ -132,7 +151,7 @@ void CNumber::Draw(void)
 	pDevice->SetFVF(FVF_VERTEX_2D);
 
 	// テクスチャ設定
-	pDevice->SetTexture(0, NULL);
+	pDevice->SetTexture(0, m_pTexture);
 
 	// ポリゴン描画
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);

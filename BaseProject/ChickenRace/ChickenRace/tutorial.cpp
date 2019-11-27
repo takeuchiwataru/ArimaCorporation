@@ -139,7 +139,7 @@ HRESULT CTutorial::Init()
 	CWall::Load();					//壁の読み込み
 
 	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-	CPlayer::LoadModel();		//モデルの読み込み
+	//CPlayer::LoadModel();		//モデルの読み込み
 
 	if (m_pBoyMotion == NULL) { m_pBoyMotion = CLoadTextMotion::Create(TEXT_BOY_MOTION); }		//男性モーション読み込み
 	if (m_pGirlMotion == NULL) { m_pGirlMotion = CLoadTextMotion::Create(TEXT_GIRL_MOTION); }	//女性モーション読み込み
@@ -188,7 +188,7 @@ void CTutorial::Uninit(void)
 	//-------------------
 	CFade::UnLoad();					//フェードテクスチャ
 	CMeshField::UnLoad();				//メッシュフィールドテクスチャ
-	CPlayer::UnloadModel();				//プレイヤーモデル
+	//CPlayer::UnloadModel();				//プレイヤーモデル
 	CObject::UnLoad();					//オブジェクトのテクスチャの破棄
 	CShadow::UnLoad();					//影テクスチャ
 	CWall::UnLoad();					//壁のテクスチャ破棄

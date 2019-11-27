@@ -33,6 +33,8 @@
 #include "chick.h"
 #include "ColMesh.h"
 #include "particle.h"
+#include "time.h"
+#include "number.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -66,7 +68,6 @@ CGame::GAMEMODE CGame::m_gameModeNext = CGame::GAMEMODE_NONE;
 CGame::GAMESTATE CGame::m_gameState = CGame::GAMESTATE_NONE;
 int	CGame::m_nCntSetStage = 0;
 int CGame::m_nGameCounter = 0;
-int CGame::m_nTime = 0;
 
 //ウォークスルー用
 bool CGame::m_bDrawUI = false;
@@ -75,9 +76,12 @@ int CGame::m_nMaxPlayer = 0;						// プレイヤー数
 int CGame::m_nCharSelectNum[MAX_PLAYER] = { 0 };	// キャラ選択番号
 int CGame::m_nControllerNum[MAX_PLAYER] = { 0 };	// コントローラー番号
 int CGame::m_nRanking[MAX_MEMBER] = { 0 };			// ランキング
+int CGame::m_nRankingSort[MAX_MEMBER] = { 0 };		// ランキング
 bool CGame::m_bGoul[MAX_PLAYER] = { false };		// ゴール
 
 int CGame::m_nCameraNumber = 0;						// 現在使用しているカメラ番号
+
+int CGame::m_nTime[MAX_MEMBER] = { 0 };				// タイム
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -121,6 +125,11 @@ HRESULT CGame::Init()
 	CGameCharSelect::Load();	// ゲーム（キャラ選択）
 	CGamePlay::Load();			// ゲーム（プレイ）
 
+	CPlayer::Load();	//モデルの読み込み
+
+	CTime::Load();
+	CNumber::Load();
+
 	//====================================================================
 	//						 必要な変数の初期化
 	//====================================================================
@@ -131,7 +140,6 @@ HRESULT CGame::Init()
 	m_nCntSetStage = 0;					//どこのステージから開始するか
 	m_bPause = false;					//ポーズを初期化
 	m_nGameCounter = 0;					//カウンターの初期化
-	m_nTime = 0;
 
 	m_nCameraNumber = 0;				// 現在使用しているカメラ番号
 
@@ -144,8 +152,11 @@ HRESULT CGame::Init()
 	}
 
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{
 		m_nRanking[nCntMember] = nCntMember;			// ランキング
-
+		m_nRankingSort[nCntMember] = nCntMember;
+		m_nTime[nCntMember] = 0;
+	}
 														// デバッグ用
 	if (m_gameMode == GAMEMODE_COURSE_VIEW)
 		m_nMaxPlayer = 1;
@@ -154,8 +165,9 @@ HRESULT CGame::Init()
 
 	SetGameMode(m_gameMode);			// ゲームモード設定
 
-	//if (m_gameMode == GAMEMODE_PLAY) 
-	//	m_nGameCounter = START_SET_TIME;
+	// カウントをなくす
+	if (m_gameMode == GAMEMODE_PLAY) 
+		m_nGameCounter = START_SET_TIME;
 
 	return S_OK;
 }
@@ -183,8 +195,11 @@ void CGame::Uninit(void)
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）
 
-									//プレイヤーモデルの破棄
-	CPlayer::UnloadModel();
+	//モデルの破棄
+	CPlayer::Unload();
+
+	CTime::Unload();
+	CNumber::Unload();
 
 	//ポーズ削除
 	if (m_pPause != NULL)
@@ -304,7 +319,8 @@ void CGame::Update(void)
 						m_pPlayer[nCntPlayer]->SetControl(true);
 			}
 
-			Ranking();		// ランキング
+			if (m_bPause == false)
+				Ranking();		// ランキング
 
 			break;
 		case GAMESTATE_END:			//ゲーム終了状態
@@ -312,7 +328,7 @@ void CGame::Update(void)
 
 			if (180 < m_nCounterGameState)
 			{//画面（モード）の設定
-				CFade::Create(CManager::MODE_TITLE);
+				CFade::Create(CManager::MODE_RESULT);
 			}
 			break;
 		}
@@ -390,17 +406,8 @@ void CGame::Update(void)
 		m_nGameCounter++;
 	}
 
-	CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
-	CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
-
-	if (m_gameMode == GAMEMODE_PLAY && m_NowGameState == GAMESTATE_NORMAL)
-		m_nTime = m_nGameCounter - START_SET_TIME;
-
-	if (0 < m_nTime)
-	{
-		//CDebugProc::Print("time:%d\n", m_nTime);		// ポーズ
-		CDebugProc::Print("time:%3d:%3d:%3d\n", ((m_nTime) / 60) / 60, ((m_nTime) / 60) % 60, (m_nTime) % 60);		// ポーズ
-	}
+	//CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
+	//CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
 }
 
 //=============================================================================
@@ -824,10 +831,10 @@ void CGame::Ranking(void)
 	 // ランキング
 		m_nRanking[nCount] = CRoad_Manager::GetManager()->GetRank(nCount) - 1;
 
-		if (nCount < m_nMaxPlayer)
-		{
-			if (m_pPlayer[nCount] != NULL)
-			{// NULL以外
+		if (m_pPlayer[nCount] != NULL)
+		{// NULL以外
+			if (nCount < m_nMaxPlayer)
+			{
 				if (m_pPlayer[nCount]->GetPlayerType() == CPlayer::PLAYERTYPE_PLAYER &&
 					m_pPlayer[nCount]->GetGoal() == true)
 				{// プレイヤーがゴールした
@@ -835,13 +842,28 @@ void CGame::Ranking(void)
 					nGoulNum++;					// ゴール人数
 				}
 			}
+
+			if (START_SET_TIME <= m_nGameCounter)
+				if (m_pPlayer[nCount]->GetGoal() == false)
+					m_nTime[nCount]++;
 		}
-		CDebugProc::Print("プレイヤー番号 [%d] : 順位 [%d]\n", nCount, m_nRanking[nCount]);
+		//CDebugProc::Print("プレイヤー番号 [%d] : 順位 [%d]\n", nCount, m_nRanking[nCount]);
 	}
 
 	if (nGoulNum == m_nMaxPlayer)
 	{// 全てゴールした
 		SetGameState(GAMESTATE_END);
+
+		for (int nCount = 0; nCount < MAX_MEMBER; nCount++)
+		{// プレイヤーカウント
+			for (int nCntCheck = 0; nCntCheck < MAX_MEMBER; nCntCheck++)
+				if (m_nRanking[nCntCheck] == nCount)
+				{
+					m_nRankingSort[nCount] = nCntCheck;
+					break;
+				}
+		}
+
 		return;
 	}
 }

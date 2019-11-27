@@ -1,36 +1,39 @@
 //=============================================================================
 //
-// リザルト処理 [result.cpp]
-// Author : 有馬　武志
+// リザルトの処理 [result.cpp]
+// Author : 有馬 武志
 //
 //=============================================================================
 #define _CRT_SECURE_NO_WARNINGS	//Fire Wall突破
-#include <stdio.h>				//インクルドファイル
-
+#include <string.h>				//ストリング使用のため
 #include "result.h"
-#include "main.h"
 #include "renderer.h"
 #include "manager.h"
 #include "input.h"
 #include "fade.h"
 #include "sound.h"
-#include "player.h"
-#include "meshfield.h"
-#include "object.h"
-#include "model.h"
-#include "wall.h"
-#include "billboord.h"
-#include "shadow.h"
 #include "resultcamera.h"
-#include "loadText.h"
+#include "object.h"
+
+#include "resultui.h"
+
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define EFFECT_FRAME	(300)		// 季節のエフェクトフレーム
+#define SEASON_MAX		(4)			// 季節のカウント
+#define EFFECT_CREATE	(10)		// エフェクト生成時間
+#define EFFECT_ROS		(D3DXVECTOR3(rand() % 1200 + 10.0f, -20.0f, 0.0f))	// 位置(ランダム)
+#define EFFECT_SIZE		(rand() % RADIUS_CONDIUIONS + 10)					// サイズ(ランダム)
+#define RESULT_POS		(D3DXVECTOR3(SCREEN_WIDTH /2, SCREEN_HEIGHT / 2 - 80.0f, 0.0f))	// 位置(タイトルロゴ000)
+#define RESULT_SIZE		(D3DXVECTOR2(480.0f, 100.0f))										// サイズ(タイトルロゴ000)
+#define LOGO_POS		(D3DXVECTOR3(RESULT_POS.x + 130.0f, RESULT_POS.y + 100.0f, 0.0f))		// 位置(タイトルロゴ001)
+#define LOGO_SIZE		(D3DXVECTOR2(125.0f, 35.0f))										// サイズ(タイトルロゴ001)
+#define PRESS_POS		(D3DXVECTOR3((SCREEN_WIDTH / 2), (SCREEN_HEIGHT/ 2) + 200.0f, 0.0f))// 位置(Press Start Enter)
+#define PRESS_SIZE		(D3DXVECTOR2(250.0f, 20.0f))										// サイズ(Press Start Enter)
+
 #define TEXT_OBJECTNAME1		"data\\TEXT\\ゲームマップ\\objecy.txt"			// 読み込むテキストファイル
-#define TEXT_MESHFIELDNAME1		"data\\TEXT\\ゲームマップ\\meshfield.txt"		// 読み込むテキストファイル
-#define TEXT_WALLNAME			"data\\TEXT\\ゲームマップ\\wall.txt"			// 読み込むテキストファイル
-#define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"				// プレイヤーのモーションファイル
-#define FADE_OUT_TIME			(60  * 13)										// フェードするまでの時間
+
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************
@@ -38,85 +41,64 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
-CMeshField		*CResult::m_pMeshField = NULL;
-CObject			*CResult::m_pObject = NULL;
-CResultCamera	*CResult::m_pCamera = NULL;
-int				CResult::m_nGetTotalScoer = 0;
-int				CResult::m_nGetLevel = 0;
-CLoadTextMotion * CResult::m_pPlayerMotion = NULL;
-int			   CResult::m_aTotalScore[MAX_RANKING] = { 1800, 1500, 1200, 1000, 800 };
+int				CResult::m_nResultCounter = 0;		// タイトルのカウンター
+
+CResultCamera	*CResult::m_pResultCamera = NULL;
 
 //=============================================================================
 // デフォルトコンストラクタ
 //=============================================================================
 CResult::CResult()
 {
-	m_nCntTime = 0;
-	m_nSetCnt = 0;
-	m_bPress = false;
+	for (int nCount = 0; nCount < MAX_MAP_OBJECT; nCount++)
+		m_Map[nCount] = {};
+
+	m_nResultCounter = 0;
+
+	m_pResultUI = NULL;			// UIメニュー
 }
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CResult::~CResult(){}
+CResult::~CResult()
+{
 
+}
 //=============================================================================
 // 初期化処理
 //=============================================================================
 HRESULT CResult::Init()
 {
-	//サウンドの情報
-	CSound *pSound = CManager::GetSound();
-
 	//===================================
 	//		 Loadの読み込み場所
 	//===================================
-	//フェードのテクスチャの読み込み
-	CFade::Load();
+	CFade::Load();		//フェードのテクスチャの読み込み
+	CResultUI::Load();
+	CObject::Load();			//オブジェクトのテクスチャの読み込み
 
-	// リザルトプレイヤーの読み込み
-	if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-
-	//メッシュフィールドのテクスチャの読み込み
-	m_pMeshField->Load();
-
-	//オブジェクトのテクスチャの読み込み
-	//m_pObject->Load();
-
-	//===================================
-	//		 生成
-	//===================================
-
-	//マップを読み込み
+	//マップを読み込む
 	TextLoad(6);
-	MeshTextLoad(6);
 
-	//m_pPlayer = CResultPlayer::Create(D3DXVECTOR3(530.0f, 0.0f, -1500.0f));
+	//	変数の初期化
+	m_nResultCounter = 0;
 
-	/*for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
+	if (m_pResultCamera == NULL)
 	{
-		// オブジェクトの生成
-		m_pObject = CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, CModel3D::MOVETYPE_NOT, m_Map[nCount].m_nCollision);
-	}*/
-	for (int nCount = 0; nCount < m_nSetMeshFieldNum; nCount++)
-	{
-		//フィールドの生成
-		CMeshField::Create(m_Mesh[nCount].m_pos, m_Mesh[nCount].m_nWidthDivide, m_Mesh[nCount].m_nDepthDivide, m_Mesh[nCount].m_fTexXUV, m_Mesh[nCount].m_fTexYUV,
-			m_Mesh[nCount].m_fWidthLength, m_Mesh[nCount].m_fDepthLength,
-			m_Mesh[nCount].m_fVtxHeight_No0, m_Mesh[nCount].m_fVtxHeight_No1, m_Mesh[nCount].m_fVtxHeight_No2, m_Mesh[nCount].m_fVtxHeight_No3,
-			m_Mesh[nCount].m_fVtxSide_No0, m_Mesh[nCount].m_fVtxSide_No1, m_Mesh[nCount].m_fVtxSide_No2, m_Mesh[nCount].m_fVtxSide_No3,
-			m_Mesh[nCount].m_nTexType, 0);
-	}
-	if (m_pCamera == NULL)
-	{
-		m_pCamera = new CResultCamera;
-		if (m_pCamera != NULL) { m_pCamera->Init(); }
+		m_pResultCamera = new CResultCamera;
+		if (m_pResultCamera != NULL) { m_pResultCamera->Init(); }
 	}
 
-	//m_pReport = CReport::Create(CReport::TYPE_NONE, m_nGetTotalScoer, m_nGetLevel);
-	
-	//スコアを読み込む
-	LoadScore();
+	// タイトルメニュー
+	if (m_pResultUI == NULL)
+	{
+		m_pResultUI = CResultUI::Create();
+	}
+
+	for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
+	{
+		//オブジェクトの生成
+		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, m_Map[nCount].m_nCollision);
+	}
 
 	return S_OK;
 }
@@ -128,50 +110,27 @@ void CResult::Uninit(void)
 	//===================================
 	//	　　UnLoadの破棄する場所
 	//===================================
+	CFade::UnLoad();	//フェードのテクスチャの破棄
+	CResultUI::Unload();
+	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 
-	//メッシュフィールドテクスチャの破棄
-	m_pMeshField->UnLoad();
-
-	//フェードのテクスチャの破棄
-	CFade::UnLoad();
-
-	//オブジェクトのテクスチャの破棄
-	m_pObject->UnLoad();
-
-	//メッシュフィールドの破棄
-	if (m_pMeshField != NULL)
+	// タイトルカメラの破棄
+	if (m_pResultCamera != NULL)
 	{
-		m_pMeshField->Uninit();
-		m_pMeshField = NULL;
-	}
-	
-	// オブジェクトの破棄
-	if (m_pObject != NULL)
-	{
-		m_pObject->Uninit();
-		m_pObject = NULL;
+		m_pResultCamera->Uninit();
+		delete m_pResultCamera;
+		m_pResultCamera = NULL;
 	}
 
-	//プレイヤーのモーションの破棄
-	if (m_pPlayerMotion != NULL)
+	// タイトルメニュー
+	if (m_pResultUI != NULL)
 	{
-		m_pPlayerMotion->Uninit();
-		delete m_pPlayerMotion;
-		m_pPlayerMotion = NULL;
+		m_pResultUI->Uninit();
+		m_pResultUI = NULL;
 	}
 
-	// リザルトカメラの破棄
-	if (m_pCamera != NULL)
-	{
-		m_pCamera->Uninit();
-		delete m_pCamera;
-		m_pCamera = NULL;
-	}
-
-	//フェード以外を削除
+	//フェード以外削除
 	CScene::NotFadeReleseAll();
-
-
 }
 //=============================================================================
 // 更新処理
@@ -180,57 +139,25 @@ void CResult::Update(void)
 {
 	//入力情報
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);					//ジョイパットの取得
 	CInputMouse *pCInputMouse = CManager::GetInputMouse();
-	CInputXPad * pXpad = CManager::GetXInput();					//ジョイパットの取得
 
 	//サウンドの情報
 	CSound *pSound = CManager::GetSound();
 
-	//現在どんな状況か
-	CGame::GAMESTATE GameStateNow = CGame::GetGameState();
+	//フェードのポイント
+	CFade::FADE pFade = CFade::GetFade();
 
-	/*if (m_nSetCnt == 60)
-	{	// 車をカメラ前まで移動する
+	//	タイトルのカウンター加算
+	m_nResultCounter++;
 
-	}
-	else if (m_nSetCnt == 80)
-	{	// トータルスコアの枠
-		m_pReport->SetReporh(CReport::TYPE_TOTALLOGO);
-	}
-	else if (m_nSetCnt == 120)
-	{	// トータルスコア表示
-		m_pReport->SetReporh(CReport::TYPE_TOTALSCORE);
-	}
-	else if (m_nSetCnt == 140)
-	{	// 満足度の枠
-		m_pReport->SetReporh(CReport::TYPE_CLAS);
-	}
-	else if (m_nSetCnt == 180)
-	{	// 満足度の星
-		m_pReport->SetReporh(CReport::TYPE_CLASLEVEL);
-	}
-	else if (m_nSetCnt == 190)
-	{	// 決定ボタン表示
-		m_pReport->SetReporh(CReport::TYPE_OK_KEY);
-		m_bPress = true;
-	}*/
+	if (m_pResultCamera != NULL) { m_pResultCamera->Updata(); }
 
-	if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) || pXpad->GetALL(1, 0))
+	if (pFade == CFade::FADE_NONE)
 	{
-		/*if (m_bPress == false) { m_pReport->SetReporh(CReport::TYPE_ALL_DISPLAY); m_bPress = true; }
-		else*/
-		{
+		if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
 			CFade::Create(CManager::MODE_TITLE);
-		}
 	}
-	m_nSetCnt++;
-
-	if (m_nCntTime == FADE_OUT_TIME)
-	{//9秒後に何もしてない場合戻る
-		CFade::Create(CManager::MODE_TITLE);
-	}
-
-	m_nCntTime++;
 }
 //=============================================================================
 // 描画処理
@@ -242,18 +169,20 @@ void CResult::Draw(void)
 	// バックバッファ＆Ｚバッファのクリア
 	pDevice->Clear(0,
 		NULL,
-		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
+		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
 		D3DCOLOR_RGBA(157, 184, 224, 255),
 		1.0f,
 		0);
 
-	if (m_pCamera != NULL) { m_pCamera->SetCamera(); }
+	//リザルトカメラの生成
+	if (m_pResultCamera != NULL) { m_pResultCamera->SetCamera(); }
 
 	//全ての描画
 	CScene::DrawAll();
 }
+
 //===============================================================================
-// オブジェクトのロード
+// ファイルからロード
 //===============================================================================
 void CResult::TextLoad(int nLoadNumber)
 {
@@ -265,7 +194,7 @@ void CResult::TextLoad(int nLoadNumber)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-	//ファイルポインタの初期化処理
+						//ファイルポインタの初期化処理
 	pFile = NULL;
 
 	//ファイルを開く 読み込み
@@ -425,215 +354,8 @@ void CResult::TextLoad(int nLoadNumber)
 			}
 		}
 	}
-
-	fclose(pFile);
-
-	//m_pMarkObject->SetObjectNum(CMarkObject::GetObjectNum() + m_nSetObjectNum);
 }
-//===============================================================================
-// メッシュフィールドをファイルからロード
-//===============================================================================
-void CResult::MeshTextLoad(int nLoadNumber)
-{
-	//ファイル用変数
-	FILE *pFile;		//ファイルポインタ
-	char *pStrcur;		//現在の先頭の文字列
-	char aLine[256];	//文字列
-	char aStr[256];		//一時保存文字列
-	int nIndex = 0;		//現在のインデックス
-	int nWord = 0;		//ポップで返された値を保持
 
-	//ファイルポインタの初期化処理
-	pFile = NULL;
-
-	//ファイルを開く 読み込み
-	pFile = fopen(TEXT_MESHFIELDNAME1, "r");
-
-	//NULLチェック
-	if (pFile != NULL)
-	{
-		//文字列の先頭を設定
-		pStrcur = ReadLine(pFile, &aLine[0]);
-		//文字列を取り出す
-		strcpy(aStr, pStrcur);
-
-		//文字列のデータ 比較する文字列 比較する文字数
-		if (memcmp(pStrcur, "MESHFIELD_SETNUM = ", strlen("MESHFIELD_SETNUM = ")) == 0)
-		{
-			//頭出し
-			pStrcur += strlen("MESHFIELD_SETNUM = ");
-			//文字列の先頭を設定
-			strcpy(aStr, pStrcur);
-			//文字列抜き出し
-			m_nSetMeshFieldNum = atoi(pStrcur);
-		}
-
-		//オブジェクトの数分回す
-		for (int nCntObject = 0; nCntObject < m_nSetMeshFieldNum; nCntObject++)
-		{
-			//文字列の先頭を設定
-			pStrcur = ReadLine(pFile, &aLine[0]);
-			//文字列を取り出す
-			strcpy(aStr, pStrcur);
-
-			if (memcmp(pStrcur, "MESHFIELD_START", strlen("MESHFIELD_START")) == 0)
-			{
-				while (1)
-				{
-					//文字列の先頭を設定
-					pStrcur = ReadLine(pFile, &aLine[0]);
-
-					//種類のを読み込み
-					if (memcmp(pStrcur, "TEXTURETYPE = ", strlen("TEXTURETYPE = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("TEXTURETYPE = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_nTexType = atoi(pStrcur);
-					}
-					//横の分割数を読み込み
-					if (memcmp(pStrcur, "X_DIVIDE = ", strlen("X_DIVIDE = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("X_DIVIDE = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_nWidthDivide = atoi(pStrcur);
-					}
-					//縦の分割数を読み込み
-					if (memcmp(pStrcur, "Z_DIVIDE = ", strlen("Z_DIVIDE = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("Z_DIVIDE = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_nDepthDivide = atoi(pStrcur);
-					}
-					//横のテクスチャ座標を読み込み
-					if (memcmp(pStrcur, "X_TEXUV = ", strlen("X_TEXUV = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("X_TEXUV = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fTexXUV = (float)atoi(pStrcur);
-					}
-					//縦のテクスチャ座標を読み込み
-					if (memcmp(pStrcur, "Y_TEXUV = ", strlen("Y_TEXUV = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("Y_TEXUV = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fTexYUV = (float)atoi(pStrcur);
-					}
-					//横の長さを読み込み
-					if (memcmp(pStrcur, "X_LENGTH = ", strlen("X_LENGTH = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("X_LENGTH = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fWidthLength = (float)atoi(pStrcur);
-					}
-					//縦の長さを読み込み
-					if (memcmp(pStrcur, "Z_LENGTH = ", strlen("Z_LENGTH = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("Z_LENGTH = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fDepthLength = (float)atoi(pStrcur);
-					}
-					//１頂点の高さ
-					if (memcmp(pStrcur, "VTX0_HEIGHT = ", strlen("VTX0_HEIGHT = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("VTX0_HEIGHT = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fVtxHeight_No0 = (float)atoi(pStrcur);
-					}
-					//２頂点の高さ
-					if (memcmp(pStrcur, "VTX1_HEIGHT = ", strlen("VTX1_HEIGHT = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("VTX1_HEIGHT = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fVtxHeight_No1 = (float)atoi(pStrcur);
-					}
-					//３頂点の高さ
-					if (memcmp(pStrcur, "VTX2_HEIGHT = ", strlen("VTX2_HEIGHT = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("VTX2_HEIGHT = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fVtxHeight_No2 = (float)atoi(pStrcur);
-					}
-					//４頂点の高さ
-					if (memcmp(pStrcur, "VTX3_HEIGHT = ", strlen("VTX3_HEIGHT = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("VTX3_HEIGHT = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-						//文字列抜き出し
-						m_Mesh[nCntObject].m_fVtxHeight_No3 = (float)atoi(pStrcur);
-					}
-					//POSを読み込み
-					if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)
-					{
-						//頭出し
-						pStrcur += strlen("POS = ");
-						//文字列の先頭を設定
-						strcpy(aStr, pStrcur);
-
-						//文字数を返してもらう
-						nWord = PopString(pStrcur, &aStr[0]);
-						//文字列変換
-						m_Mesh[nCntObject].m_pos.x = (float)atof(pStrcur);
-						//文字数分進める
-						pStrcur += nWord;
-
-						//文字数を返してもらう
-						nWord = PopString(pStrcur, &aStr[0]);
-						//文字列変換
-						m_Mesh[nCntObject].m_pos.y = (float)atof(pStrcur);
-						//文字数分進める
-						pStrcur += nWord;
-
-						//文字数を返してもらう
-						nWord = PopString(pStrcur, &aStr[0]);
-						//文字列変換
-						m_Mesh[nCntObject].m_pos.z = (float)atof(pStrcur);
-
-					}
-					else if (memcmp(pStrcur, "MESHFIELD_END", strlen("MESHFIELD_END")) == 0)
-					{
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	fclose(pFile);
-
-	//m_pMarkMeshField->SetMeshFieldNum(CMarkMeshField::GetMeshFieldNum() + m_nSetMeshFieldNum);
-}
 //=============================================================================
 //　ファイル読み込み無効文を排除
 //=============================================================================
@@ -778,23 +500,4 @@ int CResult::PopString(char * pStr, char * pDest)
 	strcpy(pDest, pStr);
 	//文字列の数を返す
 	return nWord;
-}
-
-//=============================================================================
-// スコアの読み込み処理
-//=============================================================================
-void CResult::LoadScore()
-{
-	// 読み込み
-	FILE *pFile;
-
-	// スコアのランキングの読み込み
-	pFile = fopen("data/TEXT/Ranking/ranking.bin", "rb");
-
-	if (pFile != NULL)
-	{
-		fread(m_aTotalScore, sizeof(int), MAX_RANKING, pFile);
-
-		fclose(pFile);
-	}
 }

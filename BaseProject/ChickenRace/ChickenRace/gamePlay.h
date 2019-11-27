@@ -22,6 +22,7 @@
 // 前方宣言
 //*****************************************************************************
 class CScene2D;
+class CTime;
 
 //=====================
 // 基本クラス
@@ -53,12 +54,14 @@ public:
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
+	CScene2D *m_pFade[MAX_PLAYER];			// フェード
 	CScene2D *m_pLine[MAX_LINE];			// 線
 	CScene2D *m_pCountDown[COUNT_DOWN];		// カウントダウン
 	CScene2D *m_pRanking[MAX_PLAYER];		// ランキング
 	CScene2D *m_pItemFrame[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pGoul[MAX_PLAYER];			// ゴール
+	CTime	*m_pTime[MAX_PLAYER];			// タイム
 
 };
 #endif

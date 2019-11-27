@@ -279,6 +279,7 @@ void  CNorMesh::Draw(void)
 
 	// テクスチャの設定
 	if (m_pTex != NULL) { pDevice->SetTexture(0, m_pTex); }
+	else { pDevice->SetTexture(0, NULL); }
 
 	// ポリゴンの描画
 	pDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, m_nNumVertex, 0, m_nNumPolygon);

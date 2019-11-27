@@ -11,6 +11,7 @@
 #include "scene.h"
 #include "toonshader.h"
 #include "camerabace.h"
+#include "model3D.h"
 
 //*****************************************************************************
 // É}ÉNÉçíËã`

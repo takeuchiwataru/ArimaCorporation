@@ -20,7 +20,9 @@ public:
 	CNumber();
 	~CNumber();
 
-	HRESULT Init(D3DXVECTOR3 pos, int nType);
+	static void Load(void);
+	static void Unload(void);
+	HRESULT Init(D3DXVECTOR3 pos, D3DXVECTOR3 size, int nType);
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
@@ -30,6 +32,8 @@ public:
 	void SetSize(D3DXVECTOR2 size, D3DXVECTOR2 pos);
 
 private:
+	static LPDIRECT3DTEXTURE9 m_pTexture;				// テクスチャ情報へのポインタ
+
 	LPDIRECT3DVERTEXBUFFER9   m_pVtxBuff;				// 頂点バッファへのポインタ
 	int                       m_nType;					// テクスチャの番号
 };

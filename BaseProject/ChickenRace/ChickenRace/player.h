@@ -38,6 +38,8 @@
 #define MAX_PLAYERKEY			(8)								//キーフレーム数
 #define MAX_MOTION				(10)							//モーションの最大数
 
+#define MAX_FALL_FADE			(60)							//おちるエフェクト
+#define MAX_FALL_WAIT			(15)							//おちるエフェクト待機
 
 //=============================================================================
 // 前方宣言
@@ -160,8 +162,8 @@ public:
 	void Update(void);
 	void Draw(void);
 	static CPlayer * Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum = 0, int nControllerNum = 0, PLAYERTYPE playerType = PLAYERTYPE_PLAYER);
-	static void LoadModel(void);
-	static void UnloadModel(void);
+	static void Load(void);
+	static void Unload(void);
 
 	PLAYERTYPE GetPlayerType(void) { return m_PlayerType; }
 
@@ -178,6 +180,9 @@ public:
 
 	PLAYER_INFO GetPlayerInfo(void) { return m_PlayerInfo; };
 	PLAYER_INFO * GetPlayerInfoPoint(void) { return &m_PlayerInfo; };
+	void SetSpeedCounter(float fCounter) { m_PlayerInfo.nCountTime = fCounter; }
+	float GetSpeedCounter(void) { return m_PlayerInfo.nCountTime; }
+
 	STATE_SPEED GetStateSpeed(void) { return m_StateSpeed; };
 	STATE_HANDLE GetStateHandle(void) { return m_StateHandle; };
 	PLAYERSTATE GetPlayerState(void) { return m_State; }
@@ -221,6 +226,9 @@ public:
 
 	int GetItemNum(void) { return m_nNumItem; }
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
+
+	bool GetDrop(void) { return m_bDrop; }
+	int GetDropCounter(void) { return m_nDropCounter; }
 
 	bool GetGoal(void) { return m_bGoal; }
 
@@ -338,6 +346,8 @@ private:
 
 	CDispEffect					  *m_pDispEffect;		//画面演出
 	CCOL_MESH::EFFECT			  m_FEffect;			//地面効果
+	bool						  m_bDrop;				//おちた
+	int							  m_nDropCounter;		// おちたカウント
 	CRoad_Pointer				  *m_pPoint;			//次のポイント
 	CRoad_Pointer				  *m_pEnmPoint;			//敵が見る次のポイント
 	D3DXVECTOR3					  m_FNor;				//地面の法線

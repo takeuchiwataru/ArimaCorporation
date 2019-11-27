@@ -1,7 +1,7 @@
 //==============================================================================
 //
 // リザルトカメラ処理 [resultcamera.cpp]
-// Auther : shun yokomichi
+// Auther : 有馬 武志
 //
 //==============================================================================
 #include "resultcamera.h"
@@ -27,8 +27,8 @@ CResultCamera::~CResultCamera() {}
 HRESULT CResultCamera::Init(void)
 {
 	CCamera::Init();
-	m_posV = D3DXVECTOR3(650.0f, 50.0f, 0.0f);	//視点の初期値
-	m_posR = D3DXVECTOR3(300.0f, 0.0f, -400.0f);		//注視点の初期値
+	m_posR = D3DXVECTOR3(-450.0f, -30.0f, 0.0f);	//視点の初期値
+	m_posV = D3DXVECTOR3(100.0f, 80.0f, -1.0f);		//注視点の初期値
 	m_fRotDest = 0;
 	return S_OK;
 }

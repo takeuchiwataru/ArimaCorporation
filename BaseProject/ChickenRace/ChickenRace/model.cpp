@@ -10,6 +10,7 @@
 #include "debugproc.h"
 #include "toonshader.h"
 #include "gamecamera.h"
+#include "model3d.h"
 
 //*****************************************************************************
 // É}ÉNÉçíËã`
@@ -261,6 +262,9 @@ void CModel::Draw(float fAlpha)
 					pCamera = (CCamera*)CGame::GetGameCamera(CGame::GetCameraNumber());
 				break;
 			}
+			break;
+		case CManager::MODE_RESULT:
+			pCamera = (CCamera*)CResult::GetResultCamera();
 			break;
 		}
 	}

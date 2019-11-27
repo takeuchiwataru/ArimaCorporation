@@ -125,7 +125,7 @@ void	CRoad_Pointer::RankPoint(CPlayer *pPlayer, bool &bGoal)
 		}
 		nNumPoint = pPlus->m_nNumRoad + (nMap * 1000);
 	}
-	CRoad_Manager::GetManager()->SetDistance(nNumber, nNumPoint, fDistance);
+	CRoad_Manager::GetManager()->SetDistance(nNumber, nNumPoint, fDistance, bGoal);
 }
 //==================================================================================================//
 //    * 道のポインタの順位付け関数 *
@@ -803,9 +803,13 @@ void	CRoad_Manager::Load(int &nNumber, MAP map)
 //==================================================================================================//
 //    * 道のポインタ(管理)関数 *
 //==================================================================================================//
-void	CRoad_Manager::SetDistance(int &nNumber, int &nNumPoint, float fDistance)
+void	CRoad_Manager::SetDistance(int &nNumber, int &nNumPoint, float fDistance, bool &bGoal)
 {
-	m_fDistance[nNumber] = fDistance;
+	if (bGoal == true)
+		m_fDistance[nNumber] = (float)m_nRanking[nNumber];
+	else
+		m_fDistance[nNumber] = fDistance;
+
 	m_nNumPoint[nNumber] = nNumPoint;
 	SetRank();
 }

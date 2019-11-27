@@ -40,6 +40,7 @@ void CDispEffect::Load(void)
 			switch (nCount)
 			{//“Ç‚Ýž‚Ý 
 			case TEX_SWAMP:		strcat(aStr, "DispEffect_Water.jpg");	break;
+			case TEX_SWAMP_ONE:	strcat(aStr, "WaterDrop.png");			break;
 			case TEX_BOOST:		strcat(aStr, "DispEffect_Boost.jpg");	break;
 			case TEX_FootSteps:	strcat(aStr, "Footsteps.jpg");			break;
 			}
@@ -390,5 +391,5 @@ void	CDispEffect::SetSwmp(C2DAnim *&pAnim, float fRot)
 	pAnim->Set(pos, fSize * fSizeX, fSize * fSizeY, D3DX_PI,
 		0, 1, 5, 6, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), C2D::DRAW_TYPE_NORMAL);
 	pAnim->SetState(C2DAnim::STATE_FADEIN_D, fCol);
-	//pAnim->BindTexture(m_pTexAll[TEX_SWAMP]);
+	pAnim->BindTexture(m_pTexAll[TEX_SWAMP_ONE]);
 }

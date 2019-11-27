@@ -109,7 +109,7 @@ public:
 	void	Save(void);
 	void	LoadMap(void);
 	void	Load(int &nNumber, MAP map);
-	void	SetDistance(int &nNumber, int &nNumPoint, float fDistance);
+	void	SetDistance(int &nNumber, int &nNumPoint, float fDistance, bool &bGoal);
 	void	SetRank(void);
 	void	SetRoad(void);
 	int		GetRank(int &nNumber) { return m_nRanking[nNumber]; };
