@@ -153,10 +153,13 @@ void CResult::Update(void)
 
 	if (m_pResultCamera != NULL) { m_pResultCamera->Updata(); }
 
-	if (pFade == CFade::FADE_NONE)
+	if (RESULT_WAIT < m_nResultCounter)
 	{
-		if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
-			CFade::Create(CManager::MODE_TITLE);
+		if (pFade == CFade::FADE_NONE)
+		{
+			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
+				CFade::Create(CManager::MODE_TITLE);
+		}
 	}
 }
 //=============================================================================

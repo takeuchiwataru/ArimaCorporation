@@ -32,6 +32,7 @@ public:
 		TEXTURE_RANK = 0,
 		TEXTURE_CHAR,
 		TEXTURE_ICON,
+		TEXTURE_PRESS,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -53,6 +54,7 @@ private:
 	CScene2D			*m_pRank[MAX_MEMBER];	// ランク
 	CScene2D			*m_pChar[MAX_MEMBER];	// キャラ
 	CScene2D			*m_pPlayer[MAX_MEMBER];	// プレイヤー
-	CTime				*m_pTime[MAX_MEMBER];				// タイム
+	CTime				*m_pTime[MAX_MEMBER];	// タイム
+	CScene2D			*m_pPress;				// プレス
 };
 #endif

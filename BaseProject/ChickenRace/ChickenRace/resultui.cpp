@@ -42,6 +42,7 @@ CResultUI::CResultUI()
 		m_pPlayer[nCntMember] = NULL;		// プレイヤー
 		m_pTime[nCntMember] = NULL;			// タイム
 	}
+	m_pPress = NULL;						// プレス
 }
 //=============================================================================
 // デストラクタ
@@ -69,6 +70,9 @@ HRESULT CResultUI::Load(void)
 			break;
 		case TEXTURE_ICON:
 			strcpy(cName, "data/TEXTURE/game/charselect/icon.png");
+			break;
+		case TEXTURE_PRESS:
+			strcpy(cName, "data/TEXTURE/Title/UI/PressButton.png");
 			break;
 		}
 
@@ -197,6 +201,23 @@ HRESULT CResultUI::Init()
 		}
 	}
 
+	// プレス
+	if (m_pPress == NULL)
+	{// NULL
+		m_pPress = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
+		m_pPress->Init();
+		m_pPress->SetPosSize(
+			D3DXVECTOR3
+			(
+				(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.35f),
+				(SCREEN_HEIGHT * 0.12f) + (SCREEN_HEIGHT * 0.8f),
+				0.0f
+			),
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.2f, SCREEN_HEIGHT * 0.05f));
+		m_pPress->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		m_pPress->BindTexture(m_pTexture[TEXTURE_PRESS]);
+	}
+
 	return S_OK;
 }
 //=============================================================================
@@ -235,6 +256,13 @@ void CResultUI::Uninit(void)
 		}
 	}
 
+	// プレス
+	if (m_pPress != NULL)
+	{// NULL以外
+		m_pPress->Uninit();
+		m_pPress = NULL;
+	}
+
 	//自身の削除
 	CScene::Release();
 }
@@ -244,17 +272,21 @@ void CResultUI::Uninit(void)
 //=============================================================================
 void CResultUI::Update(void)
 {
-	/*static int n = 0;
-	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
-	{// メンバーカウント
-		// タイム
-		if (m_pTime[nCntMember] != NULL)
+	int nCounter = CResult::GetCounter();
+
+	if (RESULT_WAIT < nCounter)
+	{
+		nCounter -= RESULT_WAIT;
+
+		// プレス
+		if (m_pPress != NULL)
 		{// NULL以外
-			m_pTime[nCntMember]->TexTime(n, true);
+			nCounter %= 120;
+			int nNum = nCounter % 60;
+
+			m_pPress->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nCounter < 60 ? (float)((float)nNum / (float)60) : 1.0f - (float)((float)nNum / (float)60))));
 		}
 	}
-
-	n++;*/
 }
 
 //=============================================================================

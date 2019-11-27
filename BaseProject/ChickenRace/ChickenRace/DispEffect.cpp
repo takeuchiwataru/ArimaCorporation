@@ -218,7 +218,8 @@ void	CDispEffect::AnimUp(void)
 
 		if (m_pDispAnim[nCount] != NULL)
 		{
-			m_pDispAnim[nCount]->Update();
+			if (nCount == EFFECT_BOOST)
+				m_pDispAnim[nCount]->Update();
 		}
 	}
 }
@@ -389,7 +390,7 @@ void	CDispEffect::SetSwmp(C2DAnim *&pAnim, float fRot)
 	pos += plus;
 	pAnim = C2DAnim::Create();
 	pAnim->Set(pos, fSize * fSizeX, fSize * fSizeY, D3DX_PI,
-		0, 1, 5, 6, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), C2D::DRAW_TYPE_NORMAL);
+		0, 1, 1, 1, C2DAnim::ANIMATION_LOOP, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), C2D::DRAW_TYPE_NORMAL);
 	pAnim->SetState(C2DAnim::STATE_FADEIN_D, fCol);
 	pAnim->BindTexture(m_pTexAll[TEX_SWAMP_ONE]);
 }

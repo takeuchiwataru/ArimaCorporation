@@ -16,10 +16,10 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define TEXTURE_NAME_0			"data\\TEXTURE\\pause\\pause_icon.png"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_1			"data\\TEXTURE\\pause\\pause000.png"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_2			"data\\TEXTURE\\pause\\pause001.png"	//読み込むテクスチャファイル
 #define TEXTURE_NAME_3			"data\\TEXTURE\\pause\\pause002.png"	//読み込むテクスチャファイル
+#define TEXTURE_NAME_4			"data\\TEXTURE\\pause\\pause_icon.png"	//読み込むテクスチャファイル
 #define MAX_PAUSE				(128)									//ポーズの最大数
 #define PAUSE_POS_X				(0)										//ポーズの左上X座標
 #define PAUSE_POS_Y				(0)										//ポーズの左上Y座標
@@ -102,12 +102,26 @@ HRESULT CPause::Init(void)
 
 		if (nCount == 0)
 		{//カウント０だった場合
-		 //頂点設定
+			//頂点設定
 			pVtx[0].pos = D3DXVECTOR3(PAUSE_POS_X, PAUSE_POS_Y, 0.0f);
 			pVtx[1].pos = D3DXVECTOR3(PAUSE_WIDTH, PAUSE_POS_Y, 0.0f);
 			pVtx[2].pos = D3DXVECTOR3(PAUSE_POS_X, PAUSE_HEIGHT, 0.0f);
 			pVtx[3].pos = D3DXVECTOR3(PAUSE_WIDTH, PAUSE_HEIGHT, 0.0f);
 			//頂点カラー設定
+			pVtx[0].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.3f);
+			pVtx[1].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.3f);
+			pVtx[2].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.3f);
+			pVtx[3].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.3f);
+		}
+		else if (nCount == 4)
+		{
+			//頂点設定
+			pVtx[0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 - 50, 0.0f);		//左上
+			pVtx[1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 - 50, 0.0f);		//右上
+			pVtx[2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 + 50, 0.0f);		//左下
+			pVtx[3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 + 50, 0.0f);		//右下
+
+				//頂点カラー設定
 			pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 			pVtx[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 			pVtx[2].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
@@ -115,7 +129,7 @@ HRESULT CPause::Init(void)
 		}
 		else
 		{//それ以外の場合
-		 //頂点設定
+			//頂点設定
 			pVtx[0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 250, PosPause, 0.0f);			//左上
 			pVtx[1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 250, PosPause, 0.0f);			//右上
 			pVtx[2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 250, PosPause + 150, 0.0f);		//左下
@@ -252,6 +266,14 @@ void CPause::Update(void)
 	pVtx[m_SelectNum * 4 + 2 + 4].col = D3DXCOLOR(m_SelectColor, m_SelectColor, m_SelectColor, 1.0f);
 	pVtx[m_SelectNum * 4 + 3 + 4].col = D3DXCOLOR(m_SelectColor, m_SelectColor, m_SelectColor, 1.0f);
 
+
+	//頂点設定
+	pVtx[(4 * 4) + 0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 - 50 + (m_SelectNum * 200), 0.0f);		//左上
+	pVtx[(4 * 4) + 1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 - 50 + (m_SelectNum * 200), 0.0f);		//右上
+	pVtx[(4 * 4) + 2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 + 50 + (m_SelectNum * 200), 0.0f);		//左下
+	pVtx[(4 * 4) + 3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 + 50 + (m_SelectNum * 200), 0.0f);		//右下
+
+
 	//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
 
@@ -346,10 +368,11 @@ HRESULT CPause::Load(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	// テクスチャの生成
-	D3DXCreateTextureFromFile(pDevice,TEXTURE_NAME_0,&m_pTexture[0]);
-	D3DXCreateTextureFromFile(pDevice,TEXTURE_NAME_1,&m_pTexture[1]);
-	D3DXCreateTextureFromFile(pDevice,TEXTURE_NAME_2,&m_pTexture[2]);
-	D3DXCreateTextureFromFile(pDevice,TEXTURE_NAME_3,&m_pTexture[3]);
+	m_pTexture[0] = NULL;
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_1, &m_pTexture[1]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_2, &m_pTexture[2]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_3, &m_pTexture[3]);
+	D3DXCreateTextureFromFile(pDevice, TEXTURE_NAME_4, &m_pTexture[4]);
 
 	return S_OK;
 }
