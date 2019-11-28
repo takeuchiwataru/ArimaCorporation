@@ -45,9 +45,11 @@ CGameCharSelect::CGameCharSelect()
 	}
 
 	m_pYor = NULL;						// あなた
-	m_pReturn = NULL;					// 戻る
+	m_pReturnButton = NULL;				// 戻る
 	m_pReturnBG = NULL;					// 戻る背景
+	m_pReturnHome = NULL;				// 戻る小屋
 	m_pReturnChar = NULL;				// 戻るキャラ
+	m_pReturnGrass = NULL;				// 戻る草
 
 	m_nReturnCounter = 0;				// 戻るカウント
 	m_nEntryCounter = 0;				// エントリーカウント
@@ -109,6 +111,18 @@ HRESULT CGameCharSelect::Load(void)
 			break;
 		case TEXTURE_HINT:
 			strcpy(cName, "data/TEXTURE/tutorial/tutorial_hint.png");
+			break;
+		case TEXTURE_RETURN_BG:
+			strcpy(cName, "data/TEXTURE/game/charselect/home/ground.png");
+			break;
+		case TEXTURE_RETURN_HOME:
+			strcpy(cName, "data/TEXTURE/game/charselect/home/Chicken_House.png");
+			break;
+		case TEXTURE_RETURN_CHAR:
+			strcpy(cName, "data/TEXTURE/game/charselect/home/Chicken_Yoko.png");
+			break;
+		case TEXTURE_RETURN_GRASS:
+			strcpy(cName, "data/TEXTURE/game/charselect/home/grass.png");
 			break;
 		}
 
@@ -308,16 +322,18 @@ HRESULT CGameCharSelect::Init()
 	else
 	{
 		// もどる
-		if (m_pReturn == NULL)
+		if (m_pReturnButton == NULL)
 		{// NULL
-			m_pReturn = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
-			m_pReturn->Init();
-			m_pReturn->SetPosSize(
+			m_pReturnButton = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
+			m_pReturnButton->Init();
+			m_pReturnButton->SetPosSize(
 				D3DXVECTOR3(
-					(SCREEN_WIDTH * 0.5f) + -(SCREEN_WIDTH * 0.12f),
+				(SCREEN_WIDTH * 0.5f) + -(SCREEN_WIDTH * 0.12f),
 					(SCREEN_HEIGHT * 0.05f),
 					0.0f),
-				D3DXVECTOR2(SCREEN_HEIGHT * 0.12f, SCREEN_HEIGHT * 0.032f));
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.15f, SCREEN_HEIGHT * 0.032f));
+			m_pReturnButton->BindTexture(m_pTexture[TEXTURE_BUTTON]);
+			m_pReturnButton->SetTexture(0, 1, 2, 1);
 		}
 
 		// もどる背景
@@ -328,10 +344,26 @@ HRESULT CGameCharSelect::Init()
 			m_pReturnBG->SetPosSize(
 				D3DXVECTOR3(
 					(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f),
-					(SCREEN_HEIGHT * 0.05f),
+					(SCREEN_HEIGHT * 0.08f),
 					0.0f),
-				D3DXVECTOR2(SCREEN_HEIGHT * 0.2f, SCREEN_HEIGHT * 0.032f));
-			m_pReturnBG->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.2f, SCREEN_HEIGHT * 0.003f));
+			//m_pReturnBG->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pReturnBG->BindTexture(m_pTexture[TEXTURE_RETURN_BG]);
+		}
+
+		// もどる小屋
+		if (m_pReturnHome == NULL)
+		{// NULL
+			m_pReturnHome = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
+			m_pReturnHome->Init();
+			m_pReturnHome->SetPosSize(
+				D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f) + (SCREEN_WIDTH * 0.08f),
+					(SCREEN_HEIGHT * 0.042f),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.06f, SCREEN_HEIGHT * 0.045f));
+			//m_pReturnHome->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pReturnHome->BindTexture(m_pTexture[TEXTURE_RETURN_HOME]);
 		}
 
 		// もどるキャラ
@@ -342,10 +374,26 @@ HRESULT CGameCharSelect::Init()
 			m_pReturnChar->SetPosSize(
 				D3DXVECTOR3(
 					(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f) + -(SCREEN_WIDTH * 0.09f),
-					(SCREEN_HEIGHT * 0.05f),
+					(SCREEN_HEIGHT * 0.052f),
 					0.0f),
-				D3DXVECTOR2(SCREEN_HEIGHT * 0.03f, SCREEN_HEIGHT * 0.03f));
-			m_pReturnChar->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.0f));
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.03f, SCREEN_HEIGHT * 0.04f));
+			//m_pReturnChar->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pReturnChar->BindTexture(m_pTexture[TEXTURE_RETURN_CHAR]);
+		}
+
+		// もどる草
+		if (m_pReturnGrass == NULL)
+		{// NULL
+			m_pReturnGrass = new CScene2D(0, CScene::OBJTYPE_2DPOLYGON);
+			m_pReturnGrass->Init();
+			m_pReturnGrass->SetPosSize(
+				D3DXVECTOR3(
+				(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f) + -(SCREEN_WIDTH * 0.05f),
+					(SCREEN_HEIGHT * 0.064f),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.04f, SCREEN_HEIGHT * 0.03f));
+			//m_pReturnGrass->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			m_pReturnGrass->BindTexture(m_pTexture[TEXTURE_RETURN_GRASS]);
 		}
 	}
 
@@ -463,10 +511,10 @@ void CGameCharSelect::Uninit(void)
 	}
 
 	// もどる
-	if (m_pReturn != NULL)
+	if (m_pReturnButton != NULL)
 	{// NULL以外
-		m_pReturn->Uninit();	// 終了処理
-		m_pReturn = NULL;		// NULLへ
+		m_pReturnButton->Uninit();	// 終了処理
+		m_pReturnButton = NULL;		// NULLへ
 	}
 	// もどる背景
 	if (m_pReturnBG != NULL)
@@ -474,11 +522,23 @@ void CGameCharSelect::Uninit(void)
 		m_pReturnBG->Uninit();	// 終了処理
 		m_pReturnBG = NULL;		// NULLへ
 	}
+	// もどる小屋
+	if (m_pReturnHome != NULL)
+	{// NULL以外
+		m_pReturnHome->Uninit();	// 終了処理
+		m_pReturnHome = NULL;		// NULLへ
+	}
 	// もどるキャラ
 	if (m_pReturnChar != NULL)
 	{// NULL以外
 		m_pReturnChar->Uninit();	// 終了処理
 		m_pReturnChar = NULL;		// NULLへ
+	}
+	// もどる草
+	if (m_pReturnGrass != NULL)
+	{// NULL以外
+		m_pReturnGrass->Uninit();	// 終了処理
+		m_pReturnGrass = NULL;		// NULLへ
 	}
 
 	// 準備
@@ -788,6 +848,8 @@ void CGameCharSelect::Local(void)
 
 	int nPlayerNum = nMaxPlayer;
 
+	bool bReturnInput = false;
+
 	if (CFade::GetFade() == CFade::FADE_NONE)
 	{// 使用していない
 		for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
@@ -1032,6 +1094,8 @@ void CGameCharSelect::Local(void)
 				m_nReturnCounter++;
 			else
 				CFade::Create(CManager::MODE_TITLE);
+
+			bReturnInput = true;
 		}
 		else
 		{
@@ -1039,6 +1103,8 @@ void CGameCharSelect::Local(void)
 				m_nReturnCounter -= 2;
 			else
 				m_nReturnCounter = 0;
+		
+			bReturnInput = false;
 		}
 	}
 
@@ -1201,18 +1267,23 @@ void CGameCharSelect::Local(void)
 	// もどるキャラ
 	if (m_pReturnBG != NULL)
 	{// NULL以外
-		m_pReturnBG->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_nReturnCounter < 45 ? (1.0f * (float)((float)m_nReturnCounter / (float)45)) : 1.0f)));
+		//m_pReturnBG->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_nReturnCounter < 45 ? (1.0f * (float)((float)m_nReturnCounter / (float)45)) : 1.0f)));
 	}
 	// もどるキャラ
 	if (m_pReturnChar != NULL)
 	{// NULL以外
 		m_pReturnChar->SetPosSize(
 			D3DXVECTOR3(
-				((SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f) + -(SCREEN_WIDTH * 0.09f)) + (((SCREEN_WIDTH * 0.09f) * 2.0f) * (float)((float)m_nReturnCounter / (float)90)),
-				(SCREEN_HEIGHT * 0.05f),
+				((SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.07f) + -(SCREEN_WIDTH * 0.09f)) + (((SCREEN_WIDTH * 0.09f) * 1.8f) * (float)((float)m_nReturnCounter / (float)90)),
+				(SCREEN_HEIGHT * 0.052f) + ((m_nReturnCounter / 5) % 2 == 0 ? -2.0f : 0.0f),
 				0.0f),
-			D3DXVECTOR2(SCREEN_HEIGHT * 0.03f, SCREEN_HEIGHT * 0.03f));
-		m_pReturnChar->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, (m_nReturnCounter < 45 ? (1.0f * (float)((float)m_nReturnCounter / (float)45)) : 1.0f)));
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.03f, SCREEN_HEIGHT * 0.04f));
+		//m_pReturnChar->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (m_nReturnCounter < 45 ? (1.0f * (float)((float)m_nReturnCounter / (float)45)) : 1.0f)));
+
+		if (bReturnInput == true || m_nReturnCounter == 0)
+			m_pReturnChar->SetUV(D3DXVECTOR2(0.0f, 0.0f), D3DXVECTOR2(1.0f, 0.0f), D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(1.0f, 1.0f));
+		else
+			m_pReturnChar->SetUV(D3DXVECTOR2(1.0f, 0.0f), D3DXVECTOR2(0.0f, 0.0f), D3DXVECTOR2(1.0f, 1.0f), D3DXVECTOR2(0.0f, 1.0f));
 	}
 
 	// プレイヤー最大数設定

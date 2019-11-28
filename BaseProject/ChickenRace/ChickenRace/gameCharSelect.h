@@ -37,6 +37,10 @@ public:
 		TEXTURE_READY,
 		TEXTURE_TUTORIAL,
 		TEXTURE_HINT,
+		TEXTURE_RETURN_BG,
+		TEXTURE_RETURN_HOME,
+		TEXTURE_RETURN_CHAR,
+		TEXTURE_RETURN_GRASS,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -66,9 +70,11 @@ private:
 	CScene2D *m_pButton[MAX_PLAYER];		// ボタン
 
 	CScene2D *m_pYor;						// あなた
-	CScene2D *m_pReturn;					// 戻る
+	CScene2D *m_pReturnButton;				// 戻る
 	CScene2D *m_pReturnBG;					// 戻る背景
+	CScene2D *m_pReturnHome;				// 戻る小屋
 	CScene2D *m_pReturnChar;				// 戻るキャラ
+	CScene2D *m_pReturnGrass;				// 戻る草
 	int		m_nReturnCounter;				// 戻るカウント
 
 	CScene2D *m_pReady;						// 準備
