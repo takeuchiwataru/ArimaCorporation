@@ -56,6 +56,14 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	"data\\MODEL\\Map\\Map_Second.x",
 	"data\\MODEL\\Map\\Map_Mountain.x",
 	"data\\MODEL\\Map\\Map_Sky_1.x",
+	"data\\MODEL\\Object\\ニワトリ小屋.x",
+	"data\\MODEL\\Object\\L_看板.x",
+	"data\\MODEL\\Object\\R_看板.x",
+	"data\\MODEL\\Object\\LR_看板.x",
+	"data\\MODEL\\Object\\橋.x",
+	"data\\MODEL\\Object\\石像.x",
+	"data\\MODEL\\Object\\表彰台.x",
+	"data\\MODEL\\Object\\bigkanban.x",
 
 	//=============================
 	//　          餌
@@ -94,6 +102,14 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	"data\\TEXTURE\\modeltex\\meat.jpg",
 	"data\\TEXTURE\\modeltex\\Mountain.jpg",
 	"data\\TEXTURE\\modeltex\\Map_Sky.jpg",
+	"data\\TEXTURE\\modeltex\\ニワトリ小屋.png",
+	"data\\TEXTURE\\modeltex\\看板.jpg",
+	"data\\TEXTURE\\modeltex\\看板.jpg",
+	"data\\TEXTURE\\modeltex\\看板.jpg",
+	"data\\TEXTURE\\modeltex\\橋.jpg",
+	"data\\TEXTURE\\modeltex\\石像金.jpg",
+	"data\\TEXTURE\\modeltex\\表彰台.jpg",
+	"data\\TEXTURE\\modeltex\\bigkanban.jpg",
 
 	//=============================
 	//　          餌

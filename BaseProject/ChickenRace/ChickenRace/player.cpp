@@ -1099,6 +1099,7 @@ void CPlayer::UpdateMove(void)
 	case PLAYERSTATE_DAMAGE:
 		//êiçsï˚å¸ÇÃê›íË
 		m_PlayerInfo.fCountTime = SPEED_COUNT_DAMAGE;	// å∏ë¨
+		m_fSpeed = 0.0f;
 		break;
 	}
 
@@ -1935,6 +1936,7 @@ void CPlayer::CollisionChick(void)
 							{
 								m_bDamage = true;
 								m_nCntDamage = 0;
+								m_State = PLAYERSTATE_DAMAGE;
 
 								D3DXVECTOR2 fSize;
 
