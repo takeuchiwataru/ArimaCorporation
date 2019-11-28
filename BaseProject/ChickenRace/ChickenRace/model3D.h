@@ -32,6 +32,14 @@ public:
 		MODEL_TYPE_MAP_SECOND,		//2”Ô–Ú
 		MODEL_TYPE_MAP_MOUNTAIN,	//ŽR
 		MODEL_TYPE_MAP_SKY,			//‹ó
+		MODEL_TYPE_CHICKEN_HOUSE,	//Œ{‚Ì‰Æ
+		MODEL_TYPE_L_SIGN,			//¶‚ÌŠÅ”Â
+		MODEL_TYPE_R_SIGN,			//‰E‚ÌŠÅ”Â
+		MODEL_TYPE_LR_SIGN,			//—¼•û‚ÌŠÅ”Â
+		MODEL_TYPE_BRIDGE,			//‹´
+		MODEL_TYPE_STATUE,			//“º‘œ
+		MODEL_TYPE_PODIUM,			//•\²‘ä
+		MODEL_TYPE_BIGSIGN,			//‘å‚«‚ÈŠÅ”Â
 		MODEL_TYPE_FEED_K,			//UŒ‚‰a
 		MODEL_TYPE_FEED_B,			//–WŠQ‰a
 		MODEL_TYPE_FEED_S,			//‘¬“x‰a
@@ -50,6 +58,14 @@ public:
 		TEXTURE_TYPE_MAP_SECOND,	//2”Ô–Ú
 		TEXTURE_TYPE_MAP_MOUNTAIN,	//ŽR
 		TEXTURE_TYPE_MAP_SKY,		//‹ó
+		TEXTURE_TYPE_CHICKEN_HOUSE,	//Œ{‚Ì‰Æ
+		TEXTURE_TYPE_L_SIGN,		//¶‚ÌŠÅ”Â
+		TEXTURE_TYPE_R_SIGN,		//‰E‚ÌŠÅ”Â
+		TEXTURE_TYPE_LR_SIGN,		//—¼•û‚ÌŠÅ”Â
+		TEXTURE_TYPE_BRIDGE,		//‹´
+		TEXTURE_TYPE_STATUE,		//“º‘œ
+		TEXTURE_TYPE_PODIUM,		//•\²‘ä
+		TEXTURE_TYPE_BIGSIGN,		//‘å‚«‚ÈŠÅ”Â
 		TEXTURE_TYPE_FEED_K,		//UŒ‚‰a
 		TEXTURE_TYPE_FEED_B,		//–WŠQ‰a
 		TEXTURE_TYPE_FEED_S,		//‘¬“x‰a
@@ -90,7 +106,7 @@ public:
 	void				SetRot(D3DXVECTOR3 rot) { m_Rot = rot; };
 	bool				Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
 	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
-	
+
 	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
 
 protected:
