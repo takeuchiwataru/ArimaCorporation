@@ -1008,9 +1008,11 @@ void CPlayer::UpdateMove(void)
 
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
-						   //CDebugProc::Print("DWON***\n");
+		if (m_bJump == true) { break; }
+		
+		//CDebugProc::Print("DWON***\n");
 
-		m_fSpeed += (0.0f - m_fSpeed) * ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
+		m_fSpeed += (0.0f - m_fSpeed) * 0.5f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
@@ -1055,7 +1057,7 @@ void CPlayer::UpdateMove(void)
 				D3DXVECTOR2(0.5f, 5.0f),
 				20,
 				CParticle::TEXTURE_POLYGON,
-				CParticle::TYPE_NORMAL);
+				CParticle::TYPE_DOWN);
 
 			m_nCntParticle = 0;
 		}
@@ -1084,7 +1086,7 @@ void CPlayer::UpdateMove(void)
 				D3DXVECTOR2(0.5f, 5.0f),
 				20,
 				CParticle::TEXTURE_POLYGON,
-				CParticle::TYPE_NORMAL);
+				CParticle::TYPE_DOWN);
 
 			m_nCntParticle = 0;
 		}

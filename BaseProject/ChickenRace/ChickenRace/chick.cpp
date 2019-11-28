@@ -31,7 +31,7 @@
 #define ATTACK_RANGE			(200.0f)	// 範囲攻撃の範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
-#define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
+#define CHICK_FALL_SPEED		(12.0f)		// 落ちてくるひよこの速さ
 #define CHICK_PARTICLE			(30)		// パーティクルの数
 
 //更新範囲
