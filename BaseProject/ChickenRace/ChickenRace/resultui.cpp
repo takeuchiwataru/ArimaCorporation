@@ -198,6 +198,9 @@ HRESULT CResultUI::Init()
 				),
 				D3DXVECTOR3((SCREEN_HEIGHT * 0.03f), (SCREEN_HEIGHT * 0.05f), 0.0f));
 			m_pTime[nCntMember]->TexTime(nTimer[pnRankingSort[nCntMember]], true);
+
+			if (pnRankingSort[nCntMember] < nMaxPlayer)
+				m_pTime[nCntMember]->Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
 		}
 	}
 

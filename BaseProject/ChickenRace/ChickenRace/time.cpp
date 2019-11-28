@@ -134,7 +134,7 @@ CTime::CTime(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, objType
 //=============================================================================
 // デストラクタ
 //=============================================================================
-CTime::~CTime(){}
+CTime::~CTime() {}
 
 //=============================================================================
 // 初期化処理
@@ -180,6 +180,15 @@ void CTime::Uninit(void)
 		}
 	}
 
+	for (int nCntColon = 0; nCntColon < MAX_COLON; nCntColon++)
+	{
+		if (m_pColon[nCntColon] != NULL)
+		{
+			m_pColon[nCntColon]->Uninit();
+			m_pColon[nCntColon] = NULL;
+		}
+	}
+
 	Release();
 }
 
@@ -188,7 +197,7 @@ void CTime::Uninit(void)
 //=============================================================================
 void CTime::Update(void)
 {
-	
+
 }
 
 //=============================================================================
@@ -221,18 +230,18 @@ void CTime::TexTime(int nTexData, bool bEdit)
 		nEdit %= 10;
 		sprintf(cSet, "%d", nEdit);
 		cNum[4] = cSet[0];
-	
+
 		nEdit = (int)((float)99 * (float)((float)((nTexData) % 60) / (float)60));
 		nEdit /= 10;
 		sprintf(cSet, "%d", nEdit);
 		cNum[3] = cSet[0];
 
-		nEdit = (int)((nTexData) / 60) % 60;	
+		nEdit = (int)((nTexData) / 60) % 60;
 		nEdit %= 10;
 		sprintf(cSet, "%d", nEdit);
 		cNum[2] = cSet[0];
 
-		nEdit = (int)((nTexData) / 60) % 60;	
+		nEdit = (int)((nTexData) / 60) % 60;
 		nEdit /= 10;
 		sprintf(cSet, "%d", nEdit);
 		cNum[1] = cSet[0];
@@ -265,4 +274,26 @@ void CTime::AddTime(int nTime)
 		m_nTime += nTime;
 	}
 	m_stateTime = STATE_TIMEADD;
+}
+
+//=============================================================================
+// 色
+//=============================================================================
+void CTime::Setcol(D3DXCOLOR col)
+{
+	for (int nCntTime = 0; nCntTime < TIME_MAX; nCntTime++)
+	{	// タイマーの破棄
+		if (m_apNumber[nCntTime] != NULL)
+		{
+			m_apNumber[nCntTime]->SetCol(col);
+		}
+	}
+
+	for (int nCntColon = 0; nCntColon < MAX_COLON; nCntColon++)
+	{
+		if (m_pColon[nCntColon] != NULL)
+		{
+			m_pColon[nCntColon]->SetColor(&col);
+		}
+	}
 }

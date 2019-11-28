@@ -36,6 +36,7 @@ public:
 		TEXTURE_YOU,
 		TEXTURE_READY,
 		TEXTURE_TUTORIAL,
+		TEXTURE_HINT,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -74,9 +75,11 @@ private:
 	bool	m_bReady;						// 準備
 
 	CScene2D *m_pTutorial;					// チュートリアル
+	CScene2D *m_pHint;						// ヒント
 	CScene2D *m_pGo;						// Go
 
 	int		m_nTutorialNum;					// チュートリアル番号
+	int		m_nTutorialCounter;				// チュートリアルカウント
 
 	bool	m_bEntry[MAX_PLAYER];			// エントリー
 	bool	m_bEnter[MAX_PLAYER];			// 決定したか

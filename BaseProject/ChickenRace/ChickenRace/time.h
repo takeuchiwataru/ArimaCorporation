@@ -65,18 +65,22 @@ public:
 	// 設定　取得　の関数
 	//============================
 	static int GetTime(void) { return m_nTime; };
-	static int GetCutomerTime(void) { return m_nCutomerTime;}
+	static int GetCutomerTime(void) { return m_nCutomerTime; }
 	static void AddTime(int nTime);
 	static void SetCutomerTime(int nCutomerTime)
-	{ m_nCutomerTime = nCutomerTime; m_bRideEnd = false; m_stateCutomer = STATECUTOMERADD_CUTOMERADD;}
+	{
+		m_nCutomerTime = nCutomerTime; m_bRideEnd = false; m_stateCutomer = STATECUTOMERADD_CUTOMERADD;
+	}
 	static bool GetRideEnd(void) { return m_bRideEnd; }
 	static void ResetCutomerTime(void) { m_nCutomerTime = 0; }
+
+	void Setcol(D3DXCOLOR col);
 
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
 	CNumber *m_apNumber[TIME_MAX];	// ナンバーへのポインタ
-	CScene2D *m_pColon[MAX_COLON];			
+	CScene2D *m_pColon[MAX_COLON];
 	static STATETIME		m_stateTime;				// 種類
 	static STATECUTOMERADD	m_stateCutomer;
 	static int				m_nTime;			// 時間

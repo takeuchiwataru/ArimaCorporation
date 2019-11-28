@@ -346,6 +346,9 @@ private:
 	int							  m_nPlayerNum;			// プレイヤー番号
 	int							  m_nControllerNum;		// コントローラー番号
 
+	int							m_nStartFrame;
+	int							m_nStartCounter;
+
 	CDispEffect					  *m_pDispEffect;		//画面演出
 	CCOL_MESH::EFFECT			  m_FEffect;			//地面効果
 	bool						  m_bDrop;				//おちた

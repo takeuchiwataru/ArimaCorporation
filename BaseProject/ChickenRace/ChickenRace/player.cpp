@@ -51,8 +51,8 @@
 #define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
 #define SPEED_CHICK			(0.5f)										// 加速する量ひよこ
 #define SPEED_EGG			(0.2f)										// 加速する量卵
-#define SPEED_COUNT_SPEED	(130)										// 加速状態
 #define SPEED_COUNT_ANNOY	(50)										// 減速状態
+#define SPEED_COUNT_DAMAGE	(0)											// ダメージ状態
 #define EGGJUMP				(2.0f)										// 卵のジャンプ力
 #define ANNOY_PARTICLE		(5)											// 減速エフェクトの出る間隔
 #define COL_PARTICLE		(30)										// 卵やひよこが当たったときに出るエフェクトの量
@@ -212,6 +212,9 @@ HRESULT CPlayer::Init(void)
 
 	m_nPlayerNum = 0;					// プレイヤー番号
 	m_nControllerNum = 0;				// コントローラー番号
+
+	m_nStartFrame = (CServer::Rand() % 50);
+	m_nStartCounter = 0;
 
 	m_pDispEffect = NULL;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
@@ -389,7 +392,7 @@ void CPlayer::Update(void)
 
 	ChaseEgg();				// 卵がついてくる処理
 
-	CollisionCharacter();	// キャラクター同士の当たり判定
+	//CollisionCharacter();	// キャラクター同士の当たり判定
 
 	ChickAppear();			// 
 
@@ -494,7 +497,11 @@ void CPlayer::UpdateAI(void)
 
 	m_rot.y += fRot * 0.05f;
 	RemakeAngle(&m_rot.y);
-	SetStateSpeed(STATE_SPEED_ACCEL);
+
+	if (m_nStartCounter == m_nStartFrame)
+		SetStateSpeed(STATE_SPEED_ACCEL);
+	else
+		m_nStartCounter++;
 
 	UseItem();
 }
@@ -757,7 +764,7 @@ void CPlayer::ControlKey(void)
 			SetStateHandle(HANDLE_LEFT);
 		}
 		else if ((bOnline == false &&
-			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
+				(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
 				pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
 			pXpad->GetPress(INPUT_LS_R) == true ||
 			pXpad->GetPress(INPUT_RIGHT) == true)
@@ -949,6 +956,8 @@ void CPlayer::UpdateMove(void)
 
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
+		else
+			m_PlayerInfo.fCountTime = 90.0f;
 
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
@@ -967,6 +976,8 @@ void CPlayer::UpdateMove(void)
 
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
+		else
+			m_PlayerInfo.fCountTime = 90.0f;
 
 		break;
 	case STATE_SPEED_DRIFT:	//ドリフト状態
@@ -992,6 +1003,8 @@ void CPlayer::UpdateMove(void)
 
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
+		else
+			m_PlayerInfo.fCountTime = 90.0f;
 
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
@@ -1005,6 +1018,8 @@ void CPlayer::UpdateMove(void)
 
 		if (0 < m_PlayerInfo.fCountTime)
 			m_PlayerInfo.fCountTime -= 0.3f;
+		else
+			m_PlayerInfo.fCountTime = 0.0f;
 
 		break;
 	default:
@@ -1013,6 +1028,8 @@ void CPlayer::UpdateMove(void)
 
 		if (0 < m_PlayerInfo.fCountTime)
 			m_PlayerInfo.fCountTime--;
+		else
+			m_PlayerInfo.fCountTime = 0.0f;
 
 		break;
 	}
@@ -1081,7 +1098,7 @@ void CPlayer::UpdateMove(void)
 
 	case PLAYERSTATE_DAMAGE:
 		//進行方向の設定
-		m_fSpeed = 0.0f;
+		m_PlayerInfo.fCountTime = SPEED_COUNT_DAMAGE;	// 減速
 		break;
 	}
 
@@ -1125,17 +1142,21 @@ void CPlayer::UpdateMove(void)
 		(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));*/
 		//CDebugProc::Print("m_nCntDamage : %d\n", m_nCntDamage);
 
-		//CDebugProc::Print("m_StateSpeed : %s\n",
-		//	(m_StateSpeed == STATE_SPEED_ACCEL ? "STATE_SPEED_ACCEL" :
-		//	(m_StateSpeed == STATE_SPEED_BRAKS ? "STATE_SPEED_BRAKS" :
-		//	(m_StateSpeed == STATE_SPEED_DRIFT ? "STATE_SPEED_DRIFT" :
-		//	(m_StateSpeed == STATE_SPEED_DOWN ? "STATE_SPEED_DOWN" :
-		//	(m_StateSpeed == STATE_SPEED_STOP ? "STATE_SPEED_STOP" : ""))))));
+		CDebugProc::Print("m_StateSpeed : %s\n",
+			(m_StateSpeed == STATE_SPEED_ACCEL ? "STATE_SPEED_ACCEL" :
+			(m_StateSpeed == STATE_SPEED_BRAKS ? "STATE_SPEED_BRAKS" :
+			(m_StateSpeed == STATE_SPEED_DRIFT ? "STATE_SPEED_DRIFT" :
+			(m_StateSpeed == STATE_SPEED_DOWN ? "STATE_SPEED_DOWN" :
+			(m_StateSpeed == STATE_SPEED_STOP ? "STATE_SPEED_STOP" : ""))))));
 		//CDebugProc::Print("m_rot x : %.1f y : %.1f z : %.1f\n", m_rot.x, m_rot.y, m_rot.z);
+
+		CDebugProc::Print("fCountTime : %f\n", m_PlayerInfo.fCountTime);
+		CDebugProc::Print("m_fSpeed : %f\n", m_fSpeed);
+		CDebugProc::Print("fDown : %f\n", fDown);
 	}
 
 	//CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
-	//CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
+	CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
 
 	//ハンドルの状態更新
 	if (m_StateHandle == HANDLE_LEFT)

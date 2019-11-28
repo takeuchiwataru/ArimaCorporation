@@ -56,9 +56,11 @@ CGameCharSelect::CGameCharSelect()
 	m_bReady = false;					// 準備
 
 	m_pTutorial = NULL;					// チュートリアル
+	m_pHint = NULL;						// ヒント
 	m_pGo = NULL;						// GO
 
 	m_nTutorialNum = 0;					// チュートリアル番号
+	m_nTutorialCounter = 0;				// チュートリアルカウント
 
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
 		m_pCharacter[nCntChar] = NULL;
@@ -104,6 +106,9 @@ HRESULT CGameCharSelect::Load(void)
 			break;
 		case TEXTURE_TUTORIAL:
 			strcpy(cName, "data/TEXTURE/tutorial/Tutorial.jpg");
+			break;
+		case TEXTURE_HINT:
+			strcpy(cName, "data/TEXTURE/tutorial/tutorial_hint.png");
 			break;
 		}
 
@@ -374,6 +379,24 @@ HRESULT CGameCharSelect::Init()
 		m_pTutorial->BindTexture(m_pTexture[TEXTURE_TUTORIAL]);
 	}
 
+	// ヒント
+	if (m_pHint == NULL)
+	{// NULL
+		m_pHint = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+		m_pHint->Init();
+		m_pHint->SetPosSize(
+			D3DXVECTOR3
+			(
+				(SCREEN_WIDTH * 0.5f),
+				(SCREEN_HEIGHT) - (SCREEN_HEIGHT * 0.06f),
+				0.0f
+			),
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.23f, (SCREEN_HEIGHT * 0.06f)));
+		m_pHint->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		m_pHint->BindTexture(m_pTexture[TEXTURE_HINT]);
+		m_pHint->SetTexture(0, 2, 1, 1);
+	}
+	
 	// Go
 	if (m_pGo == NULL)
 	{// NULL
@@ -470,6 +493,13 @@ void CGameCharSelect::Uninit(void)
 	{// NULL以外
 		m_pTutorial->Uninit();	// 終了処理
 		m_pTutorial = NULL;		// NULLへ
+	}
+
+	// ヒント
+	if (m_pHint != NULL)
+	{// NULL以外
+		m_pHint->Uninit();	// 終了処理
+		m_pHint = NULL;		// NULLへ
 	}
 
 	// Go
@@ -701,7 +731,7 @@ void CGameCharSelect::Online(void)
 
 		if (m_pButton[nCntPlayer] != NULL)
 		{// NULL以外
-			if (m_bEnter[nCntPlayer] == true)
+			if (m_bEntry[nCntPlayer] == true)
 				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 			else
 				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
@@ -722,7 +752,6 @@ void CGameCharSelect::Online(void)
 				pXpad->GetTrigger(INPUT_START) == true)
 			{
 				m_bReady = true;
-				//CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
 			}
 		}
 		else
@@ -1056,7 +1085,7 @@ void CGameCharSelect::Local(void)
 
 		if (m_pButton[nCntPlayer] != NULL)
 		{// NULL以外
-			if (m_bEnter[nCntPlayer] == true)
+			if (m_bEntry[nCntPlayer] == true)
 				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 			else
 				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
@@ -1212,6 +1241,12 @@ void CGameCharSelect::Tutorial(void)
 	// 取得
 	bool bOnine = CTitle::GetOnline();
 
+	int nCounter = m_nTutorialCounter % 120;
+
+	float fcol_a =
+		(nCounter < 60 ?
+		((float)((float)(nCounter % 60) / (float)60) / 1.0f) : 1.0f - ((float)((float)(nCounter % 60) / (float)60) / 1.0f));
+
 	if (m_pTutorial != NULL)
 	{
 		float fposDest_X = (SCREEN_WIDTH * 1.0f);
@@ -1229,8 +1264,17 @@ void CGameCharSelect::Tutorial(void)
 			D3DXVECTOR2(SCREEN_WIDTH * 1.0f, SCREEN_HEIGHT * 0.5f));
 		m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	}
+	if (m_pHint != NULL)
+	{
+		m_pHint->SetPosSize(
+			D3DXVECTOR3(((m_nTutorialNum ^ 1) == 0 ? (SCREEN_HEIGHT * 0.13f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.13f)), (SCREEN_HEIGHT * 0.5f), 0.0f),
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.13f, (SCREEN_HEIGHT * 0.06f)));
+
+		m_pHint->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
+		m_pHint->SetTexture((m_nTutorialNum ^ 1), 2, 1, 1);
+	}
 	if (m_pGo != NULL)
-		m_pGo->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+		m_pGo->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
 
 	if (bOnine == true)
 	{
@@ -1277,4 +1321,6 @@ void CGameCharSelect::Tutorial(void)
 			CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
 		}
 	}
+
+	m_nTutorialCounter++;
 }
