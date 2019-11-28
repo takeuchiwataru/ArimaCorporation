@@ -361,6 +361,23 @@ void CScene2D::SetTexture(int PatternAnim, int X, int Y, int nNum)
 	m_pVtxBuff->Unlock();
 }
 
+void CScene2D::SetUV(D3DXVECTOR2 LU, D3DXVECTOR2 RU, D3DXVECTOR2 LD, D3DXVECTOR2 RD)
+{
+	VERTEX_2D *pVtx;//頂点情報へのポインタ
+
+					//頂点バッファをロックし、頂点データへのポインタを取得
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
+
+	//テクスチャ設定
+	pVtx[0].tex = LU;
+	pVtx[1].tex = RU;
+	pVtx[2].tex = LD;
+	pVtx[3].tex = RD;
+
+	//頂点バッファをアンロックする
+	m_pVtxBuff->Unlock();
+}
+
 //=============================================================================
 // UVの設定
 //=============================================================================

@@ -42,6 +42,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	void SetSpin(D3DXVECTOR3 pos, float fAngle, float fLength, D3DXVECTOR3 rot);
 	void SetTexture(int PatternAnim, int X, int Y, int nNum);
 	void SetPosSizeSide(D3DXVECTOR3 pos, D3DXVECTOR2 nSize);
+	void SetUV(D3DXVECTOR2 LU, D3DXVECTOR2 RU, D3DXVECTOR2 LD, D3DXVECTOR2 RD);
 	void SetUV(float fPattern, int nNum);
 	void SetUV_X_ROLL(void);
 	void SetUVWidth(float fPattern, int nNum);

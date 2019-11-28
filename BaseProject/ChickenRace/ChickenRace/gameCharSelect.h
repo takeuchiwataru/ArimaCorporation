@@ -32,7 +32,10 @@ public:
 		TEXTURE_FRAME,
 		TEXTURE_NUMBER,
 		TEXTURE_ENTER,
+		TEXTURE_BUTTON,
 		TEXTURE_YOU,
+		TEXTURE_READY,
+		TEXTURE_TUTORIAL,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -51,6 +54,7 @@ public:
 private:
 	void Online(void);
 	void Local(void);
+	void Tutorial(void);
 
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
@@ -58,12 +62,21 @@ private:
 	CScene2D *m_pPlayerBG[MAX_PLAYER];		// プレイヤー背景
 	CScene2D *m_pSelect[MAX_PLAYER];		// 選択
 	CScene2D *m_pEnter[MAX_PLAYER];			// 決定
+	CScene2D *m_pButton[MAX_PLAYER];		// ボタン
 
 	CScene2D *m_pYor;						// あなた
 	CScene2D *m_pReturn;					// 戻る
 	CScene2D *m_pReturnBG;					// 戻る背景
 	CScene2D *m_pReturnChar;				// 戻るキャラ
 	int		m_nReturnCounter;				// 戻るカウント
+
+	CScene2D *m_pReady;						// 準備
+	bool	m_bReady;						// 準備
+
+	CScene2D *m_pTutorial;					// チュートリアル
+	CScene2D *m_pGo;						// Go
+
+	int		m_nTutorialNum;					// チュートリアル番号
 
 	bool	m_bEntry[MAX_PLAYER];			// エントリー
 	bool	m_bEnter[MAX_PLAYER];			// 決定したか
