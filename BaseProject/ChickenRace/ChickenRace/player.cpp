@@ -46,13 +46,17 @@
 #define EGG_POS				(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define SPEEDUP_TIME		(60)										// 加速している時間
 #define CHICK_SCALE			(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
-#define THROW				(13.0f)										// 卵を投げる力
+#define THROW				(11.0f)										// 卵を投げる力
 #define EGG_RAND			(2.0f)										// 卵に乗るときのジャンプ力
 #define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
 #define SPEED_CHICK			(0.5f)										// 加速する量ひよこ
 #define SPEED_EGG			(0.2f)										// 加速する量卵
 #define SPEED_COUNT_SPEED	(130)										// 加速状態
 #define SPEED_COUNT_ANNOY	(50)										// 減速状態
+#define EGGJUMP				(2.0f)										// 卵のジャンプ力
+#define ANNOY_PARTICLE		(5)											// 減速エフェクトの出る間隔
+#define COL_PARTICLE		(30)										// 卵やひよこが当たったときに出るエフェクトの量
+#define COL_PARTICLE_S		(10)										// 隕石ひよこが当たったときに出るエフェクトの量
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(0.5f)										//加速値（前進）
@@ -1022,7 +1026,7 @@ void CPlayer::UpdateMove(void)
 		//進行方向の設定
 		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// 減速
 
-		if (m_nCntParticle > 5)
+		if (m_nCntParticle > ANNOY_PARTICLE)
 		{
 			D3DXVECTOR2 fPos;
 			fPos.x = 30.0f - (float)(rand() % 60);
@@ -1033,7 +1037,8 @@ void CPlayer::UpdateMove(void)
 				D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
 				D3DXVECTOR2(0.5f, 5.0f),
 				20,
-				CParticle::TYPE_DOWN);
+				CParticle::TEXTURE_POLYGON,
+				CParticle::TYPE_NORMAL);
 
 			m_nCntParticle = 0;
 		}
@@ -1050,7 +1055,7 @@ void CPlayer::UpdateMove(void)
 		//進行方向の設定
 		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// 減速
 
-		if (m_nCntParticle > 5)
+		if (m_nCntParticle > ANNOY_PARTICLE)
 		{
 			D3DXVECTOR2 fPos;
 			fPos.x = 20.0f - (float)(rand() % 40);
@@ -1061,7 +1066,8 @@ void CPlayer::UpdateMove(void)
 				D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
 				D3DXVECTOR2(0.5f, 5.0f),
 				20,
-				CParticle::TYPE_DOWN);
+				CParticle::TEXTURE_POLYGON,
+				CParticle::TYPE_NORMAL);
 
 			m_nCntParticle = 0;
 		}
@@ -1111,12 +1117,12 @@ void CPlayer::UpdateMove(void)
 	{
 		/*CDebugProc::Print("m_bDamage : %d\n", m_bDamage);
 		CDebugProc::Print("m_State : %s\n",
-			(m_State == PLAYERSTATE_NORMAL ? "PLAYERSTATE_NORMAL" :
-			(m_State == PLAYERSTATE_SPEEDUP ? "PLAYERSTATE_SPEEDUP" :
-				(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
-				(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
-					(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
-					(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));*/
+		(m_State == PLAYERSTATE_NORMAL ? "PLAYERSTATE_NORMAL" :
+		(m_State == PLAYERSTATE_SPEEDUP ? "PLAYERSTATE_SPEEDUP" :
+		(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
+		(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
+		(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
+		(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));*/
 		//CDebugProc::Print("m_nCntDamage : %d\n", m_nCntDamage);
 
 		//CDebugProc::Print("m_StateSpeed : %s\n",
@@ -1388,7 +1394,6 @@ void CPlayer::CollisionFeed(void)
 					if (pFeed->CollisionFeed(&m_pos, &m_OldPos) == true)
 					{// 衝突した
 						EggAppear(pFeed);	// 卵出現
-						pFeed->Uninit();	// 餌削除
 						m_nNumEgg++;
 						m_nNumItem++;
 
@@ -1634,142 +1639,142 @@ void CPlayer::BulletEgg(void)
 
 	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 	//{// ダメージを食らっているときは使えない
-		if (m_nNumEgg + m_nNumChick > 0)
-		{// 卵かひよこを持っているとき
-			if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
+	if (m_nNumEgg + m_nNumChick > 0)
+	{// 卵かひよこを持っているとき
+		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
+		{
+			m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
+			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
+			int nRank = CGame::GetRanking(m_nPlayerNum) - 1;
+
+			m_nNumChick--;	// 所持数を減らす
+
+			m_nNumItem--;
+
+			switch (m_pChick[0]->GetType())
 			{
-				m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
-				m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
-				m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
-				int nRank = CGame::GetRanking(m_nPlayerNum) - 1;
-
-				m_nNumChick--;	// 所持数を減らす
-
-				m_nNumItem--;
-
-				switch (m_pChick[0]->GetType())
+				// 攻撃
+			case CChick::TYPE_ATTACK:
+				if (nRank >= 0)
 				{
-					// 攻撃
-				case CChick::TYPE_ATTACK:
-					if (nRank >= 0)
-					{
-						for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
-						{// ひとつ前の順位のやつを見つける
-							int nData = CGame::GetRanking(nCntChar);
-
-							if (nRank == nData)
-							{
-								m_nDestRank = nData;
-								m_pChick[0]->SetDestRank(nData);
-								break;
-							}
-						}
-					}
-					else
-					{
-						m_pChick[0]->SetDis(false);
-					}
-
-					m_pChick[0]->SetRot(m_rot);
-					break;
-
-					// 加速
-				case CChick::TYPE_SPEED:
-					UseBoost();
-					m_State = PLAYERSTATE_SPEEDUP;
-					m_fSpeed += SPEED_CHICK;
-
-					m_pChick[0]->Uninit();
-					m_pChick[0] = NULL;
-					break;
-
-					// 減速
-				case CChick::TYPE_ANNOY:
-					m_pChick[0]->SetDis(false);
-					break;
-
-					// 強い攻撃
-				case CChick::TYPE_ATTACK_S:
 					for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
-					{// 1位のやつを見つける
-						int nDestRank = CGame::GetRanking(nCntChar);
+					{// ひとつ前の順位のやつを見つける
+						int nData = CGame::GetRanking(nCntChar);
 
-						if (nDestRank == 0)
+						if (nRank == nData)
 						{
 							m_nDestRank = nCntChar;
 							m_pChick[0]->SetDestRank(nCntChar);
 							break;
 						}
 					}
-					m_pChick[0]->SetRot(m_rot);
-					break;
-
-					// 減速
-				case CChick::TYPE_ANNOY_S:
-					m_pChick[0]->SetDis(false);
-					break;
-
-					// 加速
-				case CChick::TYPE_SPEED_S:
-					UseBoost();
-					m_State = PLAYERSTATE_SPEEDUP_S;
-					m_fSpeed += SPEED_CHICK;
-
-					m_pChick[0]->Uninit();
-					m_pChick[0] = NULL;
-					break;
 				}
-
-				// 情報入れ替え
-				m_pChick[0] = m_pChick[1];
-				m_pChick[1] = m_pChick[2];
-				m_pChick[2] = NULL;
-
-				m_bulletType[0] = m_bulletType[1];
-				m_bulletType[1] = m_bulletType[2];
-				m_bulletType[2] = BULLET_EGG_ATTACK;
-			}
-			else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
-			{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
-				m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
-				m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
-				m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
-
-				m_nNumEgg--;	// 所持数を減らす
-
-				m_nNumItem--;
-
-				switch (m_pEgg[0]->GetType())
+				else
 				{
-					// 攻撃
-				case CEgg::EGGTYPE_ATTACK:
-					m_pEgg[0]->Jump(THROW);
-					m_pEgg[0]->SetRot(m_rot);
-					m_pEgg[0]->SetThrow(TRUE);
-					break;
-
-					// 加速
-				case CEgg::EGGTYPE_SPEED:
-					UseBoost();
-					m_State = PLAYERSTATE_SPEEDUP;
-					m_fSpeed += SPEED_EGG;
-					break;
+					m_pChick[0]->SetDis(false);
 				}
 
-				// 情報入れ替え
-				m_pEgg[0] = m_pEgg[1];
-				m_pEgg[1] = m_pEgg[2];
-				m_pEgg[2] = NULL;
+				m_pChick[0]->SetRot(m_rot);
+				break;
 
-				m_bulletType[0] = m_bulletType[1];
-				m_bulletType[1] = m_bulletType[2];
-				m_bulletType[2] = BULLET_EGG_ATTACK;
+				// 加速
+			case CChick::TYPE_SPEED:
+				UseBoost();
+				m_State = PLAYERSTATE_SPEEDUP;
+				m_fSpeed += SPEED_CHICK;
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
+				break;
+
+				// 減速
+			case CChick::TYPE_ANNOY:
+				m_pChick[0]->SetDis(false);
+				break;
+
+				// 強い攻撃
+			case CChick::TYPE_ATTACK_S:
+				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
+				{// 1位のやつを見つける
+					int nDestRank = CGame::GetRanking(nCntChar);
+
+					if (nDestRank == 0)
+					{
+						m_nDestRank = nCntChar;
+						m_pChick[0]->SetDestRank(nCntChar);
+						break;
+					}
+				}
+				m_pChick[0]->SetRot(m_rot);
+				break;
+
+				// 減速
+			case CChick::TYPE_ANNOY_S:
+				m_pChick[0]->SetDis(false);
+				break;
+
+				// 加速
+			case CChick::TYPE_SPEED_S:
+				UseBoost();
+				m_State = PLAYERSTATE_SPEEDUP_S;
+				m_fSpeed += SPEED_CHICK;
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
+				break;
 			}
 
-			pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
-			pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
-			pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
+			// 情報入れ替え
+			m_pChick[0] = m_pChick[1];
+			m_pChick[1] = m_pChick[2];
+			m_pChick[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
+		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
+			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
+			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
+
+			m_nNumEgg--;	// 所持数を減らす
+
+			m_nNumItem--;
+
+			switch (m_pEgg[0]->GetType())
+			{
+				// 攻撃
+			case CEgg::EGGTYPE_ATTACK:
+				m_pEgg[0]->Jump(THROW);
+				m_pEgg[0]->SetRot(m_rot);
+				m_pEgg[0]->SetThrow(TRUE);
+				break;
+
+				// 加速
+			case CEgg::EGGTYPE_SPEED:
+				UseBoost();
+				m_State = PLAYERSTATE_SPEEDUP;
+				m_fSpeed += SPEED_EGG;
+				break;
+			}
+
+			// 情報入れ替え
+			m_pEgg[0] = m_pEgg[1];
+			m_pEgg[1] = m_pEgg[2];
+			m_pEgg[2] = NULL;
+
+			m_bulletType[0] = m_bulletType[1];
+			m_bulletType[1] = m_bulletType[2];
+			m_bulletType[2] = BULLET_EGG_ATTACK;
+		}
+
+		pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
+		pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
+		pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
+	}
 	//}
 }
 
@@ -1810,7 +1815,7 @@ void CPlayer::CollisionEgg(void)
 
 								D3DXVECTOR2 fSize;
 
-								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
 								{
 									fSize.x = 5.0f + (float)(rand() % 5);
 									fSize.y = 5.0f + (float)(rand() % 5);
@@ -1820,6 +1825,7 @@ void CPlayer::CollisionEgg(void)
 										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
 										fSize,
 										20,
+										CParticle::TEXTURE_STAR,
 										CParticle::TYPE_NORMAL);
 								}
 							}
@@ -1878,32 +1884,13 @@ void CPlayer::CollisionChick(void)
 							// ダメージ状態にする
 							if (m_State != PLAYERSTATE_DAMAGE)
 							{
-								/*if (m_pEgg[m_nNumItem] != NULL)
-								{
-								m_pEgg[m_nNumItem]->Uninit();
-								m_pEgg[m_nNumItem] = NULL;
-
-								m_nNumEgg--;
-								m_nNumItem--;
-								}
-								else if (m_pChick[m_nNumItem] != NULL)
-								{
-								m_pChick[m_nNumItem]->Uninit();
-								m_pChick[m_nNumItem] = NULL;
-
-								m_nNumChick--;
-								m_nNumItem--;
-								}
-								else
-								{*/
 								m_bDamage = true;
 								m_nCntDamage = 0;
 								m_State = PLAYERSTATE_DAMAGE;
-								/*}*/
 
 								D3DXVECTOR2 fSize;
 
-								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
 								{
 									fSize.x = 5.0f + (float)(rand() % 5);
 									fSize.y = 5.0f + (float)(rand() % 5);
@@ -1913,6 +1900,7 @@ void CPlayer::CollisionChick(void)
 										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
 										fSize,
 										20,
+										CParticle::TEXTURE_STAR,
 										CParticle::TYPE_NORMAL);
 								}
 							}
@@ -1929,7 +1917,7 @@ void CPlayer::CollisionChick(void)
 
 								D3DXVECTOR2 fSize;
 
-								for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE_S; nCntParticle++)
 								{
 									fSize.x = 5.0f + (float)(rand() % 5);
 									fSize.y = 5.0f + (float)(rand() % 5);
@@ -1939,6 +1927,7 @@ void CPlayer::CollisionChick(void)
 										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
 										fSize,
 										20,
+										CParticle::TEXTURE_STAR,
 										CParticle::TYPE_NORMAL);
 								}
 							}
@@ -1998,15 +1987,12 @@ void CPlayer::ChickAppear(void)
 					{
 						if (CGame::GetRanking(m_nPlayerNum) == nCntRank + 3)
 						{
-							int nData = CGame::GetRanking(m_nPlayerNum);
-							int i = 10 * ((3 + nGameTime) + nCntRank);
-
-							if (nRank <= 10 * ((3 + nGameTime) + nCntRank))
+							if (nRank <= 10 * ((2 + nGameTime) + nCntRank))
 							{// 強いほう
 							 // タイプ設定
 								type = SetChickType(type, true);
 							}
-							else if (nRank > 10 * ((3 + nGameTime) + nCntRank))
+							else if (nRank > 10 * ((2 + nGameTime) + nCntRank))
 							{// 普通のほう
 							 // タイプ設定
 								type = SetChickType(type, false);
@@ -2220,21 +2206,6 @@ void CPlayer::ChaseAnnoyS(void)
 			m_bDamage = true;
 			m_nCntDamage = 0;
 			m_State = PLAYERSTATE_SPEEDDOWN_S;
-
-			//D3DXVECTOR2 fPos;
-
-			//for (int nCntParticle = 0; nCntParticle < 20; nCntParticle++)
-			//{// エフェクト生成
-			//	fPos.x = 30.0f - (float)(rand() % 60);
-			//	fPos.y = 30.0f - (float)(rand() % 60);
-
-			//	CParticle::Create(D3DXVECTOR3(m_pos.x + fPos.x, m_pos.y + 20.0f, m_pos.z + fPos.y),
-			//		D3DXVECTOR3(1.0f, 1.0f, 1.0f),
-			//		D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f),
-			//		D3DXVECTOR2(2.0f, 10.0f),
-			//		20,
-			//		CParticle::TYPE_DOWN);
-			//}
 		}
 	}
 }

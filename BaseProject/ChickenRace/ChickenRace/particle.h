@@ -30,10 +30,17 @@ public:
 
 	typedef enum
 	{// キー要素
-		TYPE_NORMAL = 0,	// 通常状態
-		TYPE_DOWN,			// 減速状態
-		PARTICLESTATE_MAX			// プレイヤーの種類の総数
+		TYPE_NORMAL = 0,
+		TYPE_UP,
+		TYPE_MAX
 	} PARTICLE_TYPE;
+
+	typedef enum
+	{// キー要素
+		TEXTURE_STAR = 0,		// 星
+		TEXTURE_POLYGON,		// 四角
+		TEXTURE_MAX			// テクスチャの種類の総数
+	} TEXTURE_TYPE;
 
 	HRESULT Init(void);	// 3Dパーティクル初期化処理
 	void Uninit(void);	// 3Dパーティクル終了処理
@@ -42,18 +49,18 @@ public:
 	static HRESULT Load(void);
 	static void UnLoad(void);
 
-	static CParticle *Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, PARTICLE_TYPE type);	// オブジェクトの生成
+	static CParticle *Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, TEXTURE_TYPE typeT, PARTICLE_TYPE typeP);	// オブジェクトの生成
 
 
 private:
+	void Move(void);
 	static LPDIRECT3DTEXTURE9 m_apTexture[MAX_EFFECT_TEX];
-
 	int m_nLife;
 	D3DXCOLOR m_col;
 	D3DXVECTOR2 m_Size;
 	D3DXVECTOR3 m_move;
 	D3DXVECTOR3 m_rot;
-	PARTICLE_TYPE m_ParticleType;
+	PARTICLE_TYPE m_Type;
 };
 
 #endif

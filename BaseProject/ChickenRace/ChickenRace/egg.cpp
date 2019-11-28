@@ -25,6 +25,7 @@
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
 #define EXPLOSION_RANGE			(100)		// 爆発の範囲
+#define EGG_PARTICLE			(30)		// パーティクルの数
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -424,7 +425,7 @@ void CEgg::Move(void)
 					m_bExplosion = true;
 					D3DXVECTOR2 fSize;
 
-					for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+					for (int nCntParticle = 0; nCntParticle < EGG_PARTICLE; nCntParticle++)
 					{
 						fSize.x = 5.0f + (float)(rand() % 5);
 						fSize.y = 5.0f + (float)(rand() % 5);
@@ -434,6 +435,7 @@ void CEgg::Move(void)
 							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
 							fSize,
 							20,
+							CParticle::TEXTURE_STAR,
 							CParticle::TYPE_NORMAL);
 					}
 				}

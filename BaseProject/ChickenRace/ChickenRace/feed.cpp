@@ -13,6 +13,7 @@
 #include "fade.h"
 #include "shadow.h"
 #include "tutorial.h"
+#include "particle.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -21,6 +22,8 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
+#define GET_TIME				(50)		// 餌の消えている時間
+#define EFFECT_TIME				(30)		// エフェクトが出る時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -49,6 +52,7 @@ CFeed::CFeed() : CModel3D(FEED_PRIOTITY, CScene::OBJTYPE_FEED)
 {
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_feedType = FEEDTYPE::FEEDTYPE_ATTACK;
+	m_nCntGetTimer = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -111,6 +115,10 @@ HRESULT CFeed::Init(void)
 
 	//変数の初期化
 	m_pObjBill = NULL;
+	m_bGet = true;
+	m_bEffect = false;
+	m_nCntGetTimer = 0;
+	m_nCntEffectTimer = 0;
 	return S_OK;
 }
 
@@ -131,10 +139,61 @@ void CFeed::Uninit(void)
 //=============================================================================
 void CFeed::Update(void)
 {
+	D3DXVECTOR3 pos = CModel3D::GetPosition();
+
 	CModel3D::Update();
 
 	m_rot.y += 0.007f;
 
+	if (m_bGet == false)
+	{// 取れないとき
+		m_nCntGetTimer++;
+
+		if (m_nCntGetTimer > GET_TIME)
+		{
+			m_bGet = true;
+			m_nCntGetTimer = 0;
+		}
+		if (m_nCntGetTimer > GET_TIME - 15)
+		{
+			if (m_bEffect == false)
+			{
+				m_bEffect = true;
+			}
+		}
+	}
+
+	if (m_bEffect == true)
+	{// エフェクトを出す
+		if (m_nCntEffectTimer < EFFECT_TIME)
+		{
+			if (m_nCntEffectTimer % 2 == 0)
+			{
+				D3DXVECTOR2 fSize;
+
+				fSize.x = 3.0f + (float)(rand() % 3);
+				fSize.y = 3.0f + (float)(rand() % 3);
+
+				CParticle::Create(D3DXVECTOR3(pos.x, pos.y - 10.0f, pos.z),
+					D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+					D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+					fSize,
+					20,
+					CParticle::TEXTURE_POLYGON,
+					CParticle::TYPE_UP);
+			}
+			m_nCntEffectTimer++;
+		}
+		else if (m_nCntEffectTimer >= EFFECT_TIME)
+		{
+			m_nCntEffectTimer = 0;
+			m_bEffect = false;
+		}
+
+	}
+
+
+	CModel3D::SetPosition(pos);
 	CModel3D::SetRot(m_rot);
 }
 //=============================================================================
@@ -152,8 +211,12 @@ void CFeed::Draw(void)
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
-	//描画処理
-	CModel3D::Draw();
+	if (m_bGet == true)
+	{
+		//描画処理
+		CModel3D::Draw();
+	}
+
 
 	//頂点法線の自動正規化
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
@@ -170,7 +233,7 @@ HRESULT CFeed::Load(void)
 	DWORD		sizeFVF;							//頂点フォーマットのサイズ
 	BYTE		*pVtxBuff;							//頂点バッファへのポインタ
 
-	//モデルの最大値・最小値を取得する
+													//モデルの最大値・最小値を取得する
 	for (int nCntModel = 0; nCntModel < FEEDTYPE_MAX; nCntModel++)
 	{
 		m_VtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
@@ -254,11 +317,10 @@ void CFeed::UnLoad(void)
 //===============================================================================
 bool CFeed::CollisionFeed(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 {
-	//入力情報
-	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
-
 	//あたっているかあたってないか
 	bool bHit = false;
+
+	if (m_bGet == false) { return bHit; }
 
 	// 各種情報の取得
 	D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
@@ -276,15 +338,18 @@ bool CFeed::CollisionFeed(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 			if (pPosOld->y >= ModelMax.y && pPos->y <= ModelMax.y)
 			{// オブジェクトの上から当たる場合
 				bHit = true;
+				m_bGet = false;
 			}
 			else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
 			{// オブジェクトの下から当たる場合
 				bHit = true;
+				m_bGet = false;
 			}
 
 			if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
 			{// オブジェクト横との当たり判定
 				bHit = true;
+				m_bGet = false;
 			}
 		}
 	}

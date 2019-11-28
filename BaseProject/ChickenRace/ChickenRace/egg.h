@@ -21,7 +21,6 @@
 #define MAX_EGG			(3)											//卵の最大数
 #define MAX_EGG_TEXTURE		(3)										// オブジェクトのテクスチャ数
 #define HATCHING_TIME	(600)										// 孵化するまでの時間
-#define EGGJUMP			(3.5f)										// 卵のジャンプ力
 #define EXPLOSION_TIME	(30)		// 爆発している時間
 
 //*****************************************************************************

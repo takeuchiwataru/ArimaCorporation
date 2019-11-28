@@ -8,11 +8,12 @@
 #include "manager.h"
 #include "renderer.h"
 #include "player.h"
+#include "feed.h"
 
 //=============================================================================
 // マクロ定義
 //=============================================================================
-#define PARTICLE_TEXTURE_0		"data\\TEXTURE\\game\\ParticleEffect\\Star.png"		//読み込むテクスチャファイル
+#define PARTICLE_TEXTURE_0		"data\\TEXTURE\\game\\ParticleEffect\\Star000.png"		//読み込むテクスチャファイル
 #define PARTICLE_TEXTURE_1		"data\\TEXTURE\\game\\ParticleEffect\\.png"			//読み込むテクスチャファイル
 
 //=============================================================================
@@ -23,7 +24,7 @@ LPDIRECT3DTEXTURE9	CParticle::m_apTexture[MAX_EFFECT_TEX] = {};
 //=============================================================================
 // パーティクルの生成処理
 //=============================================================================
-CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, PARTICLE_TYPE type)
+CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, TEXTURE_TYPE typeT, PARTICLE_TYPE typeP)
 {
 	CParticle *pParticle = NULL;
 
@@ -39,8 +40,9 @@ CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D
 			pParticle->SetPosSize(pos, size);			// 幅の設定
 			pParticle->m_Size = size;
 			pParticle->m_nLife = nLife;					// ライフの設定
-			pParticle->BindTexture(m_apTexture[type]);	// テクスチャの設定
+			pParticle->BindTexture(m_apTexture[typeT]);	// テクスチャの設定
 			pParticle->SetColor(col);					// 色の設定
+			pParticle->m_Type = typeP;					// 動き方の設定
 		}
 	}
 	return pParticle;
@@ -75,6 +77,7 @@ HRESULT CParticle::Init(void)
 	m_col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_Type = TYPE_NORMAL;
 
 	// 2Dオブジェクト初期化処理
 	CBillBoord::Init();
@@ -99,60 +102,10 @@ void CParticle::Uninit(void)
 //=============================================================================
 void CParticle::Update(void)
 {
-	// 位置を取得
-	D3DXVECTOR3 pos;
-	pos = CBillBoord::GetPosition();
+	Move();
 
-	//// 頂点バッファを取得
-	//LPDIRECT3DVERTEXBUFFER9 VtxBuff;
-	//VtxBuff = CBillBoord::GetVtxBuff();
-
-	//VERTEX_3D *pVtx;	// 頂点情報へのポインタ
-
-	//// 頂点バッファをロックし、頂点データへのポインタを取得
-	//VtxBuff->Lock(0, 0, (void**)&pVtx, 0);
-	
 	// 一定時間経過
 	m_nLife--;
-
-	m_Size.x -= 0.1f;
-	m_Size.y -= 0.1f;
-
-	if (m_Size.x <= 0 && m_Size.y <= 0)
-	{
-		m_Size.x = 0.0f;
-		m_Size.y = 0.0f;
-	}
-
-	pos -= m_move;
-
-	switch (m_ParticleType)
-	{
-		// 通常状態
-	case TYPE_NORMAL:
-		break;
-		// 減速状態
-	case TYPE_DOWN:
-		// 重力加算
-		m_move.y += 0.5f;
-
-		//CPlayer **pPlayer = NULL;
-		//pPlayer = CGame::GetPlayer();
-
-		//pos.x = pPlayer[m_nPlayer]->GetPos().x;
-		//pos.z = pPlayer[m_nPlayer]->GetPos().z;
-
-		break;
-	}
-
-	// 頂点バッファをアンロック
-	//VtxBuff->Unlock();
-
-	// 位置の設定
-	CBillBoord::SetPosition(pos);
-
-	// 幅の設定
-	CBillBoord::SetPosSize(pos, m_Size);
 
 	if (m_nLife <= 0)
 	{
@@ -231,4 +184,36 @@ void CParticle::UnLoad(void)
 			m_apTexture[nCntTex] = NULL;
 		}
 	}
+}
+
+//=============================================================================
+// パーティクルの動き処理
+//=============================================================================
+void CParticle::Move(void)
+{
+	// 位置を取得
+	D3DXVECTOR3 pos;
+	pos = CBillBoord::GetPosition();
+
+	m_Size.x -= 0.1f;
+	m_Size.y -= 0.1f;
+
+	if (m_Size.x <= 0 && m_Size.y <= 0)
+	{
+		m_Size.x = 0.0f;
+		m_Size.y = 0.0f;
+	}
+
+	if (m_Type == TYPE_UP)
+	{
+		m_move.y -= 0.5f;
+	}
+
+	pos -= m_move;
+
+	// 位置の設定
+	CBillBoord::SetPosition(pos);
+
+	// 幅の設定
+	CBillBoord::SetPosSize(pos, m_Size);
 }

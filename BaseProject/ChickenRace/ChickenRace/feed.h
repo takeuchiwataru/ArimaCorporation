@@ -53,6 +53,10 @@ private:
 	static D3DXVECTOR3 m_VtxMaxModel[FEEDTYPE_MAX];		//モデルの最大値
 	static D3DXVECTOR3 m_VtxMinModel[FEEDTYPE_MAX];		//モデルの最小値
 
+	bool				m_bGet;							// 取れるかどうか
+	bool				m_bEffect;						// エフェクトが出るかどうか
+	int					m_nCntGetTimer;					// 取れるようになるまでの時間
+	int					m_nCntEffectTimer;				// エフェクトが出る時間
 	int					m_nZone;						// ゾーン
 	FEEDTYPE			m_feedType;						// 餌の種類
 	D3DXVECTOR3			m_scale;						// 大きさ

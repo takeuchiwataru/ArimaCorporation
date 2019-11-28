@@ -32,6 +32,7 @@
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(10.0f)		// 落ちてくるひよこの速さ
+#define CHICK_PARTICLE			(30)		// パーティクルの数
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -368,7 +369,7 @@ void CChick::Move(void)
 					m_bExplosion = true;
 					D3DXVECTOR2 fSize;
 
-					for (int nCntParticle = 0; nCntParticle < 50; nCntParticle++)
+					for (int nCntParticle = 0; nCntParticle < CHICK_PARTICLE; nCntParticle++)
 					{// パーティクル生成
 						fSize.x = 5.0f + (float)(rand() % 5);
 						fSize.y = 5.0f + (float)(rand() % 5);
@@ -378,6 +379,7 @@ void CChick::Move(void)
 							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
 							fSize,
 							20,
+							CParticle::TEXTURE_STAR,
 							CParticle::TYPE_NORMAL);
 					}
 				}
