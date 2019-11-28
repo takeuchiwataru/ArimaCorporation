@@ -36,7 +36,7 @@
 LPD3DXMESH			CModel3D::m_pMeshModel[MODEL_TYPE_MAX] = {};			// メッシュ情報へのポインタ
 LPD3DXBUFFER		CModel3D::m_pBuffMatModel[MODEL_TYPE_MAX] = {};			// マテリアルの情報へのポインタ
 DWORD				CModel3D::m_nNumMatModel[MODEL_TYPE_MAX] = {};			// マテリアルの情報数
-LPDIRECT3DTEXTURE9  CModel3D::m_pMeshTextures[TEXTURE_TYPE_MAX] = {};			// テクスチャの情報
+LPDIRECT3DTEXTURE9  CModel3D::m_pMeshTextures[TEXTURE_TYPE_MAX] = {};		// テクスチャの情報
 CToonShader		   *CModel3D::m_pToonShader = NULL;							// シェーダーのポインタ
 D3DMATERIAL9	   *CModel3D::m_pMeshMaterials[MODEL_TYPE_MAX] = {};		// メッシュマテリアルの情報
 LPDIRECT3DTEXTURE9 *CModel3D::m_pShaderMeshTextures[MODEL_TYPE_MAX] = {};	// シェーダー用のメッシュテクスチャ
@@ -64,6 +64,8 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	"data\\MODEL\\Object\\石像.x",
 	"data\\MODEL\\Object\\表彰台.x",
 	"data\\MODEL\\Object\\bigkanban.x",
+	"data\\MODEL\\Object\\岩.x",
+	"data\\MODEL\\Object\\ゴール.x",
 
 	//=============================
 	//　          餌
@@ -110,6 +112,8 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	"data\\TEXTURE\\modeltex\\石像金.jpg",
 	"data\\TEXTURE\\modeltex\\表彰台.jpg",
 	"data\\TEXTURE\\modeltex\\bigkanban.jpg",
+	"data\\TEXTURE\\modeltex\\岩.jpg",
+	"data\\TEXTURE\\modeltex\\Snap000.jpg",
 
 	//=============================
 	//　          餌
