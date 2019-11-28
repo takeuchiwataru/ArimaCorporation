@@ -265,7 +265,7 @@ HRESULT CPlayer::Init(void)
 		m_bulletType[nCntEgg] = BULLET_EGG_ATTACK;
 	}
 
-	for (int nCntChick = 0; nCntChick < MAX_PLAYER; nCntChick++)
+	for (int nCntChick = 0; nCntChick < MAX_MEMBER; nCntChick++)
 	{// Œ¸‘¬Œ{‚Ìƒ|ƒCƒ“ƒ^‚ð‰Šú‰»
 		m_pAnnoyChick[nCntChick] = NULL;
 	}
@@ -306,7 +306,7 @@ void CPlayer::Uninit(void)
 		}
 	}
 
-	for (int nCntChick = 0; nCntChick < MAX_PLAYER; nCntChick++)
+	for (int nCntChick = 0; nCntChick < MAX_MEMBER; nCntChick++)
 	{
 		if (m_pAnnoyChick[nCntChick] != NULL)
 		{
