@@ -392,7 +392,7 @@ void CPlayer::Update(void)
 
 	ChaseEgg();				// 卵がついてくる処理
 
-	//CollisionCharacter();	// キャラクター同士の当たり判定
+							//CollisionCharacter();	// キャラクター同士の当たり判定
 
 	ChickAppear();			// 
 
@@ -764,7 +764,7 @@ void CPlayer::ControlKey(void)
 			SetStateHandle(HANDLE_LEFT);
 		}
 		else if ((bOnline == false &&
-				(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
+			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
 				pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
 			pXpad->GetPress(INPUT_LS_R) == true ||
 			pXpad->GetPress(INPUT_RIGHT) == true)
@@ -1009,12 +1009,12 @@ void CPlayer::UpdateMove(void)
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
 		if (m_bJump == true) { break; }
-		
+
 		//CDebugProc::Print("DWON***\n");
 
 		m_fSpeed += (0.0f - m_fSpeed) * 0.5f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
-		//進行方向の設定
+											 //進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
@@ -1126,40 +1126,43 @@ void CPlayer::UpdateMove(void)
 
 		if (m_nCntDamage > nDamageTime)
 		{
-			m_State = PLAYERSTATE_NORMAL;
-			m_nCntDamage = 0;
+			if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
+			{
+				m_State = PLAYERSTATE_NORMAL;
+				m_nCntDamage = 0;
 
-			m_bDamage = false;
+				m_bDamage = false;
+			}
 		}
 	}
 
 	//if (m_PlayerType == PLAYERTYPE_PLAYER)
 	{
-		/*CDebugProc::Print("m_bDamage : %d\n", m_bDamage);
+		//CDebugProc::Print("m_bDamage : %d\n", m_bDamage);
 		CDebugProc::Print("m_State : %s\n",
-		(m_State == PLAYERSTATE_NORMAL ? "PLAYERSTATE_NORMAL" :
-		(m_State == PLAYERSTATE_SPEEDUP ? "PLAYERSTATE_SPEEDUP" :
-		(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
-		(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
-		(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
-		(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));*/
+			(m_State == PLAYERSTATE_NORMAL ? "PLAYERSTATE_NORMAL" :
+			(m_State == PLAYERSTATE_SPEEDUP ? "PLAYERSTATE_SPEEDUP" :
+				(m_State == PLAYERSTATE_SPEEDUP_S ? "PLAYERSTATE_SPEEDUP_S" :
+				(m_State == PLAYERSTATE_SPEEDDOWN ? "PLAYERSTATE_SPEEDDOWN" :
+					(m_State == PLAYERSTATE_SPEEDDOWN_S ? "PLAYERSTATE_SPEEDDOWN_S" :
+					(m_State == PLAYERSTATE_DAMAGE ? "PLAYERSTATE_DAMAGE" : "")))))));
 		//CDebugProc::Print("m_nCntDamage : %d\n", m_nCntDamage);
 
-		CDebugProc::Print("m_StateSpeed : %s\n",
-			(m_StateSpeed == STATE_SPEED_ACCEL ? "STATE_SPEED_ACCEL" :
-			(m_StateSpeed == STATE_SPEED_BRAKS ? "STATE_SPEED_BRAKS" :
-			(m_StateSpeed == STATE_SPEED_DRIFT ? "STATE_SPEED_DRIFT" :
-			(m_StateSpeed == STATE_SPEED_DOWN ? "STATE_SPEED_DOWN" :
-			(m_StateSpeed == STATE_SPEED_STOP ? "STATE_SPEED_STOP" : ""))))));
+		//CDebugProc::Print("m_StateSpeed : %s\n",
+		//	(m_StateSpeed == STATE_SPEED_ACCEL ? "STATE_SPEED_ACCEL" :
+		//	(m_StateSpeed == STATE_SPEED_BRAKS ? "STATE_SPEED_BRAKS" :
+		//	(m_StateSpeed == STATE_SPEED_DRIFT ? "STATE_SPEED_DRIFT" :
+		//	(m_StateSpeed == STATE_SPEED_DOWN ? "STATE_SPEED_DOWN" :
+		//	(m_StateSpeed == STATE_SPEED_STOP ? "STATE_SPEED_STOP" : ""))))));
 		//CDebugProc::Print("m_rot x : %.1f y : %.1f z : %.1f\n", m_rot.x, m_rot.y, m_rot.z);
 
-		CDebugProc::Print("fCountTime : %f\n", m_PlayerInfo.fCountTime);
-		CDebugProc::Print("m_fSpeed : %f\n", m_fSpeed);
-		CDebugProc::Print("fDown : %f\n", fDown);
+		//CDebugProc::Print("fCountTime : %f\n", m_PlayerInfo.fCountTime);
+		//CDebugProc::Print("m_fSpeed : %f\n", m_fSpeed);
+		//CDebugProc::Print("fDown : %f\n", fDown);
 	}
 
 	//CDebugProc::Print("アクセル : %1f\n", m_PlayerInfo.fAccel);
-	CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
+	//CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
 
 	//ハンドルの状態更新
 	if (m_StateHandle == HANDLE_LEFT)
@@ -2012,12 +2015,12 @@ void CPlayer::ChickAppear(void)
 					{
 						if (CGame::GetRanking(m_nPlayerNum) == nCntRank + 3)
 						{
-							if (nRank <= 10 * ((2 + nGameTime) + nCntRank))
+							if (nRank <= 10 * ((1 + nGameTime) + nCntRank))
 							{// 強いほう
 							 // タイプ設定
 								type = SetChickType(type, true);
 							}
-							else if (nRank > 10 * ((2 + nGameTime) + nCntRank))
+							else if (nRank > 10 * ((1 + nGameTime) + nCntRank))
 							{// 普通のほう
 							 // タイプ設定
 								type = SetChickType(type, false);
