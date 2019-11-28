@@ -38,6 +38,7 @@ CGameCharSelect::CGameCharSelect()
 		m_pPlayerBG[nCntPlayer] = NULL;
 		m_pSelect[nCntPlayer] = NULL;
 		m_pEnter[nCntPlayer] = NULL;
+		m_pButton[nCntPlayer] = NULL;		// ボタン
 
 		m_bEntry[nCntPlayer] = false;
 		m_bEnter[nCntPlayer] = false;
@@ -50,6 +51,14 @@ CGameCharSelect::CGameCharSelect()
 
 	m_nReturnCounter = 0;				// 戻るカウント
 	m_nEntryCounter = 0;				// エントリーカウント
+
+	m_pReady = NULL;					// 準備
+	m_bReady = false;					// 準備
+
+	m_pTutorial = NULL;					// チュートリアル
+	m_pGo = NULL;						// GO
+
+	m_nTutorialNum = 0;					// チュートリアル番号
 
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
 		m_pCharacter[nCntChar] = NULL;
@@ -84,8 +93,17 @@ HRESULT CGameCharSelect::Load(void)
 		case TEXTURE_ENTER:
 			strcpy(cName, "data/TEXTURE/game/charselect/characterselect.png");
 			break;
+		case TEXTURE_BUTTON:
+			strcpy(cName, "data/TEXTURE/Title/UI/modeselect_15.png");
+			break;
 		case TEXTURE_YOU:
 			strcpy(cName, "data/TEXTURE/game/charselect/modeselect_17.png");
+			break;
+		case TEXTURE_READY:
+			strcpy(cName, "data/TEXTURE/Title/UI/areyouready.png");
+			break;
+		case TEXTURE_TUTORIAL:
+			strcpy(cName, "data/TEXTURE/tutorial/Tutorial.jpg");
 			break;
 		}
 
@@ -200,7 +218,25 @@ HRESULT CGameCharSelect::Init()
 			m_pEnter[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 			m_pEnter[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_ENTER]);
 			m_pEnter[nCntPlayer]->SetTexture(1, 1, 2, 2);
-
+		}
+		// ボタン
+		if (m_pButton[nCntPlayer] == NULL)
+		{// NULL
+			m_pButton[nCntPlayer] = new CScene2D(1, CScene::OBJTYPE_2DPOLYGON);
+			m_pButton[nCntPlayer]->Init();
+			m_pButton[nCntPlayer]->SetPosSize(
+				D3DXVECTOR3(
+					(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.25f)),
+					(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * 0.25f) : SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.25f)),
+					0.0f),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.12f, SCREEN_HEIGHT * 0.04f));
+			m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+			m_pButton[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_BUTTON]);
+			m_pButton[nCntPlayer]->SetUV
+			(
+				D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.5325f, 0.5f),
+				D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.5325f, 1.0f)
+			);
 		}
 	}
 
@@ -308,6 +344,58 @@ HRESULT CGameCharSelect::Init()
 		}
 	}
 
+	// 準備
+	if (m_pReady == NULL)
+	{// NULL
+		m_pReady = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+		m_pReady->Init();
+		m_pReady->SetPosSize(
+			D3DXVECTOR3(
+				(SCREEN_WIDTH * 0.5f),
+				(SCREEN_HEIGHT * 0.5f),
+				0.0f),
+			D3DXVECTOR2(SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.12f));
+		m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		m_pReady->BindTexture(m_pTexture[TEXTURE_READY]);
+	}
+
+	// チュートリアル
+	if (m_pTutorial == NULL)
+	{// NULL
+		m_pTutorial = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+		m_pTutorial->Init();
+		m_pTutorial->SetPosSize(
+			D3DXVECTOR3(
+				(SCREEN_WIDTH * 1.0f),
+				(SCREEN_HEIGHT * 0.5f),
+				0.0f),
+			D3DXVECTOR2(SCREEN_WIDTH * 1.0f, SCREEN_HEIGHT * 0.5f));
+		m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f)); 
+		m_pTutorial->BindTexture(m_pTexture[TEXTURE_TUTORIAL]);
+	}
+
+	// Go
+	if (m_pGo == NULL)
+	{// NULL
+		m_pGo = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+		m_pGo->Init();
+		m_pGo->SetPosSize(
+			D3DXVECTOR3
+			(
+			(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.41f),
+				(SCREEN_HEIGHT * 0.12f) + (SCREEN_HEIGHT * 0.85f),
+				0.0f
+			),
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.15f, SCREEN_HEIGHT * 0.04f));
+		m_pGo->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		m_pGo->BindTexture(m_pTexture[TEXTURE_BUTTON]);
+		m_pGo->SetUV
+		(
+			D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.5325f, 0.5f),
+			D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.5325f, 1.0f)
+		);
+	}
+
 	return S_OK;
 }
 //=============================================================================
@@ -337,6 +425,11 @@ void CGameCharSelect::Uninit(void)
 			m_pEnter[nCntPlayer]->Uninit();		// 終了処理
 			m_pEnter[nCntPlayer] = NULL;		// NULLへ
 		}
+		if (m_pButton[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pButton[nCntPlayer]->Uninit();	// 終了処理
+			m_pButton[nCntPlayer] = NULL;		// NULLへ
+		}
 	}
 
 	// あなた
@@ -365,6 +458,27 @@ void CGameCharSelect::Uninit(void)
 		m_pReturnChar = NULL;		// NULLへ
 	}
 
+	// 準備
+	if (m_pReady != NULL)
+	{// NULL以外
+		m_pReady->Uninit();		// 終了処理
+		m_pReady = NULL;		// NULLへ
+	}
+
+	// チュートリアル
+	if (m_pTutorial != NULL)
+	{// NULL以外
+		m_pTutorial->Uninit();	// 終了処理
+		m_pTutorial = NULL;		// NULLへ
+	}
+
+	// Go
+	if (m_pGo != NULL)
+	{// NULL以外
+		m_pGo->Uninit();	// 終了処理
+		m_pGo = NULL;		// NULLへ
+	}
+
 	// キャラクター
 	for (int nCntChar = 0; nCntChar < MAX_CHARCTER; nCntChar++)
 	{// キャラカウント
@@ -384,13 +498,20 @@ void CGameCharSelect::Uninit(void)
 //=============================================================================
 void CGameCharSelect::Update(void)
 {
-	// 取得
-	bool bOnine = CTitle::GetOnline();
+	if (m_bReady == false)
+	{
+		// 取得
+		bool bOnine = CTitle::GetOnline();
 
-	if (bOnine == true)	
-		Online();		// オンライン
+		if (bOnine == true)
+			Online();		// オンライン
+		else
+			Local();		// ローカル
+	}
 	else
-		Local();		// ローカル
+	{
+		Tutorial();
+	}
 }
 
 //=============================================================================
@@ -426,8 +547,7 @@ void CGameCharSelect::Online(void)
 
 			if (m_bEnter[nCntPlayer] == false)
 			{// 決定していない
-				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
-					pXpad->GetTrigger(INPUT_LS_U) == true ||
+				if (pXpad->GetTrigger(INPUT_LS_U) == true ||
 					pXpad->GetTrigger(INPUT_UP) == true)
 				{// 上キー
 					if (pnCharSelectNum[nCntPlayer] / 4 == 1)
@@ -449,8 +569,7 @@ void CGameCharSelect::Online(void)
 
 					}
 				}
-				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
-					pXpad->GetTrigger(INPUT_LS_D) == true ||
+				else if (pXpad->GetTrigger(INPUT_LS_D) == true ||
 					pXpad->GetTrigger(INPUT_DOWN) == true)
 				{// 下キー
 					if (pnCharSelectNum[nCntPlayer] / 4 == 0)
@@ -471,8 +590,7 @@ void CGameCharSelect::Online(void)
 						}
 					}
 				}
-				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true ||
-					pXpad->GetTrigger(INPUT_LS_L) == true ||
+				if (pXpad->GetTrigger(INPUT_LS_L) == true ||
 					pXpad->GetTrigger(INPUT_LEFT) == true)
 				{// 左キー
 					if (pnCharSelectNum[nCntPlayer] % 4 != 0)
@@ -501,8 +619,7 @@ void CGameCharSelect::Online(void)
 						}
 					}
 				}
-				else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true ||
-					pXpad->GetTrigger(INPUT_LS_R) == true ||
+				else if (pXpad->GetTrigger(INPUT_LS_R) == true ||
 					pXpad->GetTrigger(INPUT_RIGHT) == true)
 				{// 右キー
 					if (pnCharSelectNum[nCntPlayer] % 4 != (4 - 1))
@@ -582,9 +699,37 @@ void CGameCharSelect::Online(void)
 			}
 		}
 
-		// 全員決定
+		if (m_pButton[nCntPlayer] != NULL)
+		{// NULL以外
+			if (m_bEnter[nCntPlayer] == true)
+				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			else
+				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+		}
+	}
+
+	pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
+
+	// 全員決定
+	if (nMaxPlayer != 0)
+	{
 		if (nChackEnter == nMaxPlayer)
-			CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
+		{
+			if (m_pReady != NULL)
+				m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
+				pXpad->GetTrigger(INPUT_START) == true)
+			{
+				m_bReady = true;
+				//CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
+			}
+		}
+		else
+		{
+			if (m_pReady != NULL)
+				m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		}
 	}
 
 	// プレイヤー最大数設定
@@ -733,7 +878,7 @@ void CGameCharSelect::Local(void)
 				}
 			}
 
-			if (pXpad->GetTrigger(INPUT_START) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
 				{
@@ -772,7 +917,7 @@ void CGameCharSelect::Local(void)
 		}
 
 		// キーボード
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true || (m_bEntry[0] == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true))
 		{
 			if (m_bEntry[0] == true)
 			{
@@ -881,7 +1026,7 @@ void CGameCharSelect::Local(void)
 		{// NULL以外
 			m_pSelect[nCntPlayer]->SetPosSize(
 				D3DXVECTOR3(
-					(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (pnCharSelectNum[nCntPlayer] % 4 == 0 || pnCharSelectNum[nCntPlayer] % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (pnCharSelectNum[nCntPlayer] / 2 % 2 == 0 ? -1.0f : 1.0f)),
+				(SCREEN_WIDTH * 0.5f) + ((SCREEN_WIDTH * 0.053f + (pnCharSelectNum[nCntPlayer] % 4 == 0 || pnCharSelectNum[nCntPlayer] % 4 == 3 ? (SCREEN_WIDTH * 0.053f) * 2.0f : 0.0f)) * (pnCharSelectNum[nCntPlayer] / 2 % 2 == 0 ? -1.0f : 1.0f)),
 					(SCREEN_HEIGHT * 0.7f) + ((SCREEN_WIDTH * 0.053f) * (pnCharSelectNum[nCntPlayer] / 4 == 0 ? -1.0f : 1.0f)),
 					0.0f),
 				D3DXVECTOR2(SCREEN_WIDTH * 0.04f, SCREEN_WIDTH * 0.04f));
@@ -909,9 +1054,36 @@ void CGameCharSelect::Local(void)
 			}
 		}
 
-		// 全員決定
+		if (m_pButton[nCntPlayer] != NULL)
+		{// NULL以外
+			if (m_bEnter[nCntPlayer] == true)
+				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			else
+				m_pButton[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+		}
+	}
+
+	pXpad = CManager::GetInputJoyPad0(pnControllerNum[0]);		//ジョイパットの取得
+
+	// 全員決定
+	if (nMaxPlayer != 0)
+	{
 		if (nChackEnter == nMaxPlayer)
-			CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
+		{
+			if (m_pReady != NULL)
+				m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
+				pXpad->GetTrigger(INPUT_START) == true)
+			{
+				m_bReady = true;
+			}
+		}
+		else
+		{
+			if (m_pReady != NULL)
+				m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		}
 	}
 
 	int nEntryNum = 0;
@@ -1022,4 +1194,87 @@ void CGameCharSelect::Local(void)
 	CGame::SetControllerNum(pnControllerNum);
 
 	m_nEntryCounter++;		// カウント
+}
+
+//=============================================================================
+// チュートリアル
+//=============================================================================
+void CGameCharSelect::Tutorial(void)
+{
+	//入力情報
+	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+
+	// コントローラー番号取得
+	int *pnControllerNum = CGame::GetControllerNum();
+
+	// 取得
+	bool bOnine = CTitle::GetOnline();
+
+	if (m_pTutorial != NULL)
+	{
+		float fposDest_X = (SCREEN_WIDTH * 1.0f);
+
+		if (m_nTutorialNum == 0)
+			fposDest_X = (SCREEN_WIDTH * 1.0f);
+		else
+			fposDest_X = (SCREEN_WIDTH * 0.0f);
+
+		D3DXVECTOR3 pos = m_pTutorial->GetPosition();
+
+		pos.x += (fposDest_X - pos.x) * 0.5f;
+
+		m_pTutorial->SetPosSize(pos,
+			D3DXVECTOR2(SCREEN_WIDTH * 1.0f, SCREEN_HEIGHT * 0.5f));
+		m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+	if (m_pGo != NULL)
+		m_pGo->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+	if (bOnine == true)
+	{
+		pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
+
+		if (pXpad->GetTrigger(INPUT_LS_L) == true ||
+			pXpad->GetTrigger(INPUT_LEFT) == true)
+		{
+			m_nTutorialNum = 0;
+		}
+		else if (pXpad->GetTrigger(INPUT_LS_R) == true ||
+			pXpad->GetTrigger(INPUT_RIGHT) == true)
+		{// 右キー
+			m_nTutorialNum = 1;
+		}
+
+		if (pXpad->GetTrigger(INPUT_START) == true)
+		{
+			CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
+		}
+	}
+	else
+	{
+		pXpad = CManager::GetInputJoyPad0(pnControllerNum[0]);		//ジョイパットの取得
+
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true ||
+			pCInputKeyBoard->GetKeyboardTrigger(DIK_LEFT) == true ||
+			pXpad->GetTrigger(INPUT_LS_L) == true ||
+			pXpad->GetTrigger(INPUT_LEFT) == true)
+		{
+			m_nTutorialNum = 0;
+		}
+		else if (pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true ||
+			pCInputKeyBoard->GetKeyboardTrigger(DIK_RIGHT) == true ||
+			pXpad->GetTrigger(INPUT_LS_R) == true ||
+			pXpad->GetTrigger(INPUT_RIGHT) == true)
+		{// 右キー
+			m_nTutorialNum = 1;
+		}
+
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
+			pXpad->GetTrigger(INPUT_START) == true)
+		{
+			CFade::Create(CGame::GAMEMODE_COURSE_VIEW);
+		}
+	}
 }

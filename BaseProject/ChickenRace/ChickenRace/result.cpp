@@ -114,6 +114,9 @@ void CResult::Uninit(void)
 	CResultUI::Unload();
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 
+	CModel3D::UnLoad();
+	CModel3D::ModelShaderDeleter();
+
 	// タイトルカメラの破棄
 	if (m_pResultCamera != NULL)
 	{
