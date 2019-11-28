@@ -32,6 +32,7 @@ public:
 	{// ÉLÅ[óvëf
 		TYPE_NORMAL = 0,
 		TYPE_UP,
+		TYPE_DOWN,
 		TYPE_MAX
 	} PARTICLE_TYPE;
 

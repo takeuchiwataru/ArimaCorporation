@@ -195,18 +195,21 @@ void CParticle::Move(void)
 	D3DXVECTOR3 pos;
 	pos = CBillBoord::GetPosition();
 
-	m_Size.x -= 0.1f;
-	m_Size.y -= 0.1f;
-
-	if (m_Size.x <= 0 && m_Size.y <= 0)
-	{
-		m_Size.x = 0.0f;
-		m_Size.y = 0.0f;
-	}
-
 	if (m_Type == TYPE_UP)
 	{
 		m_move.y -= 0.5f;
+	}
+
+	if (m_Type != TYPE_DOWN)
+	{
+		m_Size.x -= 0.1f;
+		m_Size.y -= 0.1f;
+
+		if (m_Size.x <= 0 && m_Size.y <= 0)
+		{
+			m_Size.x = 0.0f;
+			m_Size.y = 0.0f;
+		}
 	}
 
 	pos -= m_move;
