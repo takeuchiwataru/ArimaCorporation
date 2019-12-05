@@ -111,6 +111,7 @@ public:
 	bool				Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
 	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
 
+	bool				&GetbColR(void) { return m_bcolChange; }
 	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
 	static CToonShader	*&GetToonShader(void) { return m_pToonShader; }
 

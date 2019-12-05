@@ -195,6 +195,9 @@
     <ClCompile Include="time.cpp">
       <Filter>ソース ファイル\知らん奴</Filter>
     </ClCompile>
+    <ClCompile Include="Orbit.cpp">
+      <Filter>ソース ファイル\杉本</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboord.h">
@@ -367,6 +370,9 @@
     </ClInclude>
     <ClInclude Include="time.h">
       <Filter>ヘッダー ファイル\知らん奴</Filter>
+    </ClInclude>
+    <ClInclude Include="Orbit.h">
+      <Filter>ヘッダー ファイル\杉本</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,7 @@ class CObjBillboad;
 class CObject : public CModel3D
 {
 public://’N‚Å‚àˆµ‚¦‚é
-	CObject();
+	CObject(int nPriority = OBJECT_PRIOTITY);
 	~CObject();
 	static HRESULT Load(void);
 	static void UnLoad(void);

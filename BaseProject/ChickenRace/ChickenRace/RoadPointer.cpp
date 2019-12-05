@@ -382,6 +382,37 @@ void	CRoad_Pointer::SetRoad(int &nNumRoad, bool &bRoad)
 	}
 }
 //==================================================================================================//
+//    * キラーのポイント設定関数 *
+//==================================================================================================//
+CRoad_Pointer	*&CRoad_Pointer::SetKiller(D3DXVECTOR3 &pos, int &nMap)
+{
+	float fDis = 99999999.9f;
+	CRoad_Pointer *pTop = CRoad_Manager::GetManager()->GetTop(1, nMap);
+	CRoad_Pointer *pPoint = NULL;
+	//現在のマップで一番近いのを探す（一定以上近いのは無視する）
+	return pTop->SearchKiller(pos, fDis, pPoint);
+}
+//==================================================================================================//
+//    * 道のポインタ接続関数 *
+//==================================================================================================//
+CRoad_Pointer	*&CRoad_Pointer::SearchKiller(D3DXVECTOR3 &pos, float &fDistance, CRoad_Pointer *&pPoint)
+{
+	float fDis = sqrtf(powf(pos.x - m_pos.x, 2) + powf(pos.z - m_pos.z, 2));
+
+	if (fDis < fDistance)
+	{//近いなら
+		fDistance = fDis;
+		pPoint = this;
+	}
+
+	for (int nCnt = 0; nCnt < ROAD_MAX; nCnt++)
+	{
+		if (m_pNextPointer[nCnt] != NULL) { m_pNextPointer[nCnt]->SearchKiller(pos, fDistance, pPoint); }
+	}
+
+	return pPoint;
+}
+//==================================================================================================//
 //    * 道のポインタ接続関数 *
 //==================================================================================================//
 void	CRoad_Pointer::Connect(CRoad_Pointer *pPoint)
@@ -422,16 +453,6 @@ bool	CRoad_Pointer::Beyond(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nNu
 	float fRot;
 	bool  bBeyond = false;
 
-	//超える補助
-	if (pPoint->m_pNextPointer[0] != NULL || nMap != CRoad_Manager::MAP_MAX - 1)
-	{//次がゴールでないなら
-		if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && !bRank)
-		{//敵 && ランキングでないなら
-			fRot = atan2f(pos.x - pPoint->m_pos.x, pos.z - pPoint->m_pos.z);
-			pos -= D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * IGNOR_DIS;
-		}
-	}
-
 	float fAngle[2];
 	fAngle[0] = atan2f(pPoint->m_Point[1].x - pPoint->m_Point[0].x, pPoint->m_Point[1].z - pPoint->m_Point[0].z);
 	fAngle[1] = atan2f(pos.x - pPoint->m_Point[0].x, pos.z - pPoint->m_Point[0].z);
@@ -440,6 +461,26 @@ bool	CRoad_Pointer::Beyond(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nNu
 	{//越えた
 		pmyPoint = pPoint;
 		bBeyond = true;
+	}
+	else
+	{
+		//超える補助
+		if (pPoint->m_pNextPointer[0] != NULL || nMap != CRoad_Manager::MAP_MAX - 1)
+		{//次がゴールでないなら
+			if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && !bRank)
+			{//敵 && ランキングでないなら
+				fRot = atan2f(pos.x - pPoint->m_pos.x, pos.z - pPoint->m_pos.z);
+				pos -= D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * IGNOR_DIS;
+			}
+		}
+		fAngle[0] = atan2f(pPoint->m_Point[1].x - pPoint->m_Point[0].x, pPoint->m_Point[1].z - pPoint->m_Point[0].z);
+		fAngle[1] = atan2f(pos.x - pPoint->m_Point[0].x, pos.z - pPoint->m_Point[0].z);
+
+		if (CCOL_MESH::AngleCheck(fAngle[0], fAngle[1]) <= 0)
+		{//越えた
+			pmyPoint = pPoint;
+			bBeyond = true;
+		}
 	}
 
 	//繰り返す

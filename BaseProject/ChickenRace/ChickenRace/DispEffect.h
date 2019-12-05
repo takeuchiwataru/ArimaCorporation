@@ -34,9 +34,9 @@ public:
 	}EFFECT;
 	typedef enum
 	{
-		TEX_SWAMP		, TEX_SWAMP_ONE,	//水たまり
-		TEX_BOOST		, 					//加速
-		TEX_FootSteps	, 
+		TEX_SWAMP, TEX_SWAMP_ONE,	//水たまり
+		TEX_BOOST, 					//加速
+		TEX_FootSteps, TEX_Shadow,
 		TEX_MAX,
 	}TEX;
 	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON) : CScene(nPriority, objType) {};
@@ -61,7 +61,7 @@ private://**********************************************************************
 	void	ChangeEffect(void);
 	C2DAnim	*&SetAnim(bool bSet = true);
 	void	SetSwmp(C2DAnim *&pAnim, float fRot = -99.9f);
-		//変数宣言//***********************************************************************
+	//変数宣言//***********************************************************************
 	static LPDIRECT3DTEXTURE9	m_pTexAll[TEX_MAX];			// テクスチャ番号
 
 	LPDIRECT3DTEXTURE9		m_pTex;			// テクスチャ番号

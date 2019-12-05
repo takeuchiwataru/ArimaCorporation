@@ -36,37 +36,37 @@ C2D	*C2D::Create(void)
 //==================================================================================================//
 void C2D::Set(D3DXVECTOR3 pos, float fLengthX, float fLengthY, float fRot, int nUV, int nUV_X, int nUV_Y, D3DXCOLOR col, DRAW_TYPE Drawtype)
 {
-		m_DrawType = Drawtype;
-		m_pos = pos;
-		m_fLengthX = fLengthX;
-		m_fLengthY = fLengthY;
-		
-		//Vtxの変更
-		VERTEX_2D *pVtx;		//頂点情報へのポインタ
+	m_DrawType = Drawtype;
+	m_pos = pos;
+	m_fLengthX = fLengthX;
+	m_fLengthY = fLengthY;
 
-								//頂点BUFFERをロックし、頂点情報へのポインタを取得
-		m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
+	//Vtxの変更
+	VERTEX_2D *pVtx;		//頂点情報へのポインタ
 
-		//頂点座標の設定
-		pVtx[0].pos = D3DXVECTOR3(m_pos.x + (sinf(fRot) * m_fLengthY) + (cosf(fRot) * m_fLengthX), m_pos.y - (sinf(fRot) * m_fLengthX) + (cosf(fRot) * m_fLengthY), 0.0f);
-		pVtx[1].pos = D3DXVECTOR3(m_pos.x + (sinf(fRot) * m_fLengthY) - (cosf(fRot) * m_fLengthX), m_pos.y + (sinf(fRot) * m_fLengthX) + (cosf(fRot) * m_fLengthY), 0.0f);
-		pVtx[2].pos = D3DXVECTOR3(m_pos.x - (sinf(fRot) * m_fLengthY) + (cosf(fRot) * m_fLengthX), m_pos.y - (sinf(fRot) * m_fLengthX) - (cosf(fRot) * m_fLengthY), 0.0f);
-		pVtx[3].pos = D3DXVECTOR3(m_pos.x - (sinf(fRot) * m_fLengthY) - (cosf(fRot) * m_fLengthX), m_pos.y + (sinf(fRot) * m_fLengthX) - (cosf(fRot) * m_fLengthY), 0.0f);
+							//頂点BUFFERをロックし、頂点情報へのポインタを取得
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
-		//カラー設定
-		pVtx[0].col = col;	// A = 透明度
-		pVtx[1].col = col;
-		pVtx[2].col = col;
-		pVtx[3].col = col;
+	//頂点座標の設定
+	pVtx[0].pos = D3DXVECTOR3(m_pos.x + (sinf(fRot) * m_fLengthY) + (cosf(fRot) * m_fLengthX), m_pos.y - (sinf(fRot) * m_fLengthX) + (cosf(fRot) * m_fLengthY), 0.0f);
+	pVtx[1].pos = D3DXVECTOR3(m_pos.x + (sinf(fRot) * m_fLengthY) - (cosf(fRot) * m_fLengthX), m_pos.y + (sinf(fRot) * m_fLengthX) + (cosf(fRot) * m_fLengthY), 0.0f);
+	pVtx[2].pos = D3DXVECTOR3(m_pos.x - (sinf(fRot) * m_fLengthY) + (cosf(fRot) * m_fLengthX), m_pos.y - (sinf(fRot) * m_fLengthX) - (cosf(fRot) * m_fLengthY), 0.0f);
+	pVtx[3].pos = D3DXVECTOR3(m_pos.x - (sinf(fRot) * m_fLengthY) - (cosf(fRot) * m_fLengthX), m_pos.y + (sinf(fRot) * m_fLengthX) - (cosf(fRot) * m_fLengthY), 0.0f);
 
-		//テクスチャ座標設定
-		pVtx[0].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y));
-		pVtx[1].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X) + (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y));
-		pVtx[2].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y) + (1.0f / nUV_Y));
-		pVtx[3].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X) + (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y) + (1.0f / nUV_Y));
+	//カラー設定
+	pVtx[0].col = col;	// A = 透明度
+	pVtx[1].col = col;
+	pVtx[2].col = col;
+	pVtx[3].col = col;
 
-		//頂点BUFFERをアンロックする
-		m_pVtxBuff->Unlock();
+	//テクスチャ座標設定
+	pVtx[0].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y));
+	pVtx[1].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X) + (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y));
+	pVtx[2].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y) + (1.0f / nUV_Y));
+	pVtx[3].tex = D3DXVECTOR2((nUV % nUV_X) * (1.0f / nUV_X) + (1.0f / nUV_X), (nUV / nUV_X) * (1.0f / nUV_Y) + (1.0f / nUV_Y));
+
+	//頂点BUFFERをアンロックする
+	m_pVtxBuff->Unlock();
 }
 //=============================================================================
 // ポリゴンの初期化処理
@@ -142,7 +142,7 @@ void C2D::Draw(void)
 	pD3DDevice->SetFVF(FVF_VERTEX_2D);	// 頂点フォーマットの設定
 
 										//テクスチャの設定
-	//テクスチャの設定
+										//テクスチャの設定
 	pD3DDevice->SetTexture(0, m_pTex);
 
 	if (m_DrawType == DRAW_TYPE_ADD) { nNumDraw = 1; }
@@ -280,7 +280,7 @@ void C2D::SetUV_Camera(float fUV_X, float fUV_Y, float fDiameter)
 	//Vtxの変更
 	VERTEX_2D *pVtx;		//頂点情報へのポインタ
 	D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-							//頂点BUFFERをロックし、頂点情報へのポインタを取得
+	//頂点BUFFERをロックし、頂点情報へのポインタを取得
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//テクスチャ座標設定
@@ -299,7 +299,7 @@ void C2D::SetUV_Camera(float fUV_X, float fUV_Y, float fDiameter)
 void	C2D::SetGageUV(float fMaxLengthX)
 {
 	VERTEX_2D *pVtx;		//頂点情報へのポインタ
-	//頂点BUFFERをロックし、頂点情報へのポインタを取得
+							//頂点BUFFERをロックし、頂点情報へのポインタを取得
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//テクスチャ座標設定
@@ -369,10 +369,14 @@ void	C2D::PlusColor(D3DXCOLOR col)
 	{
 		WKcol = pVtx[nCount].col;
 		WKcol += col;
-		if (WKcol.r > 1.0f) { WKcol.r = 1.0f; } else if (WKcol.r < 0.0f) { WKcol.r = 0.0f; }
-		if (WKcol.g > 1.0f) { WKcol.g = 1.0f; } else if (WKcol.g < 0.0f) { WKcol.g = 0.0f; }
-		if (WKcol.b > 1.0f) { WKcol.b = 1.0f; } else if (WKcol.b < 0.0f) { WKcol.b = 0.0f; }
-		if (WKcol.a > 1.0f) { WKcol.a = 1.0f; } else if (WKcol.a < 0.0f) { WKcol.a = 0.0f; }
+		if (WKcol.r > 1.0f) { WKcol.r = 1.0f; }
+		else if (WKcol.r < 0.0f) { WKcol.r = 0.0f; }
+		if (WKcol.g > 1.0f) { WKcol.g = 1.0f; }
+		else if (WKcol.g < 0.0f) { WKcol.g = 0.0f; }
+		if (WKcol.b > 1.0f) { WKcol.b = 1.0f; }
+		else if (WKcol.b < 0.0f) { WKcol.b = 0.0f; }
+		if (WKcol.a > 1.0f) { WKcol.a = 1.0f; }
+		else if (WKcol.a < 0.0f) { WKcol.a = 0.0f; }
 
 		pVtx[nCount].col = WKcol;
 	}
@@ -409,7 +413,7 @@ void C2D::PlusUV(D3DXVECTOR2 uv)
 {
 	VERTEX_2D *pVtx;		//頂点情報へのポインタ
 
-	// 頂点バッファをロックし、頂点データへのポインタを取得
+							// 頂点バッファをロックし、頂点データへのポインタを取得
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	// 頂点カラーの設定

@@ -43,6 +43,7 @@ void CDispEffect::Load(void)
 			case TEX_SWAMP_ONE:	strcat(aStr, "WaterDrop.png");			break;
 			case TEX_BOOST:		strcat(aStr, "DispEffect_Boost.jpg");	break;
 			case TEX_FootSteps:	strcat(aStr, "Footsteps.jpg");			break;
+			case TEX_Shadow:	strcat(aStr, "shadow000.jpg");			break;
 			}
 			D3DXCreateTextureFromFile(pD3DDevice, aStr, &m_pTexAll[nCount]);
 		}

@@ -157,22 +157,10 @@ void CGameCamera::UpdatePlayer(void)
 		D3DXVECTOR3 PlayerMove = m_pPlayer->GetMove();
 		D3DXVECTOR3 VecUPos;
 		D3DXVECTOR3 WKPosR;
-		float fDistance = 0.0f;
-		float fRotX = 0.0f;
-		bool bVec = false;
-
-
-		float fRotY = m_pPlayer->GetRot().y;
-		float fVecWK = fRotY - m_pPlayer->GetfRotOld();
-		float fVecU = 0.0f;
-		RemakeAngle(&fVecWK);
-		if (fVecWK > 0.01f) { m_vecU.z += 0.015f;  bVec = true; if (m_vecU.z > 0.8f) { m_vecU.z = 0.8f; } }
-		if (fVecWK < -0.01f) { m_vecU.z -= 0.015f; bVec = true; if (m_vecU.z < -0.8f) { m_vecU.z = -0.8f; } }
-		if (!bVec)
-		{
-			m_vecU.z *= 0.985f;
-		}
-
+		float		fDistance = 0.0f;
+		float		fRotX = 0.0f;
+		float		fRotY = m_pPlayer->GetRot().y;
+		m_vecU.z = m_pPlayer->Getrot().z * -1.0f;
 		fRotY += D3DX_PI * 0.5f;
 
 		//プレイヤーに追従ようにする
@@ -189,7 +177,7 @@ void CGameCamera::UpdatePlayer(void)
 		fWK += 1.0f;
 
 		CRoad_Pointer::BentRotX(m_pPlayer->Getpos(), m_pPlayer->GetpEnmPoint(), fRotX, fDistance);
-		if (m_pPlayer->GetbJump()) { fRotX -= D3DX_PI * 0.1f; }
+		if (m_pPlayer->GetbJump()) { fRotX -= D3DX_PI * 0.15f; }
 		RemakeAngle(&fRotX);
 
 		//視点更新

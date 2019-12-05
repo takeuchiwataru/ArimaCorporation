@@ -39,6 +39,7 @@ public://誰でも扱える
 		OBJTYPE_GROUND,			//地面
 		OBJTYPE_MESH,			//メッシュ
 		OBJTYPE_MESHORBIT,		//軌跡
+		OBJTYPE_ORBIT,			//軌跡
 		OBJTYPE_MESHFILED,		//メッシュフィールド
 		OBJTYPE_SHADOW,			//影
 		OBJTYPE_LOGO,			//UI系

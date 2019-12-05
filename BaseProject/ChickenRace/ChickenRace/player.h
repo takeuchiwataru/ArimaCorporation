@@ -41,6 +41,8 @@
 #define MAX_FALL_FADE		(60)							// おちるエフェクト
 #define MAX_FALL_WAIT		(15)							// おちるエフェクト待機
 
+#define PLAYER_LENGTH			(10.0f)							//キャラの大きさ
+
 //=============================================================================
 // 前方宣言
 //=============================================================================
@@ -227,6 +229,7 @@ public:
 	int				&GetnMap(void) { return m_nMap; };
 	int				&GetnPlayerNum(void) { return m_nPlayerNum; }
 	bool			&GetbDivided(void) { return m_bDivided; };
+	C3DPolygon		*&GetpShadow(void) { return m_pShadow; };
 
 	int GetItemNum(void) { return m_nNumItem; }
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
@@ -258,10 +261,16 @@ private:
 	bool UseSPD(int &nRank);
 	float GetDistance(int nRank);
 	void UpdateKiller(void);
+	void SetKiller(void);
 	void UpdateFEffect(void);
 	void EffectUp(void);
 	void WarpNext(void);
 	void UseBoost(void);
+	void EndBoost(void);
+	void SetState(PLAYERSTATE state);
+	void Tackle(float &fValue);
+	void UpVecUZ(void);
+	void SetStick(CInputJoyPad_0 *&pPad);
 
 	void UpdateField(void);
 	void SetStateSpeed(STATE_SPEED state);
@@ -278,6 +287,7 @@ private:
 	void ChaseEgg(void);
 	void BulletEgg(void);
 	void CollisionCharacter(void);
+	void Strike(CPlayer *pPlayer);
 	void ChaseAnnoyS(void);
 	void EggJump(void);
 	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
@@ -348,6 +358,7 @@ private:
 	int							  m_nStartFrame;
 	int							  m_nStartCounter;
 
+	C3DPolygon					  *m_pShadow;			//影
 	CDispEffect					  *m_pDispEffect;				// 画面演出
 	CCOL_MESH::EFFECT			  m_FEffect;					// 地面効果
 	bool						  m_bDrop;						// おちた
@@ -358,14 +369,19 @@ private:
 	float						  m_fPosY;						// 別加算位置Y
 	float						  m_fLength;					// 横幅
 	float						  m_fRoad;						// IN_OUTの％
-	float						  m_fTilt;						// 坂
-	float						  m_fCTiltV;					// カメラ用坂
-	float						  m_fCTiltW;					// カメラ用坂
-	float						  m_fRotOld;					// 前のRotY
+	float						  m_fTilt;				//坂
+	float						  m_fCTiltV;				//カメラ用坂
+	float						  m_fCTiltW;				//カメラ用坂
+	float						  m_fRotOld;			//前のRotY
+	float						  m_fPower;				//加速プラス用
+	float						  m_fTackle;			//タックル後のアクセルF
+	float						  m_fVecUZ;				//Z角度
+	float						  m_fStick;				//スティック角度
 	int							  m_nMap;						// 判定を取るマップ
 	int							  m_nNumRoad;					// 道の番号
 	bool						  m_bDivided;					// 分かれ道かどうか
 	bool						  m_bJumpOld;					// ジャンプの前F
+	bool						  m_bOrbit;			//オービットの削除制御用
 
 	// モーション関数	新規
 	static KEY_INFO				  *m_pKeyInfo[MAX_MOTION];		// キー情報へのポインタ

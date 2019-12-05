@@ -51,6 +51,9 @@ public:
 	void	Save(FILE *pFile);
 	void	Load(FILE *pFile, CRoad_Pointer **&pPoint);
 	void	SetRoad(int &nNumRoad, bool &bRoad);
+	CRoad_Pointer	*&SetKiller(D3DXVECTOR3 &pos, int &nMap);
+	CRoad_Pointer	*&SearchKiller(D3DXVECTOR3 &pos, float &fDistance, CRoad_Pointer *&pPoint);
+
 	void	Connect(CRoad_Pointer *pPoint);
 	CRoad_Pointer	*Release(void);
 	void	Scale(POINT point, float fValue);

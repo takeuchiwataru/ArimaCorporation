@@ -47,8 +47,8 @@ public://誰でも扱える
 
 	typedef enum
 	{// オブジェクトの種類
-		TYPE_CHICKEN = 0,		//体
-		TYPE_CHICK,				//体
+		TYPE_CHICKEN = 0,		//鳥
+		TYPE_CHICK,				//ひよこ
 		TYPE_MAX,				//
 	}TYPE;
 

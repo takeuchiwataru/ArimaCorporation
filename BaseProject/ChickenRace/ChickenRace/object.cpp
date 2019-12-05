@@ -45,7 +45,7 @@ D3DXVECTOR3 CObject::m_LoadVtxMinModel[MAX_OBJECT] = {};
 //===============================================================================
 //　デフォルトコンストラクタ
 //===============================================================================
-CObject::CObject() : CModel3D(OBJECT_PRIOTITY, CScene::OBJTYPE_OBJECT)
+CObject::CObject(int nPriority) : CModel3D(nPriority, CScene::OBJTYPE_OBJECT)
 {
 	m_ModelMove = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_Spin = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -138,12 +138,21 @@ void CObject::Draw(void)
 CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, float move, int nTexType, int nObjectType, int nCollision)
 {
 	CObject *pObject = NULL;
+	int nPriority = 3;
 
 	// NULLチェック
 	if (pObject == NULL)
 	{// メモリの動的確保
 
-		pObject = new CObject;
+		switch (nObjectType)
+		{
+		case CModel3D::MODEL_TYPE_MAP_FIRST:
+		case CModel3D::MODEL_TYPE_MAP_SECOND:
+		case CModel3D::MODEL_TYPE_BRIDGE:
+			nPriority = 0;
+			break;
+		}
+		pObject = new CObject(nPriority);
 
 		if (pObject != NULL)
 		{

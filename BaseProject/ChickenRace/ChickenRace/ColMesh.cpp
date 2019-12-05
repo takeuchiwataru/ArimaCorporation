@@ -704,17 +704,18 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			case EFFECT_RIVER:
 			case EFFECT_DROP:
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
+				pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z));
 				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 11.5f : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + 30.0f)
 				{//ŠÑ’Ê‚µ‚Ä‚¢‚½‚ç
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
 					if (m_Effect == EFFECT_SWAMP)
 					{
-						move *= 0.93f; Effect = m_Effect; 
-						
+						move *= 0.93f; Effect = m_Effect;
+
 						if (60 < pPlayer->GetSpeedCounter())
-							pPlayer->SetSpeedCounter(60); 
-						
+							pPlayer->SetSpeedCounter(60);
+
 						return bLand;
 					}
 					if (m_Effect == EFFECT_GRASS)
@@ -723,7 +724,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 
 						if (60 < pPlayer->GetSpeedCounter())
 							pPlayer->SetSpeedCounter(60);
-					}					
+					}
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
 					FNor = WKnor;
@@ -934,7 +935,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		fDistance = sqrtf(powf((Wpos2.x - Wpos0.x), 2) + powf((Wpos2.z - Wpos0.z), 2));
 		fPercent = fDistance / sqrtf(powf((Wpos1.x - Wpos0.x), 2) + powf((Wpos1.z - Wpos0.z), 2));
 		fPercent = (Wpos1.y - Wpos0.y) * fPercent;
-		if (pos.y < Wpos0.y + fPercent - 30.0f || pos.y > fPercent + WUpos0.y + 10.0f)
+		if (pos.y < Wpos0.y + fPercent - 30.0f || pos.y > fPercent + WUpos0.y)
 		{//YŽ²‚ª”ÍˆÍŠO‚È‚ç
 			nEnd = 1;
 			return nEnd;
@@ -1310,7 +1311,7 @@ float	CCOL_MESH_MANAGER::GetHeight(D3DXVECTOR3 &pos, int &nMap)
 		for (int nCount = 0; nCount < m_pColMesh[nMap]->m_nNumField; nCount++)
 		{
 			CCOL_MESH *&pMesh = m_pColMesh[nMap]->GetpField()[nCount];
-			
+
 			if (pMesh->GetHeight(pos, fHeight))
 			{
 				bHit = true;

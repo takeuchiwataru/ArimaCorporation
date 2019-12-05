@@ -9,6 +9,7 @@
 #include "manager.h"
 #include "renderer.h"
 #include "DispEffect.h"
+#include "player.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -26,10 +27,10 @@
 //　デフォルトコンストラクタ
 //===============================================================================
 CScene3D::CScene3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, objType)
-{	
+{
 	m_pVtxBuff = NULL;
 	m_pTexture = NULL;
-	m_pos = D3DXVECTOR3(0.0f,0.0f,0.0f);	//位置
+	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//位置
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//向き
 	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//動き
 	m_Type = TYPE_NONE;
@@ -53,7 +54,7 @@ HRESULT CScene3D::Init(void)
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);			//位置
 	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);			//動き
 
-	// 頂点情報の作成
+													// 頂点情報の作成
 	pDevice->CreateVertexBuffer
 	(
 		sizeof(VERTEX_3D) * 4,
@@ -125,7 +126,7 @@ void CScene3D::Uninit(void)
 //=============================================================================
 // 更新処理
 //=============================================================================
-void CScene3D::Update(void){}
+void CScene3D::Update(void) {}
 
 //=============================================================================
 // 描画処理
@@ -136,7 +137,7 @@ void CScene3D::Draw(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 	D3DXMATRIX mtxView, mtxRot, mtxTrans;				//計算用マトリックス
 
-	// ワールドマトリックスの初期化
+														// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	//ビューマトリックスを取得
@@ -192,7 +193,7 @@ void CScene3D::Draw(void)
 	if (m_Type == TYPE_WALL)
 	{
 		//カリングしない
-		pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);				
+		pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 	}
 	C2D::DrawPrepare(C2D::DRAW_TYPE_NORMAL, pDevice);
 }
@@ -238,7 +239,7 @@ void CScene3D::SetWall(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 nSize)
 	VERTEX_3D *pVtx;
 
 	// 頂点バッファのロック
-	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);	
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	// 頂点座標の設定
 	pVtx[0].pos = D3DXVECTOR3(-m_size.x, m_size.y, 0.0f);
@@ -247,12 +248,12 @@ void CScene3D::SetWall(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 nSize)
 	pVtx[3].pos = D3DXVECTOR3(m_size.x, 0.0f, 0.0f);
 
 	// 頂点バッファのアンロック
-	m_pVtxBuff->Unlock();	
+	m_pVtxBuff->Unlock();
 }
 //=============================================================================
 // セット処理
 //=============================================================================
-void CScene3D::SetPosSize(D3DXVECTOR3 pos,D3DXVECTOR2 nSize)
+void CScene3D::SetPosSize(D3DXVECTOR3 pos, D3DXVECTOR2 nSize)
 {
 	m_pos = pos;
 	m_size = nSize;
@@ -260,14 +261,14 @@ void CScene3D::SetPosSize(D3DXVECTOR3 pos,D3DXVECTOR2 nSize)
 	// 頂点情報を設定
 	VERTEX_3D *pVtx;	// 頂点情報へのポインタ
 
-	//頂点バッファをロック
+						//頂点バッファをロック
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//頂点設定
-	pVtx[0].pos = D3DXVECTOR3(- m_size.x,m_size.y, 0.0f);
-	pVtx[1].pos = D3DXVECTOR3(m_size.x,m_size.y, 0.0f);
-	pVtx[2].pos = D3DXVECTOR3(- m_size.x,- m_size.y, 0.0f);
-	pVtx[3].pos = D3DXVECTOR3(m_size.x,- m_size.y, 0.0f);
+	pVtx[0].pos = D3DXVECTOR3(-m_size.x, m_size.y, 0.0f);
+	pVtx[1].pos = D3DXVECTOR3(m_size.x, m_size.y, 0.0f);
+	pVtx[2].pos = D3DXVECTOR3(-m_size.x, -m_size.y, 0.0f);
+	pVtx[3].pos = D3DXVECTOR3(m_size.x, -m_size.y, 0.0f);
 
 	//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
@@ -284,7 +285,7 @@ void CScene3D::SetGroundPosSize(D3DXVECTOR3 pos, D3DXVECTOR2 size)
 	// 頂点情報を設定
 	VERTEX_3D *pVtx;	// 頂点情報へのポインタ
 
-	//頂点バッファをロック
+						//頂点バッファをロック
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//頂点設定
@@ -323,7 +324,7 @@ void CScene3D::SetVtxEffect(float fRadius)
 	// 頂点情報を設定
 	VERTEX_3D *pVtx;	// 頂点情報へのポインタ
 
-	//頂点バッファをロック
+						//頂点バッファをロック
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//頂点設定
@@ -361,7 +362,7 @@ void CScene3D::SetTexture(int PatternAnim, int X, int Y, int nNum)
 {
 	VERTEX_3D *pVtx;//頂点情報へのポインタ
 
-	//頂点バッファをロックし、頂点データへのポインタを取得
+					//頂点バッファをロックし、頂点データへのポインタを取得
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
 	//テクスチャ設定
@@ -452,7 +453,14 @@ C3DPolygon *C3DPolygon::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot)
 
 		switch (Type)
 		{
+		case TYPE_Shadow:
+			p3D->BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_Shadow));
+			p3D->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
+			size = D3DXVECTOR2(PLAYER_LENGTH, PLAYER_LENGTH);
+			p3D->SetGroundPosSize(pos, size);
+			break;
 		case TYPE_FootSteps:
+			p3D->BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_FootSteps));
 			p3D->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
 			pos.y += 3.0f;
 			size = D3DXVECTOR2(3.0f, 3.0f);
@@ -494,8 +502,15 @@ void C3DPolygon::Update(void)
 	if (m_Type == TYPE_MAX) { return; }
 	switch (m_Type)
 	{
+	case TYPE_Shadow:
+		if (m_fCntState <= 0.0f)
+		{
+			m_col.a -= 0.05f;
+			SetColor(m_col);
+		}
+		else { m_fCntState -= 1.0f; }
+		break;
 	case TYPE_FootSteps:
-		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_FootSteps));
 		m_col.a -= m_fCntState;
 		SetColor(m_col);
 		if (m_col.a < 0.0f) { Uninit(); return; }
@@ -520,4 +535,15 @@ void C3DPolygon::Draw(void)
 	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 	pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);    // 裏面をカリング
 	pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+}
+//===============================================================================
+// 描画関数
+//===============================================================================
+void C3DPolygon::SetShadow(D3DXVECTOR3 pos)
+{
+	GetposR() = pos;
+	m_fCntState = 1.0f;
+
+	m_col.a = 1.0f;
+	SetColor(m_col);
 }

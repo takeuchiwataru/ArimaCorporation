@@ -29,7 +29,7 @@ CModelEffect	*CModelEffect::Create(D3DXVECTOR3 *pos, D3DXVECTOR3 &move, TYPE typ
 	CModelEffect *pEffect = NULL;
 	pEffect = new CModelEffect;
 
-	if (pEffect != NULL) 
+	if (pEffect != NULL)
 	{
 		pEffect->Init();
 		pEffect->Set(pos, move, type, state);
@@ -52,7 +52,7 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, D3DXVECTOR3 &move, TYPE &type, STATE &
 
 	switch (m_Type)
 	{
-	case TYPE_SMOKE:	
+	case TYPE_SMOKE:
 		//CObject::SetModel(this, 0, 0);
 		GetScaleR().x = 0.125f;
 		SetModelType(MODEL_TYPE_EFFECT);
@@ -106,6 +106,8 @@ void	CModelEffect::Draw(void)
 	LPDIRECT3DDEVICE9	pD3DDevice = CManager::GetRenderer()->GetDevice();
 
 	C2D::DrawPrepare(m_DrawType, pD3DDevice);
+
+	GetbColR() = true;
 	CModel3D::Draw();
 
 	//‡¬‚ğ–ß‚·

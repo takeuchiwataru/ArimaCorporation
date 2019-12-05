@@ -58,7 +58,7 @@ public://誰でも扱える
 	void SetPosition(D3DXVECTOR3 pos) { m_pos = pos; }
 	void SetMatrix(D3DXMATRIX mtx) { m_mtxWorld = mtx; }
 	void SetWall(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 nSize);
-	void SetPosSize(D3DXVECTOR3 pos,D3DXVECTOR2 size);
+	void SetPosSize(D3DXVECTOR3 pos, D3DXVECTOR2 size);
 	void SetGroundPosSize(D3DXVECTOR3 pos, D3DXVECTOR2 size);
 	void SetColor(D3DXCOLOR Color);
 	void SetUV(D3DXVECTOR2 *uv);
@@ -67,6 +67,8 @@ public://誰でも扱える
 	void SetRotation(D3DXVECTOR3 rot) { m_rot = rot; }
 	void SetSpin(D3DXVECTOR3 pos, float fAngle, float fLength, D3DXVECTOR3 rot);
 	void Set(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 size);
+	D3DXVECTOR3 &GetposR(void) { return m_pos; }
+	D3DXVECTOR3 &GetrotR(void) { return m_rot; }
 
 private://個人でのみ使う
 	C2D::DRAW_TYPE			m_DrawType;		// 描画する方法(加算合成など)
@@ -88,10 +90,11 @@ class C3DPolygon : public CScene3D
 public:
 	typedef enum
 	{
+		TYPE_Shadow,
 		TYPE_FootSteps,
 		TYPE_MAX
 	}TYPE;
-	C3DPolygon() {};
+	C3DPolygon() : CScene3D(1) {};
 	~C3DPolygon() {};
 
 	static C3DPolygon *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot);
@@ -100,6 +103,7 @@ public:
 	void Update(void);
 	void Draw(void);
 
+	void SetShadow(D3DXVECTOR3 pos);
 private:
 	D3DXCOLOR	m_col;			//色
 	TYPE		m_Type;			//種類
