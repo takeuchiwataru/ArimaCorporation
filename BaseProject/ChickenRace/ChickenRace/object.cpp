@@ -149,6 +149,9 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 		case CModel3D::MODEL_TYPE_MAP_FIRST:
 		case CModel3D::MODEL_TYPE_MAP_SECOND:
 		case CModel3D::MODEL_TYPE_BRIDGE:
+		case CModel3D::MODEL_TYPE_MAP_MOUNTAIN:
+		case CModel3D::MODEL_TYPE_MAP_SKY:
+
 			nPriority = 0;
 			break;
 		}
@@ -187,75 +190,6 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 //===============================================================================
 HRESULT CObject::Load(void)
 {
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
-	//マテリアルデータへのポインタ
-	//D3DXMATERIAL *pMat;
-
-	for (int nCount = 0; nCount < MAX_OBJECT; nCount++)
-	{
-		//マテリアル情報からテクスチャの取得
-		//pMat = (D3DXMATERIAL*)m_pBuffMatModel[nCount]->GetBufferPointer();
-	}
-
-	//int nNumVtx;		//頂点数
-	//DWORD sizeFVF;		//頂点フォーマットのサイズ
-	//BYTE *pVtxBuff;		//頂点バッファへのポインタ
-
-	//					//モデルの最大値・最小値を取得する
-	//for (int nCntModel = 0; nCntModel < MAX_OBJECT; nCntModel++)
-	//{
-	//	m_LoadVtxMaxModel[nCntModel] = D3DXVECTOR3(-10000, -10000, -10000);	//最大値
-	//	m_LoadVtxMinModel[nCntModel] = D3DXVECTOR3(10000, 10000, 10000);	//最小値
-
-	//																		//頂点数を取得
-	//	nNumVtx = m_pMeshModel[nCntModel]->GetNumVertices();
-
-	//	//頂点フォーマットのサイズを取得
-	//	sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel[nCntModel]->GetFVF());
-
-	//	//頂点バッファのロック
-	//	m_pMeshModel[nCntModel]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
-
-	//	for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-	//	{
-	//		D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
-
-	//														//最大値
-	//		if (vtx.x > m_LoadVtxMaxModel[nCntModel].x)
-	//		{
-	//			m_LoadVtxMaxModel[nCntModel].x = vtx.x;
-	//		}
-	//		if (vtx.y > m_LoadVtxMaxModel[nCntModel].y)
-	//		{
-	//			m_LoadVtxMaxModel[nCntModel].y = vtx.y;
-	//		}
-	//		if (vtx.z > m_LoadVtxMaxModel[nCntModel].z)
-	//		{
-	//			m_LoadVtxMaxModel[nCntModel].z = vtx.z;
-	//		}
-	//		//最小値
-	//		if (vtx.x < m_LoadVtxMinModel[nCntModel].x)
-	//		{
-	//			m_LoadVtxMinModel[nCntModel].x = vtx.x;
-	//		}
-	//		if (vtx.y < m_LoadVtxMinModel[nCntModel].y)
-	//		{
-	//			m_LoadVtxMinModel[nCntModel].y = vtx.y;
-	//		}
-	//		if (vtx.z < m_LoadVtxMinModel[nCntModel].z)
-	//		{
-	//			m_LoadVtxMinModel[nCntModel].z = vtx.z;
-	//		}
-
-	//		//サイズ文のポインタを進める
-	//		pVtxBuff += sizeFVF;
-	//	}
-
-	//	//頂点バッファのアンロック
-	//	m_pMeshModel[nCntModel]->UnlockVertexBuffer();
-	//}
-
 	return S_OK;
 }
 //===============================================================================
@@ -312,7 +246,7 @@ D3DXVECTOR3 CObject::Fountain(D3DXVECTOR3 pos, D3DXVECTOR3 move)
 	if (move.z < 0.0f)fAngle = 2.0f * D3DX_PI - fAngle;
 	if (isnan(fAngle))return vecMove;
 
-	D3DXVECTOR3 vtxMax = CModel3D::GetVtxMax();		// 頂点座標の最大値の取得
+	D3DXVECTOR3 vtxMax = CModel3D::GetVtxMax(GetModelType());		// 頂点座標の最大値の取得
 
 	int nDigit = (int)log10f(vtxMax.x) + 1;
 	if (6 < nDigit)return move;
@@ -351,14 +285,13 @@ bool CObject::CollisionObject(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld, D3DXVEC
 		// 各種情報の取得
 		D3DXVECTOR3 ModelPos = CModel3D::GetPosition();		// 位置
 		D3DXVECTOR3 ModelMove = CModel3D::GetMove();		// 移動量
-		D3DXVECTOR3 VtxMax = CModel3D::GetVtxMax();			// モデルの最大値
-		D3DXVECTOR3 VtxMin = CModel3D::GetVtxMin();			// モデルの最小値
+		D3DXVECTOR3 &VtxMax = CModel3D::GetVtxMax(GetModelType());			// モデルの最大値
+		D3DXVECTOR3 &VtxMin = CModel3D::GetVtxMin(GetModelType());			// モデルの最小値
 		D3DXVECTOR3 rot = CModel3D::GetRot();
 
-		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax();	// 位置込みの最大値
-		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin();	// 位置込みの最小値
-
-																				// 移動量の保持
+		D3DXVECTOR3 ModelMax = CModel3D::GetPosition() + CModel3D::GetVtxMax(GetModelType());	// 位置込みの最大値
+		D3DXVECTOR3 ModelMin = CModel3D::GetPosition() + CModel3D::GetVtxMin(GetModelType());	// 位置込みの最小値
+																								// 移動量の保持
 		if (ModelMove.x == 0.0f) ModelMove.x = m_ModelMove.x;
 		if (ModelMove.y == 0.0f) ModelMove.y = m_ModelMove.y;
 		if (ModelMove.z == 0.0f) ModelMove.z = m_ModelMove.z;

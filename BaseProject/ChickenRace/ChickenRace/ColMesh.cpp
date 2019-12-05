@@ -704,7 +704,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			case EFFECT_RIVER:
 			case EFFECT_DROP:
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
-				pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z));
+				if (m_Effect != EFFECT_DROP) { pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z)); }
 				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 11.5f : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + 30.0f)
 				{//ŠÑ’Ê‚µ‚Ä‚¢‚½‚ç
 					Effect = m_Effect;

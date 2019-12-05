@@ -257,7 +257,7 @@ void CGameCamera::DrawReset(void)
 
 			if (pObject->GetDraw() == false)
 			{//‚à‚¤ˆê“x•`‰æ”»’è‚ð‚·‚é
-				pObject->SetDraw(Clipping(pObject->GetVtxMin(), pObject->GetVtxMax()));
+				pObject->SetDraw(Clipping(pObject->GetposR(), CModel3D::GetVtxMin(pObject->GetModelType()), CModel3D::GetVtxMax(pObject->GetModelType())));
 			}
 		}
 

@@ -8,6 +8,11 @@
 #define _CAMERA_H_
 
 #include "main.h"
+//=====================
+//	   マクロ
+//=====================
+#define OVER_DIS		(1000.0f)
+#define IGNOR_SIZE		(2000.0f)
 
 //=====================
 //	   カメラクラス
@@ -27,7 +32,7 @@ public:
 	void SetCameraPosR(D3DXVECTOR3 posR) { m_posR = posR; }
 	D3DXVECTOR3 GetCameraPosV(void) { return m_posV; }
 	D3DXVECTOR3 GetCameraPosR(void) { return m_posR; }
-	bool Clipping(D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax);				//カメラに写っているかどうかの判定
+	bool Clipping(D3DXVECTOR3 &pos, D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax);				//カメラに写っているかどうかの判定
 	bool ClippingPos(D3DXVECTOR3 ObjPos);									//中心点がカメラに写っているかどうかの判定
 	D3DXMATRIX GetViewMatrix(void) { return m_mtxView; }				//ビューマトリックスの取得
 	D3DXMATRIX GetProjectionMatrix(void) { return m_mtxProjection; }	//プロジェクションマトリックスの取得

@@ -40,10 +40,12 @@ LPDIRECT3DTEXTURE9  CModel3D::m_pMeshTextures[TEXTURE_TYPE_MAX] = {};		// テクス
 CToonShader		   *CModel3D::m_pToonShader = NULL;							// シェーダーのポインタ
 D3DMATERIAL9	   *CModel3D::m_pMeshMaterials[MODEL_TYPE_MAX] = {};		// メッシュマテリアルの情報
 LPDIRECT3DTEXTURE9 *CModel3D::m_pShaderMeshTextures[MODEL_TYPE_MAX] = {};	// シェーダー用のメッシュテクスチャ
+D3DXVECTOR3			CModel3D::m_VtxMinModel[MODEL_TYPE_MAX];
+D3DXVECTOR3			CModel3D::m_VtxMaxModel[MODEL_TYPE_MAX];					// モデルの最小値・最大値
 
-//*****************************************************************************
-//					 モデルの読み込みファイル名
-//*****************************************************************************
+																				//*****************************************************************************
+																				//					 モデルの読み込みファイル名
+																				//*****************************************************************************
 const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 {
 	//=============================
@@ -150,7 +152,6 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, objType)
 {
 	m_mtxWorldObject;							//ワールドマトリックス
-	m_VtxMinModel, m_VtxMaxModel;				//モデルの最小値・最大値
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//向き
 	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//動き
@@ -162,6 +163,7 @@ CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, o
 	m_bTexMat = false;
 	m_MapView = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_modeltype = MODEL_TYPE_MAX;
+	for (int nCnt = 0; nCnt < MAX_PLAYCOL; nCnt++) { m_fCola[nCnt] = 0.0f; }
 }
 //===============================================================================
 //　デストラクタ
@@ -200,6 +202,58 @@ LPD3DXMESH	&CModel3D::MeshLoad(MODEL_TYPE modeltype)
 					&m_pShaderMeshTextures[modeltype][MatCount]);
 			}
 		}
+		m_VtxMaxModel[modeltype] = INIT_VECTOR;
+		m_VtxMinModel[modeltype] = INIT_VECTOR;
+
+		int nNumVtx;				//頂点数
+		DWORD sizeFVF;				//頂点フォーマットのサイズ
+		BYTE *pVtxBuff;				//頂点バッファへのポインタ
+
+		nNumVtx = m_pMeshModel[modeltype]->GetNumVertices();
+
+		//頂点フォーマットのサイズを取得
+		sizeFVF = D3DXGetFVFVertexSize(m_pMeshModel[modeltype]->GetFVF());
+
+		//頂点バッファのロック
+		m_pMeshModel[modeltype]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+
+		for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+		{
+			D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+
+															//最大値
+			if (vtx.x > m_VtxMaxModel[modeltype].x)
+			{
+				m_VtxMaxModel[modeltype].x = vtx.x;
+			}
+			if (vtx.y > m_VtxMaxModel[modeltype].y)
+			{
+				m_VtxMaxModel[modeltype].y = vtx.y;
+			}
+			if (vtx.z > m_VtxMaxModel[modeltype].z)
+			{
+				m_VtxMaxModel[modeltype].z = vtx.z;
+			}
+			//最小値
+			if (vtx.x < m_VtxMinModel[modeltype].x)
+			{
+				m_VtxMinModel[modeltype].x = vtx.x;
+			}
+			if (vtx.y < m_VtxMinModel[modeltype].y)
+			{
+				m_VtxMinModel[modeltype].y = vtx.y;
+			}
+			if (vtx.z < m_VtxMinModel[modeltype].z)
+			{
+				m_VtxMinModel[modeltype].z = vtx.z;
+			}
+
+			//サイズ文のポインタを進める
+			pVtxBuff += sizeFVF;
+		}
+
+		//頂点バッファのアンロック
+		m_pMeshModel[modeltype]->UnlockVertexBuffer();
 	}
 
 	//シェーダーの読み込むファイル
@@ -253,9 +307,6 @@ HRESULT CModel3D::Init(void)
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//向き達する
 
-	m_VtxMaxModel = D3DXVECTOR3(m_VtxMaxModel.x * m_Scale.x, m_VtxMaxModel.y * m_Scale.y, m_VtxMaxModel.z * m_Scale.z);
-	m_VtxMinModel = D3DXVECTOR3(m_VtxMinModel.x * m_Scale.x, m_VtxMinModel.y * m_Scale.y, m_VtxMinModel.z * m_Scale.z);
-
 	m_Rot.y = 0.0f;
 
 	//種類を入れる
@@ -287,23 +338,24 @@ void CModel3D::Update(void)
 	//現在のモードを取得
 	CManager::MODE mode = CManager::GetMode();
 
-	//ゲームモードならクリッピングの処理
-	if (CManager::MODE_GAME == mode)
+	// 位置の保存
+	D3DXVECTOR3 posOld = m_Pos;
+
+	// 重力
+	m_Move.y -= cosf(0) * 0.5f;
+
+	// 移動量の慣性
+	m_Move.x += (0 - m_Move.x) * 0.04f;
+	m_Move.z += (0 - m_Move.z) * 0.04f;
+
+	m_bcolChange = true;
+	for (int nCnt = 0; nCnt < MAX_PLAYCOL; nCnt++)
 	{
-		//SetDraw(CGame::GetGameCamera(0)->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
-	}
-
-	if ((CManager::MODE_GAME == mode) || (CManager::MODE_TUTORIAL == mode))
-	{
-		// 位置の保存
-		D3DXVECTOR3 posOld = m_Pos;
-
-		// 重力
-		m_Move.y -= cosf(0) * 0.5f;
-
-		// 移動量の慣性
-		m_Move.x += (0 - m_Move.x) * 0.04f;
-		m_Move.z += (0 - m_Move.z) * 0.04f;
+		m_fCola[nCnt] += 0.05f;
+		if (m_fCola[nCnt] > 1.0f)
+		{
+			m_fCola[nCnt] = 1.0f;
+		}
 	}
 }
 
@@ -320,7 +372,8 @@ void CModel3D::Draw(void)
 	LPD3DXEFFECT	Shader = NULL;							//シェーダー
 	CCamera			*pCamera = NULL;						//カメラのポイント
 
-	//カメラのポインタに情報を代入
+	int nNumber = -1;
+	D3DXVECTOR3 pos0;
 	if (pCamera == NULL)
 	{
 		switch (CManager::GetMode())
@@ -345,7 +398,11 @@ void CModel3D::Draw(void)
 				if (CGame::GetCameraNumber() == -1)
 					pCamera = (CCamera*)CGame::GetCourseCamera();
 				else
+				{
+					nNumber = CGame::GetCameraNumber();
 					pCamera = (CCamera*)CGame::GetGameCamera(CGame::GetCameraNumber());
+					pos0 = pCamera->GetCameraPosV();
+				}
 				break;
 			}
 			break;
@@ -353,6 +410,17 @@ void CModel3D::Draw(void)
 			pCamera = (CCamera*)CResult::GetResultCamera();
 			break;
 		}
+	}
+
+	if (pCamera != NULL && nNumber >= 0 && GetObjType() == OBJTYPE_OBJECT)
+	{
+		m_bcolChange = true;
+		if (pCamera->Clipping(m_Pos, m_VtxMinModel[m_modeltype] + m_Pos, m_VtxMaxModel[m_modeltype] + m_Pos))
+		{
+			m_fCola[nNumber] -= 0.1f;
+			if (m_fCola[nNumber] < 0.0f) { m_fCola[nNumber] = 0.0f; return; }
+		}
+		m_col.a = m_fCola[nNumber];
 	}
 
 	//シェーダーに情報を代入
@@ -591,14 +659,14 @@ bool CModel3D::Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin
 	D3DXVECTOR3 vtxMinObject = D3DXVECTOR3(m_mtxWorldObject._41, m_mtxWorldObject._42, m_mtxWorldObject._43);	// ワールド座標の取得
 
 																												// 頂点座標の最大値を求める
-	vtxMaxObject.x += m_VtxMaxModel.x * m_Scale.x;
-	vtxMaxObject.y += m_VtxMaxModel.y * m_Scale.y;
-	vtxMaxObject.z += m_VtxMaxModel.z * m_Scale.z;
+	vtxMaxObject.x += m_VtxMaxModel[m_modeltype].x * m_Scale.x;
+	vtxMaxObject.y += m_VtxMaxModel[m_modeltype].y * m_Scale.y;
+	vtxMaxObject.z += m_VtxMaxModel[m_modeltype].z * m_Scale.z;
 
 	// 頂点座標の最小値を求める
-	vtxMinObject.x += m_VtxMinModel.x * m_Scale.x;
-	vtxMinObject.y += m_VtxMinModel.y * m_Scale.y;
-	vtxMinObject.z += m_VtxMinModel.z * m_Scale.z;
+	vtxMinObject.x += m_VtxMinModel[m_modeltype].x * m_Scale.x;
+	vtxMinObject.y += m_VtxMinModel[m_modeltype].y * m_Scale.y;
+	vtxMinObject.z += m_VtxMinModel[m_modeltype].z * m_Scale.z;
 
 	D3DXVECTOR3 vecA, vecB, vecC;
 

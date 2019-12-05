@@ -40,9 +40,9 @@
 #define MAX_MOTION			(10)							// モーションの最大数
 															   
 #define MAX_FALL_FADE		(60)							// おちるエフェクト
-#define MAX_FALL_WAIT		(25)							// おちるエフェクト待機
+#define MAX_FALL_WAIT		(60)							// おちるエフェクト待機
 
-#define PLAYER_LENGTH			(10.0f)							//キャラの大きさ
+#define PLAYER_LENGTH		(10.0f)							//キャラの大きさ
 
 //=============================================================================
 // 前方宣言

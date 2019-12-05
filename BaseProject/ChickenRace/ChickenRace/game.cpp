@@ -138,7 +138,7 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
+	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
@@ -535,8 +535,8 @@ void CGame::Draw(void)
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-											//２Dの描画
-		CScene::DrawSeting(true, 5);
+		//2Dの描画
+		CScene::DrawSeting(true, 5, true, 6);
 
 		// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
@@ -554,8 +554,8 @@ void CGame::Draw(void)
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-											//２Dの描画
-		CScene::DrawSeting(true, 6, true);
+		//2Dの描画
+		CScene::DrawSeting(true, 7, true);
 	}
 	else
 	{// その他

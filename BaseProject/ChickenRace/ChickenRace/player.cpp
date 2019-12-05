@@ -785,7 +785,7 @@ void CPlayer::UpdateFEffect(void)
 //=============================================================================
 void CPlayer::WarpNext(void)
 {
-	CRoad_Pointer *pNext = m_pPoint->GetNext(0, m_nMap, 0);
+	CRoad_Pointer *pNext = m_pPoint;
 	if (pNext == NULL) { return; }
 
 	m_rot.y = pNext->GetfRotY();

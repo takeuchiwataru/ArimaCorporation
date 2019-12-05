@@ -16,6 +16,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define MAX_PLAYCOL	(4)
 
 //=====================
 //  CSceneの派生クラス
@@ -100,8 +101,8 @@ public:
 	D3DXVECTOR3			GetMove(void) { return m_Move; }
 	D3DXVECTOR3			GetScale(void) { return m_Scale; }
 	D3DXMATRIX			GetMtx(void) { return m_mtxWorldObject; }
-	D3DXVECTOR3			GetVtxMin(void) { return m_VtxMinModel; }
-	D3DXVECTOR3			GetVtxMax(void) { return m_VtxMaxModel; }
+	static D3DXVECTOR3	&GetVtxMin(int nNumber) { return m_VtxMinModel[nNumber]; }
+	static D3DXVECTOR3	&GetVtxMax(int nNumber) { return m_VtxMaxModel[nNumber]; }
 	D3DXVECTOR3			&GetposR(void) { return m_Pos; }
 	static CModel3D		*Create(void);
 	void				SetMove(D3DXVECTOR3 m_move) { m_Move = m_move; }
@@ -111,6 +112,8 @@ public:
 	bool				Collision(D3DXVECTOR3 pos, D3DXVECTOR3 vtxMax, D3DXVECTOR3 vtxMin, D3DXVECTOR3 move);
 	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
 
+	D3DXCOLOR			&GetCol(void) { return m_col; }
+	MODEL_TYPE			&GetModelType(void) { return m_modeltype; }
 	bool				&GetbColR(void) { return m_bcolChange; }
 	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
 	static CToonShader	*&GetToonShader(void) { return m_pToonShader; }
@@ -129,12 +132,13 @@ private:
 	static LPDIRECT3DTEXTURE9	m_pMeshTextures[TEXTURE_TYPE_MAX];				// テクスチャの情報
 	static D3DMATERIAL9			*m_pMeshMaterials[MODEL_TYPE_MAX];				// メッシュマテリアルの情報
 	static LPDIRECT3DTEXTURE9	*m_pShaderMeshTextures[MODEL_TYPE_MAX];			// シェーダー用
+	static D3DXVECTOR3			m_VtxMinModel[MODEL_TYPE_MAX];
+	static D3DXVECTOR3			m_VtxMaxModel[MODEL_TYPE_MAX];					// モデルの最小値・最大値
 	D3DXMATRIX					m_mtxWorldObject;								// ワールドマトリックス
 	D3DXMATRIX					m_mtxRot;										// 回転マトリックス(保存用)
 	D3DXQUATERNION				m_quat;											// クォータニオン
 	D3DXVECTOR3					m_VecAxis;										// 回転軸
 	float						m_fValueRot;									// 回転角(回転量)
-	D3DXVECTOR3					m_VtxMinModel, m_VtxMaxModel;					// モデルの最小値・最大値
 	D3DXVECTOR3					m_Pos;											// 位置
 	D3DXVECTOR3					m_Rot;											// 向き
 	D3DXVECTOR3					m_Scale;										// サイズ
@@ -147,5 +151,6 @@ private:
 	int							m_nTextureType;									// テクスチャの種類
 	D3DXVECTOR3					m_MapView;										// マップに反映させるカメラ
 	MODEL_TYPE					m_modeltype;									// モデル種類
+	float						m_fCola[MAX_PLAYCOL];							//キャラ分α値保存
 };
 #endif

@@ -224,7 +224,7 @@ HRESULT CGamePlay::Init()
 	{// ダウンカウント
 		if (m_pCountDown[nCntDown] == NULL)
 		{// NULL
-			m_pCountDown[nCntDown] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
+			m_pCountDown[nCntDown] = new CScene2D(7, CScene::OBJTYPE_2DPOLYGON);
 			m_pCountDown[nCntDown]->Init();
 			m_pCountDown[nCntDown]->SetPosSize(
 				D3DXVECTOR3(

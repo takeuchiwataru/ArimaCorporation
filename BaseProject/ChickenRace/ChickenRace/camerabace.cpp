@@ -113,61 +113,64 @@ void CCamera::SetCamera()
 //=============================================================================
 // クリッピング処理
 //=============================================================================
-bool CCamera::Clipping(D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax)
+bool CCamera::Clipping(D3DXVECTOR3 &pos, D3DXVECTOR3 VtxMin, D3DXVECTOR3 VtxMax)
 {
-	//変数宣言
-	D3DXVECTOR3 Reference[MAX_POS];
-	D3DXVECTOR3 Pos[VECTOL] = { VECTOR_ZERO, VECTOR_ZERO };
-	D3DXVECTOR3 VecA;
-	D3DXVECTOR3 VecB;
-	bool		bDraw = false;
-	float		fAngle = 0.0f;
+	////変数宣言
+	//D3DXVECTOR3 Reference[MAX_POS];
+	//D3DXVECTOR3 Pos[VECTOL] = { VECTOR_ZERO, VECTOR_ZERO };
+	//D3DXVECTOR3 VecA;
+	//D3DXVECTOR3 VecB;
+	//bool		bDraw = false;
+	//float		fAngle = 0.0f;
+	float		fLength = 0.0f;
 
-	//４頂点の設定
-	Reference[0] = D3DXVECTOR3(VtxMin.x, 0.0f, VtxMax.z);
-	Reference[1] = D3DXVECTOR3(VtxMax.x, 0.0f, VtxMax.z);
-	Reference[2] = D3DXVECTOR3(VtxMin.x, 0.0f, VtxMin.z);
-	Reference[3] = D3DXVECTOR3(VtxMax.x, 0.0f, VtxMin.z);
+	////４頂点の設定
+	//Reference[0] = D3DXVECTOR3(VtxMin.x, 0.0f, VtxMax.z);
+	//Reference[1] = D3DXVECTOR3(VtxMax.x, 0.0f, VtxMax.z);
+	//Reference[2] = D3DXVECTOR3(VtxMin.x, 0.0f, VtxMin.z);
+	//Reference[3] = D3DXVECTOR3(VtxMax.x, 0.0f, VtxMin.z);
 
-	//角度設定
-	fAngle = (D3DX_PI * 0.5f) + (m_rot.y - D3DX_PI);
-	RemakeAngle(&fAngle);
+	////角度設定
+	//fAngle = (D3DX_PI * 0.5f) + (m_rot.y - D3DX_PI);
+	//RemakeAngle(&fAngle);
 
-	//右側の画角の位置を求める
-	Pos[0].x = sinf(fAngle) * -1500.0f + m_posV.x;
-	Pos[0].z = cosf(fAngle) * -1500.0f + m_posV.z;
+	////右側の画角の位置を求める
+	//Pos[0].x = sinf(fAngle) * -1500.0f + m_posV.x;
+	//Pos[0].z = cosf(fAngle) * -1500.0f + m_posV.z;
 
-	//角度設定
-	fAngle = (D3DX_PI * -0.5f) + (m_rot.y - D3DX_PI);
-	RemakeAngle(&fAngle);
-
-	//左側の画角の位置を求める
-	Pos[1].x = sinf(fAngle) * 1500.0f + m_posV.x;
-	Pos[1].z = cosf(fAngle) * 1500.0f + m_posV.z;
+	////角度設定
+	//fAngle = (D3DX_PI * -0.5f) + (m_rot.y - D3DX_PI);
+	//RemakeAngle(&fAngle);
 
 	//範囲チェック
-	for (int nCntPoint = 0; nCntPoint < MAX_POS; nCntPoint++)
-	{
-		for (int nCntVec = 0; nCntVec < VECTOL; nCntVec++)
-		{
-			VecA = Pos[nCntVec] - m_posV;							//カメラの位置から画角の終点のベクトルを求める
-			VecB = Reference[nCntPoint] - Pos[nCntVec];				//画角の終点と位置のベクトルを求める			
-			float fCross = (VecA.z * VecB.x) - (VecA.x * VecB.z);	//外積を求める
+	fLength = sqrtf(powf(pos.x - VtxMax.x, 2) + powf(pos.z - VtxMax.z, 2));
+	fLength += sqrtf(powf(pos.x - VtxMin.x, 2) + powf(pos.z - VtxMin.z, 2));
 
-																	//ベクトルより小さいかどうか
-			if (fCross <= 0)
-			{
-				bDraw = true;		//描画状態にする
-				return bDraw;
-			}
-			else
-			{
-				bDraw = false;		//描画しない状態にする
-			}
-		}
+	if (fLength > IGNOR_SIZE) { return false; }
+
+	float fValue = sqrtf(powf(m_posR.x - pos.x, 2) + powf(m_posR.z - pos.z, 2));
+	if (fValue - fLength > OVER_DIS)
+	{//距離チェック
+		return true;
 	}
 
-	return bDraw;
+	//for (int nCntPoint = 0; nCntPoint < MAX_POS; nCntPoint++)
+	//{
+	//	for (int nCntVec = 0; nCntVec < VECTOL; nCntVec++)
+	//	{
+	//		VecA = Pos[nCntVec] - m_posV;							//カメラの位置から画角の終点のベクトルを求める
+	//		VecB = Reference[nCntPoint] - Pos[nCntVec];				//画角の終点と位置のベクトルを求める			
+	//		float fCross = (VecA.z * VecB.x) - (VecA.x * VecB.z);	//外積を求める
+
+	//																//ベクトルより小さいかどうか
+	//		if (fCross > 0)
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//}
+
+	return false;
 }
 
 //=============================================================================
