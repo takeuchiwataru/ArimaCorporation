@@ -477,7 +477,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		}
 
 		//距離計算
-		float fDistance = sqrtf(powf(pPos->x - m_pos.x, 2) + powf(pPos->z - m_pos.z, 2));
+ 		float fDistance = sqrtf(powf(pPos->x - m_pos.x, 2) + powf(pPos->z - m_pos.z, 2));
 
 		if (fDistance < 20.0f + fDepth)
 		{//距離チェック

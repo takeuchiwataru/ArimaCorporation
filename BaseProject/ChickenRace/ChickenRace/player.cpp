@@ -69,9 +69,10 @@
 #define PLAYER_JUMP		(2.0f)											// 回転量
 #define PLAYER_GRAVITY	(0.09f)											// 回転量
 
-#define PLAYER_STRIKE	(0.3f)										//衝撃の強さ
-#define PLAYER_STRPLUS	(0.7f)										//加速度
+#define PLAYER_STRIKE	(0.4f)										//衝撃の強さ
+#define PLAYER_STRPLUS	(0.4f)										//加速度
 #define PLAYER_STRDOWN	(60.0f)		
+#define PLAYER_POWDOWN	(0.15f)		
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
@@ -850,6 +851,7 @@ void CPlayer::ControlKey(void)
 			pXpad->GetPress(INPUT_LEFT) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
+			SetStick(pXpad);
 		}
 		else if ((bOnline == false &&
 			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
@@ -858,6 +860,7 @@ void CPlayer::ControlKey(void)
 			pXpad->GetPress(INPUT_RIGHT) == true)
 		{//右ハンドル状態
 			SetStateHandle(HANDLE_RIGHT);
+			SetStick(pXpad);
 		}
 		else
 		{//ハンドルを触っていない状態
@@ -954,6 +957,14 @@ void CPlayer::ControlKey(void)
 	{// 弾発射
 		BulletEgg();
 	}
+	if (pInputKeyboard->GetKeyboardPress(DIK_LSHIFT))
+	{
+		if (pInputKeyboard->GetKeyboardTrigger(DIK_LSHIFT))
+		{
+			SetKiller();
+		}
+		UpdateKiller();
+	}
 
 	/*if ((pInputKeyboard->GetKeyboardPress(DIK_N) == true) || (pInputJoypad->GetPress(CXInput::XIJS_BUTTON_0) == true))
 	{
@@ -992,10 +1003,22 @@ void CPlayer::UpdateMove(void)
 
 	RemakeAngle(&m_rot.y);
 
-	//bool bGoal = false;
-	//float fRot = CRoad_Pointer::NextPoint(m_pos, m_pPoint, m_nPlayerNum, m_bDivided, bGoal, m_nMap);
-	//m_rot.y += (fRot - m_rot.y);
-	//if (bGoal) { m_move *= 0.0f; }
+	if (m_fPower > 0.0f)
+	{//加速度プラス用　時間経過で減少
+		m_fPower -= PLAYER_POWDOWN;
+	}
+	if (m_fTackle > 0.0f)
+	{//タックル時強制アクセルF
+		if (m_StateSpeed < STATE_SPEED_DRIFT)
+		{
+			m_StateSpeed = STATE_SPEED_ACCEL;
+		}
+		m_fTackle -= 1.0f;
+	}
+	if (m_pShadow != NULL)
+	{
+		m_pShadow->GetrotR() = D3DXVECTOR3(-m_fCTiltV * D3DX_PI * 0.5f, m_rot.y, m_fCTiltW * D3DX_PI * 0.25f);
+	}
 
 	if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
 	{// スピードアイテムを使ったとき
@@ -1020,6 +1043,7 @@ void CPlayer::UpdateMove(void)
 	float fBraks = m_PlayerInfo.fBraks;
 	float fAddRot = m_PlayerInfo.fAddRot;
 	float fDown = m_PlayerInfo.fDown;
+	float fPow = m_PlayerInfo.fCountTime + m_fPower;
 
 	fAddRot *= 0.65f;
 
@@ -1027,8 +1051,8 @@ void CPlayer::UpdateMove(void)
 	switch (m_StateSpeed)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
-					
-		//走るモーション
+
+							//走るモーション
 		m_nAnimnow = PLAYERANIM_RUN;
 
 		//ジャンプ状態なら
@@ -1036,7 +1060,7 @@ void CPlayer::UpdateMove(void)
 
 		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+			m_fSpeed = fAccel * (fPow / 90.0f) * (1.0f - m_fTilt);
 		}
 
 		//進行方向の設定
@@ -1046,15 +1070,14 @@ void CPlayer::UpdateMove(void)
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
 		else
-			m_PlayerInfo.fCountTime = 90.0f;
-
+			m_PlayerInfo.fCountTime -= 0.3f;
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-		//ジャンプ状態なら
+							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		m_fSpeed = fBraks * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f);
+		m_fSpeed = fBraks * (fPow / 90.0f) * (1.0f - m_fTilt);
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * m_fSpeed;
@@ -1066,8 +1089,7 @@ void CPlayer::UpdateMove(void)
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
 		else
-			m_PlayerInfo.fCountTime = 90.0f;
-
+			m_PlayerInfo.fCountTime -= 0.3f;
 		break;
 	case STATE_SPEED_DRIFT:	//ドリフト状態
 
@@ -1083,7 +1105,7 @@ void CPlayer::UpdateMove(void)
 
 		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f) * (1.0f - m_fTilt * 1.5f);
+			m_fSpeed = fAccel * (fPow / 90.0f) * (1.0f - m_fTilt);
 		}
 
 		//進行方向の設定
@@ -1093,7 +1115,7 @@ void CPlayer::UpdateMove(void)
 		if (m_PlayerInfo.fCountTime < 90)
 			m_PlayerInfo.fCountTime++;
 		else
-			m_PlayerInfo.fCountTime = 90.0f;
+			m_PlayerInfo.fCountTime -= 0.3f;
 
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
@@ -1101,9 +1123,9 @@ void CPlayer::UpdateMove(void)
 
 		//CDebugProc::Print("DWON***\n");
 
-		m_fSpeed += (0.0f - m_fSpeed) * 0.5f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
+		m_fSpeed += (0.0f - m_fSpeed) * 0.05f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
-											 //進行方向の設定
+											  //進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
@@ -1124,9 +1146,6 @@ void CPlayer::UpdateMove(void)
 
 		break;
 	}
-
-	//ジャンプ状態なら
-	if (m_bJump == true) { m_nAnimnow = PLAYERANIM_JUMP; }
 
 	switch (m_State)
 	{// 弾を食らったとき
@@ -1216,12 +1235,6 @@ void CPlayer::UpdateMove(void)
 			nDamageTime = SPEEDDOWN_TIME;
 		}
 
-		if (m_nCntDamage <= 33)
-		{
-			//ダメージモーション
-			m_nAnimnow = PLAYERANIM_DAMAGE;
-		}
-
 		if (m_nCntDamage > nDamageTime)
 		{
 			if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
@@ -1267,14 +1280,14 @@ void CPlayer::UpdateMove(void)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot -= fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f);
+			m_fAddRot -= fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f) * m_fStick;
 		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot += fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f);
+			m_fAddRot += fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f)* m_fStick;
 		}
 	}
 
@@ -1305,7 +1318,6 @@ void CPlayer::UpdateMove(void)
 	//CDebugProc::Print("addrot : %f\n", m_fAddRot);
 	//CDebugProc::Print("fSpeed : %f\n", m_fSpeed);
 }
-
 //=============================================================================
 // プレイヤーの高さ処理
 //=============================================================================
@@ -1911,69 +1923,66 @@ void CPlayer::CollisionEgg(void)
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
 
-	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
-	{
-		// プライオリティーチェック
-		pScene = CScene::GetTop(nCntPriority);
-		while (pScene != NULL)
-		{// プライオリティー内のリスト構造を最後まで見る
-			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+	// プライオリティーチェック
+	pScene = CScene::GetTop(EGG_PRIOTITY);
+	while (pScene != NULL)
+	{// プライオリティー内のリスト構造を最後まで見る
+		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
 
-			if (pScene->GetObjType() == OBJTYPE_EGG)
-			{// タイプが障害物だったら
-				CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
+		if (pScene->GetObjType() == OBJTYPE_EGG)
+		{// タイプが障害物だったら
+			CEgg *pEgg = (CEgg*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pEgg->GetNumPlayer() != m_nPlayerNum)
-				{
-					if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
-					{// 衝突した
-						switch (pEgg->GetType())
+			if (pEgg->GetNumPlayer() != m_nPlayerNum)
+			{
+				if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
+				{// 衝突した
+					switch (pEgg->GetType())
+					{
+						// 攻撃
+					case CEgg::EGGTYPE_ATTACK:
+						// ダメージ状態にする
+						if (m_State != PLAYERSTATE_DAMAGE)
 						{
-							// 攻撃
-						case CEgg::EGGTYPE_ATTACK:
-							// ダメージ状態にする
-							if (m_State != PLAYERSTATE_DAMAGE)
+							m_bDamage = true;
+							m_nCntDamage = 0;
+							m_State = PLAYERSTATE_DAMAGE;
+
+							D3DXVECTOR2 fSize;
+
+							for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
 							{
-								m_bDamage = true;
-								m_nCntDamage = 0;
-								m_State = PLAYERSTATE_DAMAGE;
+								fSize.x = 5.0f + (float)(rand() % 5);
+								fSize.y = 5.0f + (float)(rand() % 5);
 
-								D3DXVECTOR2 fSize;
-
-								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
-								{
-									fSize.x = 5.0f + (float)(rand() % 5);
-									fSize.y = 5.0f + (float)(rand() % 5);
-
-									CParticle::Create(m_pos,
-										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
-										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
-										fSize,
-										20,
-										CParticle::TEXTURE_STAR,
-										CParticle::TYPE_NORMAL);
-								}
+								CParticle::Create(m_pos,
+									D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+									D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+									fSize,
+									20,
+									CParticle::TEXTURE_STAR,
+									CParticle::TYPE_NORMAL);
 							}
-							pEgg->Uninit();	// 卵削除
-							break;
-
-							// 減速
-						case CEgg::EGGTYPE_ANNOY:
-							if (m_bDamage == false)
-							{
-								m_bDamage = true;
-								m_nCntDamage = 0;
-								m_State = PLAYERSTATE_SPEEDDOWN;
-							}
-							pEgg->Uninit();	// 卵削除
-							break;
 						}
+						pEgg->Uninit();	// 卵削除
+						break;
+
+						// 減速
+					case CEgg::EGGTYPE_ANNOY:
+						if (m_bDamage == false)
+						{
+							m_bDamage = true;
+							m_nCntDamage = 0;
+							m_State = PLAYERSTATE_SPEEDDOWN;
+						}
+						pEgg->Uninit();	// 卵削除
+						break;
 					}
 				}
 			}
-			// Nextに次のSceneを入れる
-			pScene = pSceneNext;
 		}
+		// Nextに次のSceneを入れる
+		pScene = pSceneNext;
 	}
 }
 
@@ -1985,96 +1994,93 @@ void CPlayer::CollisionChick(void)
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
 
-	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
-	{
-		// プライオリティーチェック
-		pScene = CScene::GetTop(nCntPriority);
+	// プライオリティーチェック
+	pScene = CScene::GetTop(EGG_PRIOTITY);
 
-		while (pScene != NULL)
-		{// プライオリティー内のリスト構造を最後まで見る
-			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+	while (pScene != NULL)
+	{// プライオリティー内のリスト構造を最後まで見る
+		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
 
-			if (pScene->GetObjType() == OBJTYPE_CHICK)
+		if (pScene->GetObjType() == OBJTYPE_CHICK)
+		{
+			CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+			if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S)
 			{
-				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
-
-				if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S)
-				{
-					if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
-					{// 衝突した
-						switch (pChick->GetType())
+				if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
+				{// 衝突した
+					switch (pChick->GetType())
+					{
+						// 攻撃
+					case CChick::TYPE_ATTACK:
+						// ダメージ状態にする
+						if (m_State != PLAYERSTATE_DAMAGE)
 						{
-							// 攻撃
-						case CChick::TYPE_ATTACK:
-							// ダメージ状態にする
-							if (m_State != PLAYERSTATE_DAMAGE)
+							m_bDamage = true;
+							m_nCntDamage = 0;
+							SetState(PLAYERSTATE_DAMAGE);
+
+							D3DXVECTOR2 fSize;
+
+							for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
 							{
-								m_bDamage = true;
-								m_nCntDamage = 0;
-								SetState(PLAYERSTATE_DAMAGE);
+								fSize.x = 5.0f + (float)(rand() % 5);
+								fSize.y = 5.0f + (float)(rand() % 5);
 
-								D3DXVECTOR2 fSize;
-
-								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE; nCntParticle++)
-								{
-									fSize.x = 5.0f + (float)(rand() % 5);
-									fSize.y = 5.0f + (float)(rand() % 5);
-
-									CParticle::Create(m_pos,
-										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
-										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
-										fSize,
-										20,
-										CParticle::TEXTURE_STAR,
-										CParticle::TYPE_NORMAL);
-								}
+								CParticle::Create(m_pos,
+									D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+									D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+									fSize,
+									20,
+									CParticle::TEXTURE_STAR,
+									CParticle::TYPE_NORMAL);
 							}
-							pChick->Uninit();	// ひよこ削除
-							break;
-
-							// 強い攻撃
-						case CChick::TYPE_ATTACK_S:
-							// ダメージ状態にする
-							if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true)
-							{
-								m_bDamage = true;
-								m_nCntDamage = 0;
-								SetState(PLAYERSTATE_DAMAGE);
-
-								D3DXVECTOR2 fSize;
-
-								for (int nCntParticle = 0; nCntParticle < COL_PARTICLE_S; nCntParticle++)
-								{
-									fSize.x = 5.0f + (float)(rand() % 5);
-									fSize.y = 5.0f + (float)(rand() % 5);
-
-									CParticle::Create(m_pos,
-										D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
-										D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
-										fSize,
-										20,
-										CParticle::TEXTURE_STAR,
-										CParticle::TYPE_NORMAL);
-								}
-							}
-							break;
-
-							// 減速
-						case CChick::TYPE_ANNOY:
-							if (m_bDamage == false)
-							{
-								m_bDamage = true;
-								m_nCntDamage = 0;
-								SetState(PLAYERSTATE_SPEEDDOWN);
-							}
-							break;
 						}
+						pChick->Uninit();	// ひよこ削除
+						break;
+
+						// 強い攻撃
+					case CChick::TYPE_ATTACK_S:
+						// ダメージ状態にする
+						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true)
+						{
+							m_bDamage = true;
+							m_nCntDamage = 0;
+							SetState(PLAYERSTATE_DAMAGE);
+
+							D3DXVECTOR2 fSize;
+
+							for (int nCntParticle = 0; nCntParticle < COL_PARTICLE_S; nCntParticle++)
+							{
+								fSize.x = 5.0f + (float)(rand() % 5);
+								fSize.y = 5.0f + (float)(rand() % 5);
+
+								CParticle::Create(m_pos,
+									D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+									D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f),
+									fSize,
+									20,
+									CParticle::TEXTURE_STAR,
+									CParticle::TYPE_NORMAL);
+							}
+						}
+						break;
+
+						// 減速
+					case CChick::TYPE_ANNOY:
+						if (m_bDamage == false)
+						{
+							m_bDamage = true;
+							m_nCntDamage = 0;
+							SetState(PLAYERSTATE_SPEEDDOWN);
+						}
+						break;
 					}
 				}
 			}
-			// Nextに次のSceneを入れる
-			pScene = pSceneNext;
 		}
+		// Nextに次のSceneを入れる
+		pScene = pSceneNext;
 	}
 }
 
@@ -2238,29 +2244,26 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 		m_nCntChick++;
 	}
 
-	for (int nCntPriority = 2; nCntPriority <= EGG_PRIOTITY; nCntPriority++)
-	{
-		// プライオリティーチェック
-		pScene = CScene::GetTop(nCntPriority);
-		while (pScene != NULL)
-		{// プライオリティー内のリスト構造を最後まで見る
-			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+	// プライオリティーチェック
+	pScene = CScene::GetTop(EGG_PRIOTITY);
+	while (pScene != NULL)
+	{// プライオリティー内のリスト構造を最後まで見る
+		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
 
-			if (pScene->GetObjType() == OBJTYPE_CHICK)
-			{// タイプが障害物だったら
-				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
+		if (pScene->GetObjType() == OBJTYPE_CHICK)
+		{// タイプが障害物だったら
+			CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pChick->GetState() == CChick::STATE_BULLET && pChick->GetType() == CChick::TYPE_ATTACK_S && pChick->GetAttackS() == false && pChick->GetDis() == true)
-				{
-					pChick->SetAttackS(true);
-					pChick->SetDis(false);
-					pChick->SetRank(CGame::GetRanking(m_nPlayerNum));
-					pChick->SetDestRank(m_nDestRank);
-				}
+			if (pChick->GetState() == CChick::STATE_BULLET && pChick->GetType() == CChick::TYPE_ATTACK_S && pChick->GetAttackS() == false && pChick->GetDis() == true)
+			{
+				pChick->SetAttackS(true);
+				pChick->SetDis(false);
+				pChick->SetRank(CGame::GetRanking(m_nPlayerNum));
+				pChick->SetDestRank(m_nDestRank);
 			}
-			// Nextに次のSceneを入れる
-			pScene = pSceneNext;
 		}
+		// Nextに次のSceneを入れる
+		pScene = pSceneNext;
 	}
 }
 
@@ -2446,16 +2449,23 @@ void CPlayer::Strike(CPlayer *pPlayer)
 //=============================================================================
 void CPlayer::Tackle(float &fValue)
 {
-	if (fValue < -PLAYER_STRDOWN) { fValue = -PLAYER_STRDOWN; }
 	if (fValue >= 0.0f)
 	{
 		if (m_fPower < fValue) { m_fPower = fValue; }
 		m_PlayerInfo.fCountTime += fValue;
-		if (m_fPower > 20.0f) { m_fPower = 20.0f; }
+		if (m_fPower > 30.0f) { m_fPower = 30.0f; }
 		if (m_PlayerInfo.fCountTime > 90.0f) { m_PlayerInfo.fCountTime = 90.0f; }
 		if (fValue > 10.0f) { m_fTackle = fValue * 0.5f; }
 	}
-	else { m_PlayerInfo.fCountTime -= fValue * 2.0f; }
+	else 
+	{
+		fValue *= 2.0f;
+		m_fPower = 0.0f;
+		if (fValue < -PLAYER_STRDOWN) { fValue = -PLAYER_STRDOWN; }
+
+		m_PlayerInfo.fCountTime += fValue; 
+		if (m_PlayerInfo.fCountTime < 0.0f) { m_PlayerInfo.fCountTime = 0.0f; }
+	}
 }
 //=============================================================================
 // CPUのコース取り変更
@@ -2474,7 +2484,7 @@ void CPlayer::UpVecUZ(void)
 	{
 		m_rot.z *= 0.985f;
 	}
-	m_rot.x = sqrtf(powf(m_rot.z, 2)) * 0.3f;
+	m_rot.x = sqrtf(powf(m_rot.z, 2)) * 0.3f + (m_PlayerInfo.fCountTime / 360.0f) * D3DX_PI * 0.25f;
 }
 //=============================================================================
 // スティック値代入
