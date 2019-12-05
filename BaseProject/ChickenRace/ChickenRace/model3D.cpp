@@ -440,10 +440,7 @@ void CModel3D::Draw(void)
 
 			// マテリアルデータへのポインタを取得
 			pMat = (D3DXMATERIAL*)m_pBuffMatModel[m_modeltype]->GetBufferPointer();
-			float fcol_a;
-			float fcol_r;
-			float fcol_g;
-			float fcol_b;
+			D3DCOLORVALUE col;
 
 			for (int nCntMat = 0; nCntMat < (int)m_nNumMatModel[m_modeltype]; nCntMat++)
 			{
@@ -452,13 +449,11 @@ void CModel3D::Draw(void)
 
 				if (m_bcolChange == true)
 				{// カラー変更(透明度)
-					fcol_a = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a;
+					col = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse;
+
 					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a = m_col.a;
-					fcol_r = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r;
 					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r = m_col.r;
-					fcol_g = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g;
 					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g = m_col.g;
-					fcol_b = m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b;
 					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b = m_col.b;
 				}
 
@@ -516,14 +511,6 @@ void CModel3D::Draw(void)
 
 				//パスの終了
 				Shader->EndPass();
-
-				if (m_bcolChange == true)
-				{// カラー変更(透明度)
-					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.r = fcol_r;
-					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.g = fcol_g;
-					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.b = fcol_b;
-					m_pMeshMaterials[m_modeltype][nCntMat].Diffuse.a = fcol_a;
-				}
 			}
 
 			// マテリアルをデフォルトに戻す

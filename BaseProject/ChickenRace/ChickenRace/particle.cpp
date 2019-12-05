@@ -19,7 +19,7 @@
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
-LPDIRECT3DTEXTURE9	CParticle::m_apTexture[MAX_EFFECT_TEX] = {};
+LPDIRECT3DTEXTURE9	CParticle::m_apTexture[TEXTURE_MAX] = {};
 
 //=============================================================================
 // パーティクルの生成処理
@@ -159,7 +159,7 @@ HRESULT CParticle::Load(void)
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	for (int nCntTex = 0; nCntTex < MAX_EFFECT_TEX; nCntTex++)
+	for (int nCntTex = 0; nCntTex < TEXTURE_MAX; nCntTex++)
 	{
 		// テクスチャの生成
 		m_apTexture[nCntTex] = NULL;
@@ -176,7 +176,7 @@ HRESULT CParticle::Load(void)
 //===============================================================================
 void CParticle::UnLoad(void)
 {
-	for (int nCntTex = 0; nCntTex < MAX_EFFECT_TEX; nCntTex++)
+	for (int nCntTex = 0; nCntTex < TEXTURE_MAX; nCntTex++)
 	{
 		if (m_apTexture[nCntTex] != NULL)
 		{
@@ -195,9 +195,11 @@ void CParticle::Move(void)
 	D3DXVECTOR3 pos;
 	pos = CBillBoord::GetPosition();
 
-	if (m_Type == TYPE_UP)
+	switch (m_Type)
 	{
+	case TYPE_UP:
 		m_move.y -= 0.5f;
+		break;
 	}
 
 	if (m_Type != TYPE_DOWN)

@@ -14,7 +14,6 @@
 // マクロ定義
 //*****************************************************************************
 #define MAX_PARTICLE3D		(256)							// パーティクルの数
-#define MAX_EFFECT_TEX		(2)								// エフェクトのテクスチャ数
 
 //========================================
 // クラスの定義
@@ -55,7 +54,7 @@ public:
 
 private:
 	void Move(void);
-	static LPDIRECT3DTEXTURE9 m_apTexture[MAX_EFFECT_TEX];
+	static LPDIRECT3DTEXTURE9 m_apTexture[TEXTURE_MAX];
 	int m_nLife;
 	D3DXCOLOR m_col;
 	D3DXVECTOR2 m_Size;

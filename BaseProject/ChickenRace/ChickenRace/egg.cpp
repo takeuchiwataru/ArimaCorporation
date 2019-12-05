@@ -24,7 +24,7 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
-#define EXPLOSION_RANGE			(100)		// 爆発の範囲
+#define EXPLOSION_RANGE			(80)		// 爆発の範囲
 #define EGG_PARTICLE			(30)		// パーティクルの数
 
 //更新範囲

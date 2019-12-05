@@ -58,6 +58,9 @@
 #define ANNOY_PARTICLE		(5)											// 減速エフェクトの出る間隔
 #define COL_PARTICLE		(30)										// 卵やひよこが当たったときに出るエフェクトの量
 #define COL_PARTICLE_S		(10)										// 隕石ひよこが当たったときに出るエフェクトの量
+#define CHICK_BORDER		(7)											// 強いひよこが出る順位のライン
+#define HATCH_TIME			(600.0f)									// 孵化するまでの時間
+
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(0.5f)											// 加速値（前進）
@@ -1028,7 +1031,7 @@ void CPlayer::UpdateMove(void)
 
 		if (m_State == PLAYERSTATE_SPEEDUP_S)
 		{
-			fTime = SPEEDUP_TIME * 2;
+			fTime = SPEEDUP_TIME * 3;
 		}
 
 		if (m_nCountSpeed > fTime)
@@ -1214,28 +1217,34 @@ void CPlayer::UpdateMove(void)
 		m_PlayerInfo.fCountTime = SPEED_COUNT_DAMAGE;	// 減速
 		m_fSpeed = 0.0f;
 		break;
+
+	case PLAYERSTATE_SPEEDUP_S:
+		//進行方向の設定
+		m_PlayerInfo.fCountTime = 90;
+		m_fSpeed = 1.0f;
+		break;
 	}
 
 	if (m_bDamage == true)
 	{
 		m_nCntDamage++;
 
-		int nDamageTime = 0;	// 状態が変わる時間の長さ
+		float fDamageTime = 0.0f;	// 状態が変わる時間の長さ
 
 		if (m_State == PLAYERSTATE_DAMAGE)
 		{// 攻撃を食らったとき
-			nDamageTime = DAMAGE_TIME;
+			fDamageTime = DAMAGE_TIME;
 		}
 		else if (m_State == PLAYERSTATE_SPEEDDOWN)
 		{// スピードダウンを食らったとき
-			nDamageTime = SPEEDDOWN_TIME;
+			fDamageTime = SPEEDDOWN_TIME;
 		}
 		else if (m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{// スピードダウンを食らったとき
-			nDamageTime = SPEEDDOWN_TIME;
+			fDamageTime = HatchTime(SPEEDDOWN_TIME, 120.0f);
 		}
 
-		if (m_nCntDamage > nDamageTime)
+		if (m_nCntDamage > fDamageTime)
 		{
 			if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 			{
@@ -1820,9 +1829,7 @@ void CPlayer::BulletEgg(void)
 				UseBoost();
 				m_State = PLAYERSTATE_SPEEDUP;
 				m_fSpeed += SPEED_CHICK;
-
-				m_pChick[0]->Uninit();
-				m_pChick[0] = NULL;
+				m_pChick[0]->SetDis(false);
 				break;
 
 				// 減速
@@ -1856,9 +1863,7 @@ void CPlayer::BulletEgg(void)
 				UseBoost();
 				m_State = PLAYERSTATE_SPEEDUP_S;
 				m_fSpeed += SPEED_CHICK;
-
-				m_pChick[0]->Uninit();
-				m_pChick[0] = NULL;
+				m_pChick[0]->SetDis(false);
 				break;
 			}
 
@@ -2091,7 +2096,7 @@ void CPlayer::ChickAppear(void)
 {
 	if (m_pEgg[0] != NULL)
 	{
-		if (m_pEgg[0]->GetHatchingTimer() > HATCHING_TIME)
+		if (m_pEgg[0]->GetHatchingTimer() > HatchTime(HATCH_TIME, 400.0f))
 		{// 孵化する時間が経過
 		 // タイマーを0にもどす
 			m_pEgg[0]->SetHatchingTimer(0);
@@ -2108,23 +2113,23 @@ void CPlayer::ChickAppear(void)
 			}
 			else if (nGameTime >= 60)
 			{
-				if (CGame::GetRanking(m_nPlayerNum) < 3)
+				if (CGame::GetRanking(m_nPlayerNum) < CHICK_BORDER - 1)
 				{// 4位より上の場合
 				 // タイプ設定
 					type = SetChickType(type, false);
 				}
-				else if (CGame::GetRanking(m_nPlayerNum) >= 3)
+				else if (CGame::GetRanking(m_nPlayerNum) >= CHICK_BORDER - 1)
 				{// 4位より下の場合
 					for (int nCntRank = 0; nCntRank < (MAX_MEMBER / 2) + 1; nCntRank++)
 					{
-						if (CGame::GetRanking(m_nPlayerNum) == nCntRank + 3)
+						if (CGame::GetRanking(m_nPlayerNum) == nCntRank + CHICK_BORDER - 1)
 						{
-							if (nRank <= 10 * ((1 + nGameTime) + nCntRank))
+							if (nRank <= 10 * (1 + nCntRank))
 							{// 強いほう
 							 // タイプ設定
 								type = SetChickType(type, true);
 							}
-							else if (nRank > 10 * ((1 + nGameTime) + nCntRank))
+							else if (nRank > 10 * (1 + nCntRank))
 							{// 普通のほう
 							 // タイプ設定
 								type = SetChickType(type, false);
@@ -2158,13 +2163,6 @@ void CPlayer::ChickAppear(void)
 					CChick::BULLETTYPE_PLAYER,
 					CChick::STATE_CHASE,
 					m_nPlayerNum);
-				//m_pChick[m_nNumChick] = CChick::Create(m_pos,
-				//	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-				//	CHICK_SCALE,
-				//	CChick::TYPE_ANNOY_S,
-				//	CChick::BULLETTYPE_PLAYER,
-				//	CChick::STATE_CHASE,
-				//	m_nPlayerNum);
 			}
 
 			m_pEgg[0]->Uninit();
@@ -2176,6 +2174,21 @@ void CPlayer::ChickAppear(void)
 			m_nNumChick++;
 		}
 	}
+}
+
+//=============================================================================
+// ひよこの成長速度設定
+//=============================================================================
+float CPlayer::HatchTime(float fTime, float fAddTime)
+{
+	float fHatchTime = fTime;
+
+	if (CGame::GetRanking(m_nPlayerNum) >= 3)
+	{
+		fHatchTime = fTime * (1.0f / (CGame::GetRanking(m_nPlayerNum) + 1)) + fAddTime;
+	}
+
+	return fHatchTime;
 }
 
 //=============================================================================
@@ -2323,7 +2336,7 @@ void CPlayer::ChaseAnnoyS(void)
 																									// 食らっている時間をカウント
 		m_nAnnoySTimer++;
 
-		if (m_nAnnoySTimer > SPEEDDOWN_TIME)
+		if (m_nAnnoySTimer > HatchTime(SPEEDDOWN_TIME, 120.0f))
 		{// 一定時間たったら
 			m_nAnnoySTimer = 0;
 			m_pAnnoyChick[m_nPlayerNum]->Uninit();
@@ -2334,7 +2347,7 @@ void CPlayer::ChaseAnnoyS(void)
 		{
 			m_bDamage = true;
 			m_nCntDamage = 0;
-			SetState(PLAYERSTATE_SPEEDDOWN_S);
+			m_State = PLAYERSTATE_SPEEDDOWN_S;
 		}
 	}
 }

@@ -31,13 +31,13 @@
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define DISTIME					(100)		// 消えるまでの時間
-#define CHICK_SPEED				(20.0f)		// ひよこが飛んでくスピード
-#define ANNOY_RANGE				(120.0f)	// 減速させる範囲
-#define ATTACK_RANGE			(200.0f)	// 範囲攻撃の範囲
+#define CHICK_SPEED				(15.0f)		// ひよこが飛んでくスピード
+#define ANNOY_RANGE				(50.0f)		// 減速させる範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(12.0f)		// 落ちてくるひよこの速さ
 #define CHICK_PARTICLE			(30)		// パーティクルの数
+#define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -96,6 +96,8 @@ CChick::CChick() : CScene(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_nMap = 0;
 	m_nExplosion = 0;
 	m_nKey = 0;
+	m_nCntUpDown = 0;
+	m_fUpDown = 0.0f;
 }
 //===============================================================================
 //　デストラクタ
@@ -171,6 +173,8 @@ HRESULT CChick::Init(void)
 	m_nExplosion = 0;
 	m_nAnimnow = CHICK_ANIM_NEUTRAL;	//ニュートラル状態
 	m_nCountFlame = 0;
+	m_nCntUpDown = 0;
+	m_fUpDown = 10.0f;
 
 	CModel::ParentModel(m_apModel, CModel::TYPE_CHICK);
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICK);
@@ -268,12 +272,16 @@ void CChick::Draw(void)
 	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
 
 	int &nMaxParts = CModel::GetnModelMax(CModel::TYPE_CHICK);
-	for (int nCount = 0; nCount < nMaxParts; nCount++)
-	{//モデルの描画
-		if (m_apModel[nCount] != NULL)
-		{
-			//描画する
-			m_apModel[nCount]->Draw(1.0f);
+
+	if (m_bExplosion == false)
+	{
+		for (int nCount = 0; nCount < nMaxParts; nCount++)
+		{//モデルの描画
+			if (m_apModel[nCount] != NULL)
+			{
+				//描画する
+				m_apModel[nCount]->Draw(1.0f);
+			}
 		}
 	}
 }
@@ -338,9 +346,20 @@ bool CChick::Move(void)
 
 	if (m_bDis == false)
 	{
+		float fDisTime = DISTIME;
+
+		if (m_type == TYPE_SPEED)
+		{
+			fDisTime = SPEEDUP_TIME + 20;
+		}
+		else if (m_type == TYPE_SPEED_S)
+		{
+			fDisTime = SPEEDUP_TIME * 2;
+		}
+
 		m_nDisTimer++;
 
-		if (m_nDisTimer > DISTIME)
+		if (m_nDisTimer > fDisTime)
 		{// 消す
 			m_nDisTimer = 0;
 			Uninit();
@@ -446,6 +465,16 @@ bool CChick::Item(void)
 			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 			m_rot = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetRot().x, pPlayer[m_nNumPlayer]->GetRot().y, pPlayer[m_nNumPlayer]->GetRot().z);
 
+			break;
+
+			// 減速させる
+		case TYPE_SPEED:
+			Speed();
+			break;
+
+			// 減速させる
+		case TYPE_SPEED_S:
+			Speed();
 			break;
 		}
 		// 飛んでく動き
@@ -694,6 +723,44 @@ void CChick::AnnoyS(void)
 		m_bAttackS = true;
 	}
 }
+
+//=============================================================================
+// 加速ひよこ
+//=============================================================================
+void CChick::Speed(void)
+{
+	CPlayer **pPlayer = NULL;
+
+	pPlayer = CGame::GetPlayer();
+
+	m_nCntUpDown++;
+
+	float fUpDown = 0.35f;
+
+	if (m_nCntUpDown <= CHICK_UPDOWN_TIME)
+	{
+		fUpDown *= -1;
+	}
+
+	if (m_nCntUpDown >= CHICK_UPDOWN_TIME * 2)
+	{
+		m_nCntUpDown = 0;
+	}
+
+	m_fUpDown += fUpDown;
+
+	// 向き設定
+	m_rot.x = pPlayer[m_nNumPlayer]->GetRot().x;
+	m_rot.y -= 0.1f;
+	m_rot.z = pPlayer[m_nNumPlayer]->GetRot().z;
+
+	m_rot.y = AdjustAngle(m_rot.y);
+
+	m_pos.x = pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * 15.0f;
+	m_pos.y = pPlayer[m_nNumPlayer]->GetPos().y + m_fUpDown;
+	m_pos.z = pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + D3DX_PI * 0.5f) * 15.0f;
+}
+
 //=============================================================================
 // プレイヤーのモーション
 //=============================================================================

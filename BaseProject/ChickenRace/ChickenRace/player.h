@@ -32,6 +32,7 @@
 #define FALL_CHICK_RANGE	(400)							// ひよこが降る範囲
 #define CHICK_FALL_NUM		(5)								// 落ちてくるひよこの数
 #define MAX_EGG				(3)								// 卵の最大数
+#define SPEEDUP_TIME		(60)								// 加速している時間
 
 #define FILE_NAME_PRISONER	"data\\TEXT\\Player\\Player.txt"// 読み込むtxtファイルの名前
 #define MAX_PLAYERANIM		(8)								// アニメーション数
@@ -290,6 +291,7 @@ private:
 	void Strike(CPlayer *pPlayer);
 	void ChaseAnnoyS(void);
 	void EggJump(void);
+	float HatchTime(float fTime, float fAddTime);
 	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
 
 	CModel						**m_apModel;			//パーツモデルのポインタ

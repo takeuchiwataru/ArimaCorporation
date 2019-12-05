@@ -151,6 +151,7 @@ private:
 	void AnnoyS(void);
 	void AttackS(void);
 	bool Item(void);
+	void Speed(void);
 	float AdjustAngle(float rot);
 	D3DXMATRIX			m_mtxWorld;						// ワールドマトリックス
 	static D3DXVECTOR3	m_VtxMaxModel[MAX_CHICK];		//モデルの最大値
@@ -174,8 +175,10 @@ private:
 	int					m_DestRank;						// 目的の順位
 	int					m_nMap;							// 判定を取るマップ
 	int					m_nExplosion;					// 爆発している時間
+	int					m_nCntUpDown;
 	float				m_fHeight;
 	float				m_fLength;						// 横幅
+	float				m_fUpDown;				// スピードアップひよこの上下
 	bool				m_bJump;						// ジャンプしているかどうか
 	bool				m_bDis;							// 消すかどうか
 	bool				m_bAttackS;
