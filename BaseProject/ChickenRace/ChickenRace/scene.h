@@ -66,7 +66,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	static void UpdateAll(void);
 	static void DrawAll(void);
 	static void DrawMap(void);
-	static void Draw2D(void);
+	static void DrawSeting(bool bSelect = false, int nNum = 5, bool bStart = false, int nEnd = NUM_PRIORITY);
 	void SetObjType(OBJTYPE ObjType);
 	static CScene *&GetTop(int nPriority);
 	CScene *&GetNext(void) { return m_pNext; }

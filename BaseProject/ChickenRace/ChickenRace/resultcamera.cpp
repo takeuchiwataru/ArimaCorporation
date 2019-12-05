@@ -27,8 +27,13 @@ CResultCamera::~CResultCamera() {}
 HRESULT CResultCamera::Init(void)
 {
 	CCamera::Init();
-	m_posR = D3DXVECTOR3(-450.0f, -30.0f, 0.0f);	//視点の初期値
-	m_posV = D3DXVECTOR3(100.0f, 80.0f, -1.0f);		//注視点の初期値
+	m_posR = D3DXVECTOR3(-24400.0f, -3200.0f, 1200.0f);		//視点の初期値
+	m_posV = D3DXVECTOR3(-24100.0f, -3200.0f, 1450.0f);		//注視点の初期値
+
+	float fAngle = atan2f(m_posV.x - m_posR.x, m_posV.z - m_posR.z);
+
+	//m_posV = m_posV + D3DXVECTOR3(sinf(fAngle) * 300.0f, 0.0f, cosf(fAngle) * 300.0f);		//注視点の初期値
+
 	m_fRotDest = 0;
 	return S_OK;
 }

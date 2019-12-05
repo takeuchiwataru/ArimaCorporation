@@ -277,6 +277,32 @@ void CTime::AddTime(int nTime)
 }
 
 //=============================================================================
+// 位置
+//=============================================================================
+void CTime::Setpos(D3DXVECTOR3 pos)
+{
+	m_pos = pos;
+
+	for (int nCntTime = 0; nCntTime < TIME_MAX; nCntTime++)
+	{	// タイマーの破棄
+		if (m_apNumber[nCntTime] != NULL)
+		{
+			m_apNumber[nCntTime]->SetSize(D3DXVECTOR2(m_size.x, m_size.y), D3DXVECTOR2(m_pos.x - ((m_size.x * 2.0f) * nCntTime) - ((m_size.x * 2.0f) * (nCntTime / 2)), m_pos.y));
+		}
+	}
+
+	for (int nCntColon = 0; nCntColon < MAX_COLON; nCntColon++)
+	{
+		if (m_pColon[nCntColon] != NULL)
+		{
+			m_pColon[nCntColon]->SetPosSize(
+				D3DXVECTOR3(m_pos.x - ((m_size.x * 2.0f) * ((nCntColon + 1) * 2.0f)) - ((m_size.x * 2.0f) * (nCntColon)), m_pos.y, m_pos.z),
+				D3DXVECTOR2(m_size.x * 0.8f, m_size.y * 0.8f));
+		}
+	}
+}
+
+//=============================================================================
 // 色
 //=============================================================================
 void CTime::Setcol(D3DXCOLOR col)

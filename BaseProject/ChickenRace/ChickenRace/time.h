@@ -74,6 +74,7 @@ public:
 	static bool GetRideEnd(void) { return m_bRideEnd; }
 	static void ResetCutomerTime(void) { m_nCutomerTime = 0; }
 
+	void Setpos(D3DXVECTOR3 pos);
 	void Setcol(D3DXCOLOR col);
 
 private:

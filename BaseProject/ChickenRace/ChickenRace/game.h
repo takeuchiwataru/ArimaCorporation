@@ -107,6 +107,7 @@ public:
 	void SetGameMode(GAMEMODE gameMode);
 	static GAMEMODE GetGameMode(void) { return m_gameMode; }
 	void SetStage(void);
+	void SetPlayer(bool bCreate, int nMode);
 	void Ranking(void);
 
 	//---------------------------------

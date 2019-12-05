@@ -215,6 +215,11 @@ void CModel::Draw(float fAlpha)
 			switch (CGame::GetGameMode())
 			{// ÉQÅ[ÉÄÉÇÅ[Éh
 			case CGame::GAMEMODE_CHARSELECT:
+				if (CGame::GetCameraNumber() == -1)
+					pCamera = (CCamera*)CGame::GetCourseCamera();
+				else
+					pCamera = (CCamera*)CGame::GetGameCamera(CGame::GetCameraNumber());
+				break;
 			case CGame::GAMEMODE_COURSESELECT:
 			case CGame::GAMEMODE_COURSE_VIEW:
 				pCamera = (CCamera*)CGame::GetCourseCamera();

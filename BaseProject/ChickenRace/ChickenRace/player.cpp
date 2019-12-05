@@ -258,13 +258,16 @@ HRESULT CPlayer::Init(void)
 	m_fAddRot = 0.0f;					// 加算角度
 
 	// プレイヤー番号（追従）
-	if (m_pPlayerNum == NULL)
-		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 1);
-
-	if (m_pPlayerpos == NULL)
+	if (CGame::GetGameMode() == CGame::GAMEMODE_PLAY)
 	{
-		m_pPlayerpos = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 500.0f, 0.0f), D3DXVECTOR2(300.0f, 300.0f), 0, true);
-		//m_pPlayerpos->BindTexture(m_pTexture);
+		if (m_pPlayerNum == NULL)
+			m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 1);
+
+		if (m_pPlayerpos == NULL)
+		{
+			m_pPlayerpos = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 500.0f, 0.0f), D3DXVECTOR2(300.0f, 300.0f), 0, true);
+			//m_pPlayerpos->BindTexture(m_pTexture);
+		}
 	}
 
 	for (int nCntEggPos = 0; nCntEggPos < MAX_FRAME; nCntEggPos++)
@@ -381,6 +384,65 @@ void CPlayer::Uninit(void)
 //=============================================================================
 void CPlayer::Update(void)
 {
+	switch (m_PlayerType)
+	{
+	case PLAYERTYPE_PLAYER:
+	case PLAYERTYPE_ENEMY:
+		UpdateRace();
+		break;
+	case PLAYERTYPE_SELECT:
+		UpdateSelect();
+		break;
+	case PLAYERTYPE_RESULT:
+		UpdateResult();
+		break;
+	}
+}
+
+//=============================================================================
+// 描画処理
+//=============================================================================
+void CPlayer::Draw(void)
+{
+	//レンダリングクラスを取得
+	CRenderer * pRenderer = NULL;
+	pRenderer = CManager::GetRenderer();
+
+	//デバイスの取得
+	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
+
+	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
+
+	// ワールドマトリックスの初期化
+	D3DXMatrixIdentity(&m_mtxWorld);
+
+	// 回転を反映
+	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
+	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
+
+	// 位置を反映
+	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y + m_fPosY, m_pos.z);
+	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
+
+	// ワールドマトリックスの設定
+	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+
+	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	{//モデルの描画
+		if (m_apModel[nCount] != NULL)
+		{
+			//描画する
+			m_apModel[nCount]->Draw(1.0f);
+		}
+	}
+}
+
+
+//=============================================================================
+// レースの更新処理
+//=============================================================================
+void CPlayer::UpdateRace(void)
+{
 	//変数宣言
 	D3DXVECTOR3 TirePos[MAX_TIRE];
 	CManager::MODE mode = CManager::GetMode();
@@ -491,42 +553,31 @@ void CPlayer::Update(void)
 }
 
 //=============================================================================
-// 描画処理
+// 選択の更新処理
 //=============================================================================
-void CPlayer::Draw(void)
+void CPlayer::UpdateSelect(void)
 {
-	//レンダリングクラスを取得
-	CRenderer * pRenderer = NULL;
-	pRenderer = CManager::GetRenderer();
+	//CDebugProc::Print("m_pos x : %.1f y : %.1f z : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
 
-	//デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
+	m_nMotionType = m_nAnimnow;
 
-	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
-
-	// ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorld);
-
-	// 回転を反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-	// 位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y + m_fPosY, m_pos.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
-
-	// ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
-
-	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
-	{//モデルの描画
-		if (m_apModel[nCount] != NULL)
-		{
-			//描画する
-			m_apModel[nCount]->Draw(1.0f);
-		}
-	}
+	//モーション更新
+	UpdateMotion();
 }
+
+//=============================================================================
+// リザルトの更新処理
+//=============================================================================
+void CPlayer::UpdateResult(void)
+{
+	//CDebugProc::Print("m_pos x : %.1f y : %.1f z : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
+
+	m_nMotionType = m_nAnimnow;
+
+	//モーション更新
+	UpdateMotion();
+}
+
 //=============================================================================
 // AIの更新処理
 //=============================================================================

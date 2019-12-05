@@ -37,6 +37,7 @@ CResultUI::CResultUI()
 {
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{
+		m_pRankBG[nCntMember] = NULL;		// ランクBG
 		m_pRank[nCntMember] = NULL;			// ランク
 		m_pChar[nCntMember] = NULL;			// キャラ
 		m_pPlayer[nCntMember] = NULL;		// プレイヤー
@@ -136,6 +137,22 @@ HRESULT CResultUI::Init()
 
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{// メンバーカウント
+	 // ランクBG
+		if (m_pRankBG[nCntMember] == NULL)
+		{// NULL
+			m_pRankBG[nCntMember] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+			m_pRankBG[nCntMember]->Init();
+			m_pRankBG[nCntMember]->SetPosSize(
+				D3DXVECTOR3
+				(
+				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.17f) - (SCREEN_WIDTH),
+					(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+					0.0f
+				),
+				D3DXVECTOR2(SCREEN_WIDTH * 0.29f, SCREEN_HEIGHT * 0.05f));
+			m_pRankBG[nCntMember]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.3f));
+		}
+
 		// ランク
 		if (m_pRank[nCntMember] == NULL)
 		{// NULL
@@ -144,7 +161,7 @@ HRESULT CResultUI::Init()
 			m_pRank[nCntMember]->SetPosSize(
 				D3DXVECTOR3
 				(
-				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.4f),
+				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.4f) - (SCREEN_WIDTH),
 					(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
 					0.0f
 				),
@@ -161,7 +178,7 @@ HRESULT CResultUI::Init()
 			m_pChar[nCntMember]->SetPosSize(
 				D3DXVECTOR3
 				(
-				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.3f),
+				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.3f) - (SCREEN_WIDTH),
 					(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
 					0.0f
 				),
@@ -177,8 +194,8 @@ HRESULT CResultUI::Init()
 			m_pPlayer[nCntMember]->SetPosSize(
 				D3DXVECTOR3
 				(
-					(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.21f),
-					(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+				(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.21f) - (SCREEN_WIDTH),
+					(SCREEN_HEIGHT * 0.12f) - (SCREEN_HEIGHT * 0.012f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
 					0.0f
 				),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.08f, SCREEN_HEIGHT * 0.05f));
@@ -192,7 +209,7 @@ HRESULT CResultUI::Init()
 			m_pTime[nCntMember] = CTime::Create(
 				D3DXVECTOR3
 				(
-					(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.08f),
+				(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.08f) - (SCREEN_WIDTH),
 					(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
 					0.0f
 				),
@@ -212,7 +229,7 @@ HRESULT CResultUI::Init()
 		m_pPress->SetPosSize(
 			D3DXVECTOR3
 			(
-				(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.35f),
+			(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.31f),
 				(SCREEN_HEIGHT * 0.12f) + (SCREEN_HEIGHT * 0.8f),
 				0.0f
 			),
@@ -230,6 +247,13 @@ void CResultUI::Uninit(void)
 {
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{// メンバーカウント
+	 // ランクBG
+		if (m_pRankBG[nCntMember] != NULL)
+		{// NULL以外
+			m_pRankBG[nCntMember]->Uninit();
+			m_pRankBG[nCntMember] = NULL;
+		}
+
 		// ランク
 		if (m_pRank[nCntMember] != NULL)
 		{// NULL以外
@@ -277,17 +301,93 @@ void CResultUI::Update(void)
 {
 	int nCounter = CResult::GetCounter();
 
+	if (RESULT_RANK_APP < nCounter)
+	{
+		int nFrame = nCounter - RESULT_RANK_APP;
+
+		for (int nCntMember = (MAX_MEMBER - 1); 0 <= nCntMember; nCntMember--)
+		{// メンバーカウント
+			if (((MAX_MEMBER - 1) - nCntMember) == (nFrame / 10))
+			{
+				float fDiff = -(SCREEN_WIDTH) * (1.0f - (float)((float)((nFrame % 10) + 1) / (float)10));
+
+				// ランクBG
+				if (m_pRankBG[nCntMember] != NULL)
+				{// NULL以外
+					m_pRankBG[nCntMember]->SetPosSize(
+						D3DXVECTOR3
+						(
+						(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.17f) + fDiff,
+							(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+							0.0f
+						),
+						D3DXVECTOR2(SCREEN_WIDTH * 0.29f, SCREEN_HEIGHT * 0.05f));
+				}
+
+				// ランク
+				if (m_pRank[nCntMember] != NULL)
+				{// NULL以外
+					m_pRank[nCntMember]->SetPosSize(
+						D3DXVECTOR3
+						(
+						(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.4f) + fDiff,
+							(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+							0.0f
+						),
+						D3DXVECTOR2(SCREEN_HEIGHT * 0.08f, SCREEN_HEIGHT * 0.05f));
+				}
+
+				// キャラ
+				if (m_pChar[nCntMember] != NULL)
+				{// NULL以外
+					m_pChar[nCntMember]->SetPosSize(
+						D3DXVECTOR3
+						(
+						(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.3f) + fDiff,
+							(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+							0.0f
+						),
+						D3DXVECTOR2(SCREEN_HEIGHT * 0.05f, SCREEN_HEIGHT * 0.05f));
+				}
+
+				// プレイヤー
+				if (m_pPlayer[nCntMember] != NULL)
+				{// NULL以外
+					m_pPlayer[nCntMember]->SetPosSize(
+						D3DXVECTOR3
+						(
+						(SCREEN_WIDTH * 0.5f) - (SCREEN_WIDTH * 0.21f) + fDiff,
+							(SCREEN_HEIGHT * 0.12f) - (SCREEN_HEIGHT * 0.012f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+							0.0f
+						),
+						D3DXVECTOR2(SCREEN_HEIGHT * 0.08f, SCREEN_HEIGHT * 0.05f));
+				}
+
+				// タイム
+				if (m_pTime[nCntMember] != NULL)
+				{// NULL以外
+					m_pTime[nCntMember]->Setpos(D3DXVECTOR3
+					(
+						(SCREEN_WIDTH * 0.5f) + (SCREEN_WIDTH * 0.08f) + fDiff,
+						(SCREEN_HEIGHT * 0.12f) + (((SCREEN_HEIGHT * 0.05f) * 2.2f) * nCntMember),
+						0.0f
+					));
+				}
+			}
+		}
+	}
+
 	if (RESULT_WAIT < nCounter)
 	{
-		nCounter -= RESULT_WAIT;
+		int nFrame = nCounter - RESULT_WAIT;
 
 		// プレス
 		if (m_pPress != NULL)
 		{// NULL以外
-			nCounter %= 120;
-			int nNum = nCounter % 60;
+			nFrame %= 120;
+			int nNum = nFrame % 60;
 
-			m_pPress->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nCounter < 60 ? (float)((float)nNum / (float)60) : 1.0f - (float)((float)nNum / (float)60))));
+			m_pPress->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nFrame < 60 ? (float)((float)nNum / (float)60) : 1.0f - (float)((float)nNum / (float)60))));
 		}
 	}
 }

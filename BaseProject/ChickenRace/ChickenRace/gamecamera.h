@@ -24,6 +24,8 @@ public:
 	typedef enum
 	{
 		CAMERA_NONE = 0,
+		CAMERA_CHARSELECT,
+		CAMERA_CHARUP,
 		CAMERA_COURSE,
 		CAMERA_PLAYER,
 		CAMERA_MAX
@@ -41,6 +43,8 @@ public:
 	void UseBoost(void) { m_fPlusDis = 1.5f; }
 
 private:
+	void UpdateCharSelect(void);
+	void UpdateCharUp(void);
 	void UpdateCourse(void);
 	void UpdatePlayer(void);
 	void DrawReset(void);

@@ -51,6 +51,7 @@ public:
 private:
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
+	CScene2D			*m_pRankBG[MAX_MEMBER];	// ランクBG
 	CScene2D			*m_pRank[MAX_MEMBER];	// ランク
 	CScene2D			*m_pChar[MAX_MEMBER];	// キャラ
 	CScene2D			*m_pPlayer[MAX_MEMBER];	// プレイヤー

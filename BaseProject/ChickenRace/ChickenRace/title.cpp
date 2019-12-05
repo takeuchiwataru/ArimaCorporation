@@ -94,6 +94,7 @@ HRESULT CTitle::Init()
 	CUi::Load();		//UIのテクスチャの読み込み
 	CTitleMenu::Load();
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
+	CToonShader::Load();
 
 	//マップを読み込む
 	TextLoad(6);

@@ -244,12 +244,18 @@ void CScene::DrawMap(void)
 
 	CDebugProc::Print("ï`âÊêî : %d", nCnt);
 }
-void CScene::Draw2D(void)
+void CScene::DrawSeting(bool bSelect, int nNum, bool bStart, int nEnd)
 {
 	CScene *pScene;
 	int nCnt = 0;
 
-	for (int nPriority = 5; nPriority < NUM_PRIORITY; nPriority++)
+	if (NUM_PRIORITY <= nEnd)
+		nEnd = NUM_PRIORITY;
+
+	if ((nEnd) <= nNum)
+		return;
+
+	for (int nPriority = nNum; nPriority < NUM_PRIORITY; nPriority++)
 	{
 		pScene = m_pTop[nPriority];
 
@@ -274,6 +280,12 @@ void CScene::Draw2D(void)
 
 			//NextÇ…éüÇÃSceneÇì¸ÇÍÇÈ
 			pScene = pSceneNext;
+		}
+
+		if (bSelect == true)
+		{
+			if (bStart == false || (bStart == true && (nEnd - 1) <= nPriority))
+				break;
 		}
 	}
 

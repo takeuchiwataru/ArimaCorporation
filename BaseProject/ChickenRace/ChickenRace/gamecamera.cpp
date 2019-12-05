@@ -67,11 +67,17 @@ void CGameCamera::Update(void)
 {
 	switch (m_cameraType)
 	{
+	case CAMERA_CHARSELECT:
+		UpdateCharSelect();	//キャラ選択状態
+		break;
+	case CAMERA_CHARUP:
+		UpdateCharUp();		//キャラアップ状態
+		break;
 	case CAMERA_COURSE:
-		UpdateCourse(); //コース状態
+		UpdateCourse();		//コース状態
 		break;
 	case CAMERA_PLAYER:
-		UpdatePlayer(); //プレイヤー状態
+		UpdatePlayer();		//プレイヤー状態
 		break;
 	}
 }
@@ -82,6 +88,31 @@ void CGameCamera::Update(void)
 void CGameCamera::SetCamera(void)
 {
 	CCamera::SetCamera();
+}
+
+//=============================================================================
+// ゲームカメラ（キャラ選択）更新処理
+//=============================================================================
+void CGameCamera::UpdateCharSelect(void)
+{
+	m_posR = D3DXVECTOR3(3000.0f, -90.0f, 140.0f);
+	m_posV = D3DXVECTOR3(2600.0f, -10.0f, 141.0f);
+}
+
+//=============================================================================
+// ゲームカメラ（キャラアップ）更新処理
+//=============================================================================
+void CGameCamera::UpdateCharUp(void)
+{
+	if (m_pPlayer != NULL)
+	{// NULL以外
+		int nCounter = CGame::GetGameCounter();
+		float frot = ((float)nCounter * 0.008f);
+
+		D3DXVECTOR3 pos = m_pPlayer->Getpos();
+		m_posR = pos + D3DXVECTOR3(0.0f, 30.0f, 0.0f);
+		m_posV = m_posR + D3DXVECTOR3(sinf(-(D3DX_PI * 0.5f) + frot) * 30.0f, 0.0f, cosf(-(D3DX_PI * 0.5f) + frot) * 30.0f);
+	}
 }
 
 //=============================================================================

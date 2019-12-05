@@ -320,7 +320,7 @@ void CModel3D::Draw(void)
 	LPD3DXEFFECT	Shader = NULL;							//シェーダー
 	CCamera			*pCamera = NULL;						//カメラのポイント
 
-															//カメラのポインタに情報を代入
+	//カメラのポインタに情報を代入
 	if (pCamera == NULL)
 	{
 		switch (CManager::GetMode())
@@ -332,6 +332,11 @@ void CModel3D::Draw(void)
 			switch (CGame::GetGameMode())
 			{// ゲームモード
 			case CGame::GAMEMODE_CHARSELECT:
+				if (CGame::GetCameraNumber() == -1)
+					pCamera = (CCamera*)CGame::GetCourseCamera();
+				else
+					pCamera = (CCamera*)CGame::GetGameCamera(CGame::GetCameraNumber());
+				break;
 			case CGame::GAMEMODE_COURSESELECT:
 			case CGame::GAMEMODE_COURSE_VIEW:
 				pCamera = (CCamera*)CGame::GetCourseCamera();

@@ -75,6 +75,7 @@ HRESULT CResult::Init()
 	CFade::Load();		//フェードのテクスチャの読み込み
 	CResultUI::Load();
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
+	CToonShader::Load();
 
 	//マップを読み込む
 	TextLoad(6);

@@ -919,9 +919,11 @@ void CTitleMenu::ControllEntry(void)
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 
-	if (m_nCntMainMenu == 0 && m_nCntEntry == (60 - 1))
+	int nClient = CServer::GetnMaxClient();
+
+	if (m_nCntMainMenu == 0/* && m_nCntEntry == (60 - 1)*/)
 	{// 表示中じゃない
-		if (1 < CServer::GetnMaxClient())
+		if (1 < nClient && CClient::GetnID() == 0)
 		{// 1人以上
 			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 				pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
@@ -931,6 +933,23 @@ void CTitleMenu::ControllEntry(void)
 				return;
 			}
 		}
+		else if (nClient < 0)
+		{
+			if (m_nCntEntry == (60 - 1))
+			{
+				m_bSubMenu = true;				// サブメニュー表示				
+
+				m_bEntry = false;				// 受付終了
+				m_bSearch = false;				// サーチ
+				CManager::OnlineSeting(false);	// オンライン設定
+				return;
+			}
+		}
+	}
+
+	for (int nCntPlayer = 0; nCntPlayer < nClient; nCntPlayer++)
+	{
+		pXpad = CManager::GetInputJoyPad0(nCntPlayer);
 
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_X) == true ||
 			pXpad->GetTrigger(INPUT_A) == true)
@@ -940,6 +959,7 @@ void CTitleMenu::ControllEntry(void)
 			m_bEntry = false;				// 受付終了
 			m_bSearch = false;				// サーチ
 			CManager::OnlineSeting(false);	// オンライン設定
+			return;
 		}
 	}
 }
@@ -1630,9 +1650,13 @@ void CTitleMenu::EditEntry(void)
 		if (m_pHint != NULL)
 			m_pHint->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fAlpha));
 
-		for (int nCntPlayer = 0; nCntPlayer < (1 < nClient ? nClient : 1); nCntPlayer++)
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 			if (m_pMember[nCntPlayer] != NULL)
-				m_pMember[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fAlpha));
+				m_pMember[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nCntPlayer < nClient ? 1.0f : 0.0f)));
+
+		//for (int nCntPlayer = 0; nCntPlayer < (m_bSearch == true ? (1 < nClient ? nClient : 1) : MAX_PLAYER); nCntPlayer++)
+		//	if (m_pMember[nCntPlayer] != NULL)
+		//		m_pMember[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fAlpha));
 
 		if (m_pCancel != NULL)
 			m_pCancel->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fAlpha));

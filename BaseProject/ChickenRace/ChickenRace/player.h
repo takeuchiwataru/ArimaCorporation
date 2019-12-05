@@ -40,7 +40,7 @@
 #define MAX_MOTION			(10)							// モーションの最大数
 															   
 #define MAX_FALL_FADE		(60)							// おちるエフェクト
-#define MAX_FALL_WAIT		(15)							// おちるエフェクト待機
+#define MAX_FALL_WAIT		(25)							// おちるエフェクト待機
 
 #define PLAYER_LENGTH			(10.0f)							//キャラの大きさ
 
@@ -105,6 +105,8 @@ public:
 	{
 		PLAYERTYPE_PLAYER = 0,
 		PLAYERTYPE_ENEMY,
+		PLAYERTYPE_SELECT,
+		PLAYERTYPE_RESULT,
 		PLAYERTYPE_MAX
 	}PLAYERTYPE;
 
@@ -250,6 +252,10 @@ public:
 	static int  PopString(char *pStr, char *pDest);			//行の最後を切り捨て
 
 private:
+	void UpdateRace(void);
+	void UpdateSelect(void);
+	void UpdateResult(void);
+
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
 	void UpdateMove(void);

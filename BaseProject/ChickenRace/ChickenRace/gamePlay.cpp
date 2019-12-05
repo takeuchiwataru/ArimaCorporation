@@ -161,10 +161,10 @@ HRESULT CGamePlay::Init()
 
 	for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
 	{// プレイヤーカウント
-	 // フェードak
+	 // フェード
 		if (m_pFade[nCntPlayer] == NULL)
 		{// NULL
-			m_pFade[nCntPlayer] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+			m_pFade[nCntPlayer] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
 			m_pFade[nCntPlayer]->Init();
 			// 各ビューポートの中心点から計算（中心点 -> 指定の位置へ）
 			if (bOnine == true)
@@ -224,7 +224,7 @@ HRESULT CGamePlay::Init()
 	{// ダウンカウント
 		if (m_pCountDown[nCntDown] == NULL)
 		{// NULL
-			m_pCountDown[nCntDown] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+			m_pCountDown[nCntDown] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
 			m_pCountDown[nCntDown]->Init();
 			m_pCountDown[nCntDown]->SetPosSize(
 				D3DXVECTOR3(
@@ -634,6 +634,9 @@ void CGamePlay::Update(void)
 						fcol_a *= fDiff;
 
 						m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
+
+						if (bOnine == true && nClient != nPlayerNum)
+							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 					}
 					else
 					{

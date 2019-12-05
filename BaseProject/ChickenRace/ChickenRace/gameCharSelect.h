@@ -38,6 +38,7 @@ public:
 		TEXTURE_TUTORIAL,
 		TEXTURE_HINT,
 		TEXTURE_RETURN_BG,
+		TEXTURE_RETURN_TREE,
 		TEXTURE_RETURN_HOME,
 		TEXTURE_RETURN_CHAR,
 		TEXTURE_RETURN_GRASS,
@@ -70,8 +71,10 @@ private:
 	CScene2D *m_pButton[MAX_PLAYER];		// ボタン
 
 	CScene2D *m_pYor;						// あなた
+	CScene2D *m_pReturnFrame;				// 戻るフレーム
 	CScene2D *m_pReturnButton;				// 戻る
 	CScene2D *m_pReturnBG;					// 戻る背景
+	CScene2D *m_pReturnTree;				// 戻る木
 	CScene2D *m_pReturnHome;				// 戻る小屋
 	CScene2D *m_pReturnChar;				// 戻るキャラ
 	CScene2D *m_pReturnGrass;				// 戻る草
@@ -92,6 +95,6 @@ private:
 
 	int		m_nEntryCounter;				// エントリーカウント
 
-	CScene2D *m_pCharacter[MAX_CHARCTER];	
+	CScene2D *m_pCharacter[MAX_CHARCTER];
 };
 #endif

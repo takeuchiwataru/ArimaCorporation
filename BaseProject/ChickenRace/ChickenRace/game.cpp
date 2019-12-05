@@ -138,7 +138,7 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
+	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか
@@ -291,16 +291,25 @@ void CGame::Update(void)
 	case GAMEMODE_CHARSELECT:
 		//if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
 		//	CFade::Create(GAMEMODE_PLAY);
+
+		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetPlayer((m_pPlayer[m_nCharSelectNum[nCntPlayer]] != NULL ? m_pPlayer[m_nCharSelectNum[nCntPlayer]] : NULL)); }
+
 		break;
 	case GAMEMODE_COURSESELECT:
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
-			CFade::Create(GAMEMODE_PLAY);
+		//if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
+		//	CFade::Create(GAMEMODE_PLAY);
 
 		break;
 	case GAMEMODE_COURSE_VIEW:
 		for (int nCntPlayer = 0; nCntPlayer < MAX_MEMBER; nCntPlayer++)
 			if (m_pPlayer[nCntPlayer] != NULL)
 				m_pPlayer[nCntPlayer]->SetControl(false);
+
+		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
+			pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
+			pXpad->GetTrigger(INPUT_START) == true)
+			CFade::Create(CGame::GAMEMODE_PLAY);
 
 		break;
 	case GAMEMODE_PLAY:
@@ -342,7 +351,7 @@ void CGame::Update(void)
 
 	if (fade == CFade::FADE_NONE)
 	{// フェードしていない
-		if (m_gameMode == GAMEMODE_COURSE_VIEW || m_gameMode == GAMEMODE_PLAY)
+		if (m_gameMode == GAMEMODE_COURSE_VIEW || (m_gameMode == GAMEMODE_PLAY && (START_SET_TIME) < m_nGameCounter))
 		{// レース中
 			if (bOnine == false)
 			{// オンラインじゃない
@@ -388,18 +397,6 @@ void CGame::Update(void)
 
 	if (m_bPause == false)
 	{//開く音
-		if (m_gameMode == GAMEMODE_PLAY)
-		{// プレイのみ
-			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
-			{
-				//m_bDrawUI = m_bDrawUI ? false : true;
-
-				//ポーズの選択の決定音
-				CFade::Create(CManager::MODE_TITLE);
-				return;
-			}
-		}
-
 		//カメラの更新処理
 		if (m_pCuorseCamera != NULL) { m_pCuorseCamera->Update(); }
 
@@ -426,7 +423,56 @@ void CGame::Draw(void)
 
 	m_nCameraNumber = 0;
 
-	if (m_gameMode == GAMEMODE_COURSE_VIEW)
+	if (m_gameMode == GAMEMODE_CHARSELECT)
+	{// その他
+		D3DVIEWPORT9 viewport;
+		pDevice->GetViewport(&viewport);	// ビューポート取得
+
+											// バックバッファ＆Ｚバッファのクリア
+		pDevice->Clear(0,
+			NULL,
+			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
+			D3DCOLOR_RGBA(157, 184, 224, 255),
+			1.0f,
+			0);
+
+		m_nCameraNumber = -1;
+
+		if (m_pCuorseCamera != NULL) { m_pCuorseCamera->SetCamera(); }
+
+		//全ての描画
+		CScene::DrawAll();
+
+		pDevice->SetViewport(&viewport);	// ビューポート設定
+
+											//２Dの描画
+		CScene::DrawSeting(true);
+
+		for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
+		{// プレイヤーカウント
+		 // バックバッファ＆Ｚバッファのクリア
+			pDevice->Clear(0,
+				NULL,
+				(D3DCLEAR_ZBUFFER),
+				D3DCOLOR_RGBA(157, 184, 224, 255),
+				1.0f,
+				0);
+
+			m_nCameraNumber = nCntPlayer;
+
+			//カメラの設定
+			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetCamera(); }
+
+			//全ての描画
+			CScene::DrawSeting(true, 0, true, 5);
+		}
+
+		pDevice->SetViewport(&viewport);	// ビューポート設定
+
+											//２Dの描画
+		CScene::DrawSeting(true, 6, true);
+	}
+	else if (m_gameMode == GAMEMODE_COURSE_VIEW)
 	{// その他
 	 // バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
@@ -435,6 +481,8 @@ void CGame::Draw(void)
 			D3DCOLOR_RGBA(157, 184, 224, 255),
 			1.0f,
 			0);
+
+		m_nCameraNumber = -1;
 
 		if (m_pCuorseCamera != NULL) { m_pCuorseCamera->SetCamera(); }
 
@@ -446,7 +494,7 @@ void CGame::Draw(void)
 		D3DVIEWPORT9 viewport;
 		pDevice->GetViewport(&viewport);	// ビューポート取得
 
-		// バックバッファ＆Ｚバッファのクリア
+											// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
@@ -467,7 +515,7 @@ void CGame::Draw(void)
 		{// ローカル
 			for (int nCntPlayer = 0; nCntPlayer < m_nMaxPlayer; nCntPlayer++)
 			{// プレイヤーカウント
-				// バックバッファ＆Ｚバッファのクリア
+			 // バックバッファ＆Ｚバッファのクリア
 				pDevice->Clear(0,
 					NULL,
 					(D3DCLEAR_ZBUFFER),
@@ -485,6 +533,11 @@ void CGame::Draw(void)
 			}
 		}
 
+		pDevice->SetViewport(&viewport);	// ビューポート設定
+
+											//２Dの描画
+		CScene::DrawSeting(true, 5);
+
 		// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
@@ -501,8 +554,8 @@ void CGame::Draw(void)
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-		//２Dの描画
-		CScene::Draw2D();
+											//２Dの描画
+		CScene::DrawSeting(true, 6, true);
 	}
 	else
 	{// その他
@@ -564,6 +617,13 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 			m_pGameCharSelect = NULL;
 		}
 
+		if (m_pCuorseCamera != NULL)
+		{
+			m_pCuorseCamera->Uninit();
+			delete m_pCuorseCamera;
+			m_pCuorseCamera = NULL;
+		}
+
 		break;
 	case GAMEMODE_COURSESELECT:		// コース選択		
 
@@ -596,6 +656,8 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		break;
 	}
 
+	SetPlayer(false, m_gameMode);
+
 	// ゲームモードを変更
 	m_gameMode = gameMode;
 
@@ -613,6 +675,23 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 			m_nCharSelectNum[nCntPlayer] = nCntPlayer;			// キャラ選択番号
 
+																//ゲームカメラの生成
+		if (m_pCuorseCamera == NULL)
+		{// NULL
+			m_pCuorseCamera = new CGameCamera;
+
+			if (m_pCuorseCamera != NULL)
+			{// NULL以外
+			 // 初期化処理
+				m_pCuorseCamera->Init();
+				// タイプ設定処理
+				m_pCuorseCamera->SetType(CGameCamera::CAMERA_CHARSELECT);
+			}
+		}
+
+		if (m_nCntSetStage == 0)
+			SetStage();
+
 		break;
 	case GAMEMODE_COURSESELECT:		// コース選択
 
@@ -622,9 +701,6 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		//タイトルの曲
 		pSound->SetVolume(CSound::SOUND_LABEL_BGM_GAME, 0.4f);
 		pSound->PlaySound(CSound::SOUND_LABEL_BGM_GAME);
-
-		if (m_nCntSetStage == 0)
-			SetStage();
 
 		//ゲームカメラの生成
 		if (m_pCuorseCamera == NULL)
@@ -639,6 +715,9 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 				m_pCuorseCamera->SetType(CGameCamera::CAMERA_COURSE);
 			}
 		}
+
+		if (m_nCntSetStage == 0)
+			SetStage();
 
 		break;
 	case GAMEMODE_PLAY:				// プレイ
@@ -660,7 +739,7 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 
 			if (m_pCuorseCamera != NULL)
 			{// NULL以外
-				// 初期化処理
+			 // 初期化処理
 				m_pCuorseCamera->Init();
 				// タイプ設定処理
 				m_pCuorseCamera->SetType(CGameCamera::CAMERA_NONE);
@@ -700,8 +779,11 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 
 		if (m_nCntSetStage == 0)
 			SetStage();
+
 		break;
 	}
+
+	SetPlayer(true, m_gameMode);
 
 	m_nGameCounter = 0;
 }
@@ -711,9 +793,6 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 //=============================================================================
 void CGame::SetStage(void)
 {
-	// 取得
-	bool bOnine = CTitle::GetOnline();
-
 	//サウンドのポインタ
 	CSound *pSound = CManager::GetSound();
 
@@ -735,77 +814,6 @@ void CGame::SetStage(void)
 
 		CCOL_MESH_MANAGER::LoadMap();
 
-		//if (m_pPlayerMotion == NULL) { m_pPlayerMotion = CLoadTextMotion::Create(TEXT_PLAYER_MOTION); }	//プレイヤーのモーション読み込み
-		//CPlayer::LoadModel();	//モデルの読み込み
-
-		float frot = (-D3DX_PI * 0.5f);
-
-		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
-		{// メンバーカウント
-		 //プレイヤーの生成
-			if (m_pPlayer[nCntMember] == NULL)
-				m_pPlayer[nCntMember] = CPlayer::Create(
-					D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -70.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4)) - 30.0f),
-					D3DXVECTOR3(0.0f, frot, 0.0f),
-					nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
-
-			if (nCntMember < m_nMaxPlayer)
-			{// プレイヤー		
-				if (m_pPlayer[nCntMember] != NULL)
-				{// NULL以外
-				 //ゲームカメラの生成
-					if (m_pGameCamera[nCntMember] == NULL)
-					{// NULL
-						m_pGameCamera[nCntMember] = new CGameCamera;
-
-						if (m_pGameCamera[nCntMember] != NULL)
-						{// NULL以外
-						 // 初期化処理
-							m_pGameCamera[nCntMember]->Init();
-							// タイプ設定処理
-							m_pGameCamera[nCntMember]->SetType(CGameCamera::CAMERA_PLAYER);
-							// 追従プレイヤー設定
-							m_pGameCamera[nCntMember]->SetPlayer(m_pPlayer[nCntMember]);
-
-							// ビューポート設定
-							if (bOnine == true)
-							{// オンライン
-								m_pGameCamera[nCntMember]->SetViewPort(
-									(DWORD)(0.0f),
-									(DWORD)(0.0f),
-									(DWORD)((SCREEN_WIDTH * 1.0f)),
-									(DWORD)((SCREEN_HEIGHT * 1.0f))
-								);
-							}
-							else
-							{// ローカル
-								m_pGameCamera[nCntMember]->SetViewPort(
-									// 横
-									//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) % 2)), 
-									//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) / 2)), 
-									//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
-									//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
-									// 縦
-									//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) / 2)),
-									//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) % 2)),
-									//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-									//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-									// 縦->横
-									(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) / 2) : ((nCntMember) % 2))),
-									(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) % 2) : ((nCntMember) / 2))),
-									(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
-									(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
-								);
-							}
-
-							// カメラ判定
-							m_pGameCamera[nCntMember]->SetColl(true);
-						}
-					}
-				}
-			}
-		}
-
 		for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
 		{
 			//オブジェクトの生成
@@ -818,6 +826,164 @@ void CGame::SetStage(void)
 		}
 
 		m_nCntSetStage = 1;
+	}
+}
+
+//=============================================================================
+// プレイヤー設定
+//=============================================================================
+void CGame::SetPlayer(bool bCreate, int nMode)
+{
+	// 取得
+	bool bOnine = CTitle::GetOnline();
+
+	if (bCreate == false)
+	{
+		switch (nMode)
+		{
+		case GAMEMODE_CHARSELECT:		// キャラ選択
+		case GAMEMODE_COURSESELECT:		// コース選択
+		case GAMEMODE_COURSE_VIEW:		// コースビュー選択
+		case GAMEMODE_PLAY:				// プレイ選択
+			for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+			{// メンバーカウント
+				if (m_pPlayer[nCntMember] != NULL)
+				{// NULL以外
+					m_pPlayer[nCntMember]->Uninit();
+					m_pPlayer[nCntMember] = NULL;
+				}
+			}
+
+			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			{// プレイヤーカウント
+				if (m_pGameCamera[nCntPlayer] != NULL)
+				{// NULL以外
+					m_pGameCamera[nCntPlayer]->Uninit();
+					delete m_pGameCamera[nCntPlayer];
+					m_pGameCamera[nCntPlayer] = NULL;
+				}
+			}
+			break;
+		}
+	}
+	else
+	{
+		float frot = (-D3DX_PI * 0.5f);
+
+		switch (nMode)
+		{
+		case GAMEMODE_CHARSELECT:		// キャラ選択
+			for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+			{// メンバーカウント
+			 //プレイヤーの生成
+				if (m_pPlayer[nCntMember] == NULL)
+					m_pPlayer[nCntMember] = CPlayer::Create(
+						D3DXVECTOR3(
+						((-250.0f + (50.0f * (nCntMember / 4))) + 2950.0f),
+							(-90.0f),
+							(210.0f - (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)))),
+						D3DXVECTOR3(0.0f, frot, 0.0f),
+						nCntMember, 0, CPlayer::PLAYERTYPE_SELECT);
+			}
+
+			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			{// プレイヤーカウント
+				if (m_pGameCamera[nCntPlayer] == NULL)
+				{// NULL
+					m_pGameCamera[nCntPlayer] = new CGameCamera;
+
+					if (m_pGameCamera[nCntPlayer] != NULL)
+					{// NULL以外
+					 // 初期化処理
+						m_pGameCamera[nCntPlayer]->Init();
+						// タイプ設定処理
+						m_pGameCamera[nCntPlayer]->SetType(CGameCamera::CAMERA_CHARUP);
+
+						// ビューポート設定
+						m_pGameCamera[nCntPlayer]->SetViewPort(
+							(DWORD)(nCntPlayer % 2 == 0 ? 0.0f + (SCREEN_HEIGHT * ((0.5f - 0.47f) * 0.5f)) : (SCREEN_WIDTH - (SCREEN_HEIGHT * 0.47f)) - (SCREEN_HEIGHT * ((0.5f - 0.47f) * 0.5f))),
+							(DWORD)(nCntPlayer / 2 == 0 ? 0.0f + (SCREEN_HEIGHT * ((0.5f - 0.47f) * 0.5f)) : (SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.47f)) - (SCREEN_HEIGHT * ((0.5f - 0.47f) * 0.5f))),
+							(DWORD)(SCREEN_HEIGHT * 0.47f),
+							(DWORD)(SCREEN_HEIGHT * 0.47f)
+						);
+					}
+				}
+			}
+			break;
+		case GAMEMODE_COURSESELECT:		// コース選択
+			break;
+		case GAMEMODE_COURSE_VIEW:		// コースビュー選択
+		case GAMEMODE_PLAY:				// プレイ選択
+			for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+			{// メンバーカウント
+			 //プレイヤーの生成
+				if (m_pPlayer[nCntMember] == NULL)
+					m_pPlayer[nCntMember] = CPlayer::Create(
+						D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -100.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4))),
+						D3DXVECTOR3(0.0f, frot, 0.0f),
+						nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
+
+				if (nMode == GAMEMODE_PLAY)
+				{
+					if (nCntMember < m_nMaxPlayer)
+					{// プレイヤー		
+						if (m_pPlayer[nCntMember] != NULL)
+						{// NULL以外
+						 //ゲームカメラの生成
+							if (m_pGameCamera[nCntMember] == NULL)
+							{// NULL
+								m_pGameCamera[nCntMember] = new CGameCamera;
+
+								if (m_pGameCamera[nCntMember] != NULL)
+								{// NULL以外
+								 // 初期化処理
+									m_pGameCamera[nCntMember]->Init();
+									// タイプ設定処理
+									m_pGameCamera[nCntMember]->SetType(CGameCamera::CAMERA_PLAYER);
+									// 追従プレイヤー設定
+									m_pGameCamera[nCntMember]->SetPlayer(m_pPlayer[nCntMember]);
+
+									// ビューポート設定
+									if (bOnine == true)
+									{// オンライン
+										m_pGameCamera[nCntMember]->SetViewPort(
+											(DWORD)(0.0f),
+											(DWORD)(0.0f),
+											(DWORD)((SCREEN_WIDTH * 1.0f)),
+											(DWORD)((SCREEN_HEIGHT * 1.0f))
+										);
+									}
+									else
+									{// ローカル
+										m_pGameCamera[nCntMember]->SetViewPort(
+											// 横
+											//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) % 2)), 
+											//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) / 2)), 
+											//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f))),
+											//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f)))
+											// 縦
+											//(DWORD)((SCREEN_WIDTH * 0.5f) * ((nCntMember) / 2)),
+											//(DWORD)((SCREEN_HEIGHT * 0.5f) * ((nCntMember) % 2)),
+											//(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+											//(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+											// 縦->横
+											(DWORD)((SCREEN_WIDTH * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) / 2) : ((nCntMember) % 2))),
+											(DWORD)((SCREEN_HEIGHT * 0.5f) * ((m_nMaxPlayer - 1) / 2 == 0 ? ((nCntMember) % 2) : ((nCntMember) / 2))),
+											(DWORD)((SCREEN_WIDTH * ((m_nMaxPlayer - 1) / 2 == 0 ? 1.0f : 0.5f))),
+											(DWORD)((SCREEN_HEIGHT * ((m_nMaxPlayer - 1) == 0 ? 1.0f : 0.5f)))
+										);
+									}
+
+									// カメラ判定
+									m_pGameCamera[nCntMember]->SetColl(true);
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
 	}
 }
 
