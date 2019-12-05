@@ -8,16 +8,21 @@
 #include "manager.h"
 #include "renderer.h"
 
+LPDIRECT3DTEXTURE9	CToonShader::m_pTexture = NULL;				//トゥーンテクスチャの情報
+LPDIRECT3DTEXTURE9	CToonShader::m_pTextureMap = NULL;			//マップテクスチャの情報
+LPDIRECT3DTEXTURE9	CToonShader::m_pTextureLine = NULL;			//ラインテクスチャの情報
+LPDIRECT3DTEXTURE9	CToonShader::m_pTextureMapLine = NULL;		//マップテクスチャの情報
+
 //=============================================================================
 // コンストラクタ
 //=============================================================================
 CToonShader::CToonShader()
 {
-	m_pTexture = NULL;
+	//m_pTexture = NULL;
 	m_pShader = NULL;
-	m_pTextureLine = NULL;
-	m_pTextureMapLine = NULL;
-	m_pTextureMap = NULL;
+	//m_pTextureLine = NULL;
+	//m_pTextureMapLine = NULL;
+	//m_pTextureMap = NULL;
 }
 
 //=============================================================================
@@ -42,27 +47,6 @@ void CToonShader::Init(char * FileName)
 		0,							//シェーダ間でやり取りする変数
 		&m_pShader,					//シェーダのポインタ
 		NULL);						//エラー情報
-
-									//シェーダのテクスチャ
-	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade.bmp", &m_pTexture)))
-	{
-		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
-	}
-	//シェーダのラインテクスチャ
-	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline01.bmp", &m_pTextureLine)))
-	{
-		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
-	}
-	//シェーダのマップラインテクスチャ
-	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline05.bmp", &m_pTextureMapLine)))
-	{
-		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
-	}
-	//シェーダのマップラインテクスチャ
-	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade05.bmp", &m_pTextureMap)))
-	{
-		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
-	}
 
 	//デバック用ライト位置
 	//0.22f, -0.87f, 0.44f, 0.0f
@@ -89,6 +73,34 @@ void CToonShader::Uninit(void)
 	{
 		m_pShader->Release();
 		m_pShader = NULL;
+	}
+}
+//=============================================================================
+// 終了処理
+//=============================================================================
+void CToonShader::Load(void)
+{
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	//シェーダのテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade.bmp", &m_pTexture)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+	}
+	//シェーダのラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline01.bmp", &m_pTextureLine)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+	}
+	//シェーダのマップラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\outline05.bmp", &m_pTextureMapLine)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+	}
+	//シェーダのマップラインテクスチャ
+	if (FAILED(D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\Shader\\Shade05.bmp", &m_pTextureMap)))
+	{
+		MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
 	}
 }
 

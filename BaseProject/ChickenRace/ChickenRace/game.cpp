@@ -34,7 +34,9 @@
 #include "ColMesh.h"
 #include "particle.h"
 #include "time.h"
+#include "model.h"
 #include "number.h"
+#include "toonshader.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -43,7 +45,7 @@
 #define TEXT_MESHFIELDNAME1		"data\\TEXT\\ゲームマップ\\meshfield.txt"		// 読み込むテキストファイル
 #define TEXT_WALLNAME1			"data\\TEXT\\ゲームマップ\\wall.txt"			// 読み込むテキストファイル
 #define TEXT_FEEDNAME			"data\\TEXT\\ゲームマップ\\feed.txt"			// 読み込むテキストファイル
-#define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"			// プレイヤーのモーションファイル
+#define TEXT_PLAYER_MOTION		"data\\TEXT\\Player\\Player.txt"				// プレイヤーのモーションファイル
 #define VECTOR_ZERO				(D3DXVECTOR3(0.0f, 0.0f, 0.0f))
 
 //*****************************************************************************
@@ -121,11 +123,13 @@ HRESULT CGame::Init()
 	CChick::Load();				//ひよこのテクスチャの読み込み
 	CParticle::Load();			// パーティクルのテクスチャのロード
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
+	CToonShader::Load();
 
 	CGameCharSelect::Load();	// ゲーム（キャラ選択）
 	CGamePlay::Load();			// ゲーム（プレイ）
 
-	CPlayer::Load();	//モデルの読み込み
+	CPlayer::Load();			//モデルの読み込み
+	CModel::Load();				//キャラモデルの読み込み
 
 	CTime::Load();
 	CNumber::Load();
@@ -134,7 +138,7 @@ HRESULT CGame::Init()
 	//						 必要な変数の初期化
 	//====================================================================
 
-	m_gameMode = GAMEMODE_CHARSELECT;	// ゲームモード
+	m_gameMode = GAMEMODE_PLAY;	// ゲームモード
 	m_gameModeNext = m_gameMode;		// 次のゲームモード
 	m_gameState = GAMESTATE_NORMAL;		//通常状態に
 	m_nCntSetStage = 0;					//どこのステージから開始するか

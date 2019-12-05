@@ -1,7 +1,7 @@
 //=============================================================================
 //
 // プレイヤー処理 [player.h]
-// Author : 佐藤安純 Sato_Asumi
+// Author : 坂川 詠祐
 //
 //=============================================================================
 #ifndef _MOTIONPLAYER_H_
@@ -21,25 +21,25 @@
 //=============================================================================
 // マクロ定義
 //=============================================================================
-#define MAX_PARTS	(11)											//読み込むパーツ数
-#define MAX_LIFE	(15)										//ライフ
-#define MAX_TIRE	(4)											//タイヤの最大数
-#define MAX_EGG		(3)											//卵の最大数
-#define MAX_FRAME	(60)
+#define MAX_PARTS			(11)							// 読み込むパーツ数
+#define MAX_LIFE			(15)							// ライフ
+#define MAX_TIRE			(4)								// タイヤの最大数
+#define MAX_EGG				(3)								// 卵の最大数
+#define MAX_FRAME			(60)							// 最大フレーム
 
-#define DAMAGE_TIME	(60)										// ダメージを食らっている時間
-#define SPEEDDOWN_TIME	(180)									// 減速している時間
-#define FALL_CHICK_RANGE		(400)							// ひよこが降る範囲
-#define CHICK_FALL_NUM			(5)								// 落ちてくるひよこの数
-#define MAX_EGG		(3)											//卵の最大数
+#define DAMAGE_TIME			(60)							// ダメージを食らっている時間
+#define SPEEDDOWN_TIME		(180)							// 減速している時間
+#define FALL_CHICK_RANGE	(400)							// ひよこが降る範囲
+#define CHICK_FALL_NUM		(5)								// 落ちてくるひよこの数
+#define MAX_EGG				(3)								// 卵の最大数
 
-#define FILE_NAME_PRISONER		"data\\TEXT\\Player\\Player.txt"//読み込むtxtファイルの名前
-#define MAX_PLAYERANIM			(8)								//アニメーション数
-#define MAX_PLAYERKEY			(8)								//キーフレーム数
-#define MAX_MOTION				(10)							//モーションの最大数
-
-#define MAX_FALL_FADE			(60)							//おちるエフェクト
-#define MAX_FALL_WAIT			(15)							//おちるエフェクト待機
+#define FILE_NAME_PRISONER	"data\\TEXT\\Player\\Player.txt"// 読み込むtxtファイルの名前
+#define MAX_PLAYERANIM		(8)								// アニメーション数
+#define MAX_PLAYERKEY		(8)								// キーフレーム数
+#define MAX_MOTION			(10)							// モーションの最大数
+															   
+#define MAX_FALL_FADE		(60)							// おちるエフェクト
+#define MAX_FALL_WAIT		(15)							// おちるエフェクト待機
 
 //=============================================================================
 // 前方宣言
@@ -92,6 +92,9 @@ public:
 	{
 		PLAYERANIM_NEUTRAL = 0,		//ニュートラルモーション
 		PLAYERANIM_RUN,				//走る
+		PLAYERANIM_JUMP,			//ジャンプ
+		PLAYERANIM_LAND,			//着地
+		PLAYERANIM_DAMAGE,			//ダメージ
 		PLALYER_MAX					//モーションの最大数
 	}PlayerAnim;
 
@@ -145,13 +148,13 @@ public:
 	//テキスト情報
 	typedef struct
 	{
-		float fAccel;				//加速値（前進）
-		float fBraks;				//加速値（後進）
-		float fDown;				//減速値
-		float fAddRot;				//加える回転値
-		float fDistance;			//移動距離
-		float fCountTime;			//時間の計算
-		D3DXVECTOR3 FirstPos;		//初期位置
+		float fAccel;				// 加速値（前進）
+		float fBraks;				// 加速値（後進）
+		float fDown;				// 減速値
+		float fAddRot;				// 加える回転値
+		float fDistance;			// 移動距離
+		float fCountTime;			// 時間の計算
+		D3DXVECTOR3 FirstPos;		// 初期位置
 	}PLAYER_INFO;
 
 	//色の状態の種類
@@ -237,16 +240,12 @@ public:
 	void UpdateMotion(void);
 
 	//ファイル読み込み関数
-	void FileLoad(void);								//ファイル読み込み
-	char *ReadLine(FILE *pFile, char *pDst);			//1行読み込み
-	char *GetLineTop(char *pStr);						//行の先頭を取得
-	int  PopString(char *pStr, char *pDest);			//行の最後を切り捨て
+	static void FileLoad(void);								//ファイル読み込み
+	static char *ReadLine(FILE *pFile, char *pDst);			//1行読み込み
+	static char *GetLineTop(char *pStr);						//行の先頭を取得
+	static int  PopString(char *pStr, char *pDest);			//行の最後を切り捨て
 
 private:
-	static LPD3DXMESH	m_pMesh[MAX_PARTS];				//メッシュ情報へのポインタ
-	static LPD3DXBUFFER	m_pBuffMat[MAX_PARTS];			//マテリアルの情報へのポインタ
-	static DWORD		m_nNumMat[MAX_PARTS];			//マテリアルの情報数
-
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
 	void UpdateMove(void);
@@ -283,12 +282,12 @@ private:
 	void EggJump(void);
 	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
 
-	CModel						*m_apModel[MAX_PARTS];			//パーツモデルのポインタ
+	CModel						**m_apModel;			//パーツモデルのポインタ
 	PlayerAnim					m_nAnimnow;						//現在のアニメーション
 
-																//static CModel *		m_pModel;			//パーツモデルのポインタ
-																//static int				m_nMaxModel;	//読み込むモデルの最大数
-																//static int				m_nMaxParts;	//読み込むパーツの最大数
+	//static CModel *		m_pModel;			//パーツモデルのポインタ
+	//static int				m_nMaxModel;	//読み込むモデルの最大数
+	//static int				m_nMaxParts;	//読み込むパーツの最大数
 
 																//メンバ変数
 	static int					  m_nMaxMotion;					// モーションの最大数
@@ -310,10 +309,10 @@ private:
 	STATE_HANDLE				  m_StateHandle;				// ハンドルの状態
 	PLAYER_INFO					  m_PlayerInfo;					// プレイヤーの情報
 	CLoadTextPlayer *			  m_pText;						// プレイヤーの情報読み込み
-	CEgg						  *m_pEgg[MAX_EGG];				//卵のポインタ
-	CChick						  *m_pChick[MAX_EGG];			//ひよこのポインタ
-	static CChick				  *m_pAnnoyChick[MAX_MEMBER];	//ひよこのポインタ
-	bool						  m_bJump;						//  ジャンプフラグ
+	CEgg						  *m_pEgg[MAX_EGG];				// 卵のポインタ
+	CChick						  *m_pChick[MAX_EGG];			// ひよこのポインタ
+	static CChick				  *m_pAnnoyChick[MAX_MEMBER];	// ひよこのポインタ
+	bool						  m_bJump;						// ジャンプフラグ
 	bool						  m_bControl;					// コントローラーの使用状態
 	float						  m_fvtxMaxY;					// モデル頂点の最大値（Y）
 	float						  m_fSpeed;						// 速さ
@@ -321,8 +320,8 @@ private:
 	int							  m_nCountSpeed;				// 時間の加算
 	bool						  m_bCrcleCarIn;				// 車が範囲内に入っているかどうか
 	CLoadEffect *				  m_pLoadEffect;				// ロードエフェクトのポインタ変数
-	bool						  m_bShake;						//揺れのオンオフ
-	bool						  m_bDirive;					//前進、後退の操作フラグ
+	bool						  m_bShake;						// 揺れのオンオフ
+	bool						  m_bDirive;					// 前進、後退の操作フラグ
 	int							  m_nNumEgg;
 	int							  m_nNumChick;
 	int							  m_nCntFrame;					// 卵のついてくる処理に使う
@@ -338,52 +337,51 @@ private:
 	int							  m_nAnnoySTimer;
 	BULLET						  m_bulletType[MAX_EGG];
 
-	int							  m_nDriftCounter;		// ドリフトカウント
+	int							  m_nDriftCounter;				// ドリフトカウント
 
 	bool						  m_bDamage;
 	PLAYERSTATE					  m_State;
 	int							  m_nCntDamage;
-	int							  m_nPlayerNum;			// プレイヤー番号
-	int							  m_nControllerNum;		// コントローラー番号
+	int							  m_nPlayerNum;					// プレイヤー番号
+	int							  m_nControllerNum;				// コントローラー番号
 
-	int							m_nStartFrame;
-	int							m_nStartCounter;
+	int							  m_nStartFrame;
+	int							  m_nStartCounter;
 
-	CDispEffect					  *m_pDispEffect;		//画面演出
-	CCOL_MESH::EFFECT			  m_FEffect;			//地面効果
-	bool						  m_bDrop;				//おちた
-	int							  m_nDropCounter;		// おちたカウント
-	CRoad_Pointer				  *m_pPoint;			//次のポイント
-	CRoad_Pointer				  *m_pEnmPoint;			//敵が見る次のポイント
-	D3DXVECTOR3					  m_FNor;				//地面の法線
-	float						  m_fPosY;				//別加算位置Y
-	float						  m_fLength;			//横幅
-	float						  m_fRoad;				//IN_OUTの％
-	float						  m_fTilt;				//坂
-	float						  m_fCTiltV;				//カメラ用坂
-	float						  m_fCTiltW;				//カメラ用坂
-	float						  m_fRotOld;			//前のRotY
-	int							  m_nMap;				//判定を取るマップ
-	int							  m_nNumRoad;			//道の番号
-	bool						  m_bDivided;			//分かれ道かどうか
-	bool						  m_bJumpOld;			//ジャンプの前F
+	CDispEffect					  *m_pDispEffect;				// 画面演出
+	CCOL_MESH::EFFECT			  m_FEffect;					// 地面効果
+	bool						  m_bDrop;						// おちた
+	int							  m_nDropCounter;				//  おちたカウント
+	CRoad_Pointer				  *m_pPoint;					// 次のポイント
+	CRoad_Pointer				  *m_pEnmPoint;					// 敵が見る次のポイント
+	D3DXVECTOR3					  m_FNor;						// 地面の法線
+	float						  m_fPosY;						// 別加算位置Y
+	float						  m_fLength;					// 横幅
+	float						  m_fRoad;						// IN_OUTの％
+	float						  m_fTilt;						// 坂
+	float						  m_fCTiltV;					// カメラ用坂
+	float						  m_fCTiltW;					// カメラ用坂
+	float						  m_fRotOld;					// 前のRotY
+	int							  m_nMap;						// 判定を取るマップ
+	int							  m_nNumRoad;					// 道の番号
+	bool						  m_bDivided;					// 分かれ道かどうか
+	bool						  m_bJumpOld;					// ジャンプの前F
 
-														// モーション関数	新規
-	KEY_INFO						*m_pKeyInfo[MAX_MOTION];	//キー情報へのポインタ
-	int								m_nKey;						//現在のキーナンバー
-	int								m_nCountFlame;				//フレーム数
-	int								m_nNumParts;				//パーツ数
-	int								m_aIndexParent[MAX_PARTS];	//親のインデックス
-	KEY								m_aKayOffset[MAX_PARTS];	//オフセット情報
-	MOTION_INFO						m_aMotionInfo[MAX_MOTION];	//モーション情報
-	int								m_nMotionType;				//モーションのタイプ(int型)
-	bool							m_bMotionEnd;				//モーション終了
-	D3DXVECTOR3						m_OffSetPos[MAX_PARTS];		//パーツごとの最初の位置
+	// モーション関数	新規
+	static KEY_INFO				  *m_pKeyInfo[MAX_MOTION];		// キー情報へのポインタ
+	int							  m_nKey;						// 現在のキーナンバー
+	int							  m_nCountFlame;				// フレーム数
+	static int					  m_nNumParts;					// パーツ数
+	static int					  m_aIndexParent[MAX_PARTS];	// 親のインデックス
+	static KEY					  m_aKayOffset[MAX_PARTS];		// オフセット情報
+	static MOTION_INFO			  m_aMotionInfo[MAX_MOTION];	// モーション情報
+	int							  m_nMotionType;				// モーションのタイプ(int型)
+	bool						  m_bMotionEnd;					// モーション終了
 
-	CBillBoord					  *m_pPlayerNum;		// プレイヤー番号（追従）
-	bool						  m_bGoal;				// ゴール
+	CBillBoord					  *m_pPlayerNum;				// プレイヤー番号（追従）
+	bool						  m_bGoal;						// ゴール
 
-	CBillBoord					  *m_pPlayerpos;		// プレイヤー
-	float						  m_fAddRot;			// 加算角度
+	CBillBoord					  *m_pPlayerpos;				// プレイヤー
+	float						  m_fAddRot;					// 加算角度
 };
 #endif

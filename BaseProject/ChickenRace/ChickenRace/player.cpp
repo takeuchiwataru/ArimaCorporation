@@ -1,7 +1,7 @@
 //=============================================================================
 //
 // プレイヤーの処理 [player.cpp]
-// Author : 坂川詠祐
+// Author : 坂川 詠祐
 //
 //=============================================================================
 #define _CRT_SECURE_NO_WARNINGS
@@ -59,28 +59,30 @@
 #define COL_PARTICLE_S		(10)										// 隕石ひよこが当たったときに出るエフェクトの量
 
 // プレイヤー情報
-#define PLAYER_ACCEL	(0.5f)										//加速値（前進）
-#define PLAYER_BRAKS	(-0.2f)										//加速値（後進）
-#define PLAYER_DOWN		(0.08f)										//減速度
-#define PLAYER_ADDROT	(0.005f)									//回転量
-#define PLAYER_DOWNROT	(0.2f)										//回転量
-
-#define PLAYER_JUMP		(2.0f)										//回転量
-#define PLAYER_GRAVITY	(0.09f)										//回転量
+#define PLAYER_ACCEL	(0.5f)											// 加速値（前進）
+#define PLAYER_BRAKS	(-0.2f)											// 加速値（後進）
+#define PLAYER_DOWN		(0.08f)											// 減速度
+#define PLAYER_ADDROT	(0.005f)										// 回転量
+#define PLAYER_DOWNROT	(0.2f)											// 回転量
+																		   
+#define PLAYER_JUMP		(2.0f)											// 回転量
+#define PLAYER_GRAVITY	(0.09f)											// 回転量
 
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
-LPDIRECT3DTEXTURE9 CPlayer::m_pTexture = NULL;
-CChick *CPlayer::m_pAnnoyChick[MAX_MEMBER] = {};
+LPDIRECT3DTEXTURE9		CPlayer::m_pTexture = NULL;
+CChick					*CPlayer::m_pAnnoyChick[MAX_MEMBER] = {};
 
-LPD3DXMESH	CPlayer::m_pMesh[MAX_PARTS] = {};					//メッシュ情報の初期化
-LPD3DXBUFFER CPlayer::m_pBuffMat[MAX_PARTS] = {};				//マテリアルの情報の初期化
-DWORD CPlayer::m_nNumMat[MAX_PARTS] = {};						//マテリアルの情報数の初期化
+CPlayer::KEY_INFO		*CPlayer::m_pKeyInfo[MAX_MOTION] = {};		//キー情報へのポインタ
+int						CPlayer::m_nNumParts = 0;					//パーツ数
+int						CPlayer::m_aIndexParent[MAX_PARTS] = {};	//親のインデックス
+CPlayer::KEY			CPlayer::m_aKayOffset[MAX_PARTS] = {};		//オフセット情報
+CPlayer::MOTION_INFO	CPlayer::m_aMotionInfo[MAX_MOTION] = {};	//モーション情報
 
-																//--------------------------------------------
-																//グローバル変数
-																//--------------------------------------------
+//--------------------------------------------
+//グローバル変数
+//--------------------------------------------
 int g_nNumModel;
 char g_aFileNameModel[MAX_PARTS][256];
 
@@ -119,10 +121,7 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 CPlayer::CPlayer() : CScene(3, OBJTYPE_PLAYER)
 {
 	//値の初期化
-	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
-	{
-		m_apModel[nCount] = NULL;
-	}
+	m_apModel = NULL;
 
 	m_pPlayerNum = NULL;
 	m_pPlayerpos = NULL;
@@ -145,6 +144,10 @@ void CPlayer::Load(void)
 	D3DXCreateTextureFromFile(pDevice,
 		FILE_TEXTURE,
 		&m_pTexture);
+
+	//モデルのオフセットと読み込み
+	FileLoad();
+	CModel::SetParts();	//ニワトリ親子の読み込み
 }
 
 //=============================================================================
@@ -152,6 +155,8 @@ void CPlayer::Load(void)
 //=============================================================================
 void CPlayer::Unload(void)
 {
+	CModel::PartsTypeUnLoad();
+
 	//テクスチャの破棄
 	if (m_pTexture != NULL)
 	{
@@ -240,7 +245,7 @@ HRESULT CPlayer::Init(void)
 	m_bGoal = false;					// ゴール
 	m_fAddRot = 0.0f;					// 加算角度
 
-										// プレイヤー番号（追従）
+	// プレイヤー番号（追従）
 	if (m_pPlayerNum == NULL)
 		m_pPlayerNum = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 50.0f, 0.0f), D3DXVECTOR2(10.0f, 10.0f), 1);
 
@@ -270,8 +275,25 @@ HRESULT CPlayer::Init(void)
 		m_pAnnoyChick[nCntChick] = NULL;
 	}
 
-	FileLoad();
+	CModel::ParentModel(m_apModel, CModel::TYPE_CHICKEN);
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
+	for(int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
+	{
+	if (m_aIndexParent[nCountIndex] == -1)
+	{
+		//モデルの親を指定
+		m_apModel[nCountIndex]->SetParent(NULL);
+	}
+	else
+	{
+		//モデルの親を指定
+		m_apModel[nCountIndex]->SetParent(m_apModel[m_aIndexParent[nCountIndex]]);
+	}
 
+	m_apModel[nCountIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nCountIndex].fposX,
+		m_pos.y + m_aKayOffset[nCountIndex].fposY,
+		m_pos.z + m_aKayOffset[nCountIndex].fposZ));
+	}
 	return S_OK;
 }
 
@@ -314,7 +336,8 @@ void CPlayer::Uninit(void)
 		}
 	}
 
-	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICK);
+	for (int nCount = 0; nCount < nMaxModel; nCount++)
 	{
 		if (m_apModel[nCount] != NULL)
 		{
@@ -324,6 +347,8 @@ void CPlayer::Uninit(void)
 			m_apModel[nCount] = NULL;
 		}
 	}
+	delete[] m_apModel;
+	m_apModel = NULL;
 
 	if (m_pDispEffect != NULL)
 	{
@@ -382,7 +407,7 @@ void CPlayer::Update(void)
 
 	UpdateMove();			// 移動処理
 
-	UpdateField();
+	UpdateField();			//マップとの当たり判定
 
 	CollisionFeed();		// 餌の当たり判定
 
@@ -398,7 +423,6 @@ void CPlayer::Update(void)
 
 	ChaseAnnoyS();			// 強い減速ひよこがくっつく
 
-							//マップとの当たり判定
 	bool bGoal = false;
 
 	CRoad_Pointer::RankPoint(this, bGoal);
@@ -407,8 +431,10 @@ void CPlayer::Update(void)
 
 	if (!bLand && m_bJump)
 	{//着地したなら
-	 //着地モーション
+		//着地モーション
+		m_nAnimnow = PLAYERANIM_LAND;
 	}
+
 	m_bJump = bLand;
 
 	if (bGoal == true)
@@ -462,7 +488,7 @@ void CPlayer::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-												// ワールドマトリックスの初期化
+	// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -938,8 +964,8 @@ void CPlayer::UpdateMove(void)
 	switch (m_StateSpeed)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
-
-							//走るモーション
+					
+		//走るモーション
 		m_nAnimnow = PLAYERANIM_RUN;
 
 		//ジャンプ状態なら
@@ -962,7 +988,7 @@ void CPlayer::UpdateMove(void)
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-							//ジャンプ状態なら
+		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		m_fSpeed = fBraks * (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f);
@@ -1035,6 +1061,9 @@ void CPlayer::UpdateMove(void)
 
 		break;
 	}
+
+	//ジャンプ状態なら
+	if (m_bJump == true) { m_nAnimnow = PLAYERANIM_JUMP; }
 
 	switch (m_State)
 	{// 弾を食らったとき
@@ -1122,6 +1151,12 @@ void CPlayer::UpdateMove(void)
 		else if (m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{// スピードダウンを食らったとき
 			nDamageTime = SPEEDDOWN_TIME;
+		}
+
+		if (m_nCntDamage <= 33)
+		{
+			//ダメージモーション
+			m_nAnimnow = PLAYERANIM_DAMAGE;
 		}
 
 		if (m_nCntDamage > nDamageTime)
@@ -2339,8 +2374,6 @@ void CPlayer::UpdateMotion(void)
 	float fDiffMotion;
 	D3DXVECTOR3 rotmotion;
 	D3DXVECTOR3 posmotion;
-	//D3DXVECTOR3 posParent;
-
 
 	//キーが最大数を上回らないように
 	if (m_aMotionInfo[m_nMotionType].nNumKey <= m_nKey)
@@ -2400,10 +2433,9 @@ void CPlayer::UpdateMotion(void)
 			m_apModel[nCntParts]->SetRot(rotmotion);
 
 			//POS
-			m_apModel[nCntParts]->SetPos(D3DXVECTOR3(m_OffSetPos[nCntParts].x + posmotion.x,
-				m_OffSetPos[nCntParts].y + posmotion.y,
-				m_OffSetPos[nCntParts].z + posmotion.z));
-
+			m_apModel[nCntParts]->SetPos(D3DXVECTOR3(m_aKayOffset[nCntParts].fposX + posmotion.x,
+				m_aKayOffset[nCntParts].fposY + posmotion.y,
+				m_aKayOffset[nCntParts].fposZ + posmotion.z));
 		}
 	}
 
@@ -2485,9 +2517,8 @@ void CPlayer::FileLoad(void)
 	int nIndex = 0;		//現在のインデックス
 	int nWord = 0;		//ポップで返された値を保持
 
-	D3DXVECTOR3 ParentPos;	//親の位置情報を取得
 #if 1
-							//ファイルを開く 読み込み
+	//ファイルを開く 読み込み
 	pFile = fopen(FILE_NAME_PRISONER, "r");
 	//NULLチェック
 	if (pFile != NULL)
@@ -2511,6 +2542,11 @@ void CPlayer::FileLoad(void)
 
 				for (int nCntModel = 0; nCntModel < g_nNumModel; nCntModel++)
 				{
+					int nNumber = nCntModel + CModel::PARTS_CHICKEN_BODY;
+					LPD3DXBUFFER &m_pBuffMat = CModel::GetpBuffMat(nNumber);
+					DWORD &m_nNumMat = CModel::GetnNumMat(nNumber);
+					LPD3DXMESH &m_pMesh = CModel::GetpMesh(nNumber);
+
 					//文字列の先頭を設定
 					pStrcur = ReadLine(pFile, &aLine[0]);
 					//文字列を取り戻す
@@ -2540,10 +2576,13 @@ void CPlayer::FileLoad(void)
 							D3DXMESH_SYSTEMMEM,
 							pDevice,
 							NULL,
-							&m_pBuffMat[nCntModel],
+							&m_pBuffMat,
 							NULL,
-							&m_nNumMat[nCntModel],
-							&m_pMesh[nCntModel]);
+							&m_nNumMat,
+							&m_pMesh);
+						int nNumber0 = nCntModel + CModel::PARTS_CHICKEN_BODY;
+
+						//CModel::SetModelType(nCntModel);
 					}
 				}
 				//文字列の先頭を設定
@@ -2656,48 +2695,6 @@ void CPlayer::FileLoad(void)
 							//パーツセット終了
 							else if (memcmp(pStrcur, "END_PARTSSET", strlen("END_PARTSSET")) == 0)
 							{
-								//NULLチェック
-								if (m_apModel[nIndex] == NULL)
-								{//動的確保
-									m_apModel[nIndex] = new CModel;
-									//NULLチェック
-									if (m_apModel[nIndex] != NULL)
-									{
-										//モデルの生成
-										m_apModel[nIndex]->BindModel(m_pMesh[nIndex], m_pBuffMat[nIndex], m_nNumMat[nIndex]);
-										m_apModel[nIndex]->Init();
-									}
-								}
-
-								//モデルを生成	オフセット設定
-								/*m_apModel[nIndex] = CModel::Create(
-								D3DXVECTOR3(m_pos.x + m_aKayOffset[nIndex].fposX,
-								m_pos.y + m_aKayOffset[nIndex].fposY,
-								m_pos.z + m_aKayOffset[nIndex].fposZ), m_rot);*/
-
-								m_apModel[nIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nIndex].fposX,
-									m_pos.y + m_aKayOffset[nIndex].fposY,
-									m_pos.z + m_aKayOffset[nIndex].fposZ));
-
-								//posを代入
-								ParentPos = m_apModel[nIndex]->GetPos();
-								m_OffSetPos[nIndex] = m_apModel[nIndex]->GetPos();
-
-								//モデルを割り当て
-								m_apModel[nIndex]->BindModel(m_pMesh[nIndex], m_pBuffMat[nIndex], m_nNumMat[nIndex]);
-
-								if (m_aIndexParent[nIndex] == -1)
-								{
-									//モデルの親を指定
-									m_apModel[nIndex]->SetParent(NULL);
-									ParentPos = m_apModel[nIndex]->GetPos();
-								}
-								else
-								{
-									//モデルの親を指定
-									m_apModel[nIndex]->SetParent(m_apModel[m_aIndexParent[nIndex]]);
-								}
-
 								break;
 							}
 						}

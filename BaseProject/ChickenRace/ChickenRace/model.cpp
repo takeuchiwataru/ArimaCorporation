@@ -23,6 +23,16 @@
 //*****************************************************************************
 // 静的メンバ変数
 //*****************************************************************************
+D3DMATERIAL9	   *CModel::m_pMeshMaterials[PARTS_MAX] = {};					// メッシュマテリアルの情報
+LPDIRECT3DTEXTURE9 *CModel::m_pShaderMeshTextures[PARTS_MAX] = {};				// シェーダー用のメッシュテクスチャ
+LPDIRECT3DTEXTURE9 *CModel::m_pMeshTextures[MAX_MODEL_TEXTURE] = {};			// シェーダー用のメッシュテクスチャ
+LPD3DXMESH			CModel::m_pMesh[PARTS_MAX] = {};								//メッシュ情報へのポインタ
+LPD3DXBUFFER		CModel::m_pBuffMat[PARTS_MAX] = {};							//マテリアルの情報へのポインタ
+DWORD				CModel::m_nNumMat[PARTS_MAX] = {};							//マテリアルの情報数
+D3DXVECTOR3			CModel::m_VtxMax[PARTS_MAX];			//最大値
+D3DXVECTOR3			CModel::m_VtxMin[PARTS_MAX];			//最小値
+CModel::PARTS_TYPE	*CModel::m_partstype[TYPE_MAX] = {};
+int					CModel::m_nModelMax[TYPE_MAX];								// モデルの種類
 
 //=============================================================================
 // 生成処理
@@ -39,7 +49,7 @@ CModel * CModel::Create(const D3DXVECTOR3 pos, char FileName[40], D3DXVECTOR3 Sc
 	//設定処理
 	pModel->SetPos(pos);
 	pModel->SetFirstPos(pos);
-	pModel->SetScale(Scale);
+	//pModel->SetScale(Scale);
 
 	return pModel;
 }
@@ -47,22 +57,102 @@ CModel * CModel::Create(const D3DXVECTOR3 pos, char FileName[40], D3DXVECTOR3 Sc
 //===============================================================================
 //　コンストラクタ
 //===============================================================================
+void CModel::Load(void)
+{
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	int nNumVtx;				//頂点数
+	DWORD sizeFVF;				//頂点フォーマットのサイズ
+	BYTE *pVtxBuff;				//頂点バッファへのポインタ
+
+	//===================================================
+	//    　　　　　マテリアルとテクスチャの情報
+	//===================================================
+	for (int nCount = 0; nCount < PARTS_MAX; nCount++)
+	{
+		m_VtxMax[nCount] = D3DXVECTOR3(-10000, -10000, -10000);			//最大値
+		m_VtxMin[nCount] = D3DXVECTOR3(10000, 10000, 10000);			//最小値
+
+		//頂点数を取得
+		nNumVtx = m_pMesh[nCount]->GetNumVertices();
+
+		//頂点フォーマットのサイズを取得
+		sizeFVF = D3DXGetFVFVertexSize(m_pMesh[nCount]->GetFVF());
+
+		//頂点バッファのロック
+		m_pMesh[nCount]->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+
+		for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+		{
+			D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
+
+			//最大値
+			if (vtx.x > m_VtxMax[nCount].x)
+			{
+				m_VtxMax[nCount].x = vtx.x;
+			}
+			if (vtx.y > m_VtxMax[nCount].y)
+			{
+				m_VtxMax[nCount].y = vtx.y;
+			}
+			if (vtx.z > m_VtxMax[nCount].z)
+			{
+				m_VtxMax[nCount].z = vtx.z;
+			}
+			//最小値
+			if (vtx.x < m_VtxMin[nCount].x)
+			{
+				m_VtxMin[nCount].x = vtx.x;
+			}
+			if (vtx.y < m_VtxMin[nCount].y)
+			{
+				m_VtxMin[nCount].y = vtx.y;
+			}
+			if (vtx.z < m_VtxMin[nCount].z)
+			{
+				m_VtxMin[nCount].z = vtx.z;
+			}
+
+			//サイズ文のポインタを進める
+			pVtxBuff += sizeFVF;
+		}
+
+		//頂点バッファのアンロック
+		m_pMesh[nCount]->UnlockVertexBuffer();
+
+		D3DXMATERIAL *d3dxMaterials = (D3DXMATERIAL*)m_pBuffMat[nCount]->GetBufferPointer();
+		m_pMeshMaterials[nCount] = new D3DMATERIAL9[(int)m_nNumMat[nCount]];
+		m_pShaderMeshTextures[nCount] = new LPDIRECT3DTEXTURE9[(int)m_nNumMat[nCount]];
+
+		for (DWORD MatCount = 0; MatCount < (int)m_nNumMat[nCount]; MatCount++)
+		{
+			m_pMeshMaterials[nCount][MatCount] = d3dxMaterials[MatCount].MatD3D;
+			m_pMeshMaterials[nCount][MatCount].Ambient = m_pMeshMaterials[nCount][MatCount].Diffuse;
+			m_pShaderMeshTextures[nCount][MatCount] = NULL;
+
+			if (d3dxMaterials[MatCount].pTextureFilename != NULL &&
+				lstrlen(d3dxMaterials[MatCount].pTextureFilename) > 0)
+			{
+				D3DXCreateTextureFromFile(pDevice,
+					d3dxMaterials[MatCount].pTextureFilename,
+					&m_pShaderMeshTextures[nCount][MatCount]);
+			}
+		}
+	}
+}
+
+//===============================================================================
+//　コンストラクタ
+//===============================================================================
 CModel::CModel()
 {
-	m_pMesh = NULL;								//メッシュ情報へのポインタ
-	m_pBuffMat = NULL;							//マテリアルの情報へのポインタ
-	m_nNumMat = 0;								//マテリアルの情報数
-	m_VtxMin, m_VtxMax;							//モデルの最小値・最大値
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//向き
 	m_FirstPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//初期位置
 	m_Scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);	//拡大縮小率
 	m_pTextures = NULL;
 	m_bTexMat = false;
-	m_pMeshMaterials = NULL;
-	m_pShaderMeshTextures = NULL;
-	m_pToonShader = NULL;
-
+	m_pParent = NULL;
 }
 //===============================================================================
 //　デストラクタ
@@ -76,96 +166,9 @@ HRESULT CModel::Init()
 {
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
-	int nNumVtx;				//頂点数
-	DWORD sizeFVF;				//頂点フォーマットのサイズ
-	BYTE *pVtxBuff;				//頂点バッファへのポインタ
-
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//向き達する
-	m_VtxMax = D3DXVECTOR3(-10000, -10000, -10000);			//最大値
-	m_VtxMin = D3DXVECTOR3(10000, 10000, 10000);			//最小値
-
-	//頂点数を取得
-	nNumVtx = m_pMesh->GetNumVertices();
-
-	//頂点フォーマットのサイズを取得
-	sizeFVF = D3DXGetFVFVertexSize(m_pMesh->GetFVF());
-
-	//頂点バッファのロック
-	m_pMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
-
-	for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-	{
-		D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;		//頂点座標の代入
-
-														//最大値
-		if (vtx.x > m_VtxMax.x)
-		{
-			m_VtxMax.x = vtx.x;
-		}
-		if (vtx.y > m_VtxMax.y)
-		{
-			m_VtxMax.y = vtx.y;
-		}
-		if (vtx.z > m_VtxMax.z)
-		{
-			m_VtxMax.z = vtx.z;
-		}
-		//最小値
-		if (vtx.x < m_VtxMin.x)
-		{
-			m_VtxMin.x = vtx.x;
-		}
-		if (vtx.y < m_VtxMin.y)
-		{
-			m_VtxMin.y = vtx.y;
-		}
-		if (vtx.z < m_VtxMin.z)
-		{
-			m_VtxMin.z = vtx.z;
-		}
-
-		//サイズ文のポインタを進める
-		pVtxBuff += sizeFVF;
-	}
-
-	//頂点バッファのアンロック
-	m_pMesh->UnlockVertexBuffer();
-
 	m_Rot.y = 0.0f;
-
-	m_pToonShader = NULL;			// シェーダーのポインタの初期化
-	m_pMeshMaterials = NULL;
-	m_pShaderMeshTextures = NULL;
-
-	//===================================================
-	//    　　　　　マテリアルとテクスチャの情報
-	//===================================================
-	D3DXMATERIAL *d3dxMaterials = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
-	m_pMeshMaterials = new D3DMATERIAL9[(int)m_nNumMat];
-	m_pShaderMeshTextures = new LPDIRECT3DTEXTURE9[(int)m_nNumMat];
-
-	for (DWORD MatCount = 0; MatCount < (int)m_nNumMat; MatCount++)
-	{
-		m_pMeshMaterials[MatCount] = d3dxMaterials[MatCount].MatD3D;
-		m_pMeshMaterials[MatCount].Ambient = m_pMeshMaterials[MatCount].Diffuse;
-		m_pShaderMeshTextures[MatCount] = NULL;
-
-		if (d3dxMaterials[MatCount].pTextureFilename != NULL &&
-			lstrlen(d3dxMaterials[MatCount].pTextureFilename) > 0)
-		{
-			D3DXCreateTextureFromFile(pDevice,
-				d3dxMaterials[MatCount].pTextureFilename,
-				&m_pShaderMeshTextures[MatCount]);
-		}
-	}
-
-	//シェーダーの読み込むファイル
-	if (m_pToonShader == NULL)
-	{
-		m_pToonShader = new CToonShader;
-		m_pToonShader->Init("data\\SHADER\\ToonShader.fx");
-	}
 
 	return S_OK;
 }
@@ -175,46 +178,7 @@ HRESULT CModel::Init()
 //=============================================================================
 void CModel::Uninit(void)
 {
-	//シェーダー残骸消すもの
-	if (m_pMeshMaterials != NULL)
-	{
-		delete[] m_pMeshMaterials;
-		m_pMeshMaterials = NULL;
-	}
-	if (m_pShaderMeshTextures != NULL)
-	{
-		delete[] m_pShaderMeshTextures;
-		m_pShaderMeshTextures = NULL;
-	}
 
-	//シェーダーのポインタの破棄
-	if (m_pToonShader != NULL)
-	{
-		m_pToonShader->Uninit();
-		delete m_pToonShader;
-		m_pToonShader = NULL;
-	}
-
-	// メッシュの開放
-	if (m_pMesh != NULL)
-	{
-		m_pMesh->Release();
-		m_pMesh = NULL;
-	}
-
-	// マテリアルの開放
-	if (m_pBuffMat != NULL)
-	{
-		m_pBuffMat->Release();
-		m_pBuffMat = NULL;
-	}
-
-	//テクスチャの破棄
-	if (m_pTextures != NULL)
-	{
-		//m_pTextures->Release();
-		m_pTextures = NULL;
-	}
 }
 
 //=============================================================================
@@ -270,18 +234,20 @@ void CModel::Draw(float fAlpha)
 	}
 
 	//シェーダーに情報を代入
-	if (m_pToonShader != NULL)
+	CToonShader *&pToonShader = CModel3D::GetToonShader();
+
+	if (pToonShader != NULL)
 	{
-		Shader = m_pToonShader->GetShader();
+		Shader = pToonShader->GetShader();
 	}
 
 	//シェーダーの中身がある場合
 	if (Shader != NULL)
 	{
-		if (m_pToonShader != NULL)
+		if (pToonShader != NULL)
 		{
-			ShaderTex = m_pToonShader->GetTexture();
-			LineTex = m_pToonShader->GetLineTexture();
+			ShaderTex = pToonShader->GetTexture();
+			LineTex = pToonShader->GetLineTexture();
 		}
 
 		// ワールドマトリックスの初期化
@@ -290,10 +256,6 @@ void CModel::Draw(float fAlpha)
 		// 回転を反映
 		D3DXMatrixRotationYawPitchRoll(&mtxRot, m_Rot.y, m_Rot.x, m_Rot.z);
 		D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-		//拡大縮小行列の作成
-		D3DXMatrixScaling(&mtxScale, m_Scale.x, m_Scale.y, m_Scale.z);
-		D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxScale);
 
 		// 位置を反映
 		D3DXMatrixTranslation(&mtxTrans, m_Pos.x, m_Pos.y, m_Pos.z);
@@ -342,58 +304,61 @@ void CModel::Draw(float fAlpha)
 		// 現在のマテリアルを取得
 		pDevice->GetMaterial(&matDef);
 
-		// マテリアルデータへのポインタを取得
-		pMat = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
+		//for (int nCount = 0; nCount < PARTS_MAX; nCount++)
+		//{
+			// マテリアルデータへのポインタを取得
+			pMat = (D3DXMATERIAL*)m_pBuffMat[m_Type]->GetBufferPointer();
 
-		for (int nCntMat = 0; nCntMat < (int)m_nNumMat; nCntMat++)
-		{
-			//シェーダのデータにモデルのテクスチャを入れる
-			m_pShaderMeshTextures[nCntMat] = m_pTextures;
-
-			//マテリアルの設定
-			pMat[nCntMat].MatD3D.Diffuse.a = fAlpha;
-			pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
-
-			// テクスチャをNULLにする
-			pDevice->SetTexture(0, m_pShaderMeshTextures[nCntMat]);
-
-			//===================================================
-			//    　　　　シェーダーの割り当て作業
-			//===================================================
-			//パスを指定して開始
-			Shader->BeginPass(0);
-
-			//シェーダーテクスチャの有無に応じてシェーダーをつける
-			if (m_pShaderMeshTextures[nCntMat] != NULL)
+			for (int nCntMat = 0; nCntMat < (int)m_nNumMat[m_Type]; nCntMat++)
 			{
-				//テクスチャがある場合
-				m_bTexMat = true;
-				//シェーダーにboolの情報を渡す
-				Shader->SetBool("TexMat", m_bTexMat);
+				//シェーダのデータにモデルのテクスチャを入れる
+				m_pShaderMeshTextures[m_Type][nCntMat] = m_pTextures;
+
+				//マテリアルの設定
+				pMat[nCntMat].MatD3D.Diffuse.a = fAlpha;
+				pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
+
+				// テクスチャをNULLにする
+				pDevice->SetTexture(0, m_pShaderMeshTextures[m_Type][nCntMat]);
+
+				//===================================================
+				//    　　　　シェーダーの割り当て作業
+				//===================================================
+				//パスを指定して開始
+				Shader->BeginPass(0);
+
+				//シェーダーテクスチャの有無に応じてシェーダーをつける
+				if (m_pShaderMeshTextures[m_Type][nCntMat] != NULL)
+				{
+					//テクスチャがある場合
+					m_bTexMat = true;
+					//シェーダーにboolの情報を渡す
+					Shader->SetBool("TexMat", m_bTexMat);
+				}
+				else if (m_pShaderMeshTextures[m_Type][nCntMat] == NULL)
+				{
+					//テクスチャがない場合
+					m_bTexMat = false;
+					//シェーダーにboolの情報を渡す
+					Shader->SetBool("TexMat", m_bTexMat);
+				}
+
+				//オブジェクトのテクスチャ
+				Shader->SetTexture("DecalTexture", m_pShaderMeshTextures[m_Type][nCntMat]);
+				//プロパティー名,NameID,設定する配列の値
+				Shader->SetFloatArray("Diffuse", (FLOAT*)&m_pMeshMaterials[m_Type][nCntMat].Diffuse, 4);
+
+				//変更を基になるディレクトリ ストアに保存
+				Shader->CommitChanges();
+
+				//オブジェクト(パーツ)の描画
+				m_pMesh[m_Type]->DrawSubset(nCntMat);
+
+				//パスの終了
+				Shader->EndPass();
 			}
-			else if (m_pShaderMeshTextures[nCntMat] == NULL)
-			{
-				//テクスチャがない場合
-				m_bTexMat = false;
-				//シェーダーにboolの情報を渡す
-				Shader->SetBool("TexMat", m_bTexMat);
-			}
 
-			//オブジェクトのテクスチャ
-			Shader->SetTexture("DecalTexture", m_pShaderMeshTextures[nCntMat]);
-			//プロパティー名,NameID,設定する配列の値
-			Shader->SetFloatArray("Diffuse", (FLOAT*)&m_pMeshMaterials[nCntMat].Diffuse, 4);
-
-			//変更を基になるディレクトリ ストアに保存
-			Shader->CommitChanges();
-
-			//オブジェクト(パーツ)の描画
-			m_pMesh->DrawSubset(nCntMat);
-
-			//パスの終了
-			Shader->EndPass();
-		}
-
+		//}
 		// マテリアルをデフォルトに戻す
 		pDevice->SetMaterial(&matDef);
 
@@ -402,49 +367,162 @@ void CModel::Draw(float fAlpha)
 	}
 }
 
-//=============================================================================
-//　マテリアルカラーの設定
-//=============================================================================
-void CModel::SetColor(D3DXCOLOR col)
+////=============================================================================
+////　マテリアルカラーの設定
+////=============================================================================
+//void CModel::SetColor(D3DXCOLOR col)
+//{
+//	// デバイスの取得
+//	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+//
+//	D3DMATERIAL9 matDef;	// 現在のマテリアル保存用
+//	D3DXMATERIAL *pMat;		// マテリアルデータへのポインタ
+//
+//							// 現在のマテリアルを取得
+//	pDevice->GetMaterial(&matDef);
+//
+//	// マテリアルデータへのポインタを取得
+//	pMat = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
+//
+//	// 色を付ける
+//	pMat->MatD3D.Diffuse = col;
+//
+//	// マテリアルをデフォルトに戻す
+//	pDevice->SetMaterial(&matDef);
+//}
+//
+////=============================================================================
+////　Xファイルの読み込み
+////=============================================================================
+//void CModel::CreateXFile(char FileName[40])
+//{
+//	//レンダリングクラスを取得
+//	CRenderer * pRenderer = NULL;
+//	pRenderer = CManager::GetRenderer();
+//
+//	//デバイスの取得
+//	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
+//
+//	// Xファイルの読み込み
+//	D3DXLoadMeshFromX(&FileName[0],
+//		D3DXMESH_SYSTEMMEM,
+//		pDevice,
+//		NULL,
+//		&m_pBuffMat,
+//		NULL,
+//		&m_nNumMat,
+//		&m_pMesh);
+//}
+////=============================================================================
+////　Xファイルの読み込み
+////=============================================================================
+void CModel::SetParts(void)
 {
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+	for (int nCount = 0; nCount < TYPE_MAX; nCount++)
+	{
+		if (m_partstype[nCount] != NULL) { return; }
 
-	D3DMATERIAL9 matDef;	// 現在のマテリアル保存用
-	D3DXMATERIAL *pMat;		// マテリアルデータへのポインタ
+		switch (nCount)
+		{
+		case TYPE_CHICKEN:
+			m_nModelMax[nCount] = 11;
+			m_partstype[nCount] = new PARTS_TYPE[m_nModelMax[nCount]];
+						
+			m_partstype[nCount][0] = PARTS_CHICKEN_BODY;
+			m_partstype[nCount][1] = PARTS_CHICKEN_HEAD;
+			m_partstype[nCount][2] = PARTS_CHICKEN_ASS;
+			m_partstype[nCount][3] = PARTS_CHICKEN_WINGSR_0;
+			m_partstype[nCount][4] = PARTS_CHICKEN_WINGSR_1;
+			m_partstype[nCount][5] = PARTS_CHICKEN_WINGSL_0;
+			m_partstype[nCount][6] = PARTS_CHICKEN_WINGSL_1;
+			m_partstype[nCount][7] = PARTS_CHICKEN_LEGR;
+			m_partstype[nCount][8] = PARTS_CHICKEN_FOOTR;
+			m_partstype[nCount][9] = PARTS_CHICKEN_LEGL;
+			m_partstype[nCount][10] = PARTS_CHICKEN_FOOTL;
 
-							// 現在のマテリアルを取得
-	pDevice->GetMaterial(&matDef);
+			break;
+		case TYPE_CHICK:
 
-	// マテリアルデータへのポインタを取得
-	pMat = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
+			m_nModelMax[nCount] = 6;
+			m_partstype[nCount] = new PARTS_TYPE[m_nModelMax[nCount]];
+						
+			m_partstype[nCount][0] = PARTS_CHICK_BODY;
+			m_partstype[nCount][1] = PARTS_CHICK_HEAD;
+			m_partstype[nCount][2] = PARTS_CHICK_LEGR;
+			m_partstype[nCount][3] = PARTS_CHICK_FOOTR;
+			m_partstype[nCount][4] = PARTS_CHICK_LEGL;
+			m_partstype[nCount][5] = PARTS_CHICK_FOOTL;
 
-	// 色を付ける
-	pMat->MatD3D.Diffuse = col;
-
-	// マテリアルをデフォルトに戻す
-	pDevice->SetMaterial(&matDef);
+			break;
+		}
+	}
 }
-
-//=============================================================================
-//　Xファイルの読み込み
-//=============================================================================
-void CModel::CreateXFile(char FileName[40])
+////=============================================================================
+////　Xファイルの読み込み
+////=============================================================================
+void CModel::ParentModel(CModel **&apModel, TYPE type)
 {
-	//レンダリングクラスを取得
-	CRenderer * pRenderer = NULL;
-	pRenderer = CManager::GetRenderer();
+	if (apModel != NULL) { return; }
 
-	//デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
+	apModel = new CModel*[m_nModelMax[type]];
+	for (int nCount = 0; nCount < m_nModelMax[type]; nCount++)
+	{// 減速鶏のポインタを初期化
+		apModel[nCount] = NULL;
 
-	// Xファイルの読み込み
-	D3DXLoadMeshFromX(&FileName[0],
-		D3DXMESH_SYSTEMMEM,
-		pDevice,
-		NULL,
-		&m_pBuffMat,
-		NULL,
-		&m_nNumMat,
-		&m_pMesh);
+		//NULLチェック
+		if (apModel[nCount] == NULL)
+		{//動的確保
+			apModel[nCount] = new CModel;
+			//NULLチェック
+			if (apModel[nCount] != NULL)
+			{
+				//モデルの生成
+				apModel[nCount]->m_Type = m_partstype[type][nCount];
+				apModel[nCount]->Init();
+			}
+		}
+	}
+}
+////=============================================================================
+////　Xファイルの読み込み
+////=============================================================================
+void CModel::PartsTypeUnLoad(void)
+{
+	for (int nCount = 0; nCount < PARTS_MAX; nCount++)
+	{
+		// メッシュの開放
+		if (m_pMesh[nCount] != NULL)
+		{
+			m_pMesh[nCount]->Release();
+			m_pMesh[nCount] = NULL;
+		}
+
+		// マテリアルの開放
+		if (m_pBuffMat[nCount] != NULL)
+		{
+			m_pBuffMat[nCount]->Release();
+			m_pBuffMat[nCount] = NULL;
+		}
+	}
+
+	for (int nCount = 0; nCount < PARTS_MAX; nCount++)
+	{
+		//シェーダー残骸消すもの
+		if (m_pMeshMaterials[nCount] != NULL)
+		{
+			delete[] m_pMeshMaterials[nCount];
+			m_pMeshMaterials[nCount] = NULL;
+		}
+		if (m_pShaderMeshTextures[nCount] != NULL)
+		{
+			delete[] m_pShaderMeshTextures[nCount];
+			m_pShaderMeshTextures[nCount] = NULL;
+		}
+	}
+
+	for (int nCount = 0; nCount < TYPE_MAX; nCount++)
+	{
+		delete[] m_partstype[nCount];
+		m_partstype[nCount] = NULL;
+	}
 }

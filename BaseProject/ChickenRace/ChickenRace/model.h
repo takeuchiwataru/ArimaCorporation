@@ -13,6 +13,8 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define MAX_MODEL			(17)
+#define MAX_MODEL_TEXTURE	(4)
 
 //=====================
 //  CModel 単独クラス
@@ -20,6 +22,37 @@
 class CModel
 {
 public://誰でも扱える
+
+	typedef enum
+	{// オブジェクトの種類
+		PARTS_CHICKEN_BODY = 0,		//体
+		PARTS_CHICKEN_HEAD,			//頭
+		PARTS_CHICKEN_ASS,			//尻尾
+		PARTS_CHICKEN_WINGSR_0,		//右羽元
+		PARTS_CHICKEN_WINGSR_1,		//右羽先
+		PARTS_CHICKEN_WINGSL_0,		//左羽元
+		PARTS_CHICKEN_WINGSL_1,		//左羽先
+		PARTS_CHICKEN_LEGR,			//右腿
+		PARTS_CHICKEN_FOOTR,			//右足
+		PARTS_CHICKEN_LEGL,			//左腿
+		PARTS_CHICKEN_FOOTL,			//左足
+		PARTS_CHICK_BODY,			//体
+		PARTS_CHICK_HEAD,			//頭
+		PARTS_CHICK_LEGR,			//右腿
+		PARTS_CHICK_FOOTR,			//右足
+		PARTS_CHICK_LEGL,			//左腿
+		PARTS_CHICK_FOOTL,			//左足
+		PARTS_MAX,				//最大数
+	}PARTS_TYPE;
+
+	typedef enum
+	{// オブジェクトの種類
+		TYPE_CHICKEN = 0,		//体
+		TYPE_CHICK,				//体
+		TYPE_MAX,				//
+	}TYPE;
+
+
 	CModel();
 	~CModel();
 	HRESULT Init();
@@ -36,35 +69,49 @@ public://誰でも扱える
 	void SetFirstPos(D3DXVECTOR3 FirstPos) { m_FirstPos = FirstPos; };
 	void SetParent(CModel *pModel) { m_pParent = pModel; }
 	void AddPos(D3DXVECTOR3 Pos) { m_Pos = Pos + m_FirstPos; };
-	void BindModel(LPD3DXMESH mesh, LPD3DXBUFFER buff, DWORD nummat) { m_pMesh = mesh; m_pBuffMat = buff; m_nNumMat = nummat; }
+	void BindModel(LPD3DXMESH mesh, LPD3DXBUFFER buff, DWORD nummat) { *m_pMesh = mesh; *m_pBuffMat = buff; *m_nNumMat = nummat; }
 	void BindTexture(LPDIRECT3DTEXTURE9 pTexture) { m_pTextures = pTexture; }
 	D3DXMATRIX &GetMtxWorld(void) { return m_mtxWorld; }
 	D3DXVECTOR3 GetPos(void) { return m_Pos; }
-	D3DXVECTOR3 GetVtxMax(void) { return m_VtxMax; }
-	D3DXVECTOR3 GetVtxMin(void) { return m_VtxMin; }
+
+	static D3DXVECTOR3 GetVtxMax(int nNumber) { return m_VtxMax[nNumber]; }
+	static D3DXVECTOR3 GetVtxMin(int nNumber) { return m_VtxMin[nNumber]; }
+	static int &GetnModelMax(TYPE type) { return m_nModelMax[type]; }
+	static LPD3DXBUFFER &GetpBuffMat(int nNumber) { return m_pBuffMat[nNumber]; }
+	static LPD3DXMESH &GetpMesh(int nNumber) { return m_pMesh[nNumber]; }
+	static DWORD &GetnNumMat(int nNumber) { return m_nNumMat[nNumber]; }
+
 	D3DXVECTOR3 GetScale(void) { return m_Scale; }
 	void SetColor(D3DXCOLOR col);
+	static void Load(void);
+	static void SetParts(void);
+	static void ParentModel(CModel **&apModel, TYPE type);
+	static void PartsTypeUnLoad(void);
+	void SetType(PARTS_TYPE partstype) { m_Type = partstype; }
 
-protected://派生クラスでも使える
-	void CreateXFile(char FileName[40]);						//Xファイルの生成
-	D3DMATERIAL9				*m_pMeshMaterials;
-	LPD3DXMESH					m_pMesh;						//メッシュ情報へのポインタ
-	LPD3DXBUFFER				m_pBuffMat;						//マテリアルの情報へのポインタ
-	DWORD						m_nNumMat;						//マテリアルの情報数
-	LPDIRECT3DTEXTURE9			m_pTextures;					//テクスチャ
-	LPDIRECT3DTEXTURE9			*m_pShaderMeshTextures;			//シェーダー用
-	D3DXMATRIX					m_mtxWorld;						//ワールドマトリックス
-	D3DXVECTOR3					m_VtxMin, m_VtxMax;				//モデルの最小値・最大値
-	D3DXVECTOR3					m_Pos;							//位置
-	D3DXVECTOR3					m_Rot;							//向き
-	D3DXVECTOR3					m_FirstPos;						//初期位置
-	D3DXVECTOR3					m_Scale;						//拡大、縮小率
-	CModel						*m_pParent;						//親モデルへのポインタ
-	bool						m_bTexMat;						//シェーダーに使うテクスチャとマテリアル
+private://派生クラスでも使える
+	void CreateXFile(char FileName[40]);									//Xファイルの生成
+	static D3DMATERIAL9			*m_pMeshMaterials[PARTS_MAX];
+	static LPDIRECT3DTEXTURE9	*m_pShaderMeshTextures[PARTS_MAX];			//シェーダー用
+	static LPDIRECT3DTEXTURE9	*m_pMeshTextures[MAX_MODEL_TEXTURE];		// シェーダー用
+	static LPD3DXBUFFER			m_pBuffMat[PARTS_MAX];						//マテリアルの情報へのポインタ
+	static LPD3DXMESH			m_pMesh[PARTS_MAX];							//メッシュ情報へのポインタ
+	static DWORD				m_nNumMat[PARTS_MAX];						//マテリアルの情報数
+	static D3DXVECTOR3			m_VtxMin[PARTS_MAX], m_VtxMax[PARTS_MAX];							//モデルの最小値・最大値
+	static PARTS_TYPE			*m_partstype[TYPE_MAX];
+	static int					m_nModelMax[TYPE_MAX];								// モデルの種類
 
-	CToonShader					*m_pToonShader;					//シェーダーのポインタ
+	PARTS_TYPE					m_Type;										// モデルの種類
+	LPDIRECT3DTEXTURE9			m_pTextures;								//テクスチャ
+	D3DXMATRIX					m_mtxWorld;									//ワールドマトリックス
+	D3DXVECTOR3					m_Pos;										//位置
+	D3DXVECTOR3					m_Rot;										//向き
+	D3DXVECTOR3					m_FirstPos;									//初期位置
+	D3DXVECTOR3					m_Scale;									//拡大、縮小率
+	CModel						*m_pParent;									//親モデルへのポインタ
+	bool						m_bTexMat;									//シェーダーに使うテクスチャとマテリアル
 
-private://個人のみ使える
-	void SetScale(D3DXVECTOR3 Scale) { m_Scale = Scale; };
+protected://個人のみ使える
+
 };
 #endif

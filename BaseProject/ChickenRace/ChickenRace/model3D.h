@@ -112,6 +112,7 @@ public:
 	void				Setcol(D3DXCOLOR col) { m_col = col; m_bcolChange = true; }
 
 	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
+	static CToonShader	*&GetToonShader(void) { return m_pToonShader; }
 
 protected:
 	void				SetModelType(int nModelType) { m_nModelType = nModelType; }
@@ -123,7 +124,8 @@ private:
 	static LPD3DXMESH			m_pMeshModel[MODEL_TYPE_MAX];					// メッシュ情報へのポインタ
 	static LPD3DXBUFFER			m_pBuffMatModel[MODEL_TYPE_MAX];				// マテリアルの情報へのポインタ
 	static DWORD				m_nNumMatModel[MODEL_TYPE_MAX];					// マテリアルの情報数
-	static LPDIRECT3DTEXTURE9	m_pMeshTextures[TEXTURE_TYPE_MAX];					// テクスチャの情報
+	static CToonShader			*m_pToonShader;									// シェーダーのポインタ
+	static LPDIRECT3DTEXTURE9	m_pMeshTextures[TEXTURE_TYPE_MAX];				// テクスチャの情報
 	static D3DMATERIAL9			*m_pMeshMaterials[MODEL_TYPE_MAX];				// メッシュマテリアルの情報
 	static LPDIRECT3DTEXTURE9	*m_pShaderMeshTextures[MODEL_TYPE_MAX];			// シェーダー用
 	D3DXMATRIX					m_mtxWorldObject;								// ワールドマトリックス
@@ -142,7 +144,6 @@ private:
 	bool						m_bTexMat;										// シェーダーに使うテクスチャとマテリアル
 	int							m_nModelType;									// モデルの種類
 	int							m_nTextureType;									// テクスチャの種類
-	static CToonShader			*m_pToonShader;									// シェーダーのポインタ
 	D3DXVECTOR3					m_MapView;										// マップに反映させるカメラ
 	MODEL_TYPE					m_modeltype;									// モデル種類
 };

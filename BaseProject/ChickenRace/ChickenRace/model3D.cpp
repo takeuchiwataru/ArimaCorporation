@@ -149,12 +149,12 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 //===============================================================================
 CModel3D::CModel3D(int nPriority, CScene::OBJTYPE objType) : CScene(nPriority, objType)
 {
-	m_mtxWorldObject;						//ワールドマトリックス
-	m_VtxMinModel, m_VtxMaxModel;			//モデルの最小値・最大値
-	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//位置
-	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//向き
-	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);	//動き
-	m_Scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);//大きさ
+	m_mtxWorldObject;							//ワールドマトリックス
+	m_VtxMinModel, m_VtxMaxModel;				//モデルの最小値・最大値
+	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//位置
+	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//向き
+	m_Move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);		//動き
+	m_Scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);	//大きさ
 	m_VecAxis = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fValueRot = 0.0f;
 	m_bcolChange = false;
@@ -286,6 +286,12 @@ void CModel3D::Update(void)
 {
 	//現在のモードを取得
 	CManager::MODE mode = CManager::GetMode();
+
+	//ゲームモードならクリッピングの処理
+	if (CManager::MODE_GAME == mode)
+	{
+		//SetDraw(CGame::GetGameCamera(0)->Clipping(m_VtxMinModel + m_Pos, m_VtxMaxModel + m_Pos));
+	}
 
 	if ((CManager::MODE_GAME == mode) || (CManager::MODE_TUTORIAL == mode))
 	{
