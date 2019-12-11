@@ -21,8 +21,8 @@
 //*****************************************************************************
 // 前方宣言
 //*****************************************************************************
-class CObjBillboad;
-
+class C3DPolygon;
+class C3DAnim;
 //=====================
 //  CModel3Dの派生クラス
 //=====================
@@ -62,6 +62,7 @@ private:
 	D3DXVECTOR3			m_scale;						// 大きさ
 	D3DXVECTOR3			m_rot;							// 回転
 	CShadow				*m_pShadow;						// 影のポインタ
-	CObjBillboad *		m_pObjBill;						// オブジェクトビルボードのポインタ
+	C3DPolygon			*m_pPin;						//ピンのポリゴン
+	C3DAnim			*m_pLight;						//ライトのポリゴン
 };
 #endif

@@ -47,7 +47,7 @@ CEfcOrbit	*CEfcOrbit::Set(D3DXMATRIX &mtxWorld, D3DXVECTOR3 length0, D3DXVECTOR3
 
 																		//代入
 	m_pmtxWorld = &mtxWorld;	m_bDelete = &bDelete;
-	m_col = col;				
+	m_col = col;
 	//m_pTex = Load(tex);
 	m_nUV = nUV;				m_nHeight = nHeight;
 	m_fEnd = 0.0f;
@@ -106,10 +106,10 @@ void	CEfcOrbit::Update(void)
 
 						//最新の頂点を代入
 		if (m_pmtxWorld != NULL) { SetVtx(false); }
-		if(m_bDelete == NULL)
+		if (m_bDelete == NULL)
 		{
 			m_fEnd += m_fPlusCol;
-			if (m_Type == TYPE_FADE) 
+			if (m_Type == TYPE_FADE)
 			{
 				m_fPlusCol *= 0.95f;
 				if (m_fPlusCol < 0.0001f) { Uninit(); return; }
@@ -150,7 +150,7 @@ void	CEfcOrbit::Draw(void)
 	//テクスチャの設定
 	pDevice->SetTexture(0, m_pTex);
 
-	 // ポリゴンの描画
+	// ポリゴンの描画
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, m_nNumPolygon);
 	pDevice->SetTexture(0, NULL);
 
@@ -230,7 +230,7 @@ void	CEfcOrbit::SwapVtx(void)
 			}
 			break;
 		}
-	 
+
 
 		//入れ替え
 		pVtx[(nCount * 2) + 2] = pVtx[(nCount * 2)];

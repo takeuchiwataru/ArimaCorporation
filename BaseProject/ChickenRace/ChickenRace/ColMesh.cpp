@@ -12,6 +12,8 @@
 #include "manager.h"
 #include "player.h"
 #include "DispEffect.h"
+#include "Character.h"
+
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
@@ -651,6 +653,16 @@ void	CCOL_MESH::Load(FILE *pFile)
 	}
 	SetMesh();
 	ResetSelect();
+
+	if (m_Effect == EFFECT_BOOST)
+	{//加速なら木を配置
+		D3DXVECTOR3 pos;
+		float	fRot = atan2f(m_pVtx[1].x - m_pVtx[0].x, m_pVtx[1].z - m_pVtx[0].z);
+		pos = (m_pVtx[0] + m_pVtx[1] + m_pVtx[2] + m_pVtx[3]) / 4.0f + D3DXVECTOR3(0.0f, 0.0f, 0.0f) + m_pos;
+		CCharcter::Create(pos, D3DXVECTOR3(0.0f, fRot - D3DX_PI, 0.0f));
+		//CCharcter::Create(D3DXVECTOR3(-250.0f, -90.0f, -100.0f), D3DXVECTOR3(0.0f, fRot - D3DX_PI, 0.0f));
+
+	}
 }
 //=============================================================================
 //メッシュ床のあたり判定
@@ -664,10 +676,13 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 	bool		&bJump = pPlayer->GetbJump();
 	D3DXVECTOR3 &FNor = pPlayer->GetFNor();
 	EFFECT		&Effect = pPlayer->GgetFEffect();
+	float		fLength = pPlayer->GetfLength() * 1.5f;
+	float		fWK;
 
 	bool		bLand = true;
 	D3DXVECTOR3 WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 WKm_pos = m_pos;
+	D3DXVECTOR3 WKpos0;
 	D3DXVECTOR3 WKpos = pos - WKm_pos + D3DXVECTOR3(sinf(rot.y), 0.0f, cosf(rot.y)) * 10.0f;
 	D3DXVECTOR3 Vec[8];
 
@@ -684,21 +699,17 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 
 		if (FieldCheck(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], WKpos))
 		{//四頂点で範囲内なら
-
+			float &fCntTime = pPlayer->GetfCntTime();
+			CPlayer::STATE_SPEED state = pPlayer->GetStateSpeed();
 			switch (m_Effect)
 			{
 			case EFFECT_BOOST:	//加速
-				if (!bJump) { move *= 1.35f; Effect = m_Effect; }
+				fWK = atan2f(VtxPos[0].x - VtxPos[1].x, VtxPos[0].z - VtxPos[1].z);
+				pPlayer->SetWind(fWK);
 				break;
 			case EFFECT_SWAMP:	//減速
-				if (!bJump)
-				{
-					move *= 0.93f; Effect = m_Effect;
-
-					if (60 < pPlayer->GetSpeedCounter())
-						pPlayer->SetSpeedCounter(60);
-				}
-				break;
+				if (!bJump) { Effect = m_Effect; pPlayer->GetbSJump() = true; }
+				return bLand;
 			case EFFECT_GRASS:
 			case EFFECT_NORMAL:
 			case EFFECT_RIVER:
@@ -709,22 +720,8 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				{//貫通していたら
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
-					if (m_Effect == EFFECT_SWAMP)
-					{
-						move *= 0.93f; Effect = m_Effect;
+					if (m_Effect == EFFECT_GRASS) { Effect = EFFECT_SWAMP; }
 
-						if (60 < pPlayer->GetSpeedCounter())
-							pPlayer->SetSpeedCounter(60);
-
-						return bLand;
-					}
-					if (m_Effect == EFFECT_GRASS)
-					{
-						move *= 0.93f;
-
-						if (60 < pPlayer->GetSpeedCounter())
-							pPlayer->SetSpeedCounter(60);
-					}
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
 					FNor = WKnor;
@@ -732,6 +729,18 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 					return bLand;
 				}
 				break;
+			}
+		}
+		else
+		{
+			if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && 
+				m_Effect == EFFECT_SWAMP && !bJump)
+			{//敵＆＆水溜まりなら
+				WKpos += move * 1.5f;
+				if (FieldCheck(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], WKpos))
+				{//ジャンプ
+					pPlayer->GetbSJump() = true;
+				}
 			}
 		}
 
@@ -896,8 +905,8 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 	D3DXVECTOR3 &move = pPlayer->Getmove();
 	float& fLength = pPlayer->GetfLength();
 
-	D3DXVECTOR3 Wpos2;			//差分縮める用
-	D3DXVECTOR3 Wpos3;			//差分縮める用
+	D3DXVECTOR3 Wpos2, Wpos3;			//差分縮める用
+	D3DXVECTOR3 WIpos0, WIpos1;			//差分縮める用
 	float		fDistance;		//めり込んだ距離
 	float		fPercent;		//距離から出す壁から壁の％
 	float		fPower;
@@ -916,6 +925,8 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 
 	//判定対象の幅分壁を伸ばす
 	Wpos2 = pos;
+	WIpos0 = Wpos0;
+	WIpos1 = Wpos1;
 	Wpos0 += D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.75f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.75f)) * fLength;
 	Wpos1 += D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.25f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.25f)) * fLength;
 
@@ -989,8 +1000,16 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 			if (bReflection) { pos = Wpos0 + D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (COL_WALL_PLUS); }
 			else
 			{//主にキャラ向けの反射処理	壁体当たり後に壁沿いに歩け、突っかからないよう調整
-				fPower = ((powf(move.x, 2) + powf(move.z, 2)) * (COL_RECOIL)+2.0f);
-				if (fPower > 12.0f) { fPower = 12.0f; }
+				fAngle[1] = fAngle[0] + D3DX_PI * 0.5f;
+				if (fAngle[1] > D3DX_PI) { fAngle[1] -= D3DX_PI * 2.0f; }
+				if (fAngle[1] < -D3DX_PI) { fAngle[1] += D3DX_PI * 2.0f; }
+
+				fPower = sqrtf((powf(move.x, 2) + powf(move.z, 2)) * (COL_RECOIL)+2.0f);
+				//if (fPower > 12.0f) { fPower = 12.0f; }
+
+				//pPlayer->DownAccel(0.0f);
+				//pPlayer->Tackle(pPlayer->ColMove(fAngle[1], fAngle[3], fPower * 0.5f, 0.0f));
+
 				pos = Wpos0
 					+ D3DXVECTOR3(sinf(fAngle[0] - D3DX_PI * 0.5f), 0.0f, cosf(fAngle[0] - D3DX_PI * 0.5f)) * (0.1f)
 					+ D3DXVECTOR3(sinf(fAngle[3]), 0.0f, cosf(fAngle[3])) * (1.0f);
@@ -1055,6 +1074,10 @@ void CCOL_MESH_MANAGER::LoadMap(void)
 {
 	CRoad_Manager *&pManager = CRoad_Manager::GetManager();
 
+	//画像読み込み
+	CDispEffect::Load();
+	CCharcter::Load();
+
 	Load(TYPE_HALF0);
 	Load(TYPE_BRIDGE);
 	Load(TYPE_HALF1);
@@ -1064,9 +1087,6 @@ void CCOL_MESH_MANAGER::LoadMap(void)
 		CRoad_Manager::Create(pManager);
 	}
 	pManager->LoadMap();
-
-	//画像読み込み
-	CDispEffect::Load();
 }
 //==================================================================================================//
 //    * 判定付加管理の読み込み関数 *
@@ -1076,6 +1096,8 @@ void CCOL_MESH_MANAGER::EndMap(void)
 	CRoad_Manager *&pManager = CRoad_Manager::GetManager();
 	if (pManager != NULL) { pManager->Uninit(); }
 	CDispEffect::UnLoad();
+	CCharcter::Unload();
+
 	UnLoad();
 }
 //==================================================================================================//

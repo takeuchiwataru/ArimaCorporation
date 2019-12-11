@@ -16,7 +16,7 @@ class CPlayer;
 //*****************************************************************************
 #define DISP_ANIM_MAX	(32)		//同時に存在できるアニメーション数
 #define DISP_SSET		(5)			//水溜まりにはいった時の汚す数
-#define DISP_SSIZE		(60.0f)		//水溜まりの一つの基本サイズ
+#define DISP_SSIZE		(90.0f)		//水溜まりの一つの基本サイズ
 #define DISP_STIME		(20.0f)		//水溜まりの一つの出現時間
 #define DISP_BTIME		(60.0f)		//加速演出の終了時間
 
@@ -37,6 +37,7 @@ public:
 		TEX_SWAMP, TEX_SWAMP_ONE,	//水たまり
 		TEX_BOOST, 					//加速
 		TEX_FootSteps, TEX_Shadow,
+		TEX_Pin, TEX_Light,
 		TEX_MAX,
 	}TEX;
 	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON) : CScene(nPriority, objType) {};

@@ -16,6 +16,7 @@
 //===============================================================================
 //　マクロ定義
 //===============================================================================
+#define MOVE_DISANGLE	(10.0f)							//カメラの画角移動量
 #define MOVE_CAMERA		(90.0f)							//カメラの移動量
 #define VECU_CAMERA		(30.0f)							//カメラの移動量
 #define MOVE_ANGLE		(0.06f)								//カメラ角度の移動量
@@ -42,13 +43,12 @@ HRESULT CGameCamera::Init(void)
 	//変数の初期化
 	m_posV = D3DXVECTOR3(0.0f, 500.0f, 0.0f);	//視点の初期値
 	m_posR = VECTOR_ZERO;						//注視点の初期値
-	m_fCameraAngle = 90;
+	m_fCameraAngle = 65;
 	m_cameraType = CAMERA_NONE;
 	m_pPlayer = NULL;
 	m_fDistance = MOVE_CAMERA;
-	m_fBackTime = 0.0f;
-	m_fCntTime = 0.0f;
 	m_fPlusDis = 0.0f;
+	m_fGAngle = 65.0f;
 	return S_OK;
 }
 
@@ -80,6 +80,8 @@ void CGameCamera::Update(void)
 		UpdatePlayer();		//プレイヤー状態
 		break;
 	}
+
+	m_fRot = atan2f(m_posR.x - m_posV.x, m_posR.z - m_posV.z);
 }
 
 //===============================================================================
@@ -95,6 +97,7 @@ void CGameCamera::SetCamera(void)
 //=============================================================================
 void CGameCamera::UpdateCharSelect(void)
 {
+	m_fCameraAngle = 90;
 	m_posR = D3DXVECTOR3(3000.0f, -90.0f, 140.0f);
 	m_posV = D3DXVECTOR3(2600.0f, -10.0f, 141.0f);
 }
@@ -104,6 +107,7 @@ void CGameCamera::UpdateCharSelect(void)
 //=============================================================================
 void CGameCamera::UpdateCharUp(void)
 {
+	m_fCameraAngle = 90;
 	if (m_pPlayer != NULL)
 	{// NULL以外
 		int nCounter = CGame::GetGameCounter();
@@ -123,6 +127,7 @@ void CGameCamera::UpdateCourse(void)
 	int nGameCounter = CGame::GetGameCounter();
 	int nCount = nGameCounter;
 
+	m_fCameraAngle = 90;
 	if (nGameCounter < CUORSE_VIEW_TIPE_0)
 	{// 1回目
 		nCount = nGameCounter;
@@ -191,8 +196,17 @@ void CGameCamera::UpdatePlayer(void)
 		float		fDistance = 0.0f;
 		float		fRotX = 0.0f;
 		float		fRotY = m_pPlayer->GetRot().y;
-		m_vecU.z = m_pPlayer->Getrot().z * -1.0f;
+		float		fCntTime = m_pPlayer->GetfCntTime();
+		m_vecU.z = m_pPlayer->Getrot().z * -1.5f;
 		fRotY += D3DX_PI * 0.5f;
+
+		//画角変更
+		if (fCntTime < 0.0f) { fCntTime = 0.0f; }
+		m_fGAngle = powf(fCntTime, 2) * 0.4f + 65.0f + m_fPlusDis * 40.0f;
+		if (m_fGAngle > 120.0f) { m_fGAngle = 120.0f; }
+
+		if (m_fCameraAngle < m_fGAngle) { m_fCameraAngle += (m_fGAngle - m_fCameraAngle) * 0.25f; }
+		else { m_fCameraAngle += (m_fGAngle - m_fCameraAngle) * 0.01f; }
 
 		//プレイヤーに追従ようにする
 		m_fRotDest = PlayerRot.y - m_rot.y;
@@ -201,13 +215,17 @@ void CGameCamera::UpdatePlayer(void)
 		m_rot.y += m_fRotDest * MOVE_ANGLE;
 		RemakeAngle(&m_rot.y);
 
-		float fTilt = m_pPlayer->GetfTiltV() * 0.25f - 0.09f;
+		float fTilt = m_pPlayer->GetfTiltV() * 3.0f - 0.1f;
 		float fWK = -m_pPlayer->GetfTiltV();
 		float fMove = MOVE_CAMERA * (fWK * 1.5f + 1.0f);
 		if (m_pPlayer->GetbJump()) { fMove += MOVE_CAMERA * 0.5f; }
 		fWK += 1.0f;
 
-		CRoad_Pointer::BentRotX(m_pPlayer->Getpos(), m_pPlayer->GetpEnmPoint(), fRotX, fDistance);
+		//CRoad_Pointer::BentRotX(m_pPlayer->Getpos(), m_pPlayer->GetpEnmPoint(), fRotX, fDistance);
+		if (fTilt > D3DX_PI * 0.75f)	{ fTilt = D3DX_PI * 0.75f; }
+		if (fTilt < D3DX_PI * -0.75f)	{ fTilt = D3DX_PI * -0.75f; }
+
+		fRotX = fTilt;
 		if (m_pPlayer->GetbJump()) { fRotX -= D3DX_PI * 0.15f; }
 		RemakeAngle(&fRotX);
 
@@ -216,7 +234,8 @@ void CGameCamera::UpdatePlayer(void)
 		if (fMove < MOVE_CAMERA * 0.25f) { fMove = MOVE_CAMERA * 0.25f; }
 		VecUPos = D3DXVECTOR3(sinf(fRotY), 0.0f, cosf(fRotY)) * (m_vecU.z * VECU_CAMERA);
 
-		fMove *= (1.0f + m_fPlusDis);
+		fMove *= (1.0f + m_fPlusDis * 0.75f);
+		fMove += MOVE_DISANGLE * (8.5f - (m_fCameraAngle - 65.0f) * 0.2f);
 		m_rot.x += (fRotX - m_rot.x) * 0.05f;
 		m_fDistance += (fMove - m_fDistance) * 0.05f;
 
@@ -230,7 +249,6 @@ void CGameCamera::UpdatePlayer(void)
 		WKPosR += D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * (5.0f * ((-fWK + 2.0f) * 0.5f) + 30.0f);
 		WKPosR.y += (-5.0f * ((fWK - 1.0f) * 1.0f) + 15.0f);
 		m_posR += (WKPosR - m_posR) * 0.2f;
-
 	}
 }
 

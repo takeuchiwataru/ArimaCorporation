@@ -14,6 +14,7 @@
 #include "shadow.h"
 #include "tutorial.h"
 #include "particle.h"
+#include "scene3D.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -65,6 +66,7 @@ CFeed::~CFeed() {}
 CFeed * CFeed::Create(D3DXVECTOR3 pos, int nZone, int nType)
 {
 	CFeed *pFeed = NULL;
+	D3DXCOLOR col;
 
 	// NULLチェック
 	if (pFeed == NULL)
@@ -84,6 +86,17 @@ CFeed * CFeed::Create(D3DXVECTOR3 pos, int nZone, int nType)
 			pFeed->Init();
 			// 位置を代入
 			pFeed->SetPosition(pos);
+
+			pFeed->m_pPin = C3DPolygon::Create(C3DPolygon::TYPE_Pin, pos, INIT_VECTOR, 4);
+			pFeed->m_pLight = C3DAnim::Create(C3DPolygon::TYPE_Light, pos, INIT_VECTOR);
+			switch (nType)
+			{
+			case FEEDTYPE_ATTACK:	col = D3DXCOLOR(1.0f, 0.1f, 0.03f, 1.0f);	break;
+			case FEEDTYPE_ANNOY:	col = D3DXCOLOR(0.0f, 0.368f, 1.0f, 1.0f);	break;
+			case FEEDTYPE_SPEED:	col = D3DXCOLOR(1.0f, 0.98f, 0.02f, 1.0f);	break;
+			}
+			if (pFeed->m_pPin != NULL) { pFeed->m_pPin->SetColor(col); }
+			if (pFeed->m_pLight != NULL) { pFeed->m_pLight->SetColor(col); }
 		}
 	}
 
@@ -114,11 +127,12 @@ HRESULT CFeed::Init(void)
 	CModel3D::SetPosition(pos);
 
 	//変数の初期化
-	m_pObjBill = NULL;
 	m_bGet = true;
 	m_bEffect = false;
 	m_nCntGetTimer = 0;
 	m_nCntEffectTimer = 0;
+	m_pPin = NULL;
+	m_pLight = NULL;
 	return S_OK;
 }
 
@@ -127,8 +141,8 @@ HRESULT CFeed::Init(void)
 //=============================================================================
 void CFeed::Uninit(void)
 {
-	//オブジェクトビルボード
-	m_pObjBill = NULL;
+	//if (m_pPin != NULL) { m_pPin->Uninit(); m_pPin = NULL; }
+	//if (m_pLight != NULL) { m_pLight->Uninit(); m_pLight = NULL; }
 
 	//3DモデルのUninit
 	CModel3D::Uninit();
@@ -151,6 +165,7 @@ void CFeed::Update(void)
 
 		if (m_nCntGetTimer > GET_TIME)
 		{
+			if (m_pLight != NULL) { m_pLight->GetDrawType() = C2D::DRAW_TYPE_ADD; }
 			m_bGet = true;
 			m_nCntGetTimer = 0;
 		}
@@ -339,17 +354,20 @@ bool CFeed::CollisionFeed(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 			{// オブジェクトの上から当たる場合
 				bHit = true;
 				m_bGet = false;
+				if (m_pLight != NULL) { m_pLight->GetDrawType() = C2D::DRAW_TYPE_NO; }
 			}
 			else if (pPosOld->y + PLAYER_HEIGHT <= ModelMin.y && pPos->y + PLAYER_HEIGHT >= ModelMin.y)
 			{// オブジェクトの下から当たる場合
 				bHit = true;
 				m_bGet = false;
+				if (m_pLight != NULL) { m_pLight->GetDrawType() = C2D::DRAW_TYPE_NO; }
 			}
 
 			if (!(pPos->y >= ModelMax.y) && !(pPos->y + PLAYER_HEIGHT <= ModelMin.y))
 			{// オブジェクト横との当たり判定
 				bHit = true;
 				m_bGet = false;
+				if (m_pLight != NULL) { m_pLight->GetDrawType() = C2D::DRAW_TYPE_NO; }
 			}
 		}
 	}

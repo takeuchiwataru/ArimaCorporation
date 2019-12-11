@@ -10,6 +10,7 @@
 #include "renderer.h"
 #include "DispEffect.h"
 #include "player.h"
+#include "gamecamera.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -137,6 +138,7 @@ void CScene3D::Draw(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 	D3DXMATRIX mtxView, mtxRot, mtxTrans;				//計算用マトリックス
 
+	if (C2D::DrawPrepare(m_DrawType, pDevice)) { return; }
 														// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
@@ -183,8 +185,6 @@ void CScene3D::Draw(void)
 
 	//テクスチャの設定
 	pDevice->SetTexture(0, m_pTexture);
-
-	C2D::DrawPrepare(m_DrawType, pDevice);
 
 	//ポリゴンの描画
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
@@ -437,47 +437,66 @@ void CScene3D::Set(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR2 size)
 //===============================================================================
 // 生成関数
 //===============================================================================
-C3DPolygon *C3DPolygon::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+C3DPolygon *C3DPolygon::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nPriority)
 {
 	C3DPolygon *p3D = NULL;
-	p3D = new C3DPolygon;
+	p3D = new C3DPolygon(nPriority);
 
-	if (p3D != NULL)
-	{
-		D3DXVECTOR2 size = D3DXVECTOR2(10.0f, 10.0f);
-		D3DXCOLOR col = INIT_COL;
-		float fCntState = 0.0f;
-
-		p3D->Init();
-		p3D->CScene3D::Set(pos, rot, size);
-
-		switch (Type)
-		{
-		case TYPE_Shadow:
-			p3D->BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_Shadow));
-			p3D->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
-			size = D3DXVECTOR2(PLAYER_LENGTH, PLAYER_LENGTH);
-			p3D->SetGroundPosSize(pos, size);
-			break;
-		case TYPE_FootSteps:
-			p3D->BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_FootSteps));
-			p3D->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
-			pos.y += 3.0f;
-			size = D3DXVECTOR2(3.0f, 3.0f);
-			p3D->SetGroundPosSize(pos, size);
-			fCntState = 0.01f;
-			break;
-		}
-		p3D->Set(Type, fCntState, col);
-	}
+	if (p3D != NULL) { p3D->Setting(Type, pos, rot); }
 
 	return p3D;
+}
+//===============================================================================
+// 初期設定関数
+//===============================================================================
+void	C3DPolygon::Setting(TYPE &Type, D3DXVECTOR3 &pos, D3DXVECTOR3 &rot)
+{
+	D3DXVECTOR2 size = D3DXVECTOR2(10.0f, 10.0f);
+	D3DXCOLOR col = INIT_COL;
+	float fCntState = 0.0f;
+
+	Init();
+	CScene3D::Set(pos, rot, size);
+
+	switch (Type)
+	{
+	case TYPE_Pin:
+		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_Pin));
+		GetDrawType() = C2D::DRAW_TYPE_OVERLAY;
+		size = D3DXVECTOR2(PLAYER_LENGTH * 1.0f, PLAYER_LENGTH * 30.0f);
+		pos.y -= 30.0f;
+		SetWall(pos, INIT_VECTOR, size);
+		break;
+	case TYPE_Light:
+		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_Light));
+		GetDrawType() = C2D::DRAW_TYPE_ADD;
+		size = D3DXVECTOR2(PLAYER_LENGTH * 3.0f, PLAYER_LENGTH * 60.0f);
+		pos.y -= 100.0f;
+		SetWall(pos, INIT_VECTOR, size);
+		break;
+	case TYPE_Shadow:
+		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_Shadow));
+		GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
+		size = D3DXVECTOR2(PLAYER_LENGTH, PLAYER_LENGTH);
+		SetGroundPosSize(pos, size);
+		break;
+	case TYPE_FootSteps:
+		BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_FootSteps));
+		GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
+		pos.y += 3.0f;
+		size = D3DXVECTOR2(3.0f, 3.0f);
+		SetGroundPosSize(pos, size);
+		fCntState = 0.01f;
+		break;
+	}
+	Set(Type, fCntState, col);
 }
 //===============================================================================
 // 設定関数
 //===============================================================================
 void	C3DPolygon::Set(TYPE &Type, float &fCntState, D3DXCOLOR &col)
 {
+	m_Initpos = GetposR();
 	m_Type = Type;
 	m_fCntState = fCntState;
 	m_col = col;
@@ -502,6 +521,18 @@ void C3DPolygon::Update(void)
 	if (m_Type == TYPE_MAX) { return; }
 	switch (m_Type)
 	{
+	case TYPE_Light:
+		if (GetDrawType() != C2D::DRAW_TYPE_NO)
+		{
+			if (m_col.a < 1.0f)
+			{
+				m_col.a += 0.1f;
+				if (m_col.a > 1.0f) { m_col.a = 1.0f; }
+				SetColor(m_col);
+			}
+		}
+		else { m_col.a = 0.0f; }
+		break;
 	case TYPE_Shadow:
 		if (m_fCntState <= 0.0f)
 		{
@@ -530,6 +561,16 @@ void C3DPolygon::Draw(void)
 	pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATER);//FUNC = Function:機能 //GREATER = ～より大きい
 	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
 
+	switch (m_Type)
+	{
+	case TYPE_Light:
+		SetRotY();
+		GoStraight(15.0f);
+		break;
+	case TYPE_Pin:
+		SetRotY();
+		break;
+	}
 	CScene3D::Draw();
 
 	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
@@ -546,4 +587,94 @@ void C3DPolygon::SetShadow(D3DXVECTOR3 pos)
 
 	m_col.a = 1.0f;
 	SetColor(m_col);
+}
+//===============================================================================
+// 角度Yをビルボード化
+//===============================================================================
+void	C3DPolygon::SetRotY(void)
+{
+	D3DXVECTOR3 pos = CGame::GetGameCamera(CGame::GetCameraNumber())->GetCameraPosV();
+	D3DXVECTOR3 &m_pos = GetposR();
+	GetrotR().y = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
+}
+//===============================================================================
+// 角度Yをビルボード化
+//===============================================================================
+void	C3DPolygon::GoStraight(float fPlus)
+{
+	float fRotY = GetrotR().y;
+	GetposR() = m_Initpos - D3DXVECTOR3(sinf(fRotY), 0.0f, cosf(fRotY)) * fPlus;
+}
+
+//===============================================================================
+// 生成関数
+//===============================================================================
+C3DAnim *C3DAnim::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+{
+	C3DAnim *p3D = NULL;
+	p3D = new C3DAnim;
+
+	if (p3D != NULL) 
+	{ 
+		p3D->C3DPolygon::Setting(Type, pos, rot);
+		p3D->Setting(Type);
+	}
+
+	return p3D;
+}
+//===============================================================================
+// 設定関数
+//===============================================================================
+void	C3DAnim::Setting(TYPE &Type)
+{
+
+	switch (Type)
+	{
+	case TYPE_Light:
+		m_nPtn = 0;		m_nPtnX = 3;	m_nPtnY = 1;
+		m_nSpeed = 12;	m_Anim = ANIM_LOOP;
+		break;
+	}
+}
+//===============================================================================
+// 初期化関数
+//===============================================================================
+HRESULT C3DAnim::Init(void)
+{
+	C3DPolygon::Init();
+	m_Anim = ANIM_END;
+	m_nPtn = 0;		m_nPtnX = 1;		m_nPtnY = 1;
+	m_nSpeed = 1;	m_nCntAnim = -1;
+	return S_OK;
+}
+//===============================================================================
+// 更新関数
+//===============================================================================
+void C3DAnim::Update(void)
+{
+	if (m_nCntAnim >= m_nSpeed)
+	{//時間経過で
+		m_nCntAnim = 0;		m_nPtn++;
+
+		if (m_nPtn > m_nPtnX * m_nPtnY) 
+		{//終了確認
+			if (EndCheck()) { Uninit(); return; }
+		}
+
+		//UV変更
+		SetTexture(m_nPtn, m_nPtnX, m_nPtnY, 1);
+	}
+	else { m_nCntAnim++; }
+	
+	C3DPolygon::Update();
+}
+//===============================================================================
+// 終了チェック
+//===============================================================================
+bool	C3DAnim::EndCheck(void)
+{
+	if (m_Anim == ANIM_END) { return true; }
+	if (m_Anim == ANIM_LOOP) { m_nPtn = 0; return false; }
+	m_Anim = (ANIM)(m_Anim - 1);
+	return false;
 }

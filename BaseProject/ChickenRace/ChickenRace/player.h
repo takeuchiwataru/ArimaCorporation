@@ -43,6 +43,7 @@
 #define MAX_FALL_WAIT		(60)							// おちるエフェクト待機
 
 #define PLAYER_LENGTH		(10.0f)							//キャラの大きさ
+#define PLAYER_COUNT	(10.0f)										//カウントの最大値
 
 //=============================================================================
 // 前方宣言
@@ -98,7 +99,7 @@ public:
 		PLAYERANIM_JUMP,			//ジャンプ
 		PLAYERANIM_LAND,			//着地
 		PLAYERANIM_DAMAGE,			//ダメージ
-		PLALYER_MAX					//モーションの最大数
+		PLAYER_MAX					//モーションの最大数
 	}PlayerAnim;
 
 	typedef enum
@@ -114,8 +115,8 @@ public:
 	typedef enum
 	{
 		STATE_SPEED_ACCEL = 0,
-		STATE_SPEED_BRAKS,
 		STATE_SPEED_DRIFT,
+		STATE_SPEED_BRAKS,
 		STATE_SPEED_DOWN,
 		STATE_SPEED_STOP,
 	}STATE_SPEED;
@@ -214,25 +215,32 @@ public:
 	bool GetDrive(void) { return m_bDirive; }
 	void SetDrive(bool bDrive) { m_bDirive = bDrive; }
 
+	void SetWind(float fRot);
+	void Tackle(float fValue);
+	float ColMove(float &fTargetRot, float &fMoveRot, float fPow0, float fPow1);
+	void Strike(CPlayer *pPlayer, D3DXVECTOR3 pos, D3DXVECTOR3 move);
+
 	void ChangeRoad(void);
-	CCOL_MESH::EFFECT &GgetFEffect(void) { return m_FEffect; }
-	CRoad_Pointer	*&GetpPoint(void) { return m_pPoint; }
-	CRoad_Pointer	*&GetpEnmPoint(void) { return m_pEnmPoint; }
-	D3DXVECTOR3		&GetFNor(void) { return m_FNor; };
-	D3DXVECTOR3		&Getpos(void) { return m_pos; };
-	D3DXVECTOR3		&Getrot(void) { return m_rot; };
-	D3DXVECTOR3		&Getposold(void) { return m_OldPos; };
-	D3DXVECTOR3		&Getmove(void) { return m_move; };
-	bool			&GetbJump(void) { return m_bJump; };
-	float			&GetfLength(void) { return m_fLength; };
-	float			&GetfTiltV(void) { return m_fCTiltV; };
-	float			&GetfTiltW(void) { return m_fCTiltW; };
-	float			&GetfRotOld(void) { return m_fRotOld; };
-	float			&GetfRoad(void) { return m_fRoad; };
-	int				&GetnMap(void) { return m_nMap; };
-	int				&GetnPlayerNum(void) { return m_nPlayerNum; }
-	bool			&GetbDivided(void) { return m_bDivided; };
-	C3DPolygon		*&GetpShadow(void) { return m_pShadow; };
+	CCOL_MESH::EFFECT &GgetFEffect(void)	{ return m_FEffect; }
+	CRoad_Pointer	*&GetpPoint(void)		{ return m_pPoint; }
+	CRoad_Pointer	*&GetpEnmPoint(void)	{ return m_pEnmPoint; }
+	D3DXVECTOR3		&GetFNor(void)			{ return m_FNor; };
+	D3DXVECTOR3		&Getpos(void)			{ return m_pos; };
+	D3DXVECTOR3		&Getrot(void)			{ return m_rot; };
+	D3DXVECTOR3		&Getposold(void)		{ return m_OldPos; };
+	D3DXVECTOR3		&Getmove(void)			{ return m_move; };
+	bool			&GetbJump(void)			{ return m_bJump; };
+	float			&GetfLength(void)		{ return m_fLength; };
+	float			&GetfTiltV(void)		{ return m_fCTiltV; };
+	float			&GetfTiltW(void)		{ return m_fCTiltW; };
+	float			&GetfRotOld(void)		{ return m_fRotOld; };
+	float			&GetfRoad(void)			{ return m_fRoad; };
+	float			&GetfCntTime(void)		{ return m_PlayerInfo.fCountTime; }
+	int				&GetnMap(void)			{ return m_nMap; };
+	int				&GetnPlayerNum(void)	{ return m_nPlayerNum; }
+	bool			&GetbDivided(void)		{ return m_bDivided; };
+	bool			&GetbSJump(void)		{ return m_bSJump; }
+	C3DPolygon		*&GetpShadow(void)		{ return m_pShadow; };
 
 	int GetItemNum(void) { return m_nNumItem; }
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
@@ -244,6 +252,10 @@ public:
 
 	//モーションの更新関数
 	void UpdateMotion(void);
+	void UpMParts(void);
+	void ResetMotion(void);
+	void CancelMotion(PlayerAnim Anim, bool bRow);
+	void SettingParts(void);
 
 	//ファイル読み込み関数
 	static void FileLoad(void);								//ファイル読み込み
@@ -261,23 +273,18 @@ private:
 	void UpdateMove(void);
 	void ControlKey(void);
 
-	void UpdateAI(void);
-	void UseItem(void);
-	bool UseATK(int &nRank);
-	bool UseDEF(int &nRank);
-	bool UseSPD(int &nRank);
-	float GetDistance(int nRank);
-	void UpdateKiller(void);
-	void SetKiller(void);
-	void UpdateFEffect(void);
-	void EffectUp(void);
+	void UpdateAI(void);					void UseItem(void);
+	bool UseATK(int &nRank);				bool UseDEF(int &nRank);				bool UseSPD(int &nRank);
+	void UpdateKiller(void);				void SetKiller(void);
+	void UpdateFEffect(void);				void EffectUp(void);
+	void EffectNor(D3DXVECTOR3 &pos);		void EffectWater(D3DXVECTOR3 &pos);
+	void Accelerator(bool bAccel);
+
 	void WarpNext(void);
-	void UseBoost(void);
-	void EndBoost(void);
+	void UseBoost(void);		void EndBoost(void);
+	void UpVecUZ(void);			void SetStick(CInputJoyPad_0 *&pPad);
 	void SetState(PLAYERSTATE state);
-	void Tackle(float &fValue);
-	void UpVecUZ(void);
-	void SetStick(CInputJoyPad_0 *&pPad);
+	float GetDistance(int nRank);
 
 	void UpdateField(void);
 	void SetStateSpeed(STATE_SPEED state);
@@ -294,15 +301,12 @@ private:
 	void ChaseEgg(void);
 	void BulletEgg(void);
 	void CollisionCharacter(void);
-	void Strike(CPlayer *pPlayer);
 	void ChaseAnnoyS(void);
 	void EggJump(void);
 	float HatchTime(float fTime, float fAddTime);
 	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
 
 	CModel						**m_apModel;			//パーツモデルのポインタ
-	PlayerAnim					m_nAnimnow;						//現在のアニメーション
-
 	//static CModel *		m_pModel;			//パーツモデルのポインタ
 	//static int				m_nMaxModel;	//読み込むモデルの最大数
 	//static int				m_nMaxParts;	//読み込むパーツの最大数
@@ -376,31 +380,39 @@ private:
 	D3DXVECTOR3					  m_FNor;						// 地面の法線
 	float						  m_fPosY;						// 別加算位置Y
 	float						  m_fLength;					// 横幅
-	float						  m_fRoad;						// IN_OUTの％
 	float						  m_fTilt;				//坂
-	float						  m_fCTiltV;				//カメラ用坂
-	float						  m_fCTiltW;				//カメラ用坂
+	float						  m_fCTiltV;			//カメラ用坂
+	float						  m_fCTiltW;			//カメラ用坂
 	float						  m_fRotOld;			//前のRotY
 	float						  m_fPower;				//加速プラス用
 	float						  m_fTackle;			//タックル後のアクセルF
 	float						  m_fVecUZ;				//Z角度
 	float						  m_fStick;				//スティック角度
-	int							  m_nMap;						// 判定を取るマップ
-	int							  m_nNumRoad;					// 道の番号
-	bool						  m_bDivided;					// 分かれ道かどうか
-	bool						  m_bJumpOld;					// ジャンプの前F
-	bool						  m_bOrbit;			//オービットの削除制御用
+	int							  m_nMap;				// 判定を取るマップ
+	int							  m_nNumRoad;			// 道の番号
+	bool						  m_bDivided;			// 分かれ道かどうか
+	bool						  m_bJumpOld;			// ジャンプの前F
+	bool						  m_bOrbit;				//オービットの削除制御用
+	D3DXVECTOR3					  m_WindMove;			//風の移動量
+	float						  m_fCntWind;			//風の管理用
+	//AI用----------------------------------
+	float						  m_fRoad;				// IN_OUTの％
+	bool						  m_bSJump;				// ジャンプ情報保存
+	//--------------------------------------
 
 	// モーション関数	新規
 	static KEY_INFO				  *m_pKeyInfo[MAX_MOTION];		// キー情報へのポインタ
+	PlayerAnim					  m_PlayerAnim;
+	KEY_INFO					  *m_pKey;						// 次のキー						
 	int							  m_nKey;						// 現在のキーナンバー
-	int							  m_nCountFlame;				// フレーム数
+	float						  m_fCountFlame;				// フレーム数
+	D3DXVECTOR3					  m_PartsPos[MAX_PARTS];		// パーツ数分の位置
+	D3DXVECTOR3					  m_PartsRot[MAX_PARTS];		// パーツ数分の角度
+
 	static int					  m_nNumParts;					// パーツ数
 	static int					  m_aIndexParent[MAX_PARTS];	// 親のインデックス
 	static KEY					  m_aKayOffset[MAX_PARTS];		// オフセット情報
 	static MOTION_INFO			  m_aMotionInfo[MAX_MOTION];	// モーション情報
-	int							  m_nMotionType;				// モーションのタイプ(int型)
-	bool						  m_bMotionEnd;					// モーション終了
 
 	CBillBoord					  *m_pPlayerNum;				// プレイヤー番号（追従）
 	bool						  m_bGoal;						// ゴール

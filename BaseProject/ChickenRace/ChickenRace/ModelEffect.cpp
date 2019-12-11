@@ -45,6 +45,7 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, D3DXVECTOR3 &move, TYPE &type, STATE &
 	D3DXVECTOR3 &m_pos = GetposR();
 	float fRot = (CServer::Rand() % 628) * 0.01f;
 	float fSize = 10.0f * (1.0f + (CServer::Rand() % 100) * 0.005f);
+	float fWK = 1.0f;
 
 	Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	m_Type = type;
@@ -61,7 +62,21 @@ void	CModelEffect::Set(D3DXVECTOR3 *&pos, D3DXVECTOR3 &move, TYPE &type, STATE &
 		m_pos = *pos;
 		m_pos += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fSize;
 		m_move = move;
-		m_move.y = 1.0f;
+		m_move.y += 1.0f;
+		break;
+	case TYPE_WATER:
+	case TYPE_WATER_S:
+		fWK = 1.0f + (float)(TYPE_WATER - m_Type);
+		GetScaleR().x = fSize * 0.05f * (1.0f + (fWK - 1.0f) * 0.5f);
+		SetModelType(MODEL_TYPE_EFFECT);
+		SetTextureType(TEXTURE_TYPE_DRIT);
+		CModel3D::Init();
+		m_pos = *pos;
+		m_pos += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fSize;
+		m_move = D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * (2.0f / (fWK * 2.0f));
+		m_move += move * (1.0f + ((fWK - 1.0f) * 0.5f));
+
+		m_move.y += 2.0f * fWK;
 		break;
 	}
 }
@@ -94,6 +109,14 @@ void	CModelEffect::Update(void)
 		m_move.z *= 0.99f;
 		m_move.y *= 0.95f;
 		GetScaleR().x += (1.0f - (m_fCntState / SMOKE_TIME)) * 0.02f;
+		break;
+	case TYPE_WATER:
+	case TYPE_WATER_S:
+		if (m_fCntState > WATER_TIME) { Uninit(); return; }
+		Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (m_fCntState / WATER_TIME)));
+		m_move.x *= 0.99f;
+		m_move.z *= 0.99f;
+		m_move.y -= WATER_G;
 		break;
 	}
 	m_fCntState += 1.0f;

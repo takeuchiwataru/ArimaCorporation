@@ -25,9 +25,9 @@
 //*****************************************************************************
 LPDIRECT3DTEXTURE9	CDispEffect::m_pTexAll[TEX_MAX] = {};			// テクスチャ番号
 
-//==================================================================================================//
-//    * 読み込み関数 *
-//==================================================================================================//
+																	//==================================================================================================//
+																	//    * 読み込み関数 *
+																	//==================================================================================================//
 void CDispEffect::Load(void)
 {
 	LPDIRECT3DDEVICE9		pD3DDevice = CManager::GetRenderer()->GetDevice();
@@ -44,6 +44,8 @@ void CDispEffect::Load(void)
 			case TEX_BOOST:		strcat(aStr, "DispEffect_Boost.jpg");	break;
 			case TEX_FootSteps:	strcat(aStr, "Footsteps.jpg");			break;
 			case TEX_Shadow:	strcat(aStr, "shadow000.jpg");			break;
+			case TEX_Pin:		strcat(aStr, "ItemEfc_Pin.jpg");		break;
+			case TEX_Light:		strcat(aStr, "ItemEfc_Light.jpg");		break;
 			}
 			D3DXCreateTextureFromFile(pD3DDevice, aStr, &m_pTexAll[nCount]);
 		}
@@ -109,9 +111,9 @@ void	CDispEffect::Uninit(void)
 	{
 		if (m_pDispAnim[nCount] != NULL) { m_pDispAnim[nCount]->Uninit(); m_pDispAnim[nCount] = NULL; }
 	}
-	for (nCount = 0;nCount < DISP_ANIM_MAX;nCount++)
+	for (nCount = 0; nCount < DISP_ANIM_MAX; nCount++)
 	{//画面個別演出の破棄
-		if (m_pAnim[nCount] != NULL) 
+		if (m_pAnim[nCount] != NULL)
 		{
 			m_pAnim[nCount]->Uninit();
 			m_pAnim[nCount] = NULL;
@@ -207,9 +209,9 @@ void	CDispEffect::AnimUp(void)
 		if (m_pAnim[nCount] != NULL)
 		{//個別演出の更新
 			m_pAnim[nCount]->Update();
-			if (m_pAnim[nCount]->GetAnim() == C2DAnim::ANIMATION_END) 
+			if (m_pAnim[nCount]->GetAnim() == C2DAnim::ANIMATION_END)
 			{//エフェクトの終了
-				m_pAnim[nCount]->Uninit(); 
+				m_pAnim[nCount]->Uninit();
 				m_pAnim[nCount] = NULL;
 			}
 		}
@@ -241,9 +243,9 @@ void	CDispEffect::GetSize(D3DXVECTOR3 &pos, float &fSizeX, float &fSizeY)
 	}
 	else
 	{
-		if (nPlayer > 2) 
+		if (nPlayer > 2)
 		{//3人以上なら
-			fSizeX = 0.5f; 
+			fSizeX = 0.5f;
 			fSizeY = 0.5f;
 			pos = D3DXVECTOR3(
 				(SCREEN_WIDTH * 0.25f) + (SCREEN_WIDTH * 0.5f * (nNumber % 2)),
@@ -255,7 +257,7 @@ void	CDispEffect::GetSize(D3DXVECTOR3 &pos, float &fSizeX, float &fSizeY)
 			fSizeX = 1.0f;
 			fSizeY = 0.5f;
 			pos = D3DXVECTOR3(
-				SCREEN_WIDTH * 0.5f, 
+				SCREEN_WIDTH * 0.5f,
 				(SCREEN_HEIGHT * 0.25f) + (SCREEN_HEIGHT * 0.5f * nNumber),
 				0.0f);
 		}
@@ -275,8 +277,8 @@ void CDispEffect::SetEffect(EFFECT Effect)
 
 	for (nCount = 0; nCount < EFFECT_MAX; nCount++)
 	{
-		if (m_Effect == nCount) 
-		{ 
+		if (m_Effect == nCount)
+		{
 			if (m_pDispAnim[nCount]->Getstate() == C2DAnim::STATE_FADEOUT)
 			{//OUT状態ならINに
 				m_pDispAnim[nCount]->SetState(C2DAnim::STATE_FADEIN, 0.1f);
@@ -303,7 +305,7 @@ void	CDispEffect::ChangeEffect(void)
 	{
 	case EFFECT_SWAMP:
 		float fRot = (CServer::Rand() % 628) * 0.01f;
-		for (int nCount = 0; nCount < DISP_SSET; nCount++) 
+		for (int nCount = 0; nCount < DISP_SSET; nCount++)
 		{
 			SetSwmp(SetAnim(false), fRot);
 			fRot += (D3DX_PI * 2.0f) / DISP_SSET;
@@ -384,8 +386,8 @@ void	CDispEffect::SetSwmp(C2DAnim *&pAnim, float fRot)
 
 	GetSize(pos, fSizeX, fSizeY);
 	plus = D3DXVECTOR3(
-		sinf(fRot) * SCREEN_WIDTH * fDisX,
-		cosf(fRot) * SCREEN_HEIGHT * fDisY, 
+		sinf(fRot) * SCREEN_WIDTH * fDisX * fSizeX,
+		cosf(fRot) * SCREEN_HEIGHT * fDisY * fSizeY,
 		0.0f);
 
 	pos += plus;

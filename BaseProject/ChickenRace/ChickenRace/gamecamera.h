@@ -41,6 +41,7 @@ public:
 	void SetType(CAMERA camera) { m_cameraType = camera; }
 	void SetPlayer(CPlayer *pPlayer) { m_pPlayer = pPlayer; }
 	void UseBoost(void) { m_fPlusDis = 1.5f; }
+	float &GetfRot(void) { return m_fRot; };
 
 private:
 	void UpdateCharSelect(void);
@@ -52,8 +53,8 @@ private:
 	CAMERA		m_cameraType;
 	CPlayer		*m_pPlayer;
 	float		m_fDistance;
-	float		m_fBackTime;
-	float		m_fCntTime;
 	float		m_fPlusDis;
+	float		m_fRot;			//ŒvŽZŒã‚ÌŠp“x
+	float		m_fGAngle;		//–ÚŽw‚·‰æŠp
 };
 #endif

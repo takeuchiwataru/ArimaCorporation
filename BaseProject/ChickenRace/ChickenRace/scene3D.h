@@ -90,23 +90,61 @@ class C3DPolygon : public CScene3D
 public:
 	typedef enum
 	{
+		TYPE_Pin,
+		TYPE_Light,
 		TYPE_Shadow,
 		TYPE_FootSteps,
 		TYPE_MAX
 	}TYPE;
-	C3DPolygon() : CScene3D(1) {};
+	C3DPolygon(int nPriority = 1) : CScene3D(nPriority) {};
 	~C3DPolygon() {};
 
-	static C3DPolygon *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot);
-	void	Set(TYPE &Type, float &fCntState, D3DXCOLOR &col);
+	static C3DPolygon *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nPriority = 1);
 	HRESULT Init(void);
 	void Update(void);
 	void Draw(void);
-
 	void SetShadow(D3DXVECTOR3 pos);
+	void SetColor(D3DXCOLOR col) { m_col = col; CScene3D::SetColor(col); };
+	D3DXCOLOR &GetcolR(void) { return m_col; }
+
+protected:
+	void	Setting(TYPE &Type, D3DXVECTOR3 &pos, D3DXVECTOR3 &rot);
 private:
+	void	Set(TYPE &Type, float &fCntState, D3DXCOLOR &col);
+	void	SetRotY(void);
+	void	GoStraight(float fPlus);
+	//==変数===========================================================================
+	D3DXVECTOR3	m_Initpos;		//初期位置
 	D3DXCOLOR	m_col;			//色
 	TYPE		m_Type;			//種類
 	float		m_fCntState;	//状態管理用
+};
+//=============================================================================
+// クラス定義
+//=============================================================================
+class C3DAnim : public C3DPolygon
+{
+public:
+	typedef enum
+	{
+		ANIM_LOOP = -1,
+		ANIM_END,
+		ANIM_ONE,
+		ANIM_MAX
+	}ANIM;
+	C3DAnim(int nPriority = 4) : C3DPolygon(nPriority) {};
+	~C3DAnim() {};
+
+	static C3DAnim *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot);
+	HRESULT Init(void);
+	void Update(void);
+
+private:
+	bool	EndCheck(void);
+	void	Setting(TYPE &Type);
+	//==変数===========================================================================
+	ANIM	m_Anim;
+	int		m_nPtn, m_nPtnX, m_nPtnY;	//アニメーション情報
+	int		m_nSpeed, m_nCntAnim;	//アニメーション管理用
 };
 #endif

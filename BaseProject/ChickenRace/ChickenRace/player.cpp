@@ -34,6 +34,7 @@
 #include "mesh.h"
 #include "meshfield.h"
 #include "Orbit.h"
+#include "Character.h"
 
 //=============================================================================
 // マクロ定義
@@ -50,10 +51,10 @@
 #define THROW				(11.0f)										// 卵を投げる力
 #define EGG_RAND			(2.0f)										// 卵に乗るときのジャンプ力
 #define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
-#define SPEED_CHICK			(0.5f)										// 加速する量ひよこ
+#define SPEED_CHICK			(0.4f)										// 加速する量ひよこ
 #define SPEED_EGG			(0.2f)										// 加速する量卵
-#define SPEED_COUNT_ANNOY	(50)										// 減速状態
-#define SPEED_COUNT_DAMAGE	(0)											// ダメージ状態
+#define SPEED_COUNT_ANNOY	(5.0f)										// 減速状態
+#define SPEED_COUNT_DAMAGE	(0.0f)											// ダメージ状態
 #define EGGJUMP				(2.0f)										// 卵のジャンプ力
 #define ANNOY_PARTICLE		(5)											// 減速エフェクトの出る間隔
 #define COL_PARTICLE		(30)										// 卵やひよこが当たったときに出るエフェクトの量
@@ -64,7 +65,7 @@
 
 // プレイヤー情報
 #define PLAYER_ACCEL	(0.5f)											// 加速値（前進）
-#define PLAYER_BRAKS	(-0.2f)											// 加速値（後進）
+#define PLAYER_BRAKS	(0.75f)											// 加速値（後進）
 #define PLAYER_DOWN		(0.08f)											// 減速度
 #define PLAYER_ADDROT	(0.005f)										// 回転量
 #define PLAYER_DOWNROT	(0.2f)											// 回転量
@@ -72,10 +73,15 @@
 #define PLAYER_JUMP		(2.0f)											// 回転量
 #define PLAYER_GRAVITY	(0.09f)											// 回転量
 
+#define WIND_TIME		(15.0f)										//風の持続時間
+#define WIND_POW		(2.0f)										//風の強さ
 #define PLAYER_STRIKE	(0.4f)										//衝撃の強さ
-#define PLAYER_STRPLUS	(0.4f)										//加速度
-#define PLAYER_STRDOWN	(60.0f)		
-#define PLAYER_POWDOWN	(0.15f)		
+#define PLAYER_STRPLUS	(0.4f)										//タックル加速度
+#define PLAYER_STRDOWN	(50.0f)										//タックル最大減速値
+#define PLAYER_POWDOWN	(0.0385f)									//タックル加速度の毎F減少値
+#define PLAYER_POWMAX	(0.25f)										//タックル加速度の最大値
+#define PLAYER_SPDUP	(1.0f)										//アクセル
+#define PLAYER_SPDDOWN	(0.3f)										//アクセルの減速
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
@@ -238,6 +244,8 @@ HRESULT CPlayer::Init(void)
 	m_nMap = 0;
 	m_nNumRoad = 0;
 
+	m_WindMove = INIT_VECTOR;
+	m_fCntWind = 0.0f;;
 	m_FNor = INIT_VECTOR;
 	m_fTilt = 0.0f;
 	m_fCTiltV = 0.0f;
@@ -249,9 +257,9 @@ HRESULT CPlayer::Init(void)
 	m_fVecUZ = 0.0f;
 	m_fStick = 1.0f;
 	m_bJumpOld = m_bJump;
+	m_bSJump = false;
 
-	m_nAnimnow = PLAYERANIM_NEUTRAL;	//ニュートラル状態
-	m_nCountFlame = 0;
+	m_fCountFlame = 0;
 	m_nKey = 0;
 
 	m_bGoal = false;					// ゴール
@@ -292,27 +300,29 @@ HRESULT CPlayer::Init(void)
 
 	CModel::ParentModel(m_apModel, CModel::TYPE_CHICKEN);
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
-	for(int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
+	for (int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
 	{
-	if (m_aIndexParent[nCountIndex] == -1)
-	{
-		//モデルの親を指定
-		m_apModel[nCountIndex]->SetParent(NULL);
-	}
-	else
-	{
-		//モデルの親を指定
-		m_apModel[nCountIndex]->SetParent(m_apModel[m_aIndexParent[nCountIndex]]);
-	}
+		if (m_aIndexParent[nCountIndex] == -1)
+		{
+			//モデルの親を指定
+			m_apModel[nCountIndex]->SetParent(NULL);
+		}
+		else
+		{
+			//モデルの親を指定
+			m_apModel[nCountIndex]->SetParent(m_apModel[m_aIndexParent[nCountIndex]]);
+		}
 
-	m_apModel[nCountIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nCountIndex].fposX,
-		m_pos.y + m_aKayOffset[nCountIndex].fposY,
-		m_pos.z + m_aKayOffset[nCountIndex].fposZ));
+		m_apModel[nCountIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nCountIndex].fposX,
+			m_pos.y + m_aKayOffset[nCountIndex].fposY,
+			m_pos.z + m_aKayOffset[nCountIndex].fposZ));
 	}
+	ResetMotion();
 
 	m_pShadow = NULL;
 	m_pShadow = C3DPolygon::Create(C3DPolygon::TYPE_Shadow, m_pos, D3DXVECTOR3(0.0f, m_rot.y, 0.0f));
 	m_pShadow->SetTexture(1, 1, 1, 1);
+
 	return S_OK;
 }
 
@@ -497,6 +507,7 @@ void CPlayer::UpdateRace(void)
 	ChaseEgg();				// 卵がついてくる処理
 
 	CollisionCharacter();	// キャラクター同士の当たり判定
+	CCharcter::CollisionAll(this);
 
 	ChickAppear();			// 
 
@@ -521,7 +532,7 @@ void CPlayer::UpdateRace(void)
 		m_move *= 0.0f;
 		SetStateHandle(HANDLE_MAX);
 		SetStateSpeed(STATE_SPEED_DOWN);
-		m_nAnimnow = PLAYERANIM_NEUTRAL;
+		CancelMotion(PLAYERANIM_NEUTRAL, false);
 		return;
 	}
 
@@ -545,12 +556,11 @@ void CPlayer::UpdateRace(void)
 			m_pPlayerpos->SetColor(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
-	m_nMotionType = m_nAnimnow;
-
 	//モーション更新
 	UpdateMotion();
 	EffectUp();
 }
+
 
 //=============================================================================
 // 選択の更新処理
@@ -558,8 +568,6 @@ void CPlayer::UpdateRace(void)
 void CPlayer::UpdateSelect(void)
 {
 	//CDebugProc::Print("m_pos x : %.1f y : %.1f z : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
-
-	m_nMotionType = m_nAnimnow;
 
 	//モーション更新
 	UpdateMotion();
@@ -571,8 +579,6 @@ void CPlayer::UpdateSelect(void)
 void CPlayer::UpdateResult(void)
 {
 	//CDebugProc::Print("m_pos x : %.1f y : %.1f z : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
-
-	m_nMotionType = m_nAnimnow;
 
 	//モーション更新
 	UpdateMotion();
@@ -595,6 +601,13 @@ void CPlayer::UpdateAI(void)
 		SetStateSpeed(STATE_SPEED_ACCEL);
 	else
 		m_nStartCounter++;
+
+	if (!m_bJump && m_bSJump)
+	{//ジャンプ
+		m_bSJump = false;
+		m_bJump = true;
+		m_move.y += PLAYER_JUMP;
+	}
 
 	UseItem();
 }
@@ -737,18 +750,27 @@ void CPlayer::UpdateFEffect(void)
 {
 	CDispEffect::EFFECT Effect = CDispEffect::EFFECT_MAX;
 
-	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP)
+	if (m_FEffect == CCOL_MESH::EFFECT_SWAMP && !m_bJump)
 	{//水溜まり
-		Effect = CDispEffect::EFFECT_SWAMP;
-		m_fPosY += (-10.0f - m_fPosY) * 0.1f;
+		if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
+		{
+			m_move *= 0.93f;
+			m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+			Effect = CDispEffect::EFFECT_SWAMP;
+			m_fPosY += (-10.0f - m_fPosY) * 0.1f;
+		}
 	}
 	else { m_fPosY *= 0.9f; }
 
-	if (m_FEffect == CCOL_MESH::EFFECT_GRASS)
+	if (m_FEffect == CCOL_MESH::EFFECT_GRASS && !m_bJump)
 	{//ダート
-	 //Effect = CDispEffect::EFFECT_SWAMP;
+		if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
+		{
+			m_move *= 0.93f;
+			m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+		}
 	}
-
+	
 	if (m_FEffect == CCOL_MESH::EFFECT_DROP)
 	{//落下
 		if (m_bDrop == false)
@@ -828,6 +850,7 @@ void CPlayer::UseBoost(void)
 //=============================================================================
 void CPlayer::EndBoost(void)
 {
+	if (m_fCntWind > 0.0f) { return; }
 	m_bOrbit = true;
 	CEfcOrbit::Delete(false);
 	m_bOrbit = false;
@@ -844,6 +867,17 @@ void CPlayer::SetState(PLAYERSTATE state)
 		EndBoost();
 		break;
 	}
+	switch (state)
+	{
+	case PLAYERSTATE_SPEEDUP:
+	case PLAYERSTATE_SPEEDUP_S:
+		UseBoost();
+		break;
+	case PLAYERSTATE_DAMAGE:	break;
+	case PLAYERSTATE_SPEEDDOWN:
+	case PLAYERSTATE_SPEEDDOWN_S:
+		break;
+	}
 	m_State = state;
 }
 //=============================================================================
@@ -852,24 +886,104 @@ void CPlayer::SetState(PLAYERSTATE state)
 void CPlayer::EffectUp(void)
 {
 	//煙、足跡更新
-	if (!m_bJump && m_nMotionType == PLAYERANIM_RUN)
+	if (!m_bJump && m_PlayerAnim == PLAYERANIM_RUN)
 	{//地面にいる && 歩きモーション
-		if (m_nCountFlame == 0)
+		if (m_fCountFlame == 0.0f)
 		{//キーが変わったなら
 			D3DXVECTOR3 pos = m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f);
-			//煙
-			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-			CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
 
-			if (m_nKey % 2 == 0)
-			{//足が付いたなら足跡
-				C3DPolygon::Create(C3DPolygon::TYPE_FootSteps, pos
-					, D3DXVECTOR3(-m_fCTiltV * D3DX_PI * 0.5f, m_rot.y, m_fCTiltW * D3DX_PI * 0.25f))->SetTexture(m_nKey / 2, 2, 1, 1);
+			switch (m_FEffect)
+			{
+			case CCOL_MESH::EFFECT_SWAMP:	EffectWater(pos);	break;
+			case CCOL_MESH::EFFECT_GRASS:	EffectWater(pos);	break;
+			case CCOL_MESH::EFFECT_NORMAL:
+			case CCOL_MESH::EFFECT_BOOST:
+				EffectNor(pos);
+				break;
+
 			}
 		}
 	}
 }
+//=============================================================================
+// 通常エフェクトの生成処理
+//=============================================================================
+void CPlayer::EffectNor(D3DXVECTOR3 &pos)
+{//煙
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+
+	if (m_nKey % 2 == 0)
+	{//足が付いたなら足跡
+		C3DPolygon::Create(C3DPolygon::TYPE_FootSteps, pos
+			, D3DXVECTOR3(-m_fCTiltV * D3DX_PI * 0.5f, m_rot.y, m_fCTiltW * D3DX_PI * 0.25f))->SetTexture(m_nKey / 2, 2, 1, 1);
+	}
+}
+//=============================================================================
+// アクセル（加速）処理
+//=============================================================================
+void CPlayer::Accelerator(bool bAccel)
+{
+	if (m_bJump) { return; }
+
+	if (bAccel)
+	{
+		float fUp, fSpd;
+
+		switch (m_State)
+		{
+		case PLAYERSTATE_SPEEDUP:
+		case PLAYERSTATE_SPEEDUP_S:
+			fUp = 1.0f;
+			fSpd = PLAYER_SPDUP * 2.0f;
+			break;
+		default:
+			fUp = 1.0f - (m_rot.y - m_fRotOld) / (D3DX_PI * 0.5f);
+			fSpd = PLAYER_SPDUP;
+			break;
+		}
+		if (m_PlayerInfo.fCountTime < 0.0f) { m_PlayerInfo.fCountTime = 0.0f; }
+		if (fUp < 0.0f) { fUp = 0.0f; }
+		float fWK = (fSpd * fUp) * (1.0f / powf(1.0f + (m_PlayerInfo.fCountTime * 0.1f), 10.0f));
+		m_PlayerInfo.fCountTime += (fSpd * fUp) * (1.0f / powf(1.0f + (m_PlayerInfo.fCountTime), 2.0f));
+		//m_fAccel += (fUp * PLAYER_SPDUP) / powf(m_fAccel + 1.0f, 3.0f);
+		CDebugProc::Print("加速度 %.5f\n", m_PlayerInfo.fCountTime);
+
+		if (m_PlayerInfo.fCountTime > 10.0f) { m_PlayerInfo.fCountTime = PLAYER_COUNT; }
+	}
+	else
+	{
+		float fMin = 0.0f;
+		switch (m_StateSpeed)
+		{
+		case STATE_SPEED_BRAKS:	
+			if (m_PlayerInfo.fCountTime > 0.0f)
+			{ m_PlayerInfo.fCountTime *= 0.5f; }
+			fMin = -PLAYER_COUNT * 0.35f; break;
+		}
+		m_PlayerInfo.fCountTime -= PLAYER_SPDDOWN * (1.0f / powf(1.0f + (m_PlayerInfo.fCountTime), 2.0f));
+		if (m_PlayerInfo.fCountTime < fMin) { m_PlayerInfo.fCountTime = fMin; }
+	}
+}
+//=============================================================================
+// 水エフェクトの生成処理
+//=============================================================================
+void CPlayer::EffectWater(D3DXVECTOR3 &pos)
+{//煙
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_WATER);
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_WATER);
+
+	if (m_nKey % 2 == 0)
+	{//足が付いたなら足跡
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
+	}
+}
+
 //=============================================================================
 // コントロールキー
 //=============================================================================
@@ -889,7 +1003,7 @@ void CPlayer::ControlKey(void)
 		m_move *= 0.0f;
 		SetStateHandle(HANDLE_MAX);
 		SetStateSpeed(STATE_SPEED_DOWN);
-		m_nAnimnow = PLAYERANIM_NEUTRAL;
+		CancelMotion(PLAYERANIM_NEUTRAL, false);
 		return;
 	}
 
@@ -936,7 +1050,7 @@ void CPlayer::ControlKey(void)
 				(pXpad->GetPress(INPUT_R2) == true))
 		)
 	{// ドリフト
-		if (m_PlayerInfo.fCountTime < 90)
+		if (m_PlayerInfo.fCountTime < PLAYER_COUNT * 0.7f)
 			SetStateSpeed(STATE_SPEED_ACCEL);
 		else
 			SetStateSpeed(STATE_SPEED_DRIFT);
@@ -1054,9 +1168,16 @@ void CPlayer::UpdateMove(void)
 	}
 	else { m_fTilt = 0.0f; }
 	if (m_fTilt > 0.05f) { m_fTilt = 0.05f; }
+	if (m_fTilt > -0.2f) { m_fTilt = -0.2f; }
 
 	RemakeAngle(&m_rot.y);
 
+	if (m_fCntWind > 0.0f)	
+	{//風の更新
+		m_fCntWind--;
+		EndBoost();
+	}
+	else					{ m_WindMove *= 0.95f; }
 	if (m_fPower > 0.0f)
 	{//加速度プラス用　時間経過で減少
 		m_fPower -= PLAYER_POWDOWN;
@@ -1079,26 +1200,27 @@ void CPlayer::UpdateMove(void)
 		m_nCountSpeed++;
 
 		float fTime = SPEEDUP_TIME;
-
+		m_PlayerInfo.fCountTime = PLAYER_COUNT;
 		if (m_State == PLAYERSTATE_SPEEDUP_S)
 		{
-			fTime = SPEEDUP_TIME * 3;
+			fTime = SPEEDUP_TIME * 2;
 		}
 
 		if (m_nCountSpeed > fTime)
 		{
-			m_State = PLAYERSTATE_NORMAL;
+			SetState(PLAYERSTATE_NORMAL);
 			m_nCountSpeed = 0;
-			EndBoost();
 		}
 	}
+	if (m_fPower > PLAYER_POWMAX) { m_fPower = PLAYER_POWMAX; }
+
 
 	float fAccel = m_PlayerInfo.fAccel;
 	float fBraks = m_PlayerInfo.fBraks;
 	float fAddRot = m_PlayerInfo.fAddRot;
 	float fDown = m_PlayerInfo.fDown;
-	float fPow = m_PlayerInfo.fCountTime + m_fPower;
-
+	float fPow = (m_PlayerInfo.fCountTime + m_fPower) / PLAYER_COUNT;
+	
 	fAddRot *= 0.65f;
 
 	//状態ごとの更新処理
@@ -1106,32 +1228,29 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-							//走るモーション
-		m_nAnimnow = PLAYERANIM_RUN;
+		//走るモーション
+		CancelMotion(PLAYERANIM_RUN, false);
 
 		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (fPow / 90.0f) * (1.0f - m_fTilt);
+			m_fSpeed = fAccel * fPow * (1.0f - m_fTilt);
 		}
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
-		if (m_PlayerInfo.fCountTime < 90)
-			m_PlayerInfo.fCountTime++;
-		else
-			m_PlayerInfo.fCountTime -= 0.3f;
+		Accelerator(true);
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
 							//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
-		m_fSpeed = fBraks * (fPow / 90.0f) * (1.0f - m_fTilt);
+		m_fSpeed = fBraks * fPow * (1.0f - m_fTilt);
 
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * m_fSpeed;
@@ -1140,10 +1259,7 @@ void CPlayer::UpdateMove(void)
 		//揺れを無効にする
 		m_bShake = false;
 
-		if (m_PlayerInfo.fCountTime < 90)
-			m_PlayerInfo.fCountTime++;
-		else
-			m_PlayerInfo.fCountTime -= 0.3f;
+		Accelerator(false);
 		break;
 	case STATE_SPEED_DRIFT:	//ドリフト状態
 
@@ -1152,52 +1268,39 @@ void CPlayer::UpdateMove(void)
 		fDown *= 0.35f;
 
 		//走るモーション
-		m_nAnimnow = PLAYERANIM_RUN;
+		CancelMotion(PLAYERANIM_RUN, false);
 
 		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
 		if (m_State == PLAYERSTATE_NORMAL || m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{
-			m_fSpeed = fAccel * (fPow / 90.0f) * (1.0f - m_fTilt);
+			m_fSpeed = fAccel * fPow * (1.0f - m_fTilt);
 		}
-
+		
 		//進行方向の設定
-		m_move.x += sinf(m_rot.y) * (m_fSpeed);
-		m_move.z += cosf(m_rot.y) * (m_fSpeed);
+		m_move.x += sinf(m_rot.y) * (m_fSpeed * 0.345f);
+		m_move.z += cosf(m_rot.y) * (m_fSpeed * 0.345f);
 
-		if (m_PlayerInfo.fCountTime < 90)
-			m_PlayerInfo.fCountTime++;
-		else
-			m_PlayerInfo.fCountTime -= 0.3f;
-
+		Accelerator(true);
 		break;
 	case STATE_SPEED_DOWN: //ダウン状態
 		if (m_bJump == true) { break; }
 
 		//CDebugProc::Print("DWON***\n");
-
-		m_fSpeed += (0.0f - m_fSpeed) * 0.05f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
+		if (m_fSpeed < 0.15f) { m_fSpeed *= 0.1f; }
+		m_fSpeed += (0.0f - m_fSpeed) * 0.015f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
 											  //進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
-		if (0 < m_PlayerInfo.fCountTime)
-			m_PlayerInfo.fCountTime -= 0.3f;
-		else
-			m_PlayerInfo.fCountTime = 0.0f;
-
+		Accelerator(false);
 		break;
 	default:
 		//走るモーション
-		m_nAnimnow = PLAYERANIM_NEUTRAL;
-
-		if (0 < m_PlayerInfo.fCountTime)
-			m_PlayerInfo.fCountTime--;
-		else
-			m_PlayerInfo.fCountTime = 0.0f;
-
+		CancelMotion(PLAYERANIM_NEUTRAL, false);
+		Accelerator(false);
 		break;
 	}
 
@@ -1268,38 +1371,32 @@ void CPlayer::UpdateMove(void)
 		m_PlayerInfo.fCountTime = SPEED_COUNT_DAMAGE;	// 減速
 		m_fSpeed = 0.0f;
 		break;
-
-	case PLAYERSTATE_SPEEDUP_S:
-		//進行方向の設定
-		m_PlayerInfo.fCountTime = 90;
-		m_fSpeed = 1.0f;
-		break;
 	}
 
 	if (m_bDamage == true)
 	{
 		m_nCntDamage++;
 
-		float fDamageTime = 0.0f;	// 状態が変わる時間の長さ
+		int nDamageTime = 0;	// 状態が変わる時間の長さ
 
 		if (m_State == PLAYERSTATE_DAMAGE)
 		{// 攻撃を食らったとき
-			fDamageTime = DAMAGE_TIME;
+			nDamageTime = DAMAGE_TIME;
 		}
 		else if (m_State == PLAYERSTATE_SPEEDDOWN)
 		{// スピードダウンを食らったとき
-			fDamageTime = SPEEDDOWN_TIME;
+			nDamageTime = SPEEDDOWN_TIME;
 		}
 		else if (m_State == PLAYERSTATE_SPEEDDOWN_S)
 		{// スピードダウンを食らったとき
-			fDamageTime = HatchTime(SPEEDDOWN_TIME, 120.0f);
+			nDamageTime = SPEEDDOWN_TIME;
 		}
 
-		if (m_nCntDamage > fDamageTime)
+		if (m_nCntDamage > nDamageTime)
 		{
 			if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 			{
-				m_State = PLAYERSTATE_NORMAL;
+				SetState(PLAYERSTATE_NORMAL);
 				m_nCntDamage = 0;
 
 				m_bDamage = false;
@@ -1336,18 +1433,25 @@ void CPlayer::UpdateMove(void)
 	//CDebugProc::Print("スピード : %1f  %1f  %1f\n", m_move.x, m_move.y, m_move.z);
 
 	//ハンドルの状態更新
+	float fHandle = m_PlayerInfo.fCountTime / (PLAYER_COUNT * 0.5f);
+	if (fHandle < 0.0f) { fHandle *= -1.0f; }
+	//if (m_PlayerInfo.fCountTime < 0.0f && fHandle < -0.2f)
+	//{ fHandle = -0.2f; }
+	if (fHandle > 1.0f) { fHandle = 1.0f; }
+	if (fHandle < -1.0f) { fHandle = -1.0f; }
+
 	if (m_StateHandle == HANDLE_LEFT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot -= fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f) * m_fStick;
+			m_fAddRot -= fAddRot * fHandle * m_fStick;
 		}
 	}
 	else if (m_StateHandle == HANDLE_RIGHT)
 	{
 		if (m_StateSpeed != STATE_SPEED_STOP)
 		{
-			m_fAddRot += fAddRot * (m_PlayerInfo.fCountTime < 45 ? (m_PlayerInfo.fCountTime / 45) : 1.0f)* m_fStick;
+			m_fAddRot += fAddRot * fHandle * m_fStick;
 		}
 	}
 
@@ -1358,9 +1462,7 @@ void CPlayer::UpdateMove(void)
 	}
 
 	//中心座標更新
-	m_pos.x += m_move.x;
-	m_pos.y += m_move.y;
-	m_pos.z += m_move.z;
+	m_pos += m_move + m_WindMove;
 
 	m_rot.y += m_fAddRot;
 
@@ -1491,7 +1593,7 @@ void CPlayer::CollisionObject(void)
 
 	bool bType = false;	//タイプのフラグ
 
-	for (int nCntPriority = 2; nCntPriority <= OBJECT_PRIOTITY; nCntPriority++)
+	for (int nCntPriority = OBJECT_PRIOTITY; nCntPriority <= OBJECT_PRIOTITY; nCntPriority++)
 	{
 		// プライオリティーチェック
 		pScene = CScene::GetTop(nCntPriority);
@@ -1574,34 +1676,31 @@ void CPlayer::CollisionFeed(void)
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
 
-	for (int nCntPriority = 2; nCntPriority <= FEED_PRIOTITY; nCntPriority++)
-	{
-		// プライオリティーチェック
-		pScene = CScene::GetTop(nCntPriority);
-		while (pScene != NULL)
-		{// プライオリティー内のリスト構造を最後まで見る
-			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+	// プライオリティーチェック
+	pScene = CScene::GetTop(FEED_PRIOTITY);
+	while (pScene != NULL)
+	{// プライオリティー内のリスト構造を最後まで見る
+		CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
 
-			if (pScene->GetObjType() == OBJTYPE_FEED)
-			{// タイプが障害物だったら
-				CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
+		if (pScene->GetObjType() == OBJTYPE_FEED)
+		{// タイプが障害物だったら
+			CFeed *pFeed = (CFeed*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-				if (pFeed->GetDeath() != true)
-				{
-					if (pFeed->CollisionFeed(&m_pos, &m_OldPos) == true)
-					{// 衝突した
-						EggAppear(pFeed);	// 卵出現
-						m_nNumEgg++;
-						m_nNumItem++;
+			if (pFeed->GetDeath() != true)
+			{
+				if (pFeed->CollisionFeed(&m_pos, &m_OldPos) == true)
+				{// 衝突した
+					EggAppear(pFeed);	// 卵出現
+					m_nNumEgg++;
+					m_nNumItem++;
 
-						break;
-					}
+					break;
 				}
 			}
-
-			// Nextに次のSceneを入れる
-			pScene = pSceneNext;
 		}
+
+		// Nextに次のSceneを入れる
+		pScene = pSceneNext;
 	}
 }
 
@@ -1877,10 +1976,11 @@ void CPlayer::BulletEgg(void)
 
 				// 加速
 			case CChick::TYPE_SPEED:
-				UseBoost();
-				m_State = PLAYERSTATE_SPEEDUP;
+				SetState(PLAYERSTATE_SPEEDUP);
 				m_fSpeed += SPEED_CHICK;
-				m_pChick[0]->SetDis(false);
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
 				break;
 
 				// 減速
@@ -1911,10 +2011,11 @@ void CPlayer::BulletEgg(void)
 
 				// 加速
 			case CChick::TYPE_SPEED_S:
-				UseBoost();
-				m_State = PLAYERSTATE_SPEEDUP_S;
+				SetState(PLAYERSTATE_SPEEDUP_S);
 				m_fSpeed += SPEED_CHICK;
-				m_pChick[0]->SetDis(false);
+
+				m_pChick[0]->Uninit();
+				m_pChick[0] = NULL;
 				break;
 			}
 
@@ -1948,8 +2049,7 @@ void CPlayer::BulletEgg(void)
 
 				// 加速
 			case CEgg::EGGTYPE_SPEED:
-				UseBoost();
-				m_State = PLAYERSTATE_SPEEDUP;
+				SetState(PLAYERSTATE_SPEEDUP);
 				m_fSpeed += SPEED_EGG;
 				break;
 			}
@@ -2002,7 +2102,7 @@ void CPlayer::CollisionEgg(void)
 						{
 							m_bDamage = true;
 							m_nCntDamage = 0;
-							m_State = PLAYERSTATE_DAMAGE;
+							SetState(PLAYERSTATE_DAMAGE);
 
 							D3DXVECTOR2 fSize;
 
@@ -2029,7 +2129,7 @@ void CPlayer::CollisionEgg(void)
 						{
 							m_bDamage = true;
 							m_nCntDamage = 0;
-							m_State = PLAYERSTATE_SPEEDDOWN;
+							SetState(PLAYERSTATE_SPEEDDOWN);
 						}
 						pEgg->Uninit();	// 卵削除
 						break;
@@ -2387,7 +2487,7 @@ void CPlayer::ChaseAnnoyS(void)
 																									// 食らっている時間をカウント
 		m_nAnnoySTimer++;
 
-		if (m_nAnnoySTimer > HatchTime(SPEEDDOWN_TIME, 120.0f))
+		if (m_nAnnoySTimer > SPEEDDOWN_TIME)
 		{// 一定時間たったら
 			m_nAnnoySTimer = 0;
 			m_pAnnoyChick[m_nPlayerNum]->Uninit();
@@ -2398,7 +2498,7 @@ void CPlayer::ChaseAnnoyS(void)
 		{
 			m_bDamage = true;
 			m_nCntDamage = 0;
-			m_State = PLAYERSTATE_SPEEDDOWN_S;
+			SetState(PLAYERSTATE_SPEEDDOWN_S);
 		}
 	}
 }
@@ -2460,7 +2560,7 @@ void CPlayer::CollisionCharacter(void)
 					m_pos = D3DXVECTOR3(pos.x + sinf(fAngle) * PLAYER_LENGTH * 2.0f, m_pos.y, pos.z + cosf(fAngle) * PLAYER_LENGTH * 2.0f);
 
 					//弾く
-					Strike(pPlayer[nCntMember]);
+					Strike(pPlayer[nCntMember], pPlayer[nCntMember]->m_pos, pPlayer[nCntMember]->m_move);
 				}
 			}
 		}
@@ -2469,15 +2569,14 @@ void CPlayer::CollisionCharacter(void)
 //=============================================================================
 // 弾く処理
 //=============================================================================
-void CPlayer::Strike(CPlayer *pPlayer)
+void CPlayer::Strike(CPlayer *pPlayer, D3DXVECTOR3 pos, D3DXVECTOR3 move)
 {
 	D3DXVECTOR3 Strike[2], Power[2];
 	float fTargetRot[2], fMoveRot[2], fPower[2];
-	float fDown;
 
 	//情報の作成
-	Strike[0] = m_move;	Strike[1] = pPlayer->m_move;
-	fTargetRot[0] = atan2f(m_pos.x - pPlayer->m_pos.x, m_pos.z - pPlayer->m_pos.z);
+	Strike[0] = m_move;	Strike[1] = m_move;
+	fTargetRot[0] = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
 	fTargetRot[1] = fTargetRot[0] + D3DX_PI;
 	for (int nCnt = 0; nCnt < 2; nCnt++)
 	{
@@ -2490,46 +2589,67 @@ void CPlayer::Strike(CPlayer *pPlayer)
 	}
 
 	//衝撃の反映
-	pPlayer->m_move -= Power[0];
+	move -= Power[0];
 	m_move -= Power[1];
 
 	//自身に跳ね返す
-	pPlayer->m_move += Power[1];
+	move += Power[1];
 	m_move += Power[0];
 
 	//跳ね返った衝撃に応じてカウント加算
-	fTargetRot[0] -= fMoveRot[0];
-	fDown = (cosf(fTargetRot[0]) * fPower[0]) / PLAYER_STRPLUS;
-	fDown -= (cosf(fTargetRot[0] + D3DX_PI) * fPower[1]) / PLAYER_STRPLUS;
-	Tackle(fDown);
+	Tackle(ColMove(fTargetRot[0], fMoveRot[0], fPower[0], fPower[1]));
 
-	fTargetRot[1] -= fMoveRot[1];
-	fDown = (cosf(fTargetRot[1]) * fPower[1]) / PLAYER_STRPLUS;
-	fDown -= (cosf(fTargetRot[1] + D3DX_PI) * fPower[0]) / PLAYER_STRPLUS;
-	pPlayer->Tackle(fDown);
+	if (pPlayer != NULL)
+	{//プレイヤーなら
+		pPlayer->m_move = move;
+		pPlayer->Tackle(ColMove(fTargetRot[1], fMoveRot[1], fPower[0], fPower[1]));
+	}
+}
+//=============================================================================
+// 移動方向と衝撃方向から移動量を計算
+//=============================================================================
+float CPlayer::ColMove(float &fTargetRot, float &fMoveRot, float fPow0, float fPow1)
+{
+	float fDown;
+	fTargetRot -= fMoveRot;
+	fDown = (cosf(fTargetRot) * fPow0) / PLAYER_STRPLUS;
+	fDown -= (cosf(fTargetRot + D3DX_PI) * fPow1) / PLAYER_STRPLUS;
+	return fDown;
 }
 //=============================================================================
 // タックル時の移動量加算
 //=============================================================================
-void CPlayer::Tackle(float &fValue)
+void CPlayer::Tackle(float fValue)
 {
 	if (fValue >= 0.0f)
 	{
-		if (m_fPower < fValue) { m_fPower = fValue; }
-		m_PlayerInfo.fCountTime += fValue;
-		if (m_fPower > 30.0f) { m_fPower = 30.0f; }
-		if (m_PlayerInfo.fCountTime > 90.0f) { m_PlayerInfo.fCountTime = 90.0f; }
+		if (m_fPower < fValue) { m_fPower = fValue * (PLAYER_POWMAX / 100.0f); }
+		m_PlayerInfo.fCountTime += fValue * (10.0f / 100.0f);
+		if (m_fPower > PLAYER_POWMAX) { m_fPower = PLAYER_POWMAX; }
+		if (m_PlayerInfo.fCountTime > 10.0f) { m_PlayerInfo.fCountTime = 10.0f; }
 		if (fValue > 10.0f) { m_fTackle = fValue * 0.5f; }
 	}
-	else 
+	else
 	{
-		fValue *= 2.0f;
+		//fValue *= 2.0f;
 		m_fPower = 0.0f;
 		if (fValue < -PLAYER_STRDOWN) { fValue = -PLAYER_STRDOWN; }
 
-		m_PlayerInfo.fCountTime += fValue; 
+		m_PlayerInfo.fCountTime += fValue * (10.0f / 100.0f);
 		if (m_PlayerInfo.fCountTime < 0.0f) { m_PlayerInfo.fCountTime = 0.0f; }
 	}
+}
+//=============================================================================
+// 風受け設定
+//=============================================================================
+void CPlayer::SetWind(float fRot)
+{
+	if (m_fCntWind > WIND_TIME - 10.0f) { return; }
+	m_rot.y += (fRot - m_rot.y) * 1.0f;
+	m_fCntWind = WIND_TIME;
+	m_WindMove += D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * WIND_POW;
+	EndBoost();
+	UseBoost();
 }
 //=============================================================================
 // CPUのコース取り変更
@@ -2542,8 +2662,8 @@ void CPlayer::UpVecUZ(void)
 	float fVecU = 0.0f;
 
 	RemakeAngle(&fVecWK);
-	if (fVecWK < -0.01f) { m_rot.z -= fVecWK * 0.5f;  bVec = true; if (m_rot.z > 0.8f) { m_rot.z = 0.8f; } }
-	if (fVecWK > 0.01f) { m_rot.z -= fVecWK * 0.5f; bVec = true; if (m_rot.z < -0.8f) { m_rot.z = -0.8f; } }
+	if (fVecWK < -0.01f) { m_rot.z -= fVecWK * 0.5f;  bVec = true; if (m_rot.z > 0.5f) { m_rot.z = 0.5f; } }
+	if (fVecWK > 0.01f) { m_rot.z -= fVecWK * 0.5f; bVec = true; if (m_rot.z < -0.5f) { m_rot.z = -0.5f; } }
 	if (!bVec)
 	{
 		m_rot.z *= 0.985f;
@@ -2567,7 +2687,6 @@ void CPlayer::SetStick(CInputJoyPad_0 *&pPad)
 
 	}
 }
-
 //=============================================================================
 // CPUのコース取り変更
 //=============================================================================
@@ -2603,138 +2722,111 @@ void CPlayer::ChangeRoad(void)
 //=============================================================================
 void CPlayer::UpdateMotion(void)
 {
-	//モーション
-	KEY *pKey, *pNextKey;
-	float fRateMotion;
-	float fDiffMotion;
-	D3DXVECTOR3 rotmotion;
-	D3DXVECTOR3 posmotion;
+	bool bSet = false;
 
-	//キーが最大数を上回らないように
-	if (m_aMotionInfo[m_nMotionType].nNumKey <= m_nKey)
+	float fSpd = 1.0f;
+	if (m_PlayerAnim == PLAYERANIM_RUN)
 	{
-		m_nKey = 0;
+		float fTime = m_PlayerInfo.fCountTime;
+		if (fTime < 0.0f) { fTime *= -1.0f; }
+		fSpd = 0.1f + (fTime / 9.0f);
 	}
+	m_fCountFlame += fSpd;	//F++
+
+	while (m_fCountFlame > m_pKey->nFrame)
+	{//キーの終了判定
+		bSet = true;
+		m_fCountFlame -= m_pKey->nFrame;
+		if (m_aMotionInfo[m_PlayerAnim].nNumKey - 1 <= m_nKey)
+		{//モーションの終了
+			if (!m_aMotionInfo[m_PlayerAnim].bLoop) { m_PlayerAnim = PLAYERANIM_NEUTRAL; }
+			m_nKey = 0;
+			m_fCountFlame = 0.0f;
+			m_pKey = &m_pKeyInfo[m_PlayerAnim][m_nKey];
+		}
+		else
+		{//キーを進める
+			m_nKey += 1;
+			m_pKey = &m_pKeyInfo[m_PlayerAnim][m_nKey];
+
+		}
+	}
+	if (bSet) { SettingParts(); }
+
+	UpMParts();	//パーツ更新
+}
+//=============================================================================
+// モーション　パーツの更新
+//=============================================================================
+void CPlayer::UpMParts(void)
+{
+	float fRateMotion;
+	D3DXVECTOR3 WKVec3;
+
+	//現在のキーから次のキーへの再生フレーム数におけるモーションカウンターの相対値を算出
+	fRateMotion = (float)m_fCountFlame / (float)m_pKey->nFrame;
 
 	//モーション更新
 	for (int nCntParts = 0; nCntParts < m_nNumParts; nCntParts++)
 	{
 		if (m_apModel[nCntParts] != NULL)
 		{
-			//現在のキーを取得
-			pKey = &m_pKeyInfo[m_nMotionType][m_nKey].aKey[nCntParts];
-			//次のキーを取得
-			pNextKey = &m_pKeyInfo[m_nMotionType][(m_nKey + 1) % m_aMotionInfo[m_nMotionType].nNumKey].aKey[nCntParts];
+			WKVec3 = D3DXVECTOR3(
+				m_pKey->aKey[nCntParts].fposX + m_aKayOffset[nCntParts].fposX,
+				m_pKey->aKey[nCntParts].fposY + m_aKayOffset[nCntParts].fposY,
+				m_pKey->aKey[nCntParts].fposZ + m_aKayOffset[nCntParts].fposZ);
+			m_apModel[nCntParts]->SetPos(m_PartsPos[nCntParts] + (WKVec3 - m_PartsPos[nCntParts]) * fRateMotion);
 
-			//現在のキーから次のキーへの再生フレーム数におけるモーションカウンターの相対値を算出
-			fRateMotion = (float)m_nCountFlame / (float)m_pKeyInfo[m_nMotionType][m_nKey].nFrame;
+			WKVec3 = D3DXVECTOR3(
+				m_pKey->aKey[nCntParts].frotX + m_aKayOffset[nCntParts].frotX,
+				m_pKey->aKey[nCntParts].frotY + m_aKayOffset[nCntParts].frotY,
+				m_pKey->aKey[nCntParts].frotZ + m_aKayOffset[nCntParts].frotZ);
+			RemakeAngle(&WKVec3.x);	RemakeAngle(&WKVec3.y);	RemakeAngle(&WKVec3.z);
+			WKVec3 = m_PartsRot[nCntParts] + (WKVec3 - m_PartsRot[nCntParts]) * fRateMotion;
+			RemakeAngle(&WKVec3.x);	RemakeAngle(&WKVec3.y);	RemakeAngle(&WKVec3.z);
+			m_apModel[nCntParts]->SetRot(WKVec3);
 
-			//ROT
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->frotX - pKey->frotX;
-			//相対値を差分を使って各要素の値を算出
-			rotmotion.x = pKey->frotX + (fDiffMotion * fRateMotion);
-
-			//POS
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->fposX - pKey->fposX;
-			//相対値を差分を使って各要素の値を算出
-			posmotion.x = pKey->fposX + (fDiffMotion * fRateMotion);
-
-
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->frotY - pKey->frotY;
-			//相対値を差分を使って各要素の値を算出
-			rotmotion.y = pKey->frotY + (fDiffMotion * fRateMotion);
-			//POS
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->fposY - pKey->fposY;
-			//相対値を差分を使って各要素の値を算出
-			posmotion.y = pKey->fposY + (fDiffMotion * fRateMotion);
-
-
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->frotZ - pKey->frotZ;
-			//相対値を差分を使って各要素の値を算出
-			rotmotion.z = pKey->frotZ + (fDiffMotion * fRateMotion);
-			//POS
-			//現在のキーと次のキーの各要素の差分を算出
-			fDiffMotion = pNextKey->fposZ - pKey->fposZ;
-			//相対値を差分を使って各要素の値を算出
-			posmotion.z = pKey->fposZ + (fDiffMotion * fRateMotion);
-
-
-			//パーツを動かす
-			m_apModel[nCntParts]->SetRot(rotmotion);
-
-			//POS
-			m_apModel[nCntParts]->SetPos(D3DXVECTOR3(m_aKayOffset[nCntParts].fposX + posmotion.x,
-				m_aKayOffset[nCntParts].fposY + posmotion.y,
-				m_aKayOffset[nCntParts].fposZ + posmotion.z));
 		}
 	}
-
-	//ループの判定
-	switch (m_aMotionInfo[m_nMotionType].bLoop)
-	{
-	case true:
-		//ループする
-		//フレームを進める
-		m_nCountFlame++;
-		//キーの更新
-		if (m_nCountFlame >= m_pKeyInfo[m_nMotionType][m_nKey].nFrame)
-		{
-			if (m_aMotionInfo[m_nMotionType].nNumKey - 1 == m_nKey)
-			{
-				m_nKey = 0;
-			}
-			else
-			{
-				m_nKey += 1;
-			}
-			m_nCountFlame = 0;
-		}
-
-		break;
-	case false:
-		//ループしない
-		if (m_aMotionInfo[m_nMotionType].nNumKey - 1 > m_nKey)
-		{//フレームを進める
-			m_nCountFlame++;
-		}
-		else if (m_aMotionInfo[m_nMotionType].nNumKey - 1 == m_nKey)
-		{
-			//if (m_nAnimnow == PLAYERANIM_ATTACK)
-			//{//攻撃モーション
-			//	m_nAttackDelay++;
-			//	if (m_nAttackDelay > 20)
-			//	{
-			//		m_bAttack = false;
-			//		m_nAttackDelay = 0;
-			//	}
-			//}
-			m_bMotionEnd = true;
-		}
-		//キーの更新
-		if (m_nCountFlame >= m_pKeyInfo[m_nMotionType][m_nKey].nFrame)
-		{
-			if (m_aMotionInfo[m_nMotionType].nNumKey > m_nKey)
-			{
-				m_nKey += 1;
-			}
-			m_nCountFlame = 0;
-		}
-		break;
-	}
-
-#ifdef  _DEBUG
-	/*CDebugProc::Print(" Numキー  : (%d)\n", m_nKey);
-	CDebugProc::Print(" m_nCountFlame  : (%d)\n", m_nCountFlame);*/
-
-#endif
-
 }
-
+//=============================================================================
+// モーション　パーツの設定
+//=============================================================================
+void CPlayer::SettingParts(void)
+{
+	if (m_apModel == NULL) { return; }
+	//モーション更新
+	for (int nCntParts = 0; nCntParts < m_nNumParts; nCntParts++)
+	{
+		if (m_apModel[nCntParts] != NULL)
+		{
+			m_PartsPos[nCntParts] = m_apModel[nCntParts]->GetPos();
+			m_PartsRot[nCntParts] = m_apModel[nCntParts]->GetRot();
+		}
+	}
+}
+//=============================================================================
+// モーションの初期化
+//=============================================================================
+void CPlayer::ResetMotion(void)
+{
+	m_pKey = &m_pKeyInfo[PLAYERANIM_NEUTRAL][0];
+	m_fCountFlame = 0.0f;
+	m_nKey = 0;
+	SettingParts();
+}
+//=============================================================================
+// モーションのキャンセル
+//=============================================================================
+void CPlayer::CancelMotion(PlayerAnim Anim, bool bRow)
+{
+	if (!bRow && m_PlayerAnim == Anim) { return; }
+	m_PlayerAnim = Anim;
+	m_pKey = &m_pKeyInfo[m_PlayerAnim][0];
+	m_nKey = 0;
+	m_fCountFlame = 0.0f;
+	SettingParts();
+}
 //=============================================================================
 // ファイル読み込み
 //=============================================================================
