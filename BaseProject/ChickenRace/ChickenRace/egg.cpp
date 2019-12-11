@@ -340,7 +340,15 @@ void CEgg::Item(void)
 			// ‰Á‘¬
 		case EGGTYPE_SPEED:
 			CPlayer **pPlayer = NULL;
-			pPlayer = CGame::GetPlayer();
+			switch (CManager::GetMode())
+			{
+			case CManager::MODE_TITLE:
+				pPlayer = CTitle::GetPlayer();
+				break;
+			case CManager::MODE_GAME:
+				pPlayer = CGame::GetPlayer();
+				break;
+			}
 
 			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 5.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 
@@ -391,7 +399,15 @@ void CEgg::Move(void)
 	{
 		//ƒ}ƒbƒv‚Æ‚Ì“–‚½‚è”»’è
 		CPlayer **pPlayer = NULL;
-		pPlayer = CGame::GetPlayer();
+		switch (CManager::GetMode())
+		{
+		case CManager::MODE_TITLE:
+			pPlayer = CTitle::GetPlayer();
+			break;
+		case CManager::MODE_GAME:
+			pPlayer = CGame::GetPlayer();
+			break;
+		}
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 

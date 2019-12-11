@@ -8,14 +8,21 @@
 #define _RESULT_H_
 
 #include "main.h"
-//#include "meshfield.h"
+#include "game.h"
 
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_MAP_OBJECT		(3500)
-#define RESULT_WAIT			(300)
-#define RESULT_RANK_APP		(180)
+#define MAX_MAP_OBJECT			(3500)
+#define RESULT_WAIT				(310)
+#define RESULT_CAMERA_WAIT_0	(30)
+#define RESULT_CAMERA_DOWN		(90)
+#define RESULT_CAMERA_WAIT_1	(120)
+#define RESULT_CAMERA_ROLL		(150)
+#define RESULT_CAMERA_WAIT_2	(240)
+#define RESULT_RANK_APP			(250)
+
+#define RANKIN_PLAYER			(3)
 
 //*****************************************************************************
 // 前方宣言
@@ -65,10 +72,13 @@ private:
 
 	Map m_Map[MAX_MAP_OBJECT];					//設置するオブジェクトの構造体
 
-	static int			m_nResultCounter;	// タイトルのカウンター
+	static int			m_nResultCounter;		// タイトルのカウンター
 
 	static CResultCamera	*m_pResultCamera;	//リザルトカメラのポインタ
 
-	CResultUI			*m_pResultUI;		// リザルトUI
+	CResultUI			*m_pResultUI;			// リザルトUI
+
+	static CPlayer *m_pPlayer[MAX_MEMBER];		//プレイヤーのポインタ
+
 };
 #endif

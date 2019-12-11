@@ -19,6 +19,10 @@
 #include "object.h"
 
 #include "titlemenu.h"
+#include "player.h"
+#include "model.h"
+#include "feed.h"
+#include "resultui.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -37,6 +41,8 @@
 
 #define TEXT_OBJECTNAME1		"data\\TEXT\\ゲームマップ\\objecy.txt"			// 読み込むテキストファイル
 
+#define TEXT_FEEDNAME			"data\\TEXT\\ゲームマップ\\feed.txt"			// 読み込むテキストファイル
+
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************
@@ -51,6 +57,9 @@ bool			CTitle::m_bMenu = false;			// メニュー
 bool			CTitle::m_bOnline = false;			// オンライン
 bool			CTitle::m_bHost = false;			// ホスト
 
+CPlayer			*CTitle::m_pPlayer[MAX_MEMBER] = { NULL };
+int				CTitle::m_nRanking[MAX_MEMBER] = { 0 };			// ランキング
+
 //=============================================================================
 // デフォルトコンストラクタ
 //=============================================================================
@@ -60,7 +69,7 @@ CTitle::CTitle()
 
 	for (int nCount = 0; nCount < MAX_MAP_OBJECT; nCount++)
 		m_Map[nCount] = {};
-	
+
 	m_nCntTex = 0;
 	m_nFrame = 0;
 	m_nLeafposX = 0;
@@ -74,6 +83,9 @@ CTitle::CTitle()
 	m_bHost = false;			// ホスト
 
 	m_pTitleMenu = NULL;		// タイトルメニュー
+
+	m_pResultUI = NULL;			// UIメニュー
+
 }
 //=============================================================================
 // デストラクタ
@@ -95,8 +107,13 @@ HRESULT CTitle::Init()
 	CTitleMenu::Load();
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
 	CToonShader::Load();
+	CResultUI::Load();
 
-	//マップを読み込む
+	CChick::Load();				//ひよこのテクスチャの読み込み
+	CPlayer::Load();			//モデルの読み込み
+	CModel::Load();				//キャラモデルの読み込み
+
+								//マップを読み込む
 	TextLoad(6);
 
 	//	変数の初期化
@@ -105,7 +122,16 @@ HRESULT CTitle::Init()
 	if (m_pTitleCamera == NULL)
 	{
 		m_pTitleCamera = new CTitleCamera;
-		if (m_pTitleCamera != NULL) { m_pTitleCamera->Init(); }
+		if (m_pTitleCamera != NULL)
+		{
+			m_pTitleCamera->Init();
+		}
+	}
+
+	// リザルト
+	if (m_pResultUI == NULL)
+	{
+		m_pResultUI = CResultUI::Create();
 	}
 
 	// タイトルメニュー
@@ -114,11 +140,7 @@ HRESULT CTitle::Init()
 		m_pTitleMenu = CTitleMenu::Create();
 	}
 
-	for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
-	{
-		//オブジェクトの生成
-		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType,m_Map[nCount].m_nCollision);
-	}
+	SetStage();
 
 	CManager::OnlineSeting(false);	// オンライン設定
 
@@ -136,6 +158,11 @@ void CTitle::Uninit(void)
 	CUi::UnLoad();		//UIのテクスチャの破棄
 	CTitleMenu::Unload();
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
+	CResultUI::Unload();
+
+	//モデルの破棄
+	CChick::UnLoad();				//ひよこのテクスチャの破棄
+	CPlayer::Unload();			//モデルの読み込み
 
 	CModel3D::UnLoad();
 	CModel3D::ModelShaderDeleter();
@@ -148,12 +175,31 @@ void CTitle::Uninit(void)
 		m_pTitleCamera = NULL;
 	}
 
+	// リザルト
+	if (m_pResultUI != NULL)
+	{
+		m_pResultUI->Uninit();
+		m_pResultUI = NULL;
+	}
+
 	// タイトルメニュー
 	if (m_pTitleMenu != NULL)
 	{
 		m_pTitleMenu->Uninit();
 		m_pTitleMenu = NULL;
 	}
+
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		if (m_pPlayer[nCntMember] != NULL)
+		{// NULL以外
+			m_pPlayer[nCntMember]->Uninit();
+			m_pPlayer[nCntMember] = NULL;
+		}
+	}
+
+	//マップの破棄
+	CCOL_MESH_MANAGER::EndMap();
 
 	//フェード以外削除
 	CScene::NotFadeReleseAll();
@@ -174,7 +220,10 @@ void CTitle::Update(void)
 	//フェードのポイント
 	CFade::FADE pFade = CFade::GetFade();
 
-	//	タイトルのカウンター加算
+	Ranking();
+	SetTitleMode();		// タイトルモード
+
+						//	タイトルのカウンター加算
 	m_nTitleCounter++;
 
 	if (m_pTitleCamera != NULL) { m_pTitleCamera->Updata(); }
@@ -196,9 +245,194 @@ void CTitle::Draw(void)
 
 	//タイトルカメラの生成
 	if (m_pTitleCamera != NULL) { m_pTitleCamera->SetCamera(); }
-	
+
 	//全ての描画
 	CScene::DrawAll();
+}
+
+//=============================================================================
+// ステージ設定
+//=============================================================================
+void CTitle::SetStage(void)
+{
+	//マップを読み込む
+	TextLoad(6);
+	FeedTextLoad();
+
+	//===================================
+	//		Create
+	//===================================
+
+	CCOL_MESH_MANAGER::LoadMap();
+
+	for (int nCount = 0; nCount < m_nSetObjectNum; nCount++)
+	{
+		//オブジェクトの生成
+		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, m_Map[nCount].m_nCollision);
+	}
+	for (int nCount = 0; nCount < m_nSetFeedNum; nCount++)
+	{
+		//食べ物の生成		
+		CFeed::Create(m_aFeed[nCount].m_pos, m_aFeed[nCount].m_nZone, m_aFeed[nCount].m_nType);
+	}
+
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		float frot = (-D3DX_PI * 0.5f);
+		//プレイヤーの生成
+		if (m_pPlayer[nCntMember] == NULL)
+			m_pPlayer[nCntMember] = CPlayer::Create(
+				D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -100.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4))),
+				D3DXVECTOR3(0.0f, frot, 0.0f),
+				nCntMember, nCntMember, nCntMember, CPlayer::PLAYERTYPE_ENEMY);
+		if (m_pPlayer[nCntMember] != NULL)
+			m_pPlayer[nCntMember]->SetControl(false);
+	}
+}
+
+//=============================================================================
+// タイトルモード設定
+//=============================================================================
+void CTitle::SetTitleMode(void)
+{
+	int nCounter = m_nTitleCounter % RESET_TITLEMODE;
+
+	if (nCounter == RACEINIT_TITLEMODE)
+	{// コース
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		{// メンバーカウント
+			float frot = (-D3DX_PI * 0.5f);
+			if (m_pPlayer[nCntMember] != NULL)
+			{// NULL以外
+				m_pPlayer[nCntMember]->SetControl(false);
+
+				m_pPlayer[nCntMember]->SetPos(
+					D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -100.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4))));
+				m_pPlayer[nCntMember]->SetRot(
+					D3DXVECTOR3(0.0f, frot, 0.0f));
+				m_pPlayer[nCntMember]->SetPlayerType(CPlayer::PLAYERTYPE_ENEMY);
+			}
+		}
+
+		if (m_pTitleCamera != NULL)
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_COURSE);
+	}
+	else if (nCounter == RACEMOVE_TITLEMODE)
+	{// 動く
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		{// メンバーカウント
+
+			if (m_pPlayer[nCntMember] != NULL)
+			{// NULL以外
+				m_pPlayer[nCntMember]->SetControl(true);
+			}
+		}
+	}
+	else if (nCounter == CAMERA_P_TITLEMODE_1)
+	{// カメラをプレイヤーへ
+		if (m_pTitleCamera != NULL)
+		{
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_PLAYER);
+			m_pTitleCamera->SetPlayer(m_pPlayer[(CServer::Rand() % MAX_MEMBER)]);
+			m_pTitleCamera->SetTypeReset();
+		}
+	}
+	else if (nCounter == CAMERA_UP_TITLEMODE)
+	{// 上から
+		if (m_pTitleCamera != NULL)
+		{
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_GOUL);
+			m_pTitleCamera->SetTypeReset();
+		}
+	}
+	else if (nCounter == CAMERA_P_TITLEMODE_2)
+	{// カメラをプレイヤーへ
+		if (m_pTitleCamera != NULL)
+		{
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_PLAYER);
+			m_pTitleCamera->SetTypeReset();
+		}
+	}
+	else if (nCounter == (HOME_TITLEMODE - RANKING_TITLEMODE))
+	{// 
+
+	}
+	else if (nCounter == HOME_TITLEMODE)
+	{// 鳥小屋
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		{// メンバーカウント
+			if (m_pPlayer[nCntMember] != NULL)
+			{// NULL以外
+				m_pPlayer[nCntMember]->Uninit();
+				m_pPlayer[nCntMember] = NULL;
+			}
+		}
+
+		CScene *pScene = NULL;
+		CScene *pSceneNext = NULL;
+
+		pScene = CScene::GetTop(0);
+
+		//NULLチェック
+		while (pScene != NULL)
+		{
+			//UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
+			CScene *pSceneNext = pScene->GetNext();
+
+			if (pScene->GetDeath() == false)
+			{//タイプが壁だったら
+				if (pScene->GetObjType() == CScene::OBJTYPE_CHICK || pScene->GetObjType() == CScene::OBJTYPE_EGG)
+				{
+					//何もしていない状態
+					pScene->Uninit();
+				}
+			}
+			//Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+
+		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+		{// メンバーカウント
+			float frot = (-D3DX_PI * 0.5f);
+			if (m_pPlayer[nCntMember] == NULL)
+				m_pPlayer[nCntMember] = CPlayer::Create(
+					D3DXVECTOR3(((-250.0f + (50.0f * (nCntMember / 4))) + 2950.0f), (-90.0f), (210.0f - (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)))),
+					D3DXVECTOR3(0.0f, frot, 0.0f),
+					nCntMember, nCntMember, nCntMember, CPlayer::PLAYERTYPE_SELECT);
+			if (m_pPlayer[nCntMember] != NULL)
+			{
+				m_pPlayer[nCntMember]->SetControl(false);
+				m_pTitleCamera->SetTypeReset();
+			}
+		}
+
+		if (m_pTitleCamera != NULL)
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_CHARSELECT);
+	}
+	else if (nCounter == CHARUP_TITLEMODE)
+	{// キャラアップ
+		if (m_pTitleCamera != NULL)
+		{
+			m_pTitleCamera->SetType(CTitleCamera::CAMERA_CHARUP);
+			m_pTitleCamera->SetPlayer(m_pPlayer[(CServer::Rand() % MAX_MEMBER)]);
+		}
+	}
+}
+
+//===============================================================================
+// ランキング
+//===============================================================================
+void CTitle::Ranking(void)
+{
+	CSound *pSound = CManager::GetSound();						//サウンドの情報
+
+	int	nGoulNum = 0;						// ゴール数
+
+	for (int nCount = 0; nCount < MAX_MEMBER; nCount++)
+	{// プレイヤーカウント
+	 // ランキング
+		m_nRanking[nCount] = CRoad_Manager::GetManager()->GetRank(nCount) - 1;
+	}
 }
 
 //===============================================================================
@@ -374,6 +608,116 @@ void CTitle::TextLoad(int nLoadNumber)
 			}
 		}
 	}
+}
+
+//===============================================================================
+// 食べ物をファイルからロード
+//===============================================================================
+void CTitle::FeedTextLoad(void)
+{
+	//ファイル用変数
+	FILE *pFile;		//ファイルポインタ
+	char *pStrcur;		//現在の先頭の文字列
+	char aLine[256];	//文字列
+	char aStr[256];		//一時保存文字列
+	int nIndex = 0;		//現在のインデックス
+	int nWord = 0;		//ポップで返された値を保持
+
+						//ファイルを開く 読み込み
+	pFile = fopen(TEXT_FEEDNAME, "r");
+
+	//NULLチェック
+	if (pFile != NULL)
+	{
+		//文字列の先頭を設定
+		pStrcur = ReadLine(pFile, &aLine[0]);
+		//文字列を取り出す
+		strcpy(aStr, pStrcur);
+
+		//文字列のデータ 比較する文字列 比較する文字数
+		if (memcmp(pStrcur, "FEED_SETNUM = ", strlen("FEED_SETNUM = ")) == 0)
+		{
+			//頭出し
+			pStrcur += strlen("FEED_SETNUM = ");
+			//文字列の先頭を設定
+			strcpy(aStr, pStrcur);
+			//文字列抜き出し
+			m_nSetFeedNum = atoi(pStrcur);
+		}
+
+		//オブジェクトの数分回す
+		for (int nCntObject = 0; nCntObject < m_nSetFeedNum; nCntObject++)
+		{
+			//文字列の先頭を設定
+			pStrcur = ReadLine(pFile, &aLine[0]);
+			//文字列を取り出す
+			strcpy(aStr, pStrcur);
+
+			if (memcmp(pStrcur, "FEED_START", strlen("FEED_START")) == 0)
+			{
+				while (1)
+				{
+					//文字列の先頭を設定
+					pStrcur = ReadLine(pFile, &aLine[0]);
+
+					//POSを読み込み
+					if (memcmp(pStrcur, "POS = ", strlen("POS = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("POS = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.x = (float)atof(pStrcur);
+						//文字数分進める
+						pStrcur += nWord;
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.y = (float)atof(pStrcur);
+						//文字数分進める
+						pStrcur += nWord;
+
+						//文字数を返してもらう
+						nWord = PopString(pStrcur, &aStr[0]);
+						//文字列変換
+						m_aFeed[nCntObject].m_pos.z = (float)atof(pStrcur);
+
+					}
+					//ZONEを読み込み
+					if (memcmp(pStrcur, "ZONE = ", strlen("ZONE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("ZONE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_aFeed[nCntObject].m_nZone = atoi(pStrcur);
+					}
+					//TYPEを読み込み
+					if (memcmp(pStrcur, "TYPE = ", strlen("TYPE = ")) == 0)
+					{
+						//頭出し
+						pStrcur += strlen("TYPE = ");
+						//文字列の先頭を設定
+						strcpy(aStr, pStrcur);
+						//文字列抜き出し
+						m_aFeed[nCntObject].m_nType = atoi(pStrcur);
+					}
+					else if (memcmp(pStrcur, "FEED_END", strlen("FEED_END")) == 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	//m_pMarkFeed->SetFeedNum(CMarkFeed::GetFeedNum() + m_nSetFeedNum);
 }
 
 //=============================================================================

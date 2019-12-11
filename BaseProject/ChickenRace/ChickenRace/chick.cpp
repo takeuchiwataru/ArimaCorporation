@@ -371,7 +371,15 @@ bool CChick::Move(void)
 	{
 		//マップとの当たり判定
 		CPlayer **pPlayer = NULL;
-		pPlayer = CGame::GetPlayer();
+		switch (CManager::GetMode())
+		{
+		case CManager::MODE_TITLE:
+			pPlayer = CTitle::GetPlayer();
+			break;
+		case CManager::MODE_GAME:
+			pPlayer = CGame::GetPlayer();
+			break;
+		}
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 
@@ -387,7 +395,15 @@ bool CChick::Move(void)
 	{
 		//マップとの当たり判定
 		CPlayer **pPlayer = NULL;
-		pPlayer = CGame::GetPlayer();
+		switch (CManager::GetMode())
+		{
+		case CManager::MODE_TITLE:
+			pPlayer = CTitle::GetPlayer();
+			break;
+		case CManager::MODE_GAME:
+			pPlayer = CGame::GetPlayer();
+			break;
+		}
 
 		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 
@@ -460,8 +476,15 @@ bool CChick::Item(void)
 
 			// 減速させる
 		case TYPE_ANNOY:
-			pPlayer = CGame::GetPlayer();
-
+			switch (CManager::GetMode())
+			{
+			case CManager::MODE_TITLE:
+				pPlayer = CTitle::GetPlayer();
+				break;
+			case CManager::MODE_GAME:
+				pPlayer = CGame::GetPlayer();
+				break;
+			}
 			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 			m_rot = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetRot().x, pPlayer[m_nNumPlayer]->GetRot().y, pPlayer[m_nNumPlayer]->GetRot().z);
 
@@ -629,8 +652,16 @@ float CChick::AdjustAngle(float rot)
 //=============================================================================
 void CChick::Attack(void)
 {
-	CPlayer **pPlayer = CGame::GetPlayer();
-
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
 	if (m_DestRank >= 0)
 	{
 		// 目的の角度
@@ -666,8 +697,16 @@ void CChick::Attack(void)
 //=============================================================================
 void CChick::AttackS(void)
 {
-	CPlayer **pPlayer = CGame::GetPlayer();
-
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
 	if (m_nRank != 0)
 	{
 		if (m_bAttackS == false)
@@ -711,8 +750,16 @@ void CChick::AttackS(void)
 //=============================================================================
 void CChick::AnnoyS(void)
 {
-	CPlayer **pPlayer = CGame::GetPlayer();
-
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
 	if (m_bAttackS == false)
 	{
 		m_move.x = pPlayer[m_nNumPlayer]->GetMove().x;
@@ -731,8 +778,15 @@ void CChick::Speed(void)
 {
 	CPlayer **pPlayer = NULL;
 
-	pPlayer = CGame::GetPlayer();
-
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
 	m_nCntUpDown++;
 
 	float fUpDown = 0.35f;

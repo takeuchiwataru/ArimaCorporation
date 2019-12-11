@@ -13,6 +13,7 @@
 #include "scene2D.h"
 #include "input.h"
 #include "fade.h"
+#include "player.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -673,7 +674,18 @@ void CGameCharSelect::Online(void)
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 
-																// プレイヤー最大数取得
+																// プレイヤー
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
+	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
 	int *pnCharSelectNum = CGame::GetCharSelectNum();
@@ -797,6 +809,9 @@ void CGameCharSelect::Online(void)
 				{
 					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
 
+					if (m_bEnter[nCntPlayer] == true)
+						pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum(1);;
+
 					//決定音の設定
 					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 					pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -893,7 +908,18 @@ void CGameCharSelect::Local(void)
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 	CSound *pSound = CManager::GetSound();						//サウンドの情報
 
-																// プレイヤー最大数取得
+																// プレイヤー
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
+	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
 	int *pnCharSelectNum = CGame::GetCharSelectNum();
@@ -1028,6 +1054,9 @@ void CGameCharSelect::Local(void)
 				{
 					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
 
+					if (m_bEnter[nCntPlayer] == true)
+						pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum(1);
+
 					//決定音の設定
 					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 					pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -1067,6 +1096,9 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
 
+				if (m_bEnter[0] == true)
+					pPlayer[pnCharSelectNum[0]]->SetSelectNum(1);
+
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -1084,6 +1116,9 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
 
+				if (m_bEnter[0] == true)
+					pPlayer[pnCharSelectNum[0]]->SetSelectNum(1);
+
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -1098,6 +1133,9 @@ void CGameCharSelect::Local(void)
 			if (m_bEntry[1] == true)
 			{
 				m_bEnter[1] = (m_bEnter[1] ^ 1 ? true : false);
+
+				if (m_bEnter[1] == true)
+					pPlayer[pnCharSelectNum[1]]->SetSelectNum(1);
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1114,6 +1152,9 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[2] = (m_bEnter[2] ^ 1 ? true : false);
 
+				if (m_bEnter[2] == true)
+					pPlayer[pnCharSelectNum[2]]->SetSelectNum(1);
+
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -1128,6 +1169,9 @@ void CGameCharSelect::Local(void)
 			if (m_bEntry[3] == true)
 			{
 				m_bEnter[3] = (m_bEnter[3] ^ 1 ? true : false);
+
+				if (m_bEnter[3] == true)
+					pPlayer[pnCharSelectNum[3]]->SetSelectNum(1);
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);

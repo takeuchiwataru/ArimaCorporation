@@ -108,7 +108,7 @@ public://’N‚Å‚àˆµ‚¦‚é
 	void SetColor(D3DXCOLOR col);
 	static void Load(void);
 	static void SetParts(void);
-	static void ParentModel(CModel **&apModel, TYPE type);
+	static void ParentModel(CModel **&apModel, TYPE type, int nSelectParts = 0);
 	static void PartsTypeUnLoad(void);
 	void SetType(PARTS_TYPE partstype) { m_Type = partstype; }
 

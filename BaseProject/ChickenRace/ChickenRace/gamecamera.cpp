@@ -49,6 +49,9 @@ HRESULT CGameCamera::Init(void)
 	m_fDistance = MOVE_CAMERA;
 	m_fPlusDis = 0.0f;
 	m_fGAngle = 65.0f;
+	
+	m_nTopPlayer = 0;
+	
 	return S_OK;
 }
 
@@ -76,6 +79,9 @@ void CGameCamera::Update(void)
 	case CAMERA_COURSE:
 		UpdateCourse();		//コース状態
 		break;
+	case CAMERA_GOUL:
+		UpdateGoul();		//ゴール状態
+		break; 
 	case CAMERA_PLAYER:
 		UpdatePlayer();		//プレイヤー状態
 		break;
@@ -90,6 +96,22 @@ void CGameCamera::Update(void)
 void CGameCamera::SetCamera(void)
 {
 	CCamera::SetCamera();
+}
+
+//=============================================================================
+// リセット
+//=============================================================================
+void CGameCamera::SetTypeReset(void)
+{
+	switch (m_cameraType)
+	{
+	case CAMERA_GOUL:
+		UpdateGoul(true);	//ゴール状態
+		break;
+	case CAMERA_PLAYER:
+		UpdatePlayer(true);		//プレイヤー状態
+		break;
+	}
 }
 
 //=============================================================================
@@ -178,9 +200,101 @@ void CGameCamera::UpdateCourse(void)
 }
 
 //=============================================================================
+// ゲームカメラ（ゴール）更新処理
+//=============================================================================
+void CGameCamera::UpdateGoul(bool bSet)
+{
+	//m_posR = D3DXVECTOR3(-22590.0f, -3285.0f, -136.0f);
+	//m_posV = D3DXVECTOR3(-22358.0f, -3285.0f, -121.0f);
+	m_vecU.z = 0.0f;
+
+	float fAngle = atan2f(m_posV.x - m_posR.x, m_posV.z - m_posR.z);
+	/*m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.52f)) * 250.0f, 0.0f,
+	cosf(fAngle - (D3DX_PI * 0.52f)) * 250.0f);
+	m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.52f) - (D3DX_PI * 0.5f)) * 400.0f, 50.0f,
+	cosf(fAngle - (D3DX_PI * 0.52f) - (D3DX_PI * 0.5f)) * 400.0f);
+	m_posV = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.52f)) * 1160.0f, 100.0f,
+	cosf(fAngle - (D3DX_PI * 0.52f)) * 1160.0f);*/
+
+	/*m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.54f)) * 250.0f, 0.0f,
+	cosf(fAngle - (D3DX_PI * 0.54f)) * 250.0f);
+	m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.54f) - (D3DX_PI * 0.5f)) * 400.0f, 50.0f,
+	cosf(fAngle - (D3DX_PI * 0.54f) - (D3DX_PI * 0.5f)) * 400.0f);
+	m_posV = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (D3DX_PI * 0.54f)) * 1080.0f, -10.0f,
+	cosf(fAngle - (D3DX_PI * 0.54f)) * 1080.0f);*/
+
+	/*m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (-D3DX_PI * 0.26f)) * -1200.0f, 0.0f,
+	cosf(fAngle - (-D3DX_PI * 0.26f)) * -1200.0f);
+	m_posR = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (-D3DX_PI * 0.26f) - (D3DX_PI * 0.5f)) * 300.0f, 0.0f,
+	cosf(fAngle - (-D3DX_PI * 0.26f) - (D3DX_PI * 0.5f)) * 300.0f);
+	m_posV = m_posR + D3DXVECTOR3(
+	sinf(fAngle - (-D3DX_PI * 0.26f)) * 700.0f, 50.0f,
+	cosf(fAngle - (-D3DX_PI * 0.26f)) * 700.0f);*/
+
+	// プレイヤー
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}	// ランキング
+	int *pnRanking = CGame::GetRanking();
+
+	D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	float frot = 0.0f;
+	int nNum = 0;
+
+	// ゴール数
+	for (int nCount = 0; nCount < MAX_MEMBER; nCount++)
+	{// メンバーカウント
+		if (pPlayer[nCount] != NULL)
+			if (pPlayer[nCount]->GetGoal() == true)
+				nNum++;
+	}
+
+	// １位
+	for (int nCount = 0; nCount < MAX_MEMBER; nCount++)
+	{// メンバーカウント
+		if (pnRanking[nCount] == nNum && pPlayer[nCount] != NULL)
+		{// レース中でトップ
+			if (pPlayer[nCount]->GetGoal() == false)
+			{// ゴールしていない
+				pos = pPlayer[nCount]->GetPos();
+				frot = pPlayer[nCount]->Getrot().y;
+				break;
+			}
+		}
+	}
+
+	// ゴール数が変わった
+	if (m_nTopPlayer != nNum || bSet == true)
+	{
+		m_posR = pos;
+		m_nTopPlayer = nNum;
+	}
+
+	// 位置設定
+	m_posR += (pos - m_posR) * 0.08f;
+	//m_posR = m_posR + D3DXVECTOR3(sinf(frot + D3DX_PI) * 5.0f, 0.0f, cosf(frot + D3DX_PI) * 5.0f);
+	m_posV = m_posR + D3DXVECTOR3(sinf(frot) * 250.0f, 300.0f, cosf(frot) * 250.0f);
+}
+
+//=============================================================================
 // ゲームカメラ（プレイヤー）更新処理
 //=============================================================================
-void CGameCamera::UpdatePlayer(void)
+void CGameCamera::UpdatePlayer(bool bSet)
 {
 	//プレイヤーの情報を取得する
 	CManager::MODE mode = CManager::GetMode();
@@ -197,6 +311,7 @@ void CGameCamera::UpdatePlayer(void)
 		float		fRotX = 0.0f;
 		float		fRotY = m_pPlayer->GetRot().y;
 		float		fCntTime = m_pPlayer->GetfCntTime();
+		float		fSet = 0.2f;
 		m_vecU.z = m_pPlayer->Getrot().z * -1.5f;
 		fRotY += D3DX_PI * 0.5f;
 
@@ -213,6 +328,13 @@ void CGameCamera::UpdatePlayer(void)
 		RemakeAngle(&m_fRotDest);
 
 		m_rot.y += m_fRotDest * MOVE_ANGLE;
+
+		if (bSet == true)
+		{
+			m_rot.y = PlayerRot.y;
+			fSet = 1.0f;
+		}
+
 		RemakeAngle(&m_rot.y);
 
 		float fTilt = m_pPlayer->GetfTiltV() * 3.0f - 0.1f;
@@ -237,6 +359,12 @@ void CGameCamera::UpdatePlayer(void)
 		fMove *= (1.0f + m_fPlusDis * 0.75f);
 		fMove += MOVE_DISANGLE * (8.5f - (m_fCameraAngle - 65.0f) * 0.2f);
 		m_rot.x += (fRotX - m_rot.x) * 0.05f;
+
+		if (bSet == true)
+		{
+			m_rot.x = fRotX;
+		}
+
 		m_fDistance += (fMove - m_fDistance) * 0.05f;
 
 		PlayerPos += VecUPos;
@@ -248,7 +376,7 @@ void CGameCamera::UpdatePlayer(void)
 		WKPosR = D3DXVECTOR3(0.0f, HIGHT_R, 0.0f) + PlayerPos;	//見る場所 + 水平移動分
 		WKPosR += D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * (5.0f * ((-fWK + 2.0f) * 0.5f) + 30.0f);
 		WKPosR.y += (-5.0f * ((fWK - 1.0f) * 1.0f) + 15.0f);
-		m_posR += (WKPosR - m_posR) * 0.2f;
+		m_posR += (WKPosR - m_posR) * fSet;
 	}
 }
 

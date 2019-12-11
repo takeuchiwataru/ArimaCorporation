@@ -27,6 +27,7 @@ public:
 		CAMERA_CHARSELECT,
 		CAMERA_CHARUP,
 		CAMERA_COURSE,
+		CAMERA_GOUL,
 		CAMERA_PLAYER,
 		CAMERA_MAX
 	}CAMERA;
@@ -42,12 +43,14 @@ public:
 	void SetPlayer(CPlayer *pPlayer) { m_pPlayer = pPlayer; }
 	void UseBoost(void) { m_fPlusDis = 1.5f; }
 	float &GetfRot(void) { return m_fRot; };
+	void SetTypeReset(void);
 
 private:
 	void UpdateCharSelect(void);
 	void UpdateCharUp(void);
 	void UpdateCourse(void);
-	void UpdatePlayer(void);
+	void UpdateGoul(bool bSet = false);
+	void UpdatePlayer(bool bSet = false);
 	void DrawReset(void);
 
 	CAMERA		m_cameraType;
@@ -56,5 +59,7 @@ private:
 	float		m_fPlusDis;
 	float		m_fRot;			//ŒvŽZŒã‚ÌŠp“x
 	float		m_fGAngle;		//–ÚŽw‚·‰æŠp
+
+	int			m_nTopPlayer;
 };
 #endif

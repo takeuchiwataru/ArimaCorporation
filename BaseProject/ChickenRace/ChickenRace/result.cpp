@@ -16,6 +16,8 @@
 #include "object.h"
 
 #include "resultui.h"
+#include "player.h"
+#include "model.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -44,6 +46,8 @@
 int				CResult::m_nResultCounter = 0;		// タイトルのカウンター
 
 CResultCamera	*CResult::m_pResultCamera = NULL;
+
+CPlayer			*CResult::m_pPlayer[MAX_MEMBER] = { NULL };
 
 //=============================================================================
 // デフォルトコンストラクタ
@@ -77,7 +81,11 @@ HRESULT CResult::Init()
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
 	CToonShader::Load();
 
-	//マップを読み込む
+	CChick::Load();				//ひよこのテクスチャの読み込み
+	CPlayer::Load();			//モデルの読み込み
+	CModel::Load();				//キャラモデルの読み込み
+
+								//マップを読み込む
 	TextLoad(6);
 
 	//	変数の初期化
@@ -89,7 +97,7 @@ HRESULT CResult::Init()
 		if (m_pResultCamera != NULL) { m_pResultCamera->Init(); }
 	}
 
-	// タイトルメニュー
+	// リザルト
 	if (m_pResultUI == NULL)
 	{
 		m_pResultUI = CResultUI::Create();
@@ -99,6 +107,28 @@ HRESULT CResult::Init()
 	{
 		//オブジェクトの生成
 		CObject::Create(m_Map[nCount].m_pos, m_Map[nCount].m_rot, m_Map[nCount].m_scale, 0.0f, m_Map[nCount].m_nTexType, m_Map[nCount].m_nType, m_Map[nCount].m_nCollision);
+	}
+
+	//D3DXVECTOR3 pos1 = D3DXVECTOR3(-24585.0, -3231.0f, 1208.0f);
+	//D3DXVECTOR3 pos2 = D3DXVECTOR3(-24607.0, -3246.0f, 1238.0f);
+	//D3DXVECTOR3 pos3 = D3DXVECTOR3(-24562.0, -3257.0f, 1178.0f);
+
+	D3DXVECTOR3 pos = D3DXVECTOR3(-24409.0, -3290.0f, 1049.0f);
+
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		pos = pos + D3DXVECTOR3(sinf(0.95f + (D3DX_PI * 0.5f)) * 20.0f, 0.0f, cosf(0.95f + (D3DX_PI * 0.5f)) * 20.0f);
+
+		D3DXVECTOR3 posEdit = pos;
+		if (nCntMember % 2 == 0)
+			posEdit = pos + D3DXVECTOR3(sinf(0.95f) * 20.0f, 0.0f, cosf(0.95f) * 20.0f);
+
+		//プレイヤーの生成
+		if (m_pPlayer[nCntMember] == NULL)
+			m_pPlayer[nCntMember] = CPlayer::Create(
+				posEdit,
+				D3DXVECTOR3(0.0f, (0.95f - (D3DX_PI * 0.5f)), 0.0f),
+				nCntMember, 0, nCntMember, CPlayer::PLAYERTYPE_RESULT);
 	}
 
 	return S_OK;
@@ -115,6 +145,9 @@ void CResult::Uninit(void)
 	CResultUI::Unload();
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 
+	CChick::UnLoad();				//ひよこのテクスチャの破棄
+	CPlayer::Unload();			//モデルの読み込み
+
 	CModel3D::UnLoad();
 	CModel3D::ModelShaderDeleter();
 
@@ -126,11 +159,20 @@ void CResult::Uninit(void)
 		m_pResultCamera = NULL;
 	}
 
-	// タイトルメニュー
+	// リザルト
 	if (m_pResultUI != NULL)
 	{
 		m_pResultUI->Uninit();
 		m_pResultUI = NULL;
+	}
+
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		if (m_pPlayer[nCntMember] != NULL)
+		{
+			m_pPlayer[nCntMember]->Uninit();
+			m_pPlayer[nCntMember] = NULL;
+		}
 	}
 
 	//フェード以外削除
@@ -157,13 +199,18 @@ void CResult::Update(void)
 
 	if (m_pResultCamera != NULL) { m_pResultCamera->Updata(); }
 
-	if (RESULT_WAIT < m_nResultCounter)
+	if (RESULT_WAIT <= m_nResultCounter)
 	{
 		if (pFade == CFade::FADE_NONE)
 		{
 			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
 				CFade::Create(CManager::MODE_TITLE);
 		}
+	}
+	else if (m_nResultCounter < (RESULT_RANK_APP - 15))
+	{
+		if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
+			m_nResultCounter = (RESULT_RANK_APP - 15);
 	}
 }
 //=============================================================================

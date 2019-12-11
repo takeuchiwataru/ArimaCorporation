@@ -63,5 +63,8 @@ private:
 	CScene2D *m_pGoul[MAX_PLAYER];			// ゴール
 	CTime	*m_pTime[MAX_PLAYER];			// タイム
 
+	int		m_nGoulCounter[MAX_PLAYER];		// ゴールカウント
+	int		m_nCameraNumber[MAX_PLAYER];	// カメラ番号
+
 };
 #endif

@@ -49,6 +49,9 @@ public:
 	void Draw(void);							//描画処理
 
 private:
+	void Title(void);
+	void Result(void);
+
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
 	CScene2D			*m_pRankBG[MAX_MEMBER];	// ランクBG
@@ -57,5 +60,6 @@ private:
 	CScene2D			*m_pPlayer[MAX_MEMBER];	// プレイヤー
 	CTime				*m_pTime[MAX_MEMBER];	// タイム
 	CScene2D			*m_pPress;				// プレス
+	CScene2D			*m_pFade;				// フェード
 };
 #endif

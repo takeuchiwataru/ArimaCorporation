@@ -170,10 +170,11 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-	static CPlayer * Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum = 0, int nControllerNum = 0, PLAYERTYPE playerType = PLAYERTYPE_PLAYER);
+	static CPlayer * Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPlayerNum = 0, int nControllerNum = 0, int nCharacterNum = 0, PLAYERTYPE playerType = PLAYERTYPE_PLAYER);
 	static void Load(void);
 	static void Unload(void);
 
+	void SetPlayerType(PLAYERTYPE playertype) { m_PlayerType = playertype; }
 	PLAYERTYPE GetPlayerType(void) { return m_PlayerType; }
 
 	D3DXVECTOR3 GetPos(void) { return m_pos; };
@@ -249,6 +250,8 @@ public:
 	int GetDropCounter(void) { return m_nDropCounter; }
 
 	bool GetGoal(void) { return m_bGoal; }
+
+	void SetSelectNum(int nSelectNum) { m_nSelectNum = nSelectNum; }
 
 	//モーションの更新関数
 	void UpdateMotion(void);
@@ -367,6 +370,7 @@ private:
 	int							  m_nCntDamage;
 	int							  m_nPlayerNum;					// プレイヤー番号
 	int							  m_nControllerNum;				// コントローラー番号
+	int							  m_nCharacterNum;				// キャラクター番号
 
 	int							  m_nStartFrame;
 	int							  m_nStartCounter;
@@ -420,5 +424,8 @@ private:
 
 	CBillBoord					  *m_pPlayerpos;				// プレイヤー
 	float						  m_fAddRot;					// 加算角度
+
+	int							  m_nSelectNum;
+	int							  m_nSelectCounter;
 };
 #endif

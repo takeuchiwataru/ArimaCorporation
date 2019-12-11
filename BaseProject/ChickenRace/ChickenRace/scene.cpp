@@ -132,9 +132,12 @@ void CScene::UpdateAll(void)
 
 			if (pScene->m_pDeath == false)
 			{
-				pScene->Update();	//更新処理
+				if (pScene->m_pDeath == false)
+				{
+					pScene->Update();	//更新処理
+				}
 			}
-			if (pScene->m_pDeath == true)
+			else
 			{
 				pScene->Delete();	//削除
 			}

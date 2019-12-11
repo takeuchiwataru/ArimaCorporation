@@ -14,6 +14,7 @@
 #include "input.h"
 #include "fade.h"
 #include "time.h"
+#include "gamecamera.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -67,6 +68,9 @@ CGamePlay::CGamePlay()
 
 		m_pGoul[nCntPlayer] = NULL;					// ランキング
 		m_pTime[nCntPlayer] = NULL;					// タイム
+
+		m_nGoulCounter[nCntPlayer] = 0;				// ゴールカウント
+		m_nCameraNumber[nCntPlayer] = nCntPlayer;	// カメラ番号
 	}
 }
 //=============================================================================
@@ -379,7 +383,7 @@ HRESULT CGamePlay::Init()
 						D3DXVECTOR2(
 							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P),
 							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)));
-					m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.5f));
+					m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 				}
 				m_pItem[nCntPlayer][nCntItem]->BindTexture(m_pTexture[TEXTURE_ITEM]);
 
@@ -535,15 +539,33 @@ void CGamePlay::Uninit(void)
 //=============================================================================
 void CGamePlay::Update(void)
 {
-	// プレイヤー
-	CPlayer **pPlayer = CGame::GetPlayer();
+	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
+	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 
+	// プレイヤー
+	CPlayer **pPlayer = NULL;
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
 	// 取得
 	bool bOnine = CTitle::GetOnline();
 	int nClient = 0;
 
 	if (bOnine == true)
 		nClient = CClient::GetnID();
+
+	// プレイヤー最大数取得
+	int nMaxPlayer = CGame::GetMaxPlayer();
+	// コントローラー番号取得
+	int *pnControllerNum = CGame::GetControllerNum();
+
+	CGameCamera *pCamera = NULL;
 
 	// ランキング
 	int *pnRanking = CGame::GetRanking();
@@ -604,6 +626,98 @@ void CGamePlay::Update(void)
 					m_pGoul[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 				}
 			}
+
+			if (60 <= m_nGoulCounter[nCntPlayer] && m_nGoulCounter[nCntPlayer] < 120)
+			{// ゴール後移動、フェードアウト
+				int nFrame = m_nGoulCounter[nCntPlayer] - 60;
+
+				if (m_pGoul[nCntPlayer] != NULL)
+				{// NULL以外
+					if (bOnine == true && nClient == nCntPlayer)
+					{// オンライン
+						m_pGoul[nCntPlayer]->SetPosSize(
+							D3DXVECTOR3(
+							(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+								(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
+								((((SCREEN_HEIGHT * 0.5f) - GOUL_SIZE_2P.y)* (1.0f - (0.5f * (float)((float)nFrame / (float)60)))) * (float)((float)nFrame / (float)60)),
+								0.0f),
+							GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
+					}
+					else
+					{// オンラインじゃない
+						m_pGoul[nCntPlayer]->SetPosSize(
+							D3DXVECTOR3(
+							(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+								(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
+								((((nMaxPlayer - 1) == 0 ? (SCREEN_HEIGHT * 0.5f) : (SCREEN_HEIGHT * 0.25f)) - (((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P.y : GOUL_SIZE_4P.y) * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
+								0.0f),
+								((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P : GOUL_SIZE_4P) * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
+					}
+				}
+
+				if (m_pFade[nCntPlayer] != NULL)
+				{// NULL以外
+					int nFrame = m_nGoulCounter[nCntPlayer] - 60;
+
+					int nNum = (nFrame % 20) + 1;
+					if (nFrame / 20 == 1)
+						m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+					else
+						m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nFrame / 20 == 0 ? (float)((float)nNum / (float)20) : 1.0f - (float)((float)nNum / (float)20))));
+
+					if (bOnine == true && nClient != nCntPlayer)
+						m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+				}
+			}
+
+			if (90 <= m_nGoulCounter[nCntPlayer])
+			{// フェード後
+				pXpad = CManager::GetInputJoyPad0(pnControllerNum[nCntPlayer]);
+				bool bEdit = false;
+
+				if (CFade::GetFade() == CFade::FADE_NONE)
+				{
+					if (pXpad->GetTrigger(INPUT_LS_L) == true ||
+						pXpad->GetTrigger(INPUT_LEFT) == true ||
+						(bOnine == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_A) == true) || 
+						(bOnine == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_LEFT) == true))
+					{// 左キー
+						m_nCameraNumber[nCntPlayer] = ((m_nCameraNumber[nCntPlayer] + ((nMaxPlayer + 1) - 1)) % (nMaxPlayer + 1));
+						bEdit = true;
+					}
+					else if (pXpad->GetTrigger(INPUT_LS_R) == true ||
+						pXpad->GetTrigger(INPUT_RIGHT) == true ||
+						(bOnine == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_D) == true) ||
+						(bOnine == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_RIGHT) == true))
+					{// 右キー
+						m_nCameraNumber[nCntPlayer] = ((m_nCameraNumber[nCntPlayer] + (1)) % (nMaxPlayer + 1));
+						bEdit = true;
+					}
+				}
+
+				if (bEdit == true)
+				{// 変更した
+				 // カメラ取得
+					pCamera = CGame::GetGameCamera(nCntPlayer);
+
+					if (pCamera != NULL)
+					{// NULL以外
+						if (m_nCameraNumber[nCntPlayer] < nMaxPlayer)
+						{// プレイヤーカメラ
+							pCamera->SetPlayer(pPlayer[m_nCameraNumber[nCntPlayer]]);
+							pCamera->SetType(CGameCamera::CAMERA_PLAYER);
+							pCamera->SetTypeReset();
+						}
+						else
+						{// １位カメラ
+							pCamera->SetType(CGameCamera::CAMERA_GOUL);
+							pCamera->SetTypeReset();
+						}
+					}
+				}
+			}
+
+			m_nGoulCounter[nCntPlayer]++;
 		}
 	}
 
@@ -614,67 +728,74 @@ void CGamePlay::Update(void)
 		{// NULL以外
 			if (pPlayer[nCntMember]->GetPlayerType() == CPlayer::PLAYERTYPE_PLAYER)
 			{
-				if (m_pFade[nPlayerNum] != NULL)
-				{// NULL以外
-					if (pPlayer[nCntMember]->GetDrop() == true)
-					{
-						int nCounter = pPlayer[nCntMember]->GetDropCounter();
-						float fcol_a = 1.0f;
-						float fDiff = 1.0f;
-
-						int nNum = (((nCounter + (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT ? 0 : -MAX_FALL_WAIT)) % MAX_FALL_FADE) + 1);
-
-						if (nCounter < MAX_FALL_FADE)
-							fDiff = (float)((float)((nCounter % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
-						else if (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT)
-							fDiff = 1.0f;
-						else
-							fDiff = 1.0f - (float)((float)(((nCounter - MAX_FALL_WAIT) % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
-
-						fcol_a *= fDiff;
-
-						m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
-
-						if (bOnine == true && nClient != nPlayerNum)
-							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-					}
-					else
-					{
-						m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-					}
-				}
-
-				for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
-				{// アイテムカウント
-				 // アイテム
-					if (m_pItem[nPlayerNum][nCntItem] != NULL)
+				if (pbGoul[nPlayerNum] == false)
+				{
+					if (m_pFade[nPlayerNum] != NULL)
 					{// NULL以外
-						if ((bOnine == true && nClient == nPlayerNum) || bOnine == false)
-						{// オンラインで自分なら、オンラインじゃない
-							int nNum = pPlayer[nCntMember]->GetItemNum();
-							if (nCntItem < nNum)
-							{
-								int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
-								switch (nType)
+						if (pPlayer[nCntMember]->GetDrop() == true)
+						{
+							int nCounter = pPlayer[nCntMember]->GetDropCounter();
+							float fcol_a = 1.0f;
+							float fDiff = 1.0f;
+
+							int nNum = (((nCounter + (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT ? 0 : -MAX_FALL_WAIT)) % MAX_FALL_FADE) + 1);
+
+							if (nCounter < MAX_FALL_FADE)
+								fDiff = (float)((float)((nCounter % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
+							else if (nCounter < MAX_FALL_FADE + MAX_FALL_WAIT)
+								fDiff = 1.0f;
+							else
+								fDiff = 1.0f - (float)((float)(((nCounter - MAX_FALL_WAIT) % MAX_FALL_FADE)) / (float)MAX_FALL_FADE);
+
+							fcol_a *= fDiff;
+
+							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
+
+							if (bOnine == true && nClient != nPlayerNum)
+								m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+						}
+						else
+						{
+							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+						}
+					}
+
+					for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
+					{// アイテムカウント
+					 // アイテム
+						if (m_pItem[nPlayerNum][nCntItem] != NULL)
+						{// NULL以外
+							if ((bOnine == true && nClient == nPlayerNum) || bOnine == false)
+							{// オンラインで自分なら、オンラインじゃない
+								int nNum = pPlayer[nCntMember]->GetItemNum();
+								if (nCntItem < nNum)
 								{
-								case CPlayer::BULLET_EGG_ATTACK:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
-									break;
-								case CPlayer::BULLET_EGG_ANNOY:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
-									break;
-								case CPlayer::BULLET_EGG_SPEED:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-									break;
-								case CPlayer::BULLET_CHICK_ATTACK:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.3f));
-									break;
-								case CPlayer::BULLET_CHICK_ANNOY:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 0.3f));
-									break;
-								case CPlayer::BULLET_CHICK_SPEED:
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 0.3f));
-									break;
+									int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
+									switch (nType)
+									{
+									case CPlayer::BULLET_EGG_ATTACK:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
+										break;
+									case CPlayer::BULLET_EGG_ANNOY:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
+										break;
+									case CPlayer::BULLET_EGG_SPEED:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
+										break;
+									case CPlayer::BULLET_CHICK_ATTACK:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.3f));
+										break;
+									case CPlayer::BULLET_CHICK_ANNOY:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 0.3f));
+										break;
+									case CPlayer::BULLET_CHICK_SPEED:
+										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 0.3f));
+										break;
+									}
+								}
+								else
+								{
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 								}
 							}
 							else
@@ -682,26 +803,60 @@ void CGamePlay::Update(void)
 								m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 						}
+					}
+
+					if (m_pTime[nPlayerNum] != NULL)
+					{// NULL以外
+						m_pTime[nPlayerNum]->TexTime(nTimer[nCntMember], true);
+
+						if (pbGoul[nCntMember] == true)
+							m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
 						else
-						{
-							m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-						}
+							m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+						if (bOnine == true && nClient != nPlayerNum)
+							m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 					}
 				}
+				else
+				{
+					for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
+					{// アイテムカウント
+					 // アイテムフレーム
+						if (m_pItemFrame[nPlayerNum][nCntItem] != NULL)
+						{// NULL以外
+							if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
+							{
+								int nFrame = m_nGoulCounter[nPlayerNum] - 60;
 
-				if (m_pTime[nPlayerNum] != NULL)
-				{// NULL以外
-					m_pTime[nPlayerNum]->TexTime(nTimer[nCntMember], true);
+								int nNum = (nFrame % 20) + 1;
+								if (nFrame / 20 == 0)
+									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nNum / (float)20)));
 
-					if (pbGoul[nCntMember] == true)
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-					else
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+								if (bOnine == true && nClient != nPlayerNum)
+									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 
-					if (bOnine == true && nClient != nPlayerNum)
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							}
+						}
+						// アイテム
+						if (m_pItem[nPlayerNum][nCntItem] != NULL)
+						{// NULL以外
+							if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
+							{
+								int nFrame = m_nGoulCounter[nPlayerNum] - 60;
+
+								int nNum = (nFrame % 20) + 1;
+								if (nFrame / 20 == 0)
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nNum / (float)20)));
+
+								if (bOnine == true && nClient != nPlayerNum)
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+
+							}
+						}
+					}
+
 				}
-
 				nPlayerNum++;
 			}
 		}

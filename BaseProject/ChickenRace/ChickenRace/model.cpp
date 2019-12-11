@@ -420,7 +420,7 @@ void CModel::SetParts(void)
 //=============================================================================
 //　Xファイルの読み込み
 //=============================================================================
-void CModel::ParentModel(CModel **&apModel, TYPE type)
+void CModel::ParentModel(CModel **&apModel, TYPE type, int nSelectParts)
 {
 	if (apModel != NULL) { return; }
 
@@ -441,7 +441,7 @@ void CModel::ParentModel(CModel **&apModel, TYPE type)
 
 				if (apModel[nCount]->m_Type == PARTS_MAX)
 				{//キャラごとに設定
-					switch (0)//←ニワトリの番号を入れる
+					switch (nSelectParts)//←ニワトリの番号を入れる
 					{
 					case 0://ハッピーボーイ
 						apModel[nCount]->m_Type = PARTS_CHICKEN_11;

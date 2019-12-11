@@ -241,7 +241,7 @@ private:
 	Feed m_aFeed[MAX_MAP_FEED];					//設置する食べ物の構造体
 
 	static int m_nMaxPlayer;					// プレイヤー数
-	static int m_nCharSelectNum[MAX_PLAYER];	// キャラ選択番号
+	static int m_nCharSelectNum[MAX_MEMBER];	// キャラ選択番号
 
 	static int m_nControllerNum[MAX_PLAYER];	// コントローラー番号
 

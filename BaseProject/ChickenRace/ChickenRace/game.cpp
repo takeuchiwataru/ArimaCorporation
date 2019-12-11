@@ -75,7 +75,7 @@ int CGame::m_nGameCounter = 0;
 bool CGame::m_bDrawUI = false;
 
 int CGame::m_nMaxPlayer = 0;						// プレイヤー数
-int CGame::m_nCharSelectNum[MAX_PLAYER] = { 0 };	// キャラ選択番号
+int CGame::m_nCharSelectNum[MAX_MEMBER] = { 0 };	// キャラ選択番号
 int CGame::m_nControllerNum[MAX_PLAYER] = { 0 };	// コントローラー番号
 int CGame::m_nRanking[MAX_MEMBER] = { 0 };			// ランキング
 int CGame::m_nRankingSort[MAX_MEMBER] = { 0 };		// ランキング
@@ -150,13 +150,13 @@ HRESULT CGame::Init()
 	m_nMaxPlayer = 0;					// プレイヤー数
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
-		m_nCharSelectNum[nCntPlayer] = nCntPlayer;		// キャラ選択番号
 		m_nControllerNum[nCntPlayer] = nCntPlayer;		// コントローラー番号
 		m_bGoul[nCntPlayer] = false;					// ゴール
 	}
 
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{
+		m_nCharSelectNum[nCntMember] = nCntMember;		// キャラ選択番号
 		m_nRanking[nCntMember] = nCntMember;			// ランキング
 		m_nRankingSort[nCntMember] = nCntMember;
 		m_nTime[nCntMember] = 0;
@@ -289,9 +289,6 @@ void CGame::Update(void)
 	switch (m_gameMode)
 	{// ゲームモード
 	case GAMEMODE_CHARSELECT:
-		//if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true)
-		//	CFade::Create(GAMEMODE_PLAY);
-
 		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 			if (m_pGameCamera[nCntPlayer] != NULL) { m_pGameCamera[nCntPlayer]->SetPlayer((m_pPlayer[m_nCharSelectNum[nCntPlayer]] != NULL ? m_pPlayer[m_nCharSelectNum[nCntPlayer]] : NULL)); }
 
@@ -672,7 +669,7 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 		if (m_pGameCharSelect == NULL)
 			m_pGameCharSelect = CGameCharSelect::Create();
 
-		for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+		for (int nCntPlayer = 0; nCntPlayer < MAX_MEMBER; nCntPlayer++)
 			m_nCharSelectNum[nCntPlayer] = nCntPlayer;			// キャラ選択番号
 
 																//ゲームカメラの生成
@@ -842,6 +839,27 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 		switch (nMode)
 		{
 		case GAMEMODE_CHARSELECT:		// キャラ選択
+			// キャラ入れ替え
+			for (int nCntMember = m_nMaxPlayer; nCntMember < MAX_MEMBER; nCntMember++)
+			{// メンバーカウント
+				bool bCheck = false;
+				do
+				{
+					bCheck = false;
+					for (int nCntPlayer = 0; nCntPlayer < MAX_MEMBER; nCntPlayer++)
+					{// プレイヤーカウント
+						if (nCntMember != nCntPlayer)
+						{
+							if (m_nCharSelectNum[nCntMember] == m_nCharSelectNum[nCntPlayer])
+							{
+								m_nCharSelectNum[nCntMember] = (m_nCharSelectNum[nCntMember] + 1) % MAX_MEMBER;
+								bCheck = true;
+								break;
+							}
+						}
+					}
+				} while (bCheck != false);
+			}
 		case GAMEMODE_COURSESELECT:		// コース選択
 		case GAMEMODE_COURSE_VIEW:		// コースビュー選択
 		case GAMEMODE_PLAY:				// プレイ選択
@@ -883,7 +901,7 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 							(-90.0f),
 							(210.0f - (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)))),
 						D3DXVECTOR3(0.0f, frot, 0.0f),
-						nCntMember, 0, CPlayer::PLAYERTYPE_SELECT);
+						nCntMember, 0, m_nCharSelectNum[nCntMember], CPlayer::PLAYERTYPE_SELECT);
 			}
 
 			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
@@ -921,7 +939,7 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 					m_pPlayer[nCntMember] = CPlayer::Create(
 						D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -100.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4))),
 						D3DXVECTOR3(0.0f, frot, 0.0f),
-						nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
+						nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), m_nCharSelectNum[nCntMember], (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
 
 				if (nMode == GAMEMODE_PLAY)
 				{
