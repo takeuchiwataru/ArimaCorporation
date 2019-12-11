@@ -593,7 +593,10 @@ void C3DPolygon::SetShadow(D3DXVECTOR3 pos)
 //===============================================================================
 void	C3DPolygon::SetRotY(void)
 {
-	D3DXVECTOR3 pos = CGame::GetGameCamera(CGame::GetCameraNumber())->GetCameraPosV();
+	CGameCamera *pCamera = CGame::GetGameCamera(CGame::GetCameraNumber());
+	if (pCamera == NULL) { return; }
+
+	D3DXVECTOR3 pos = pCamera->GetCameraPosV();
 	D3DXVECTOR3 &m_pos = GetposR();
 	GetrotR().y = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
 }

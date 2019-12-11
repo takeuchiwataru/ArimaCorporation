@@ -43,9 +43,9 @@ LPDIRECT3DTEXTURE9 *CModel3D::m_pShaderMeshTextures[MODEL_TYPE_MAX] = {};	// ƒVƒ
 D3DXVECTOR3			CModel3D::m_VtxMinModel[MODEL_TYPE_MAX];
 D3DXVECTOR3			CModel3D::m_VtxMaxModel[MODEL_TYPE_MAX];					// ƒ‚ƒfƒ‹‚ÌÅ¬’lEÅ‘å’l
 
-																				//*****************************************************************************
-																				//					 ƒ‚ƒfƒ‹‚Ì“Ç‚Ýž‚Ýƒtƒ@ƒCƒ‹–¼
-																				//*****************************************************************************
+//*****************************************************************************
+//					 ƒ‚ƒfƒ‹‚Ì“Ç‚Ýž‚Ýƒtƒ@ƒCƒ‹–¼
+//*****************************************************************************
 const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 {
 	//=============================
@@ -68,6 +68,9 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	"data\\MODEL\\Object\\bigkanban.x",
 	"data\\MODEL\\Object\\Šâ.x",
 	"data\\MODEL\\Object\\ƒS[ƒ‹.x",
+	"data\\MODEL\\Object\\ŠR_ŠÅ”Â.x",
+	"data\\MODEL\\Object\\‰a_ŠÅ”Â.x",
+	"data\\MODEL\\Object\\…_ŠÅ”Â.x",
 
 	//=============================
 	//@          ‰a
@@ -116,6 +119,9 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	"data\\TEXTURE\\modeltex\\bigkanban.jpg",
 	"data\\TEXTURE\\modeltex\\Šâ.jpg",
 	"data\\TEXTURE\\modeltex\\Snap000.jpg",
+	"data\\TEXTURE\\modeltex\\ŠÅ”Â(ŠR).jpg",
+	"data\\TEXTURE\\modeltex\\ŠÅ”Â(‰a).jpg",
+	"data\\TEXTURE\\modeltex\\ŠÅ”Â(…‚½‚Ü‚è).jpg",
 
 	//=============================
 	//@          ‰a
@@ -548,7 +554,7 @@ void CModel3D::Draw(void)
 				//===================================================
 				//    @@@@ƒVƒF[ƒ_[‚ÌŠ„‚è“–‚Äì‹Æ
 				//===================================================
-				//if (m_nModelType != 3 && m_nModelType != 4)
+				if (m_nModelType != MODEL_TYPE_BRIDGE)
 				{
 					//ƒpƒX‚ðŽw’è‚µ‚ÄŠJŽn
 					Shader->BeginPass(0);

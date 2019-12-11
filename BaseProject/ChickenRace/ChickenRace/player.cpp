@@ -41,7 +41,7 @@
 //=============================================================================
 #define VECTOR_ZERO			(D3DXVECTOR3(0.0f, 0.0f, 0.0f))				//ベクトルの初期化
 #define FAILE_NAME			("data\\TEXT\\Player\\PlayerState.txt")		//読み込むファイル名
-#define FILE_TEXTURE		("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
+#define FILE_TEXTURE		("data\\TEXTURE\\costumetex\\happyboy.jpg")	//テクスチャの読み込み
 #define ROLLOVER_STOP		(0.6f)										//横転防止角度
 #define DECELERATION		(0.5f)										//減速の割合
 #define EGG_RANGE			(25.0f)										// 卵とプレイヤーの距離
@@ -64,24 +64,26 @@
 
 
 // プレイヤー情報
-#define PLAYER_ACCEL	(0.5f)											// 加速値（前進）
-#define PLAYER_BRAKS	(0.75f)											// 加速値（後進）
-#define PLAYER_DOWN		(0.08f)											// 減速度
-#define PLAYER_ADDROT	(0.005f)										// 回転量
-#define PLAYER_DOWNROT	(0.2f)											// 回転量
+#define PLAYER_ACCEL		(0.5f)										// 加速値（前進）
+#define PLAYER_BRAKS		(0.75f)										// 加速値（後進）
+#define PLAYER_DOWN			(0.08f)										// 減速度
+#define PLAYER_ADDROT		(0.005f)									// 回転量
+#define PLAYER_DOWNROT		(0.2f)										// 回転量
 																		   
-#define PLAYER_JUMP		(2.0f)											// 回転量
-#define PLAYER_GRAVITY	(0.09f)											// 回転量
+#define PLAYER_JUMP			(2.0f)										// 回転量
+#define PLAYER_GRAVITY		(0.09f)										// 回転量
 
-#define WIND_TIME		(15.0f)										//風の持続時間
-#define WIND_POW		(2.0f)										//風の強さ
-#define PLAYER_STRIKE	(0.4f)										//衝撃の強さ
-#define PLAYER_STRPLUS	(0.4f)										//タックル加速度
-#define PLAYER_STRDOWN	(50.0f)										//タックル最大減速値
-#define PLAYER_POWDOWN	(0.0385f)									//タックル加速度の毎F減少値
-#define PLAYER_POWMAX	(0.25f)										//タックル加速度の最大値
-#define PLAYER_SPDUP	(1.0f)										//アクセル
-#define PLAYER_SPDDOWN	(0.3f)										//アクセルの減速
+#define WIND_TIME			(15.0f)										//風の持続時間
+#define WIND_POW			(2.0f)										//風の強さ
+#define PLAYER_STRIKE		(0.4f)										//衝撃の強さ
+#define PLAYER_STRPLUS		(0.4f)										//タックル加速度
+#define PLAYER_STRDOWN		(50.0f)										//タックル最大減速値
+#define PLAYER_POWDOWN		(0.0385f)									//タックル加速度の毎F減少値
+#define PLAYER_POWMAX		(0.25f)										//タックル加速度の最大値
+#define PLAYER_SPDUP		(1.0f)										//アクセル
+#define PLAYER_SPDDOWN		(0.3f)										//アクセルの減速
+
+#define PLAYER_Cap			(D3DXVECTOR3(0.0f, 8.2f, -2.0f))			//帽子の位置
 //=============================================================================
 // 静的メンバ変数宣言
 //=============================================================================
@@ -155,9 +157,7 @@ void CPlayer::Load(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	// テクスチャの生成
-	D3DXCreateTextureFromFile(pDevice,
-		FILE_TEXTURE,
-		&m_pTexture);
+	D3DXCreateTextureFromFile(pDevice, FILE_TEXTURE, &m_pTexture);
 
 	//モデルのオフセットと読み込み
 	FileLoad();
@@ -274,7 +274,6 @@ HRESULT CPlayer::Init(void)
 		if (m_pPlayerpos == NULL)
 		{
 			m_pPlayerpos = CBillBoord::Create(m_pos + D3DXVECTOR3(0.0f, 500.0f, 0.0f), D3DXVECTOR2(300.0f, 300.0f), 0, true);
-			//m_pPlayerpos->BindTexture(m_pTexture);
 		}
 	}
 
@@ -300,7 +299,7 @@ HRESULT CPlayer::Init(void)
 
 	CModel::ParentModel(m_apModel, CModel::TYPE_CHICKEN);
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
-	for (int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
+	for (int nCountIndex = 0; nCountIndex < nMaxModel - 1; nCountIndex++)
 	{
 		if (m_aIndexParent[nCountIndex] == -1)
 		{
@@ -318,6 +317,13 @@ HRESULT CPlayer::Init(void)
 			m_pos.z + m_aKayOffset[nCountIndex].fposZ));
 	}
 	ResetMotion();
+
+	//テクスチャの割当て
+	if (m_apModel[CModel::PARTS_CHICKEN_11]) { m_apModel[CModel::PARTS_CHICKEN_11]->BindTexture(m_pTexture); }
+
+	m_apModel[MAX_PARTS]->SetParent(m_apModel[CModel::PARTS_CHICKEN_HEAD - CModel::PARTS_CHICKEN_BODY]);
+	m_apModel[MAX_PARTS]->AddPos(PLAYER_Cap);
+
 
 	m_pShadow = NULL;
 	m_pShadow = C3DPolygon::Create(C3DPolygon::TYPE_Shadow, m_pos, D3DXVECTOR3(0.0f, m_rot.y, 0.0f));
@@ -365,19 +371,22 @@ void CPlayer::Uninit(void)
 		}
 	}
 
-	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
-	for (int nCount = 0; nCount < nMaxModel; nCount++)
+	if (m_apModel != NULL)
 	{
-		if (m_apModel[nCount] != NULL)
+		int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
+		for (int nCount = 0; nCount < nMaxModel; nCount++)
 		{
-			//3DモデルのUninit
-			m_apModel[nCount]->Uninit();
-			delete m_apModel[nCount];
-			m_apModel[nCount] = NULL;
+			if (m_apModel[nCount] != NULL)
+			{
+				//3DモデルのUninit
+				m_apModel[nCount]->Uninit();
+				delete m_apModel[nCount];
+				m_apModel[nCount] = NULL;
+			}
 		}
+		delete[] m_apModel;
+		m_apModel = NULL;
 	}
-	delete[] m_apModel;
-	m_apModel = NULL;
 
 	if (m_pDispEffect != NULL)
 	{
@@ -437,7 +446,9 @@ void CPlayer::Draw(void)
 	// ワールドマトリックスの設定
 	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
 
-	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	if (m_apModel == NULL) { return; }
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
+	for (int nCount = 0; nCount < nMaxModel; nCount++)
 	{//モデルの描画
 		if (m_apModel[nCount] != NULL)
 		{
@@ -911,8 +922,8 @@ void CPlayer::EffectUp(void)
 void CPlayer::EffectNor(D3DXVECTOR3 &pos)
 {//煙
 	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+	//CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
+	//CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
 
 	if (m_nKey % 2 == 0)
 	{//足が付いたなら足跡
@@ -2760,6 +2771,8 @@ void CPlayer::UpdateMotion(void)
 //=============================================================================
 void CPlayer::UpMParts(void)
 {
+	if (m_apModel == NULL) { return; }
+
 	float fRateMotion;
 	D3DXVECTOR3 WKVec3;
 
@@ -2806,14 +2819,43 @@ void CPlayer::SettingParts(void)
 	}
 }
 //=============================================================================
+// モーション　パーツのオフセット設定
+//=============================================================================
+void CPlayer::OfSetParts(void)
+{
+	D3DXVECTOR3 WKVec3;
+
+	for (int nCntParts = 0; nCntParts < m_nNumParts; nCntParts++)
+	{
+		if (m_apModel[nCntParts] != NULL)
+		{
+			WKVec3 = D3DXVECTOR3(
+				m_aKayOffset[nCntParts].fposX,
+				m_aKayOffset[nCntParts].fposY,
+				m_aKayOffset[nCntParts].fposZ);
+			m_apModel[nCntParts]->SetPos(WKVec3);
+
+			WKVec3 = D3DXVECTOR3(
+				m_aKayOffset[nCntParts].frotX,
+				m_aKayOffset[nCntParts].frotY,
+				m_aKayOffset[nCntParts].frotZ);
+			RemakeAngle(&WKVec3.x);	RemakeAngle(&WKVec3.y);	RemakeAngle(&WKVec3.z);
+			m_apModel[nCntParts]->SetRot(WKVec3);
+
+		}
+	}
+	SettingParts();
+}
+//=============================================================================
 // モーションの初期化
 //=============================================================================
 void CPlayer::ResetMotion(void)
 {
-	m_pKey = &m_pKeyInfo[PLAYERANIM_NEUTRAL][0];
+	m_PlayerAnim = PLAYERANIM_NEUTRAL;
+	m_pKey = &m_pKeyInfo[m_PlayerAnim][0];
 	m_fCountFlame = 0.0f;
 	m_nKey = 0;
-	SettingParts();
+	OfSetParts();
 }
 //=============================================================================
 // モーションのキャンセル

@@ -256,6 +256,7 @@ public:
 	void ResetMotion(void);
 	void CancelMotion(PlayerAnim Anim, bool bRow);
 	void SettingParts(void);
+	void OfSetParts(void);
 
 	//ファイル読み込み関数
 	static void FileLoad(void);								//ファイル読み込み

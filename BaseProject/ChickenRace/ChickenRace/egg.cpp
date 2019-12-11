@@ -215,26 +215,11 @@ void CEgg::Draw(void)
 	//’¸“_–@ü‚ÌŽ©“®³‹K‰»
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
-	// F•ÏX
-	if (m_eggType == EGGTYPE_ATTACK)
-	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
-	}
-	else if (m_eggType == EGGTYPE_ANNOY)
-	{
-		CModel3D::Setcol(D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
-	}
-	else if (m_eggType == EGGTYPE_SPEED)
-	{
-		CModel3D::Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-	}
-
 	if (m_bExplosion == false)
 	{
 		//•`‰æˆ—
 		CModel3D::Draw();
 	}
-
 
 	//’¸“_–@ü‚ÌŽ©“®³‹K‰»
 	pDevice->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);

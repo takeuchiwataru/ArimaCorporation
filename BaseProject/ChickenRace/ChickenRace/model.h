@@ -13,7 +13,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_MODEL			(17)
+#define MAX_MODEL			(25)
 #define MAX_MODEL_TEXTURE	(4)
 
 //=====================
@@ -33,24 +33,47 @@ public://誰でも扱える
 		PARTS_CHICKEN_WINGSL_0,		//左羽元
 		PARTS_CHICKEN_WINGSL_1,		//左羽先
 		PARTS_CHICKEN_LEGR,			//右腿
-		PARTS_CHICKEN_FOOTR,			//右足
+		PARTS_CHICKEN_FOOTR,		//右足
 		PARTS_CHICKEN_LEGL,			//左腿
-		PARTS_CHICKEN_FOOTL,			//左足
+		PARTS_CHICKEN_FOOTL,		//左足
+
+		PARTS_CHICKEN_11,			//ハッピーボーイ
+		PARTS_CHICKEN_12,			//ハット帽子
+		PARTS_CHICKEN_13,			//フェザーボーン
+		PARTS_CHICKEN_14,			//海賊帽子
+		PARTS_CHICKEN_15,			//兜
+		PARTS_CHICKEN_16,			//ヘルメット
+		PARTS_CHICKEN_17,			//ベレー帽
+		PARTS_CHICKEN_18,			//ピエロ帽子
+
 		PARTS_CHICK_BODY,			//体
 		PARTS_CHICK_HEAD,			//頭
 		PARTS_CHICK_LEGR,			//右腿
 		PARTS_CHICK_FOOTR,			//右足
 		PARTS_CHICK_LEGL,			//左腿
 		PARTS_CHICK_FOOTL,			//左足
-		PARTS_MAX,				//最大数
+		PARTS_MAX,					//最大数
 	}PARTS_TYPE;
 
 	typedef enum
 	{// オブジェクトの種類
-		TYPE_CHICKEN = 0,		//鳥
-		TYPE_CHICK,				//ひよこ
-		TYPE_MAX,				//
+		TYPE_CHICKEN = 0,			//鳥
+		TYPE_CHICK,					//ひよこ
+		TYPE_MAX,					//
 	}TYPE;
+
+	typedef enum
+	{// テクスチャの種類
+		TEX_HAPPYBOY = 0,			//ハッピボーイ
+		TEX_HAT,					//ハット帽子
+		TEX_FEATHERBONE,			//フェザーボーン
+		TEX_PIRATE,					//海賊
+		TEX_KABUTO,					//兜
+		TEX_HELMET,					//ヘルメット
+		TEX_BERET,					//ベレー
+		TEX_CLOWN,					//ピエロ
+		TEX_MAX,					//最大数
+	}TEXTURE;
 
 
 	CModel();

@@ -9,7 +9,7 @@ SCRIPT			# この行は絶対消さないこと！
 #------------------------------------------------------------------------------
 # モデル数
 #------------------------------------------------------------------------------
-NUM_MODEL = 11
+NUM_MODEL = 19
 
 #------------------------------------------------------------------------------
 # モデルファイル名
@@ -25,6 +25,15 @@ MODEL_FILENAME = data/MODEL/Player/07_chicken_legR.x		# [7]右腿
 MODEL_FILENAME = data/MODEL/Player/08_chicken_footR.x		# [8]右足
 MODEL_FILENAME = data/MODEL/Player/09_chicken_legL.x		# [9]左腿
 MODEL_FILENAME = data/MODEL/Player/10_chicken_footL.x		# [10]左足
+
+MODEL_FILENAME = data/MODEL/Costume/11_happyboy.x			# [11]ハッピーボーイ
+MODEL_FILENAME = data/MODEL/Costume/12_hat.x				# [12]ハット帽子
+MODEL_FILENAME = data/MODEL/Costume/13_featherbone.x		# [13]フェザーボーン
+MODEL_FILENAME = data/MODEL/Costume/14_pirate.x				# [14]海賊帽子
+MODEL_FILENAME = data/MODEL/Costume/15_kabuto.x				# [15]兜
+MODEL_FILENAME = data/MODEL/Costume/16_helmet.x				# [16]ヘルメット
+MODEL_FILENAME = data/MODEL/Costume/17_beret.x				# [17]ベレー帽
+MODEL_FILENAME = data/MODEL/Costume/18_clown.x				# [18]ピエロ帽
 
 #------------------------------------------------------------------------------
 # キャラクター情報

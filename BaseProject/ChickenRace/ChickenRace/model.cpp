@@ -26,11 +26,11 @@
 D3DMATERIAL9	   *CModel::m_pMeshMaterials[PARTS_MAX] = {};					// メッシュマテリアルの情報
 LPDIRECT3DTEXTURE9 *CModel::m_pShaderMeshTextures[PARTS_MAX] = {};				// シェーダー用のメッシュテクスチャ
 LPDIRECT3DTEXTURE9 *CModel::m_pMeshTextures[MAX_MODEL_TEXTURE] = {};			// シェーダー用のメッシュテクスチャ
-LPD3DXMESH			CModel::m_pMesh[PARTS_MAX] = {};								//メッシュ情報へのポインタ
+LPD3DXMESH			CModel::m_pMesh[PARTS_MAX] = {};							//メッシュ情報へのポインタ
 LPD3DXBUFFER		CModel::m_pBuffMat[PARTS_MAX] = {};							//マテリアルの情報へのポインタ
 DWORD				CModel::m_nNumMat[PARTS_MAX] = {};							//マテリアルの情報数
-D3DXVECTOR3			CModel::m_VtxMax[PARTS_MAX];			//最大値
-D3DXVECTOR3			CModel::m_VtxMin[PARTS_MAX];			//最小値
+D3DXVECTOR3			CModel::m_VtxMax[PARTS_MAX];								//最大値
+D3DXVECTOR3			CModel::m_VtxMin[PARTS_MAX];								//最小値
 CModel::PARTS_TYPE	*CModel::m_partstype[TYPE_MAX] = {};
 int					CModel::m_nModelMax[TYPE_MAX];								// モデルの種類
 
@@ -169,6 +169,7 @@ HRESULT CModel::Init()
 	m_Pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//位置
 	m_Rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);					//向き達する
 	m_Rot.y = 0.0f;
+	m_pTextures = NULL;
 
 	return S_OK;
 }
@@ -371,56 +372,9 @@ void CModel::Draw(float fAlpha)
 		Shader->End();
 	}
 }
-
-////=============================================================================
-////　マテリアルカラーの設定
-////=============================================================================
-//void CModel::SetColor(D3DXCOLOR col)
-//{
-//	// デバイスの取得
-//	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-//
-//	D3DMATERIAL9 matDef;	// 現在のマテリアル保存用
-//	D3DXMATERIAL *pMat;		// マテリアルデータへのポインタ
-//
-//							// 現在のマテリアルを取得
-//	pDevice->GetMaterial(&matDef);
-//
-//	// マテリアルデータへのポインタを取得
-//	pMat = (D3DXMATERIAL*)m_pBuffMat->GetBufferPointer();
-//
-//	// 色を付ける
-//	pMat->MatD3D.Diffuse = col;
-//
-//	// マテリアルをデフォルトに戻す
-//	pDevice->SetMaterial(&matDef);
-//}
-//
-////=============================================================================
-////　Xファイルの読み込み
-////=============================================================================
-//void CModel::CreateXFile(char FileName[40])
-//{
-//	//レンダリングクラスを取得
-//	CRenderer * pRenderer = NULL;
-//	pRenderer = CManager::GetRenderer();
-//
-//	//デバイスの取得
-//	LPDIRECT3DDEVICE9 pDevice = pRenderer->GetDevice();
-//
-//	// Xファイルの読み込み
-//	D3DXLoadMeshFromX(&FileName[0],
-//		D3DXMESH_SYSTEMMEM,
-//		pDevice,
-//		NULL,
-//		&m_pBuffMat,
-//		NULL,
-//		&m_nNumMat,
-//		&m_pMesh);
-//}
-////=============================================================================
-////　Xファイルの読み込み
-////=============================================================================
+//=============================================================================
+//　Xファイルの読み込み
+//=============================================================================
 void CModel::SetParts(void)
 {
 	for (int nCount = 0; nCount < TYPE_MAX; nCount++)
@@ -430,9 +384,9 @@ void CModel::SetParts(void)
 		switch (nCount)
 		{
 		case TYPE_CHICKEN:
-			m_nModelMax[nCount] = 11;
+			m_nModelMax[nCount] = 12;
 			m_partstype[nCount] = new PARTS_TYPE[m_nModelMax[nCount]];
-						
+
 			m_partstype[nCount][0] = PARTS_CHICKEN_BODY;
 			m_partstype[nCount][1] = PARTS_CHICKEN_HEAD;
 			m_partstype[nCount][2] = PARTS_CHICKEN_ASS;
@@ -444,13 +398,14 @@ void CModel::SetParts(void)
 			m_partstype[nCount][8] = PARTS_CHICKEN_FOOTR;
 			m_partstype[nCount][9] = PARTS_CHICKEN_LEGL;
 			m_partstype[nCount][10] = PARTS_CHICKEN_FOOTL;
+			m_partstype[nCount][11] = PARTS_MAX;
 
 			break;
 		case TYPE_CHICK:
 
 			m_nModelMax[nCount] = 6;
 			m_partstype[nCount] = new PARTS_TYPE[m_nModelMax[nCount]];
-						
+
 			m_partstype[nCount][0] = PARTS_CHICK_BODY;
 			m_partstype[nCount][1] = PARTS_CHICK_HEAD;
 			m_partstype[nCount][2] = PARTS_CHICK_LEGR;
@@ -462,9 +417,9 @@ void CModel::SetParts(void)
 		}
 	}
 }
-////=============================================================================
-////　Xファイルの読み込み
-////=============================================================================
+//=============================================================================
+//　Xファイルの読み込み
+//=============================================================================
 void CModel::ParentModel(CModel **&apModel, TYPE type)
 {
 	if (apModel != NULL) { return; }
@@ -483,14 +438,46 @@ void CModel::ParentModel(CModel **&apModel, TYPE type)
 			{
 				//モデルの生成
 				apModel[nCount]->m_Type = m_partstype[type][nCount];
+
+				if (apModel[nCount]->m_Type == PARTS_MAX)
+				{//キャラごとに設定
+					switch (0)//←ニワトリの番号を入れる
+					{
+					case 0://ハッピーボーイ
+						apModel[nCount]->m_Type = PARTS_CHICKEN_11;
+						break;
+					case 1://ハット帽子
+						apModel[nCount]->m_Type = PARTS_CHICKEN_12;
+						break;
+					case 2://フェザーボーン
+						apModel[nCount]->m_Type = PARTS_CHICKEN_13;
+						break;
+					case 3://海賊帽子
+						apModel[nCount]->m_Type = PARTS_CHICKEN_14;
+						break;
+					case 4://兜
+						apModel[nCount]->m_Type = PARTS_CHICKEN_15;
+						break;
+					case 5://ヘルメット
+						apModel[nCount]->m_Type = PARTS_CHICKEN_16;
+						break;
+					case 6://ベレー帽
+						apModel[nCount]->m_Type = PARTS_CHICKEN_17;
+						break;
+					case 7://ピエロ帽子
+						apModel[nCount]->m_Type = PARTS_CHICKEN_18;
+						break;
+					}
+				}
+
 				apModel[nCount]->Init();
 			}
 		}
 	}
 }
-////=============================================================================
-////　Xファイルの読み込み
-////=============================================================================
+//=============================================================================
+//　Xファイルの読み込み
+//=============================================================================
 void CModel::PartsTypeUnLoad(void)
 {
 	for (int nCount = 0; nCount < PARTS_MAX; nCount++)
