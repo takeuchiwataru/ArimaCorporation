@@ -32,12 +32,15 @@
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
 #define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(15.0f)		// ひよこが飛んでくスピード
-#define ANNOY_RANGE				(50.0f)		// 減速させる範囲
+#define ANNOY_RANGE				(70.0f)		// 減速させる範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(12.0f)		// 落ちてくるひよこの速さ
 #define CHICK_PARTICLE			(30)		// パーティクルの数
 #define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
+#define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
+#define MAX_SMOKE_SPEED			(15)		// キラーひよこ出現時の煙の数
+#define ATTACK_TIME				(3)		// 隕石ひよこが落ちるまでの時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -87,6 +90,9 @@ CChick::CChick() : CScene(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_fDestAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_fDiffAngle = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_DestPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fRangePos = 0.0f;
+	m_fRange = 0.0f;
 	m_fHeight = 0.0f;
 	m_fLength = 0.0f;
 	m_nRank = 0;
@@ -97,6 +103,7 @@ CChick::CChick() : CScene(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_nExplosion = 0;
 	m_nKey = 0;
 	m_nCntUpDown = 0;
+	m_nCntAttackTime = 0;
 	m_fUpDown = 0.0f;
 }
 //===============================================================================
@@ -159,6 +166,9 @@ HRESULT CChick::Init(void)
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_posOld = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_FNor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_DestPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fRangePos = 0.0f;
+	m_fRange = 0.0f;
 	m_fLength = 3.0f;
 	m_bJump = false;
 	m_bDis = true;
@@ -170,10 +180,15 @@ HRESULT CChick::Init(void)
 	m_nMap = 0;
 	m_bAttackS = false;
 	m_bExplosion = false;
+	m_bHeight = false;
+	m_bJumpOk = false;
+	m_bSpeedS = false;
+	m_bAttackCol = true;
 	m_nExplosion = 0;
 	m_nAnimnow = CHICK_ANIM_NEUTRAL;	//ニュートラル状態
 	m_nCountFlame = 0;
 	m_nCntUpDown = 0;
+	m_nCntAttackTime = 0;
 	m_fUpDown = 10.0f;
 
 	CModel::ParentModel(m_apModel, CModel::TYPE_CHICK);
@@ -337,7 +352,14 @@ bool CChick::Move(void)
 
 	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{
-		m_move.y -= cosf(0) * 0.1f;
+		float fGravity = 0.1f;
+
+		if (m_type == TYPE_SPEED && m_state == STATE_BULLET)
+		{
+			fGravity = 0.3f;
+		}
+
+		m_move.y -= fGravity;
 	}
 
 	m_pos.x += m_move.x;
@@ -350,11 +372,11 @@ bool CChick::Move(void)
 
 		if (m_type == TYPE_SPEED)
 		{
-			fDisTime = SPEEDUP_TIME + 20;
+			fDisTime = SPEEDUP_TIME + 40;
 		}
 		else if (m_type == TYPE_SPEED_S)
 		{
-			fDisTime = SPEEDUP_TIME * 2;
+			fDisTime = SPEEDUP_TIME * 3 + 20.0f;
 		}
 
 		m_nDisTimer++;
@@ -367,72 +389,79 @@ bool CChick::Move(void)
 		}
 	}
 
-	if ((m_type != TYPE_ATTACK_S || m_type != TYPE_ANNOY_S) && m_state == STATE_CHASE)
+	if (m_state == STATE_CHASE)
 	{
-		//マップとの当たり判定
-		CPlayer **pPlayer = NULL;
-		switch (CManager::GetMode())
+		if (m_type != TYPE_ATTACK_S || m_type != TYPE_ANNOY_S)
 		{
-		case CManager::MODE_TITLE:
-			pPlayer = CTitle::GetPlayer();
-			break;
-		case CManager::MODE_GAME:
-			pPlayer = CGame::GetPlayer();
-			break;
-		}
+			//マップとの当たり判定
+			CPlayer **pPlayer = NULL;
+			switch (CManager::GetMode())
+			{
+			case CManager::MODE_TITLE:
+				pPlayer = CTitle::GetPlayer();
+				break;
+			case CManager::MODE_GAME:
+				pPlayer = CGame::GetPlayer();
+				break;
+			}
 
-		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+			m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
 
-		if (m_pos.y < m_fHeight)
-		{
-			m_move.y = 0.0f;
-			m_pos.y = m_fHeight/* + 10.0f*/;
-			//ジャンプの状態設定
-			m_bJump = false;
+			if (m_pos.y < m_fHeight)
+			{
+				m_move.y = 0.0f;
+				m_pos.y = m_fHeight/* + 10.0f*/;
+				//ジャンプの状態設定
+				m_bJump = false;
+			}
 		}
 	}
-	else if ((m_type == TYPE_ATTACK || m_type == TYPE_ATTACK_S) && m_state == STATE_BULLET)
+	else if (m_state == STATE_BULLET)
 	{
-		//マップとの当たり判定
-		CPlayer **pPlayer = NULL;
-		switch (CManager::GetMode())
+		if (m_type == TYPE_ATTACK || m_type == TYPE_ATTACK_S || m_type == TYPE_SPEED_S)
 		{
-		case CManager::MODE_TITLE:
-			pPlayer = CTitle::GetPlayer();
-			break;
-		case CManager::MODE_GAME:
-			pPlayer = CGame::GetPlayer();
-			break;
-		}
-
-		m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
-
-		if (m_pos.y < m_fHeight)
-		{
-			m_move.y = 0.0f;
-			m_pos.y = m_fHeight;
-			//ジャンプの状態設定
-			m_bJump = false;
-
-			if (m_type == TYPE_ATTACK_S)
+			//マップとの当たり判定
+			CPlayer **pPlayer = NULL;
+			switch (CManager::GetMode())
 			{
-				if (m_bExplosion == false)
+			case CManager::MODE_TITLE:
+				pPlayer = CTitle::GetPlayer();
+				break;
+			case CManager::MODE_GAME:
+				pPlayer = CGame::GetPlayer();
+				break;
+			}
+
+			m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+
+			if (m_pos.y < m_fHeight)
+			{
+				m_move.y = 0.0f;
+				m_pos.y = m_fHeight;
+				//ジャンプの状態設定
+				m_bJump = false;
+
+				if (m_type == TYPE_ATTACK_S)
 				{
-					m_bExplosion = true;
-					D3DXVECTOR2 fSize;
+					if (m_bExplosion == false && m_bAttackCol == true)
+					{
+						m_bExplosion = true;
+						D3DXVECTOR2 fSize;
 
-					for (int nCntParticle = 0; nCntParticle < CHICK_PARTICLE; nCntParticle++)
-					{// パーティクル生成
-						fSize.x = 5.0f + (float)(rand() % 5);
-						fSize.y = 5.0f + (float)(rand() % 5);
+						for (int nCntParticle = 0; nCntParticle < CHICK_PARTICLE; nCntParticle++)
+						{// パーティクル生成
+							fSize.x = 5.0f + (float)(rand() % 5);
+							fSize.y = 5.0f + (float)(rand() % 5);
 
-						CParticle::Create(m_pos,
-							D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
-							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
-							fSize,
-							20,
-							CParticle::TEXTURE_STAR,
-							CParticle::TYPE_NORMAL);
+							CParticle::Create(m_pos,
+								D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+								D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
+								fSize,
+								20,
+								CParticle::TEXTURE_STAR,
+								CParticle::TYPE_NORMAL,
+								m_nNumPlayer);
+						}
 					}
 				}
 			}
@@ -476,18 +505,7 @@ bool CChick::Item(void)
 
 			// 減速させる
 		case TYPE_ANNOY:
-			switch (CManager::GetMode())
-			{
-			case CManager::MODE_TITLE:
-				pPlayer = CTitle::GetPlayer();
-				break;
-			case CManager::MODE_GAME:
-				pPlayer = CGame::GetPlayer();
-				break;
-			}
-			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 60.0f, pPlayer[m_nNumPlayer]->GetPos().z);
-			m_rot = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetRot().x, pPlayer[m_nNumPlayer]->GetRot().y, pPlayer[m_nNumPlayer]->GetRot().z);
-
+			Annoy();
 			break;
 
 			// 減速させる
@@ -497,7 +515,7 @@ bool CChick::Item(void)
 
 			// 減速させる
 		case TYPE_SPEED_S:
-			Speed();
+			SpeedS();
 			break;
 		}
 		// 飛んでく動き
@@ -679,9 +697,6 @@ void CChick::Attack(void)
 		//モデルの移動	モデルの移動する角度(カメラの向き + 角度) * 移動量
 		m_move.x = sinf(m_rot.y) * CHICK_SPEED;
 		m_move.z = cosf(m_rot.y) * CHICK_SPEED;
-
-		CDebugProc::Print("m_DestRank : %d\n", m_DestRank);
-		CDebugProc::Print("m_DestRank : %.1f  %.1f\n", m_move.x, m_move.z);
 	}
 	else
 	{
@@ -707,41 +722,78 @@ void CChick::AttackS(void)
 		pPlayer = CGame::GetPlayer();
 		break;
 	}
-	if (m_nRank != 0)
-	{
-		if (m_bAttackS == false)
-		{// 上がっていく
-			m_move.x = pPlayer[m_nNumPlayer]->GetMove().x;
-			m_move.y = 4.0f;
-			m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
+	if (m_bAttackS == false)
+	{// １位の周りをまわる
+		if (m_nCntAttackTime < 60 * ATTACK_TIME)
+		{
+			m_nCntAttackTime++;
 
-			if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 300.0f)
-			{// 隕石になるタイミング
-				int fx = rand() % FALL_CHICK_RANGE;
-				int fz = rand() % FALL_CHICK_RANGE;
+			m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_DestRank]->GetnMap());
 
-				m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + ((FALL_CHICK_RANGE / 2) - fx),
-					pPlayer[m_DestRank]->GetPos().y + 100.0f,
-					pPlayer[m_DestRank]->GetPos().z + ((FALL_CHICK_RANGE / 2) - fz));
+			// 向き設定
+			m_rot.x = pPlayer[m_DestRank]->GetRot().x;
+			m_rot.y -= 0.06f;
+			m_rot.z = pPlayer[m_DestRank]->GetRot().z;
 
-				if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
-				{// 5匹まで出す
-				 // 落ちるひよこ出現
-					pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
-						(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().x,
-						pPlayer[m_DestRank]->GetPos().y,
-						(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().z));
+			m_rot.y = AdjustAngle(m_rot.y);
+
+			m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * (FALL_CHICK_RANGE / 2),
+				pPlayer[m_DestRank]->GetPos().y,
+				pPlayer[m_DestRank]->GetPos().z + cosf(m_rot.y + D3DX_PI * 0.5f) * (FALL_CHICK_RANGE / 2));
+
+			if (m_pos.y < m_fHeight)
+			{
+				m_pos.y = m_fHeight;
+			}
+
+			if (m_nCntAttackTime == 1)
+			{
+				D3DXVECTOR2 fSize = D3DXVECTOR2(0.0f, 0.0f);
+				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
+				{
+					fSize.x = SMOKE_SIZE + (float)(rand() % 3);
+					fSize.y = SMOKE_SIZE + (float)(rand() % 3);
+
+					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.x,
+						m_pos.y,
+						(cosf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.z),
+						D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 3 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 1 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 3 + 1))),
+						D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+						fSize,
+						30,
+						CParticle::TEXTURE_SMOKE,
+						CParticle::TYPE_TURN,
+						m_DestRank);
 				}
-
-				m_bAttackS = true;
-				pPlayer[m_nNumPlayer]->SetCntChick(0);
 			}
 		}
-		else
-		{
-			// 移動量を設定
-			m_move.y = -CHICK_FALL_SPEED;
+		if (m_nCntAttackTime >= 60 * ATTACK_TIME)
+		{// 隕石になるタイミング
+			int fx = rand() % FALL_CHICK_RANGE;
+			int fz = rand() % FALL_CHICK_RANGE;
+
+			m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + ((FALL_CHICK_RANGE / 2) - fx),
+				pPlayer[m_DestRank]->GetPos().y + 100.0f,
+				pPlayer[m_DestRank]->GetPos().z + ((FALL_CHICK_RANGE / 2) - fz));
+
+			if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
+			{// 5匹まで出す
+			 // 落ちるひよこ出現
+				pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
+					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * -50.0f) + pPlayer[m_DestRank]->GetPos().x,
+					pPlayer[m_DestRank]->GetPos().y,
+					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * -50.0f) + pPlayer[m_DestRank]->GetPos().z));
+			}
+
+			m_bAttackS = true;
+			m_bExplosion = true;
+			pPlayer[m_nNumPlayer]->SetCntChick(0);
 		}
+	}
+	else
+	{
+		// 移動量を設定
+		m_move.y = -CHICK_FALL_SPEED;
 	}
 }
 
@@ -766,8 +818,11 @@ void CChick::AnnoyS(void)
 		m_move.y = 3.0f;
 		m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
 
-		pPlayer[m_nNumPlayer]->AnnoyChicks();
-		m_bAttackS = true;
+		if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 200.0f)
+		{// 隕石になるタイミング
+			pPlayer[m_nNumPlayer]->AnnoyChicks();
+			m_bAttackS = true;
+		}
 	}
 }
 
@@ -787,9 +842,171 @@ void CChick::Speed(void)
 		pPlayer = CGame::GetPlayer();
 		break;
 	}
+	m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap()) + 20.0f;
+
+	if (m_bHeight == false && m_fHeight < m_pos.y)
+	{
+		m_bHeight = true;
+	}
+	else if (m_bHeight == false && m_fHeight >= m_pos.y)
+	{
+		// 向き設定
+		m_rot = pPlayer[m_nNumPlayer]->GetRot();
+	}
+
+	if (m_bHeight == true)
+	{
+		if (m_bJump == false || (m_bJump == true && m_fHeight > m_pos.y))
+		{
+			//ジャンプの状態設定
+			m_bJump = false;
+
+			m_move.y = 0.0f;
+			m_pos.y = pPlayer[m_nNumPlayer]->GetPos().y + 25.0f;
+
+
+			m_pos.x = pPlayer[m_nNumPlayer]->GetPos().x;
+			m_pos.z = pPlayer[m_nNumPlayer]->GetPos().z;
+
+			Jump(2.5f);
+
+			m_bJumpOk = true;
+		}
+
+		if (m_bJump == true && m_bJumpOk == true)
+		{
+			m_rot.y += 0.1f;
+
+			m_rot.y = AdjustAngle(m_rot.y);
+		}
+	}
+
+	m_move.x = pPlayer[m_nNumPlayer]->GetMove().x * 1.2f;
+	m_move.z = pPlayer[m_nNumPlayer]->GetMove().z * 1.2f;
+}
+
+//=============================================================================
+// 強い加速ひよこ
+//=============================================================================
+void CChick::SpeedS(void)
+{
+	CPlayer **pPlayer = NULL;
+
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
+
+	if (m_bSpeedS == true)
+	{
+		float aRangePos[MAX_SPEED_CHICK];
+		float fRange = 0.0f;
+
+		for (int nCntChick = 0; nCntChick < MAX_SPEED_CHICK; nCntChick++)
+		{// ひよこ出現
+			aRangePos[nCntChick] = 0.0f;
+
+			aRangePos[nCntChick] = (-1.0f + (nCntChick * 0.25f));
+
+			fRange = CHICK_SPEED_RANGE;
+
+			CChick::Create(
+				D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + -D3DX_PI * aRangePos[nCntChick]) * fRange,
+					pPlayer[m_nNumPlayer]->GetPos().y,
+					pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * aRangePos[nCntChick]) * fRange),
+				D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+				D3DXVECTOR3(1.0f, 1.0f, 1.0f),
+				CChick::TYPE_SPEED_S,
+				CChick::BULLETTYPE_PLAYER,
+				CChick::STATE_BULLET,
+				m_nNumPlayer);
+
+			if (nCntChick == MAX_SPEED_CHICK - 1)
+			{
+				m_bSpeedS = false;
+			}
+		}
+
+		int nCntChick = 0;
+
+		CScene *pScene;
+		// プライオリティーチェック
+		pScene = CScene::GetTop(EGG_PRIOTITY);
+		while (pScene != NULL)
+		{// プライオリティー内のリスト構造を最後まで見る
+			CScene *pSceneNext = pScene->GetNext();		// 次のオブジェクトを保存
+
+			if (pScene->GetObjType() == OBJTYPE_CHICK)
+			{// タイプが障害物だったら
+				CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
+
+				if (pChick->GetState() == CChick::STATE_BULLET && pChick->GetType() == CChick::TYPE_SPEED_S && pChick->GetDis() == true)
+				{
+					pChick->m_bDis = false;
+					pChick->m_fRangePos = aRangePos[nCntChick];
+					pChick->m_fRange = fRange;
+
+					nCntChick++;
+				}
+			}
+			// Nextに次のSceneを入れる
+			pScene = pSceneNext;
+		}
+
+		D3DXVECTOR2 fSize;
+
+		for (int nCntParticle = 0; nCntParticle < MAX_SMOKE_SPEED; nCntParticle++)
+		{
+			fSize.x = SMOKE_SIZE + (float)(rand() % 3);
+			fSize.y = SMOKE_SIZE + (float)(rand() % 3);
+
+			CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[m_nNumPlayer]->GetPos().x,
+				pPlayer[m_nNumPlayer]->GetPos().y - 2.0f,
+				(cosf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[m_nNumPlayer]->GetPos().z),
+				D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 6 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 6 + 1))),
+				D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+				fSize,
+				30,
+				CParticle::TEXTURE_SMOKE,
+				CParticle::TYPE_TURN,
+				m_nNumPlayer);
+		}
+	}
+
+	m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange,
+		pPlayer[m_nNumPlayer]->GetPos().y,
+		pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange),
+
+		m_rot = pPlayer[m_nNumPlayer]->GetRot();
+}
+
+//=============================================================================
+// 減速ひよこ
+//=============================================================================
+void CChick::Annoy(void)
+{
+	CPlayer **pPlayer = NULL;
+
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
+
+	m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_nNumPlayer]->GetnMap());
+
 	m_nCntUpDown++;
 
-	float fUpDown = 0.35f;
+	float fUpDown = 0.4f;
 
 	if (m_nCntUpDown <= CHICK_UPDOWN_TIME)
 	{
@@ -805,15 +1022,21 @@ void CChick::Speed(void)
 
 	// 向き設定
 	m_rot.x = pPlayer[m_nNumPlayer]->GetRot().x;
-	m_rot.y -= 0.1f;
+	m_rot.y -= 0.08f;
 	m_rot.z = pPlayer[m_nNumPlayer]->GetRot().z;
 
 	m_rot.y = AdjustAngle(m_rot.y);
 
-	m_pos.x = pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * 15.0f;
+	m_pos.x = pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * ANNOY_RANGE;
 	m_pos.y = pPlayer[m_nNumPlayer]->GetPos().y + m_fUpDown;
-	m_pos.z = pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + D3DX_PI * 0.5f) * 15.0f;
+	m_pos.z = pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + D3DX_PI * 0.5f) * ANNOY_RANGE;
+
+	if (m_pos.y < m_fHeight)
+	{
+		m_pos.y = m_fHeight;
+	}
 }
+
 
 //=============================================================================
 // プレイヤーのモーション
@@ -951,6 +1174,7 @@ void CChick::UpdateMotion(void)
 #endif
 
 }
+
 //=============================================================================
 // ファイル読み込み
 //=============================================================================

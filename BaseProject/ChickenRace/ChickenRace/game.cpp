@@ -187,6 +187,7 @@ void CGame::Uninit(void)
 	CModel3D::UnLoad();
 	CMeshField::UnLoad();			//メッシュフィールドテクスチャの破棄
 	CFade::UnLoad();				//フェードのテクスチャの破棄
+	CParticle::UnLoad();			// パーティクルのテクスチャのロード
 	CBillBoord::UnLoad();			//ビルボードテクスチャの破棄
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 	CWall::UnLoad();				//壁のテクスチャの破
@@ -194,7 +195,6 @@ void CGame::Uninit(void)
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
 	CChick::UnLoad();				//ひよこのテクスチャの破棄
-	CParticle::UnLoad();				// パーティクルのテクスチャのロード
 
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）

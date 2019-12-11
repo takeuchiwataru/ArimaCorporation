@@ -182,20 +182,21 @@ void CFeed::Update(void)
 	{// エフェクトを出す
 		if (m_nCntEffectTimer < EFFECT_TIME)
 		{
-			if (m_nCntEffectTimer % 2 == 0)
+			if (m_nCntEffectTimer % 5 == 0)
 			{
 				D3DXVECTOR2 fSize;
 
-				fSize.x = 3.0f + (float)(rand() % 3);
-				fSize.y = 3.0f + (float)(rand() % 3);
+				fSize.x = 15.0f + (float)(rand() % 3);
+				fSize.y = 15.0f + (float)(rand() % 3);
 
 				CParticle::Create(D3DXVECTOR3(pos.x, pos.y - 10.0f, pos.z),
-					D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+					D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 2 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 2 + 1))),
 					D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
 					fSize,
 					20,
-					CParticle::TEXTURE_POLYGON,
-					CParticle::TYPE_UP);
+					CParticle::TEXTURE_SMOKE,
+					CParticle::TYPE_TURN,
+					0);
 			}
 			m_nCntEffectTimer++;
 		}

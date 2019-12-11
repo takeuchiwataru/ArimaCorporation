@@ -28,6 +28,7 @@
 #define CHICK_POS			(7)									// ひよこ同士の間隔の広さ（増やすと広くなる）
 #define CHICK_BOOST			(2.0f)								// 加速する量
 #define MAX_CHICK			(3)									// ひよこの最大数
+#define MAX_SPEED_CHICK		(8)									// ひよこの数
 
 //*****************************************************************************
 // 前方宣言
@@ -132,9 +133,15 @@ public:
 	void SetPos(D3DXVECTOR3 pos) { m_pos = pos; }
 	bool GetAttackS(void) { return m_bAttackS; }
 	void SetAttackS(bool bAttackS) { m_bAttackS = bAttackS; }
+	bool GetSpeedS(void) { return m_bSpeedS; }
+	void SetSpeedS(bool bSpeedS) { m_bSpeedS = bSpeedS; }
 	void SetDestRank(int nDestRank) { m_DestRank = nDestRank; }
 	D3DXVECTOR3 GetPos(void) { return m_pos; }
 	float GetHeight(void) { return m_fHeight; }
+	void SetMove(D3DXVECTOR3 move) { m_move = move; }
+	D3DXVECTOR3 GetMove(void) { return m_move; }
+	void SetAttackCol(bool bAttackCol) { m_bAttackCol = bAttackCol; }
+	bool GetAttackCol(void) { return m_bAttackCol; }
 
 	//モーションの更新関数
 	void UpdateMotion(void);
@@ -152,6 +159,8 @@ private:
 	void AttackS(void);
 	bool Item(void);
 	void Speed(void);
+	void SpeedS(void);
+	void Annoy(void);
 	float AdjustAngle(float rot);
 	D3DXMATRIX			m_mtxWorld;						// ワールドマトリックス
 	static D3DXVECTOR3	m_VtxMaxModel[MAX_CHICK];		//モデルの最大値
@@ -169,6 +178,7 @@ private:
 	D3DXVECTOR3			m_fDestAngle;					// 目的の角度
 	D3DXVECTOR3			m_fDiffAngle;					// 差分
 	D3DXVECTOR3			m_FNor;							//地面の法線
+	D3DXVECTOR3			m_DestPos;					// 目的の位置
 	int					m_nRank;						// 向かっていく順位
 	int					m_nNumPlayer;					// プレイヤー何が持っているひよこか
 	int					m_nDisTimer;					// 消すまでの時間
@@ -176,14 +186,21 @@ private:
 	int					m_nMap;							// 判定を取るマップ
 	int					m_nExplosion;					// 爆発している時間
 	int					m_nCntUpDown;
+	int					m_nCntAttackTime;				// 隕石が落ちるまでの時間
 	float				m_fHeight;
 	float				m_fLength;						// 横幅
 	float				m_fUpDown;				// スピードアップひよこの上下
+	float				m_fRangePos;					// 位置保存用
+	float				m_fRange;
 	bool				m_bJump;						// ジャンプしているかどうか
 	bool				m_bDis;							// 消すかどうか
 	bool				m_bAttackS;
 	bool				m_bExplosion;					// 範囲攻撃になるかならないか
-														   
+	bool				m_bHeight;
+	bool				m_bJumpOk;
+	bool				m_bSpeedS;
+	bool				m_bAttackCol;
+
 	// モーション関数	新規								 
 	CModel				**m_apModel;	// パーツモデルのポインタ
 	ChickAnim			m_nAnimnow;						// 現在のアニメーション

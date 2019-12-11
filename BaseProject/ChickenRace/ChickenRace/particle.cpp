@@ -14,7 +14,8 @@
 // マクロ定義
 //=============================================================================
 #define PARTICLE_TEXTURE_0		"data\\TEXTURE\\game\\ParticleEffect\\Star000.png"		//読み込むテクスチャファイル
-#define PARTICLE_TEXTURE_1		"data\\TEXTURE\\game\\ParticleEffect\\.png"			//読み込むテクスチャファイル
+#define PARTICLE_TEXTURE_1		"data\\TEXTURE\\game\\ParticleEffect\\smoke.png"			//読み込むテクスチャファイル
+#define MINUS_ALPHA				(0.04f)												//煙を透明にしていく数値
 
 //=============================================================================
 // 静的メンバ変数宣言
@@ -24,7 +25,7 @@ LPDIRECT3DTEXTURE9	CParticle::m_apTexture[TEXTURE_MAX] = {};
 //=============================================================================
 // パーティクルの生成処理
 //=============================================================================
-CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, TEXTURE_TYPE typeT, PARTICLE_TYPE typeP)
+CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D3DXVECTOR2 size, int nLife, TEXTURE_TYPE typeT, PARTICLE_TYPE typeP, int nPlayerNum)
 {
 	CParticle *pParticle = NULL;
 
@@ -43,6 +44,7 @@ CParticle *CParticle::Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXCOLOR col, D
 			pParticle->BindTexture(m_apTexture[typeT]);	// テクスチャの設定
 			pParticle->SetColor(col);					// 色の設定
 			pParticle->m_Type = typeP;					// 動き方の設定
+			pParticle->m_nPlayerNum = nPlayerNum;					// 動き方の設定
 		}
 	}
 	return pParticle;
@@ -55,9 +57,11 @@ CParticle::CParticle()
 {
 	// 値をクリア
 	m_nLife = 0;
+	m_nPlayerNum = 0;
 	m_col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fAlfa = 0.0f;
 }
 
 //=============================================================================
@@ -77,6 +81,8 @@ HRESULT CParticle::Init(void)
 	m_col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	m_move = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_fAlfa = 1.0f;
+	m_nPlayerNum = 0;
 	m_Type = TYPE_NORMAL;
 
 	// 2Dオブジェクト初期化処理
@@ -200,6 +206,29 @@ void CParticle::Move(void)
 	case TYPE_UP:
 		m_move.y -= 0.5f;
 		break;
+
+	case TYPE_TURN:
+		CPlayer **pPlayer = NULL;
+
+		switch (CManager::GetMode())
+		{
+		case CManager::MODE_TITLE:
+			pPlayer = CTitle::GetPlayer();
+			break;
+		case CManager::MODE_GAME:
+			pPlayer = CGame::GetPlayer();
+			break;
+		}
+
+		m_move.x -= sinf(pPlayer[m_nPlayerNum]->GetRot().y) * pPlayer[m_nPlayerNum]->GetSpeed();
+		m_move.y -= 0.2f;
+		m_move.z -= cosf(pPlayer[m_nPlayerNum]->GetRot().y) * pPlayer[m_nPlayerNum]->GetSpeed();
+
+		m_fAlfa -= MINUS_ALPHA;
+
+		CBillBoord::SetColor(D3DXCOLOR(m_col.a, m_col.g, m_col.b, m_fAlfa));
+
+		break;
 	}
 
 	if (m_Type != TYPE_DOWN)
@@ -218,7 +247,6 @@ void CParticle::Move(void)
 
 	// 位置の設定
 	CBillBoord::SetPosition(pos);
-
 	// 幅の設定
 	CBillBoord::SetPosSize(pos, m_Size);
 }

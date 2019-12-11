@@ -26,6 +26,7 @@
 #define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
 #define EXPLOSION_RANGE			(80)		// 爆発の範囲
 #define EGG_PARTICLE			(30)		// パーティクルの数
+#define EGG_DIS_TIME			(30)		// 消えるまでの時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -67,6 +68,7 @@ CEgg::CEgg() : CModel3D(EGG_PRIOTITY, CScene::OBJTYPE_EGG)
 	m_nHatchingTimer = 0;
 	m_nExplosion = 0;
 	m_nMap = 0;
+	m_nDisTimer = 0;
 }
 //===============================================================================
 //　デストラクタ
@@ -146,8 +148,10 @@ HRESULT CEgg::Init(void)
 	m_nHatchingTimer = 0;
 	m_nMap = 0;
 	m_nExplosion = 0;
+	m_nDisTimer = 0;
 	m_bThrow = false;
 	m_bExplosion = false;
+	m_bDis = true;
 	return S_OK;
 }
 
@@ -174,13 +178,24 @@ void CEgg::Update(void)
 
 	m_posOld = m_pos;	//前回の位置を保存する
 
+	if (m_bDis == false)
+	{
+		m_nDisTimer++;
+
+		if (m_nDisTimer > 60 * EGG_DIS_TIME)
+		{// 消す
+			m_nDisTimer = 0;
+			Uninit();
+		}
+	}
+
 	Item();
 
 	Move();
 
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_pos.y + 10.0f, m_pos.z));
-
+	CModel3D::SetRot(m_rot);
 
 	/*CDebugProc::Print("%.1f\n", m_move.y);
 	CDebugProc::Print("m_fHeight : %.1f\n", m_fHeight);*/
@@ -437,7 +452,8 @@ void CEgg::Move(void)
 							fSize,
 							20,
 							CParticle::TEXTURE_STAR,
-							CParticle::TYPE_NORMAL);
+							CParticle::TYPE_NORMAL,
+							m_nNumPlayer);
 					}
 				}
 			}

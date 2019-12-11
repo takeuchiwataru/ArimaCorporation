@@ -85,6 +85,8 @@ public:
 	void Bullet(void);
 	void SetThrow(bool bThrow) { m_bThrow = bThrow; }
 	float GetHeight(void) { return m_fHeight; }
+	void SetDis(bool bDis) { m_bDis = bDis; }
+	bool GetDis(void) { return m_bDis; }
 
 private:
 	void Item(void);
@@ -108,9 +110,11 @@ private:
 	bool				m_bJump;				// ジャンプしているかどうか
 	bool				m_bThrow;				// 投げたかどうか
 	bool				m_bExplosion;			// 範囲攻撃になるかならないか
+	bool				m_bDis;							// 消すかどうか
 	float				m_fDestAngle;			// 目的の角度
 	float				m_fDiffAngle;			// 差分
 	float				m_fLength;				// 横幅
+	int					m_nDisTimer;					// 消すまでの時間
 	int					m_nRank;				// 向かっていく順位
 	int					m_nNumPlayer;			// プレイヤー何が持っている卵か
 	int					m_nHatchingTimer;		// 孵化するまでの時間

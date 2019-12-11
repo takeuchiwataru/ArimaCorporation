@@ -29,10 +29,12 @@
 
 #define DAMAGE_TIME			(60)							// ダメージを食らっている時間
 #define SPEEDDOWN_TIME		(180)							// 減速している時間
-#define FALL_CHICK_RANGE	(400)							// ひよこが降る範囲
+#define FALL_CHICK_RANGE	(250)							// ひよこが降る範囲
 #define CHICK_FALL_NUM		(5)								// 落ちてくるひよこの数
 #define MAX_EGG				(3)								// 卵の最大数
 #define SPEEDUP_TIME		(60)								// 加速している時間
+#define MAX_SMOKE			(5)								// 煙の数
+#define SMOKE_SIZE			(20.0f)							// 煙の大きさ
 
 #define FILE_NAME_PRISONER	"data\\TEXT\\Player\\Player.txt"// 読み込むtxtファイルの名前
 #define MAX_PLAYERANIM		(8)								// アニメーション数
@@ -207,6 +209,7 @@ public:
 	CChick **GetAnnoyChick(void) { return m_pAnnoyChick; }
 	void FallChicks(D3DXVECTOR3 pos);
 	void AnnoyChicks(void);
+	float GetSpeed(void) { return m_fSpeed; }
 
 	void SetJump(bool bJump) { m_bJump = bJump; }
 	bool GetJump(void) { return m_bJump; };
@@ -316,6 +319,8 @@ private:
 	//static int				m_nMaxParts;	//読み込むパーツの最大数
 
 																//メンバ変数
+	static bool					  m_bSChick;
+	static int					  m_nCntSTime;
 	static int					  m_nMaxMotion;					// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;				// モーション情報
 	static LPDIRECT3DTEXTURE9     m_pTexture;					// テクスチャ
