@@ -421,12 +421,16 @@ void CModel3D::Draw(void)
 	if (pCamera != NULL && nNumber >= 0 && GetObjType() == OBJTYPE_OBJECT)
 	{
 		m_bcolChange = true;
-		if (pCamera->Clipping(m_Pos, m_VtxMinModel[m_modeltype] + m_Pos, m_VtxMaxModel[m_modeltype] + m_Pos))
+
+		if (m_modeltype != MODEL_TYPE_BRIDGE && m_modeltype != MODEL_TYPE_BIGSIGN)
 		{
-			m_fCola[nNumber] -= 0.1f;
-			if (m_fCola[nNumber] < 0.0f) { m_fCola[nNumber] = 0.0f; return; }
+			if (pCamera->Clipping(m_Pos, m_VtxMinModel[m_modeltype] + m_Pos, m_VtxMaxModel[m_modeltype] + m_Pos))
+			{
+				m_fCola[nNumber] -= 0.1f;
+				if (m_fCola[nNumber] < 0.0f) { m_fCola[nNumber] = 0.0f; return; }
+			}
+			m_col.a = m_fCola[nNumber];
 		}
-		m_col.a = m_fCola[nNumber];
 	}
 
 	//シェーダーに情報を代入

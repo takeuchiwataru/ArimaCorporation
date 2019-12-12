@@ -113,6 +113,9 @@ HRESULT CResult::Init()
 	//D3DXVECTOR3 pos2 = D3DXVECTOR3(-24607.0, -3246.0f, 1238.0f);
 	//D3DXVECTOR3 pos3 = D3DXVECTOR3(-24562.0, -3257.0f, 1178.0f);
 
+	int *pnCharSelectNum = CGame::GetCharSelectNum();
+	int *pnRankingSort = CGame::GetRankingSort();
+
 	D3DXVECTOR3 pos = D3DXVECTOR3(-24409.0, -3290.0f, 1049.0f);
 
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
@@ -128,7 +131,7 @@ HRESULT CResult::Init()
 			m_pPlayer[nCntMember] = CPlayer::Create(
 				posEdit,
 				D3DXVECTOR3(0.0f, (0.95f - (D3DX_PI * 0.5f)), 0.0f),
-				nCntMember, 0, nCntMember, CPlayer::PLAYERTYPE_RESULT);
+				(MAX_MEMBER - 1) - nCntMember, 0, pnCharSelectNum[pnRankingSort[nCntMember]], CPlayer::PLAYERTYPE_RESULT);
 	}
 
 	return S_OK;

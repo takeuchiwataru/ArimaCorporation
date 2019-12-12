@@ -22,6 +22,7 @@
 // マクロ定義
 //=============================================================================
 #define MAX_PARTS			(11)							// 読み込むパーツ数
+#define MAX_PARTS_CAP		(19)							// キャラのパーツと帽子の読み込むパーツ数
 #define MAX_LIFE			(15)							// ライフ
 #define MAX_TIRE			(4)								// タイヤの最大数
 #define MAX_EGG				(3)								// 卵の最大数
@@ -67,6 +68,13 @@ class CDispEffect;
 class CPlayer : public CScene
 {
 public:
+	typedef enum
+	{
+		TEXTURE_NUMBER = 0,
+		TEXTURE_ICON,
+		TEXTURE_MAX
+	}TEXTURE;
+
 	//キー要素
 	typedef struct
 	{
@@ -150,6 +158,9 @@ public:
 		BULLET_CHICK_ATTACK,		// ひよこ（攻撃）
 		BULLET_CHICK_ANNOY,			// ひよこ（妨害）
 		BULLET_CHICK_SPEED,			// ひよこ（速度）
+		BULLET_CHICK_ATTACK_S,		// ひよこ（攻撃）（強い）
+		BULLET_CHICK_ANNOY_S,		// ひよこ（妨害）（強い）
+		BULLET_CHICK_SPEED_S,		// ひよこ（速度）（強い）
 		BULLET_MAX,
 	}BULLET;
 
@@ -323,7 +334,7 @@ private:
 	static int					  m_nCntSTime;
 	static int					  m_nMaxMotion;					// モーションの最大数
 	static CMotion::MOTION_INFO * m_pMotionInfo;				// モーション情報
-	static LPDIRECT3DTEXTURE9     m_pTexture;					// テクスチャ
+	static LPDIRECT3DTEXTURE9     m_pTexture[TEXTURE_MAX];		// テクスチャ
 	PLAYERTYPE					  m_PlayerType;					// プレイヤータイプ
 	D3DXVECTOR3				      m_pos;						// 中心座標
 	D3DXVECTOR3					  m_move;						// 移動
@@ -430,7 +441,8 @@ private:
 	CBillBoord					  *m_pPlayerpos;				// プレイヤー
 	float						  m_fAddRot;					// 加算角度
 
-	int							  m_nSelectNum;
-	int							  m_nSelectCounter;
+	int							  m_nSelectNum;					// 選択
+	int							  m_nSelectCounter;				// 選択カウント
+
 };
 #endif

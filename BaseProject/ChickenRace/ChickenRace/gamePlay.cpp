@@ -98,7 +98,7 @@ HRESULT CGamePlay::Load(void)
 			strcpy(cName, "data/TEXTURE/game/play/rank.png");
 			break;
 		case TEXTURE_ITEM:
-			strcpy(cName, "data/TEXTURE/game/play/eggslot.png");
+			strcpy(cName, "data/TEXTURE/game/play/egg_chickslot.png");
 			break;
 		case TEXTURE_GOUL:
 			strcpy(cName, "data/TEXTURE/game/play/finish.png");
@@ -394,7 +394,7 @@ HRESULT CGamePlay::Init()
 
 		if (m_pGoul[nCntPlayer] == NULL)
 		{// NULLˆÈŠO
-			m_pGoul[nCntPlayer] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+			m_pGoul[nCntPlayer] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
 			m_pGoul[nCntPlayer]->Init();
 			if (bOnine == true)
 			{// ƒIƒ“ƒ‰ƒCƒ“
@@ -771,27 +771,8 @@ void CGamePlay::Update(void)
 								if (nCntItem < nNum)
 								{
 									int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
-									switch (nType)
-									{
-									case CPlayer::BULLET_EGG_ATTACK:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f));
-										break;
-									case CPlayer::BULLET_EGG_ANNOY:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f));
-										break;
-									case CPlayer::BULLET_EGG_SPEED:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-										break;
-									case CPlayer::BULLET_CHICK_ATTACK:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 0.0f, 0.0f, 0.3f));
-										break;
-									case CPlayer::BULLET_CHICK_ANNOY:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(0.0f, 0.0f, 1.0f, 0.3f));
-										break;
-									case CPlayer::BULLET_CHICK_SPEED:
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 0.0f, 0.3f));
-										break;
-									}
+									m_pItem[nPlayerNum][nCntItem]->SetTexture(((nType % 3) * 3) + (nType / 3), 3, 3, 1);
+									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 								}
 								else
 								{

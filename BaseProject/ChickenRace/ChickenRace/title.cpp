@@ -23,6 +23,7 @@
 #include "model.h"
 #include "feed.h"
 #include "resultui.h"
+#include "particle.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -108,6 +109,7 @@ HRESULT CTitle::Init()
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
 	CToonShader::Load();
 	CResultUI::Load();
+	CParticle::Load();			// パーティクルのテクスチャのロード
 
 	CChick::Load();				//ひよこのテクスチャの読み込み
 	CPlayer::Load();			//モデルの読み込み
@@ -159,6 +161,7 @@ void CTitle::Uninit(void)
 	CTitleMenu::Unload();
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 	CResultUI::Unload();
+	CParticle::UnLoad();			// パーティクルのテクスチャのロード
 
 	//モデルの破棄
 	CChick::UnLoad();				//ひよこのテクスチャの破棄
