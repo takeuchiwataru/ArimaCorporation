@@ -40,7 +40,7 @@ CHARACTERSET
 	PARTSSET						# [1]木の先っぽ(右)
 		INDEX = 1
 		PARENT = 0					# (親)木の根本
-		POS = -123.0 80.0 3.5
+		POS = -93.0 80.0 3.5
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 
@@ -68,7 +68,7 @@ CHARACTERSET
 	PARTSSET						# [5]木の先っぽ(左)
 		INDEX = 5
 		PARENT = 0					# (親)木の根本
-		POS = 123.0 80.0 3.5
+		POS = 93.0 80.0 3.5
 		ROT = 0.0 0.0 0.0
 	END_PARTSSET
 	
