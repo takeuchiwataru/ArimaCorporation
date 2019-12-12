@@ -870,7 +870,10 @@ void CPlayer::UpdateFEffect(void)
 		if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 		{
 			m_move *= 0.93f;
-			m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+			if (m_PlayerInfo.fCountTime > PLAYER_COUNT * 0.6f)
+			{
+				m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+			}
 			Effect = CDispEffect::EFFECT_SWAMP;
 			m_fPosY += (-10.0f - m_fPosY) * 0.1f;
 		}
@@ -882,7 +885,10 @@ void CPlayer::UpdateFEffect(void)
 		if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 		{
 			m_move *= 0.93f;
-			m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+			if (m_PlayerInfo.fCountTime > PLAYER_COUNT * 0.6f)
+			{
+				m_PlayerInfo.fCountTime += (PLAYER_COUNT * 0.6f - m_PlayerInfo.fCountTime) * 0.05f;
+			}
 		}
 	}
 	
@@ -1442,7 +1448,10 @@ void CPlayer::UpdateMove(void)
 
 	case PLAYERSTATE_SPEEDDOWN:
 		//is•ûŒü‚ÌÝ’è
-		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// Œ¸‘¬
+		if (m_PlayerInfo.fCountTime > SPEED_COUNT_ANNOY)
+		{
+			m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// Œ¸‘¬
+		}
 
 		if (m_nCntParticle > ANNOY_PARTICLE)
 		{
@@ -2062,6 +2071,8 @@ void CPlayer::ChaseEgg(void)
 //=============================================================================
 void CPlayer::BulletEgg(void)
 {
+	if (m_State == PLAYERSTATE_DAMAGE) { return; }
+
 	CSound *pSound = CManager::GetSound();
 
 	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
@@ -2933,7 +2944,7 @@ void CPlayer::UpdateMotion(void)
 	{
 		float fTime = m_PlayerInfo.fCountTime;
 		if (fTime < 0.0f) { fTime *= -1.0f; }
-		fSpd = 0.1f + (fTime / 9.0f);
+		fSpd = 0.4f + (fTime / 12.0f);
 	}
 	m_fCountFlame += fSpd;	//F++
 

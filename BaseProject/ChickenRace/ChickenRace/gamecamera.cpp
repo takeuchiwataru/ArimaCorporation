@@ -344,11 +344,10 @@ void CGameCamera::UpdatePlayer(bool bSet)
 		fWK += 1.0f;
 
 		//CRoad_Pointer::BentRotX(m_pPlayer->Getpos(), m_pPlayer->GetpEnmPoint(), fRotX, fDistance);
-		if (fTilt > D3DX_PI * 0.75f)	{ fTilt = D3DX_PI * 0.75f; }
-		if (fTilt < D3DX_PI * -0.75f)	{ fTilt = D3DX_PI * -0.75f; }
-
 		fRotX = fTilt;
 		if (m_pPlayer->GetbJump()) { fRotX -= D3DX_PI * 0.15f; }
+		if (fRotX > D3DX_PI * 0.45f) { fRotX = D3DX_PI * 0.45f; }
+		if (fRotX < D3DX_PI * -0.45f) { fRotX = D3DX_PI * -0.45f; }
 		RemakeAngle(&fRotX);
 
 		//Ž‹“_XV
