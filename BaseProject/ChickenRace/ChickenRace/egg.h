@@ -87,6 +87,7 @@ public:
 	float GetHeight(void) { return m_fHeight; }
 	void SetDis(bool bDis) { m_bDis = bDis; }
 	bool GetDis(void) { return m_bDis; }
+	void SetJump(bool bJump) { m_bJump = bJump; }
 
 private:
 	void Item(void);

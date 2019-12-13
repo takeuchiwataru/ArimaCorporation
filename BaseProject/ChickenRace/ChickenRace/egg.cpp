@@ -367,15 +367,11 @@ void CEgg::Item(void)
 
 			m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x, pPlayer[m_nNumPlayer]->GetPos().y + 5.0f, pPlayer[m_nNumPlayer]->GetPos().z);
 
-			m_scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-
 			m_rot.z = D3DX_PI * 0.5f;
-
 			m_rot.x += 0.5f;
-
 			m_rot.x = AdjustAngle(m_rot.x);
 
-			CModel3D::SetRot(m_rot);
+			m_rot.y = pPlayer[m_nNumPlayer]->GetRot().y;
 
 			if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_NORMAL)
 			{// ‰Á‘¬ó‘Ô‚¶‚á‚È‚­‚È‚Á‚½‚çíœ

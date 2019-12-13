@@ -44,7 +44,6 @@
 #define DECELERATION		(0.5f)										//減速の割合
 #define EGG_RANGE			(25.0f)										// 卵とプレイヤーの距離
 #define EGG_POS				(7)											// 卵同士の間隔の広さ（増やすと広くなる）
-#define SPEEDUP_TIME		(60)										// 加速している時間
 #define CHICK_SCALE			(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
 #define THROW				(11.0f)										// 卵を投げる力
 #define EGG_RAND			(2.0f)										// 卵に乗るときのジャンプ力
@@ -53,15 +52,16 @@
 #define SPEED_EGG			(0.2f)										// 加速する量卵
 #define SPEED_COUNT_ANNOY	(5.0f)										// 減速状態
 #define SPEED_COUNT_DAMAGE	(0.0f)											// ダメージ状態
+#define SPEED_COUNT_UP		(9.0f)										// 加速状態
 #define EGGJUMP				(2.0f)										// 卵のジャンプ力
 #define ANNOY_PARTICLE		(5)											// 減速エフェクトの出る間隔
 #define COL_PARTICLE		(30)										// 卵やひよこが当たったときに出るエフェクトの量
 #define COL_PARTICLE_S		(10)										// 隕石ひよこが当たったときに出るエフェクトの量
-#define CHICK_BORDER		(7)											// 強いひよこが出る順位のライン
+#define CHICK_BORDER		(6)											// 強いひよこが出る順位のライン
 #define HATCH_TIME			(600.0f)									// 孵化するまでの時間
 #define CHICK_SPEEDJUMP		(6.5f)										// ひよこに乗るときのジャンプ
 #define ANNOY_TO_PLAYER		(40.0f)										// 減速ひよことプレイヤーの間隔
-#define SCHICK_TIME			(10)										// 強いひよことひよこの出る時間の間隔
+#define SCHICK_TIME			(5)										// 強いひよことひよこの出る時間の間隔
 
 // プレイヤー情報
 #define PLAYER_ACCEL		(0.5f)										// 加速値（前進）
@@ -2085,7 +2085,7 @@ void CPlayer::BulletEgg(void)
 
 	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 	//{// ダメージを食らっているときは使えない
-	if (m_nNumEgg + m_nNumChick > 0)
+if (m_nNumEgg + m_nNumChick > 0)
 	{// 卵かひよこを持っているとき
 		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
 		{
@@ -2102,6 +2102,7 @@ void CPlayer::BulletEgg(void)
 			switch (m_pChick[0]->GetType())
 			{
 			case CChick::TYPE_ATTACK:
+				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				if (nRank >= 0)
 				{
 					for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
@@ -2135,13 +2136,15 @@ void CPlayer::BulletEgg(void)
 
 				// 減速
 			case CChick::TYPE_ANNOY:
-				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HDEF);
+				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				m_pChick[0]->SetDis(false);
 				break;
 
 				// 強い攻撃
 			case CChick::TYPE_ATTACK_S:
+				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK_SC);
+
 				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 				{// 1位のやつを見つける
 					bGoal = CGame::GetPlayer()[nCntChar]->GetGoal();
@@ -2153,7 +2156,6 @@ void CPlayer::BulletEgg(void)
 						nChar = nCntChar;
 					}
 				}
-				m_pChick[0]->SetDestRank(nChar);
 
 				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
 				{
@@ -2177,16 +2179,17 @@ void CPlayer::BulletEgg(void)
 
 				// 減速
 			case CChick::TYPE_ANNOY_S:
+				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				m_pChick[0]->SetDis(false);
 				break;
 
 				// 加速
 			case CChick::TYPE_SPEED_S:
-				SetKiller();
 				m_State = PLAYERSTATE_SPEEDUP_S;
 				m_fSpeed += SPEED_CHICK;
 				m_pChick[0]->SetDis(false);
 				m_pChick[0]->SetSpeedS(true);
+				CancelMotion(PLAYERANIM_CHICKGETON, false);
 				break;
 			}
 
@@ -2213,15 +2216,20 @@ void CPlayer::BulletEgg(void)
 			{
 				// 攻撃
 			case CEgg::EGGTYPE_ATTACK:
+				CancelMotion(PLAYERANIM_INTIMIDATION, false);
+				m_pEgg[0]->SetJump(false);
 				m_pEgg[0]->Jump(THROW);
-				m_pEgg[0]->SetRot(m_rot);
+				m_pEgg[0]->SetRot(D3DXVECTOR3(0.0f, m_rot.y, 0.0f));
 				m_pEgg[0]->SetThrow(TRUE);
 				break;
 
 				// 加速
 			case CEgg::EGGTYPE_SPEED:
+				// 卵の角度設定
+				m_pEgg[0]->SetRot(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 				SetState(PLAYERSTATE_SPEEDUP);
 				m_fSpeed += SPEED_EGG;
+				CancelMotion(PLAYERANIM_EGGGETON, false);
 				break;
 
 				// 減速
@@ -2276,6 +2284,8 @@ void CPlayer::CollisionEgg(void)
 						// ダメージ状態にする
 						if (m_State != PLAYERSTATE_DAMAGE)
 						{
+							CancelMotion(PLAYERANIM_DAMAGE, false);
+
 							m_bDamage = true;
 							m_nCntDamage = 0;
 							SetState(PLAYERSTATE_DAMAGE);
@@ -2304,6 +2314,8 @@ void CPlayer::CollisionEgg(void)
 					case CEgg::EGGTYPE_ANNOY:
 						if (m_bDamage == false)
 						{
+							CancelMotion(PLAYERANIM_DAMAGE, false);
+
 							m_bDamage = true;
 							m_nCntDamage = 0;
 							SetState(PLAYERSTATE_SPEEDDOWN);
@@ -2349,6 +2361,7 @@ void CPlayer::CollisionChick(void)
 						// ダメージ状態にする
 						if (m_State != PLAYERSTATE_DAMAGE)
 						{
+							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
 							m_nCntDamage = 0;
 							SetState(PLAYERSTATE_DAMAGE);
@@ -2378,6 +2391,7 @@ void CPlayer::CollisionChick(void)
 						// ダメージ状態にする
 						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
 						{
+							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
 							m_nCntDamage = 0;
 							SetState(PLAYERSTATE_DAMAGE);
@@ -2405,6 +2419,7 @@ void CPlayer::CollisionChick(void)
 					case CChick::TYPE_ANNOY:
 						if (m_bDamage == false)
 						{
+							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
 							m_nCntDamage = 0;
 							SetState(PLAYERSTATE_SPEEDDOWN);
@@ -2456,13 +2471,13 @@ void CPlayer::ChickAppear(void)
 						{
 							if (m_bSChick == false)
 							{
-								if (nRank <= 10 * (5 + nCntRank))
+								if (nRank <= 10 * (6 + nCntRank))
 								{// 強いほう
 								 // タイプ設定
 									type = SetChickType(type, true);
 									m_bSChick = true;
 								}
-								else if (nRank > 10 * (5 + nCntRank))
+								else if (nRank > 10 * (6 + nCntRank))
 								{// 普通のほう
 								 // タイプ設定
 									type = SetChickType(type, false);
@@ -2480,8 +2495,18 @@ void CPlayer::ChickAppear(void)
 				}
 			}
 
-			// 種類設定
-			m_bulletType[m_nNumChick] = (BULLET)(BULLET_CHICK_ATTACK + (type));
+			if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_ATTACK)
+			{
+				m_bulletType[m_nNumChick] = BULLET_CHICK_ATTACK;
+			}
+			else if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_ANNOY)
+			{
+				m_bulletType[m_nNumChick] = BULLET_CHICK_ANNOY;
+			}
+			else if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
+			{
+				m_bulletType[m_nNumChick] = BULLET_CHICK_SPEED;
+			}
 
 			if (type != CChick::TYPE_MAX)
 			{
@@ -2496,7 +2521,7 @@ void CPlayer::ChickAppear(void)
 				//m_pChick[m_nNumChick] = CChick::Create(m_pos,
 				//	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				//	CHICK_SCALE,
-				//	CChick::TYPE_ANNOY_S,
+				//	CChick::TYPE_ANNOY,
 				//	CChick::BULLETTYPE_PLAYER,
 				//	CChick::STATE_CHASE,
 				//	m_nPlayerNum);

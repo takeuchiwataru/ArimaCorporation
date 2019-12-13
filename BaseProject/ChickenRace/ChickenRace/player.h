@@ -33,10 +33,10 @@
 #define FALL_CHICK_RANGE	(250)							// ひよこが降る範囲
 #define CHICK_FALL_NUM		(5)								// 落ちてくるひよこの数
 #define MAX_EGG				(3)								// 卵の最大数
-#define SPEEDUP_TIME		(60)								// 加速している時間
-#define MAX_SMOKE			(5)								// 煙の数
 #define SMOKE_SIZE			(20.0f)							// 煙の大きさ
-
+#define MAX_SMOKE			(5)								// 煙の数
+#define SPEEDUP_TIME		(0.5f)								// 加速している時間
+#define KILLER_TIME			(5)								// キラーひよこの時間
 #define FILE_NAME_PRISONER	"data\\TEXT\\Player\\Player.txt"// 読み込むtxtファイルの名前
 #define MAX_PLAYERANIM		(8)								// アニメーション数
 #define MAX_PLAYERKEY		(8)								// キーフレーム数
@@ -109,6 +109,11 @@ public:
 		PLAYERANIM_JUMP,			//ジャンプ
 		PLAYERANIM_LAND,			//着地
 		PLAYERANIM_DAMAGE,			//ダメージ
+		PLAYERANIM_APPLAUSE,		//拍手
+		PLAYERANIM_EGGGETON,		//卵の上乗る
+		PLAYERANIM_INTIMIDATION,	//威嚇
+		PLAYERANIM_WINNING,			//入賞
+		PLAYERANIM_CHICKGETON,		//雛の上に乗る
 		PLAYER_MAX					//モーションの最大数
 	}PlayerAnim;
 

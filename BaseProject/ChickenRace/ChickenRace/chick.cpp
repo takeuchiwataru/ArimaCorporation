@@ -39,6 +39,7 @@
 #define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
 #define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
 #define MAX_SMOKE_SPEED			(15)		// キラーひよこ出現時の煙の数
+#define ATTACK_TIME				(3)		// 隕石ひよこが落ちるまでの時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -375,17 +376,49 @@ bool CChick::Move(void)
 
 		if (m_type == TYPE_SPEED)
 		{
-			fDisTime = SPEEDUP_TIME + 40;
+			fDisTime = (60.0f * SPEEDUP_TIME) + 40;
 		}
 		else if (m_type == TYPE_SPEED_S)
 		{
-			fDisTime = SPEEDUP_TIME * 3 + 20.0f;
+			fDisTime = (60.0f * KILLER_TIME) + 20.0f;
 		}
 
 		m_nDisTimer++;
 
 		if (m_nDisTimer > fDisTime)
 		{// 消す
+			if (m_type == TYPE_SPEED || m_type == TYPE_SPEED_S)
+			{
+				D3DXVECTOR2 fSize;
+				int nNumSmoke = 0;
+
+				if (m_type == TYPE_SPEED)
+				{
+					nNumSmoke = MAX_SMOKE;
+				}
+				else if (m_type == TYPE_SPEED_S)
+				{
+					nNumSmoke = 2;
+				}
+
+				for (int nCntParticle = 0; nCntParticle < nNumSmoke; nCntParticle++)
+				{
+					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+
+					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.x,
+						m_pos.y - 2.0f,
+						(cosf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.z),
+						D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), 0.0f, cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
+						D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+						fSize,
+						30,
+						CParticle::TEXTURE_SMOKE,
+						CParticle::TYPE_TURN,
+						m_nNumPlayer);
+				}
+			}
+
 			m_nDisTimer = 0;
 			Uninit();
 			return true;
@@ -453,11 +486,11 @@ bool CChick::Move(void)
 
 						for (int nCntParticle = 0; nCntParticle < CHICK_PARTICLE; nCntParticle++)
 						{// パーティクル生成
-							fSize.x = 5.0f + (float)(rand() % 5);
-							fSize.y = 5.0f + (float)(rand() % 5);
+							fSize.x = 5.0f + (float)(CServer::Rand() % 5);
+							fSize.y = 5.0f + (float)(CServer::Rand() % 5);
 
 							CParticle::Create(m_pos,
-								D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+								D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1))),
 								D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
 								fSize,
 								20,
@@ -552,7 +585,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		//距離計算
  		float fDistance = sqrtf(powf(pPos->x - m_pos.x, 2) + powf(pPos->z - m_pos.z, 2));
 
-		if (fDistance < 20.0f + fDepth)
+		if (fDistance < PLAYER_DEPTH + fDepth)
 		{//距離チェック
 			bHit = true;
 		}
@@ -770,13 +803,13 @@ void CChick::AttackS(void)
 				D3DXVECTOR2 fSize = D3DXVECTOR2(0.0f, 0.0f);
 				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
 				{
-					fSize.x = SMOKE_SIZE + (float)(rand() % 3);
-					fSize.y = SMOKE_SIZE + (float)(rand() % 3);
+					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
 
 					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.x,
 						m_pos.y,
 						(cosf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.z),
-						D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 3 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 1 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 3 + 1))),
+						D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 1 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
 						D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
 						fSize,
 						30,
@@ -788,20 +821,20 @@ void CChick::AttackS(void)
 		}
 		if (m_nCntAttackTime >= 60 * ATTACK_TIME)
 		{// 隕石になるタイミング
-			int fx = rand() % FALL_CHICK_RANGE;
-			int fz = rand() % FALL_CHICK_RANGE;
+			int fx = CServer::Rand() % FALL_CHICK_RANGE;
+			int fz = CServer::Rand() % FALL_CHICK_RANGE;
 
 			m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + ((FALL_CHICK_RANGE / 2) - fx),
-				pPlayer[m_DestRank]->GetPos().y + 100.0f,
+				pPlayer[m_DestRank]->GetPos().y + 80.0f,
 				pPlayer[m_DestRank]->GetPos().z + ((FALL_CHICK_RANGE / 2) - fz));
 
 			if (pPlayer[m_nNumPlayer]->GetCntChick() < CHICK_FALL_NUM)
 			{// 5匹まで出す
 			 // 落ちるひよこ出現
 				pPlayer[m_nNumPlayer]->FallChicks(D3DXVECTOR3(
-					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * -50.0f) + pPlayer[m_DestRank]->GetPos().x,
-					pPlayer[m_DestRank]->GetPos().y,
-					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI) * -50.0f) + pPlayer[m_DestRank]->GetPos().z));
+					(sinf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().x,
+					pPlayer[m_DestRank]->GetPos().y + 80.0f,
+					(cosf(pPlayer[m_DestRank]->GetRot().y + D3DX_PI)) + pPlayer[m_DestRank]->GetPos().z));
 			}
 
 			m_bAttackS = true;
@@ -981,13 +1014,13 @@ void CChick::SpeedS(void)
 
 		for (int nCntParticle = 0; nCntParticle < MAX_SMOKE_SPEED; nCntParticle++)
 		{
-			fSize.x = SMOKE_SIZE + (float)(rand() % 3);
-			fSize.y = SMOKE_SIZE + (float)(rand() % 3);
+			fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+			fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
 
 			CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[m_nNumPlayer]->GetPos().x,
 				pPlayer[m_nNumPlayer]->GetPos().y - 2.0f,
 				(cosf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[m_nNumPlayer]->GetPos().z),
-				D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 6 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 6 + 1))),
+				D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 6 + 1)), 0.0f, cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 6 + 1))),
 				D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
 				fSize,
 				30,
