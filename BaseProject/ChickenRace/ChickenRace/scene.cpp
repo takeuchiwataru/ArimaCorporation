@@ -269,20 +269,22 @@ void CScene::DrawSeting(bool bSelect, int nNum, bool bStart, int nEnd)
 		 //UpdateでUninitされてしまう場合　Nextが消える可能性があるからNextにデータを残しておく
 			CScene *pSceneNext = pScene->m_pNext;
 
-			if (pScene->m_pDeath == true)
+			if (pScene->m_ObjType != OBJTYPE_3DPOLYGON)
 			{
-				pScene->Delete();	//削除
-			}
-			else if (pScene->m_bDraw == true)
-			{
-				pScene->Draw();
-
-				if (pScene->GetObjType() == OBJTYPE_OBJECT)
+				if (pScene->m_pDeath == true)
 				{
-					nCnt++;
+					pScene->Delete();	//削除
+				}
+				else if (pScene->m_bDraw == true)
+				{
+					pScene->Draw();
+
+					if (pScene->GetObjType() == OBJTYPE_OBJECT)
+					{
+						nCnt++;
+					}
 				}
 			}
-
 			//Nextに次のSceneを入れる
 			pScene = pSceneNext;
 		}

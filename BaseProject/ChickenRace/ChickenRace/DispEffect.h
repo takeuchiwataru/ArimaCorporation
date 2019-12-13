@@ -36,8 +36,10 @@ public:
 	{
 		TEX_SWAMP, TEX_SWAMP_ONE,	//êÖÇΩÇ‹ÇË
 		TEX_BOOST, 					//â¡ë¨
-		TEX_FootSteps, TEX_Shadow,
-		TEX_Pin, TEX_Light,
+		TEX_FootSteps, TEX_Shadow,	//ë´å≥
+		TEX_Pin, TEX_Light,			//íÉíå
+		TEX_Warning,				//åxçê
+		TEX_White,
 		TEX_MAX,
 	}TEX;
 	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON) : CScene(nPriority, objType) {};

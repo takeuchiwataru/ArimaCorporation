@@ -52,6 +52,16 @@ public://誰でも扱える
 		PARTS_CHICK_FOOTR,			//右足
 		PARTS_CHICK_LEGL,			//左腿
 		PARTS_CHICK_FOOTL,			//左足
+
+		PARTS_WOOD_LEG,				//足
+		PARTS_WOOD_BODY_R,			//右半身
+		PARTS_WOOD_LONG_R,			//長い右腕
+		PARTS_WOOD_SHORT_R,			//短い右腕
+		PARTS_WOOD_LEAF_R,			//右の草
+		PARTS_WOOD_BODY_L,			//左半身
+		PARTS_WOOD_LONG_L,			//長い左腕
+		PARTS_WOOD_SHORT_L,			//短い左腕
+		PARTS_WOOD_LEAF_L,			//左の草
 		PARTS_MAX,					//最大数
 	}PARTS_TYPE;
 
@@ -59,6 +69,7 @@ public://誰でも扱える
 	{// オブジェクトの種類
 		TYPE_CHICKEN = 0,			//鳥
 		TYPE_CHICK,					//ひよこ
+		TYPE_WOOD,
 		TYPE_MAX,					//
 	}TYPE;
 

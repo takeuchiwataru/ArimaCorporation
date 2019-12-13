@@ -139,7 +139,7 @@ void CScene3D::Draw(void)
 	D3DXMATRIX mtxView, mtxRot, mtxTrans;				//計算用マトリックス
 
 	if (C2D::DrawPrepare(m_DrawType, pDevice)) { return; }
-														// ワールドマトリックスの初期化
+	// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	//ビューマトリックスを取得
@@ -594,8 +594,11 @@ void C3DPolygon::SetShadow(D3DXVECTOR3 pos)
 void	C3DPolygon::SetRotY(void)
 {
 	CGameCamera *pCamera = CGame::GetGameCamera(CGame::GetCameraNumber());
-	if (pCamera == NULL) { return; }
-
+	if (pCamera == NULL)
+	{
+		pCamera = CGame::GetCourseCamera();
+		if (pCamera == NULL) { return; }
+	}
 	D3DXVECTOR3 pos = pCamera->GetCameraPosV();
 	D3DXVECTOR3 &m_pos = GetposR();
 	GetrotR().y = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
@@ -612,13 +615,13 @@ void	C3DPolygon::GoStraight(float fPlus)
 //===============================================================================
 // 生成関数
 //===============================================================================
-C3DAnim *C3DAnim::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+C3DAnim *C3DAnim::Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nPriority)
 {
 	C3DAnim *p3D = NULL;
-	p3D = new C3DAnim;
+	p3D = new C3DAnim(nPriority);
 
-	if (p3D != NULL) 
-	{ 
+	if (p3D != NULL)
+	{
 		p3D->C3DPolygon::Setting(Type, pos, rot);
 		p3D->Setting(Type);
 	}
@@ -659,7 +662,7 @@ void C3DAnim::Update(void)
 	{//時間経過で
 		m_nCntAnim = 0;		m_nPtn++;
 
-		if (m_nPtn > m_nPtnX * m_nPtnY) 
+		if (m_nPtn > m_nPtnX * m_nPtnY)
 		{//終了確認
 			if (EndCheck()) { Uninit(); return; }
 		}
@@ -668,7 +671,7 @@ void C3DAnim::Update(void)
 		SetTexture(m_nPtn, m_nPtnX, m_nPtnY, 1);
 	}
 	else { m_nCntAnim++; }
-	
+
 	C3DPolygon::Update();
 }
 //===============================================================================

@@ -355,14 +355,6 @@ void CModel3D::Update(void)
 	m_Move.z += (0 - m_Move.z) * 0.04f;
 
 	m_bcolChange = true;
-	for (int nCnt = 0; nCnt < MAX_PLAYCOL; nCnt++)
-	{
-		m_fCola[nCnt] += 0.05f;
-		if (m_fCola[nCnt] > 1.0f)
-		{
-			m_fCola[nCnt] = 1.0f;
-		}
-	}
 }
 
 //=============================================================================
@@ -418,7 +410,7 @@ void CModel3D::Draw(void)
 		}
 	}
 
-	if (pCamera != NULL && nNumber >= 0 && GetObjType() == OBJTYPE_OBJECT)
+	if (pCamera != NULL && nNumber >= 0 && (GetObjType() == OBJTYPE_OBJECT || GetObjType() == OBJTYPE_EGG))
 	{
 		m_bcolChange = true;
 
@@ -426,8 +418,13 @@ void CModel3D::Draw(void)
 		{
 			if (pCamera->Clipping(m_Pos, m_VtxMinModel[m_modeltype] + m_Pos, m_VtxMaxModel[m_modeltype] + m_Pos))
 			{
-				m_fCola[nNumber] -= 0.1f;
+				m_fCola[nNumber] -= 0.05f;
 				if (m_fCola[nNumber] < 0.0f) { m_fCola[nNumber] = 0.0f; return; }
+			}
+			else
+			{
+				m_fCola[nNumber] += 0.05f;
+				if (m_fCola[nNumber] > 1.0f) { m_fCola[nNumber] = 1.0f; }
 			}
 			m_col.a = m_fCola[nNumber];
 		}

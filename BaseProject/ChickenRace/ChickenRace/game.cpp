@@ -36,6 +36,7 @@
 #include "time.h"
 #include "model.h"
 #include "number.h"
+#include "Character.h"
 #include "toonshader.h"
 
 //*****************************************************************************

@@ -30,6 +30,9 @@
 #define MAX_CHICK			(3)									// ひよこの最大数
 #define MAX_SPEED_CHICK		(8)									// ひよこの数
 
+#define DISTIME					(100)		// 消えるまでの時間
+#define ANNOY_RANGE				(70.0f)		// 減速させる範囲
+#define ATTACK_TIME				(3)		// 隕石ひよこが落ちるまでの時間
 //*****************************************************************************
 // 前方宣言
 //*****************************************************************************
@@ -213,5 +216,6 @@ private:
 	static MOTION_INFO	m_aMotionInfo[MAX_CHICK_MOTION];// モーション情報
 	int					m_nMotionType;					// モーションのタイプ(int型)
 	bool				m_bMotionEnd;					// モーション終了
+	float				m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
 };
 #endif

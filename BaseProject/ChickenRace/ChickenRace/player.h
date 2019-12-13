@@ -416,6 +416,7 @@ private:
 	bool						  m_bOrbit;				//オービットの削除制御用
 	D3DXVECTOR3					  m_WindMove;			//風の移動量
 	float						  m_fCntWind;			//風の管理用
+	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
 	//AI用----------------------------------
 	float						  m_fRoad;				// IN_OUTの％
 	bool						  m_bSJump;				// ジャンプ情報保存

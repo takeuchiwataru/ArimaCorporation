@@ -62,7 +62,7 @@ bool	CCOL_MESH::Create(CCOL_MESH *&pColMesh)
 //==================================================================================================//
 void	CCOL_MESH::Uninit(void)
 {
-	if (m_pMesh != NULL) { m_pMesh->Uninit(); }
+	if (m_pMesh != NULL) { m_pMesh->Uninit(); delete m_pMesh; m_pMesh = NULL; }
 	if (m_pVtx != NULL)
 	{
 		delete[] m_pVtx;
@@ -720,6 +720,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				{//ŠÑ’Ê‚µ‚Ä‚¢‚½‚ç
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
+					if (m_Effect == EFFECT_GRASS) { Effect = EFFECT_GRASS; }
 
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;
@@ -732,7 +733,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 		}
 		else
 		{
-			if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && 
+			if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY &&
 				m_Effect == EFFECT_SWAMP && !bJump)
 			{//“G••…—­‚Ü‚è‚È‚ç
 				WKpos += move * 1.5f;
@@ -1075,7 +1076,6 @@ void CCOL_MESH_MANAGER::LoadMap(void)
 
 	//‰æ‘œ“Ç‚İ‚İ
 	CDispEffect::Load();
-	CCharcter::Load();
 
 	Load(TYPE_HALF0);
 	Load(TYPE_BRIDGE);

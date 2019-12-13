@@ -122,6 +122,7 @@ public:
 	MODEL_TYPE			&GetModelType(void) { return m_modeltype; }
 	bool				&GetbColR(void) { return m_bcolChange; }
 	D3DXVECTOR3			&GetScaleR(void) { return m_Scale; }
+	float				*GetfCola(void) { return &m_fCola[0]; }
 	static CToonShader	*&GetToonShader(void) { return m_pToonShader; }
 
 protected:

@@ -187,6 +187,8 @@ void CPlayer::Load(void)
 	//モデルのオフセットと読み込み
 	FileLoad();
 	CModel::SetParts();	//ニワトリ親子の読み込み
+
+	CCharcter::Load();
 }
 
 //=============================================================================
@@ -205,6 +207,7 @@ void CPlayer::Unload(void)
 			m_pTexture[nCntTex] = NULL;
 		}
 	}
+	CCharcter::Unload();
 }
 
 //=============================================================================
@@ -255,6 +258,7 @@ HRESULT CPlayer::Init(void)
 
 	m_nDriftCounter = 0;		// ドリフトカウント
 
+	for (int nCount = 0; nCount < MAX_PLAYCOL; nCount++) { m_fCola[nCount] = 1.0f; }
 	if (CManager::GetMode() == CManager::MODE_TITLE || CManager::GetMode() == CManager::MODE_GAME)
 	{
 		m_pPoint = CRoad_Manager::GetManager()->GetTop(0);
@@ -339,6 +343,8 @@ HRESULT CPlayer::Init(void)
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
 	for (int nCountIndex = 0; nCountIndex < nMaxModel - 1; nCountIndex++)
 	{
+		m_apModel[nCountIndex]->BindTexture(CDispEffect::GetpTexAll(CDispEffect::TEX_White));
+
 		if (m_aIndexParent[nCountIndex] == -1)
 		{
 			//モデルの親を指定
@@ -460,6 +466,9 @@ void CPlayer::Update(void)
 //=============================================================================
 void CPlayer::Draw(void)
 {
+	float fCola;
+	if (!CCharcter::DrawCheck(m_pos, &m_fCola[0], fCola)) { return; }
+
 	//レンダリングクラスを取得
 	CRenderer * pRenderer = NULL;
 	pRenderer = CManager::GetRenderer();
@@ -490,7 +499,7 @@ void CPlayer::Draw(void)
 		if (m_apModel[nCount] != NULL)
 		{
 			//描画する
-			m_apModel[nCount]->Draw(1.0f);
+			m_apModel[nCount]->Draw(fCola);
 		}
 	}
 }
@@ -965,6 +974,8 @@ void CPlayer::UseBoost(void)
 	//わきから
 	CEfcOrbit::Create()->Set(m_apModel[3]->GetMtxWorld(), D3DXVECTOR3(0.5f, 0.0f, 0.0f), D3DXVECTOR3(-0.5f, .0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), 0, 0, 0);
 	CEfcOrbit::Create()->Set(m_apModel[5]->GetMtxWorld(), D3DXVECTOR3(-0.5f, 0.0f, 0.0f), D3DXVECTOR3(0.5f, .0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f), 0, 0, 0);
+
+	CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_BOOST);
 }
 //=============================================================================
 // 加速の終了処理
@@ -2073,6 +2084,9 @@ void CPlayer::BulletEgg(void)
 {
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
 
+	int nTarget = 99;
+	int nDestRank, nChar;
+	bool bGoal;
 	CSound *pSound = CManager::GetSound();
 
 	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
@@ -2127,22 +2141,25 @@ void CPlayer::BulletEgg(void)
 
 				// 減速
 			case CChick::TYPE_ANNOY:
+				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HDEF);
 				m_pChick[0]->SetDis(false);
 				break;
 
 				// 強い攻撃
 			case CChick::TYPE_ATTACK_S:
+				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK_SC);
 				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 				{// 1位のやつを見つける
-					int nDestRank = CGame::GetRanking(nCntChar);
+					bGoal = CGame::GetPlayer()[nCntChar]->GetGoal();
+					nDestRank = CGame::GetRanking(nCntChar);
 
-					if (nDestRank == 0)
-					{
-						m_nDestRank = nCntChar;
-						m_pChick[0]->SetDestRank(nCntChar);
-						break;
+					if (!bGoal && nTarget > nDestRank)
+					{//ゴールしていない && ターゲットより順位が上
+						nTarget = nDestRank;
+						nChar = nCntChar;
 					}
 				}
+				m_pChick[0]->SetDestRank(nChar);
 
 				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
 				{

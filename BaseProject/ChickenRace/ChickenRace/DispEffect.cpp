@@ -46,6 +46,8 @@ void CDispEffect::Load(void)
 			case TEX_Shadow:	strcat(aStr, "shadow000.jpg");			break;
 			case TEX_Pin:		strcat(aStr, "ItemEfc_Pin.jpg");		break;
 			case TEX_Light:		strcat(aStr, "ItemEfc_Light.jpg");		break;
+			case TEX_Warning:	strcat(aStr, "Warning000.jpg");			break;
+			case TEX_White:	strcat(aStr, "White.jpg");			break;
 			}
 			D3DXCreateTextureFromFile(pD3DDevice, aStr, &m_pTexAll[nCount]);
 		}

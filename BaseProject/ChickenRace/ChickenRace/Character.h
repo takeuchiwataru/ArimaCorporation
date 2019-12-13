@@ -16,7 +16,7 @@
 //=============================================================================
 // マクロ定義
 //=============================================================================
-#define CHAR_PRIORITY	(0)
+#define CHAR_PRIORITY	(1)
 #define WOOD_DIS		(40.0f)				//木と木の間の距離（半分）
 #define WOOD_LEN		(5.0f)				//木の長さ
 //=============================================================================
@@ -54,12 +54,16 @@ public:
 	void				CollisionWood(CPlayer *&pPlayer);
 
 	void UpdateMotion(void);
-	
+
+	static bool	DrawCheck(D3DXVECTOR3 &pos, float *fCol, float &fCola);
+	static void	ResetCheck(D3DXVECTOR3 &pos, float *fCol);
 	float	&GetfCntState(void) { return m_fCntState; }
 private:
+
 	D3DXVECTOR3 m_pos;
 	D3DXVECTOR3 m_rot;
 	float		m_fCntState;
+	bool		m_bDraw;
 
 	// モーション関数	新規
 	static CPlayer::KEY_INFO	  *m_pKeyInfo[MAX_MOTION];		// キー情報へのポインタ
@@ -76,5 +80,8 @@ private:
 	int							  m_nCountFlame;				// フレーム数
 	int							  m_nMotionType;				// モーションのタイプ(int型)
 	bool						  m_bMotionEnd;					// モーション終了
+
+	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
+	C3DPolygon					  *m_p3D;
 };
 #endif

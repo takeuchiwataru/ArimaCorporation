@@ -322,6 +322,8 @@ void CModel::Draw(float fAlpha)
 
 				//マテリアルの設定
 				pMat[nCntMat].MatD3D.Diffuse.a = fAlpha;
+				m_pMeshMaterials[m_Type][nCntMat].Diffuse.a = fAlpha;
+
 				pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
 
 				// テクスチャをNULLにする
@@ -412,6 +414,20 @@ void CModel::SetParts(void)
 			m_partstype[nCount][3] = PARTS_CHICK_FOOTR;
 			m_partstype[nCount][4] = PARTS_CHICK_LEGL;
 			m_partstype[nCount][5] = PARTS_CHICK_FOOTL;
+			break;
+		case TYPE_WOOD:
+			m_nModelMax[nCount] = 9;
+			m_partstype[nCount] = new PARTS_TYPE[m_nModelMax[nCount]];
+
+			m_partstype[nCount][0] = PARTS_WOOD_LEG;
+			m_partstype[nCount][1] = PARTS_WOOD_BODY_R;
+			m_partstype[nCount][2] = PARTS_WOOD_LONG_R;
+			m_partstype[nCount][3] = PARTS_WOOD_SHORT_R;
+			m_partstype[nCount][4] = PARTS_WOOD_LEAF_R;
+			m_partstype[nCount][5] = PARTS_WOOD_BODY_L;
+			m_partstype[nCount][6] = PARTS_WOOD_LONG_L;
+			m_partstype[nCount][7] = PARTS_WOOD_SHORT_L;
+			m_partstype[nCount][8] = PARTS_WOOD_LEAF_L;
 
 			break;
 		}

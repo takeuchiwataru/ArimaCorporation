@@ -13,6 +13,7 @@
 #include "fade.h"
 #include "shadow.h"
 #include "tutorial.h"
+#include "Character.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -180,6 +181,8 @@ CObject * CObject::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, f
 			//pObject->m_move = D3DXVECTOR3(move, move, move);
 			// コリジョンをONOFF
 			pObject->m_nCollision = nCollision;
+
+			CCharcter::ResetCheck(pos, pObject->GetfCola());
 		}
 	}
 

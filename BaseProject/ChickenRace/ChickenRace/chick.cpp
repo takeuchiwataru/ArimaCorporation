@@ -20,6 +20,7 @@
 #include "egg.h"
 #include "particle.h"
 #include "model.h"
+#include "Character.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -30,9 +31,7 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define DISTIME					(100)		// 消えるまでの時間
 #define CHICK_SPEED				(15.0f)		// ひよこが飛んでくスピード
-#define ANNOY_RANGE				(70.0f)		// 減速させる範囲
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
 #define CHICK_FALL_SPEED		(12.0f)		// 落ちてくるひよこの速さ
@@ -40,7 +39,6 @@
 #define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
 #define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
 #define MAX_SMOKE_SPEED			(15)		// キラーひよこ出現時の煙の数
-#define ATTACK_TIME				(3)		// 隕石ひよこが落ちるまでの時間
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -144,6 +142,8 @@ CChick * CChick::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYP
 			pChick->m_nNumPlayer = nNumPlayer;
 			// 状態の設定
 			pChick->m_state = state;
+
+			CCharcter::ResetCheck(pChick->m_pos, &pChick->m_fCola[0]);
 		}
 	}
 
@@ -263,6 +263,9 @@ void CChick::Update(void)
 //=============================================================================
 void CChick::Draw(void)
 {
+	float fCola;
+	CCharcter::DrawCheck(m_pos, &m_fCola[0], fCola);
+
 	//レンダリングクラスを取得
 	CRenderer * pRenderer = NULL;
 	pRenderer = CManager::GetRenderer();
@@ -295,7 +298,7 @@ void CChick::Draw(void)
 			if (m_apModel[nCount] != NULL)
 			{
 				//描画する
-				m_apModel[nCount]->Draw(1.0f);
+				m_apModel[nCount]->Draw(fCola);
 			}
 		}
 	}
@@ -724,10 +727,26 @@ void CChick::AttackS(void)
 	}
 	if (m_bAttackS == false)
 	{// １位の周りをまわる
+		int nDestRank, nChar;
+		int nTarget = 99;
+		bool bGoal;
+		D3DXVECTOR3 Goal;
+
 		if (m_nCntAttackTime < 60 * ATTACK_TIME)
 		{
-			m_nCntAttackTime++;
+			for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
+			{// 1位のやつを見つける
+				bGoal = CGame::GetPlayer()[nCntChar]->GetGoal();
+				nDestRank = CGame::GetRanking(nCntChar);
 
+				if (!bGoal && nTarget > nDestRank)
+				{//ゴールしていない && ターゲットより順位が上
+					nTarget = nDestRank;
+					nChar = nCntChar;
+				}
+			}
+			m_DestRank = nChar;
+			m_nCntAttackTime++;
 			m_fHeight = CCOL_MESH_MANAGER::GetHeight(m_pos, pPlayer[m_DestRank]->GetnMap());
 
 			// 向き設定
@@ -737,10 +756,10 @@ void CChick::AttackS(void)
 
 			m_rot.y = AdjustAngle(m_rot.y);
 
-			m_pos = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * (FALL_CHICK_RANGE / 2),
+			Goal = D3DXVECTOR3(pPlayer[m_DestRank]->GetPos().x + sinf(m_rot.y + D3DX_PI * 0.5f) * (FALL_CHICK_RANGE / 2),
 				pPlayer[m_DestRank]->GetPos().y,
 				pPlayer[m_DestRank]->GetPos().z + cosf(m_rot.y + D3DX_PI * 0.5f) * (FALL_CHICK_RANGE / 2));
-
+			m_pos += (Goal - m_pos) * 0.1f;
 			if (m_pos.y < m_fHeight)
 			{
 				m_pos.y = m_fHeight;
