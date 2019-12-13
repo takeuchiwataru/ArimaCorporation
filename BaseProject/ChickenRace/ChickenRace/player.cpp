@@ -623,7 +623,6 @@ void CPlayer::UpdateRace(void)
 
 	//モーション更新
 	UpdateMotion();
-	EffectUp();
 }
 
 
@@ -652,7 +651,6 @@ void CPlayer::UpdateSelect(void)
 
 	//モーション更新
 	UpdateMotion();
-	EffectUp();
 }
 
 //=============================================================================
@@ -697,7 +695,6 @@ void CPlayer::UpdateResult(void)
 
 	//モーション更新
 	UpdateMotion();
-	EffectUp();
 }
 
 //=============================================================================
@@ -1020,20 +1017,17 @@ void CPlayer::EffectUp(void)
 	//煙、足跡更新
 	if (!m_bJump && m_PlayerAnim == PLAYERANIM_RUN)
 	{//地面にいる && 歩きモーション
-		if (m_fCountFlame == 0.0f)
-		{//キーが変わったなら
-			D3DXVECTOR3 pos = m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f);
+		D3DXVECTOR3 pos = m_pos + D3DXVECTOR3(sinf(m_rot.y + D3DX_PI * 0.5f), 0.0f, cosf(m_rot.y + D3DX_PI * 0.5f)) * (m_nKey == 0 ? -6.0f : 6.0f);
 
-			switch (m_FEffect)
-			{
-			case CCOL_MESH::EFFECT_SWAMP:	EffectWater(pos);	break;
-			case CCOL_MESH::EFFECT_GRASS:	EffectWater(pos);	break;
-			case CCOL_MESH::EFFECT_NORMAL:
-			case CCOL_MESH::EFFECT_BOOST:
-				EffectNor(pos);
-				break;
+		switch (m_FEffect)
+		{
+		case CCOL_MESH::EFFECT_SWAMP:	EffectWater(pos);	break;
+		case CCOL_MESH::EFFECT_GRASS:	EffectWater(pos);	break;
+		case CCOL_MESH::EFFECT_NORMAL:
+		case CCOL_MESH::EFFECT_BOOST:
+			EffectNor(pos);
+			break;
 
-			}
 		}
 	}
 }
@@ -2983,7 +2977,7 @@ void CPlayer::UpdateMotion(void)
 
 		}
 	}
-	if (bSet) { SettingParts(); }
+	if (bSet) { SettingParts(); EffectUp(); }
 
 	UpMParts();	//パーツ更新
 }
