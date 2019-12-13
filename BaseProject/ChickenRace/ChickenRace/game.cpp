@@ -114,7 +114,6 @@ HRESULT CGame::Init()
 
 	CFade::Load();				//フェードのテクスチャの読み込み
 	CMeshField::Load();			//メッシュフィールドのテクスチャの読み込み
-	CBillBoord::Load();			//ビルボードテクスチャの読み込み
 	CWall::Load();				//壁のテクスチャの読み込み
 	CShadow::Load();			//影のテクスチャ読み込み
 	CObject::Load();			//オブジェクトのテクスチャの読み込み
@@ -170,8 +169,8 @@ HRESULT CGame::Init()
 	SetGameMode(m_gameMode);			// ゲームモード設定
 
 	// カウントをなくす
-	if (m_gameMode == GAMEMODE_PLAY) 
-		m_nGameCounter = START_SET_TIME;
+	//if (m_gameMode == GAMEMODE_PLAY) 
+	//	m_nGameCounter = START_SET_TIME;
 
 	return S_OK;
 }
@@ -188,7 +187,6 @@ void CGame::Uninit(void)
 	CMeshField::UnLoad();			//メッシュフィールドテクスチャの破棄
 	CFade::UnLoad();				//フェードのテクスチャの破棄
 	CParticle::UnLoad();			// パーティクルのテクスチャのロード
-	CBillBoord::UnLoad();			//ビルボードテクスチャの破棄
 	CObject::UnLoad();				//オブジェクトのテクスチャの破棄
 	CWall::UnLoad();				//壁のテクスチャの破
 	CShadow::UnLoad();				//影のテクスチャの破棄
@@ -303,11 +301,17 @@ void CGame::Update(void)
 			if (m_pPlayer[nCntPlayer] != NULL)
 				m_pPlayer[nCntPlayer]->SetControl(false);
 
-		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
-			pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
-			pXpad->GetTrigger(INPUT_START) == true)
-			CFade::Create(CGame::GAMEMODE_PLAY);
-
+		fade = CFade::GetFade(); 
+		if (fade == CFade::FADE_NONE)
+		{// フェードしていない
+			if (m_bPause == false)
+			{//ポーズしていない
+				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
+					pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
+					pXpad->GetTrigger(INPUT_START) == true)
+					CFade::Create(CGame::GAMEMODE_PLAY);
+			}
+		}
 		break;
 	case GAMEMODE_PLAY:
 		//現在の状態を保存
@@ -346,6 +350,7 @@ void CGame::Update(void)
 		break;
 	}
 
+	fade = CFade::GetFade();
 	if (fade == CFade::FADE_NONE)
 	{// フェードしていない
 		if (m_gameMode == GAMEMODE_COURSE_VIEW || (m_gameMode == GAMEMODE_PLAY && (START_SET_TIME) < m_nGameCounter))

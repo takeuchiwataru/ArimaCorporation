@@ -50,7 +50,7 @@ CServer			*CManager::m_pServer = NULL;					//デバックログ
 CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
 
 //===============================================================================
 //　デフォルトコンストラクタ

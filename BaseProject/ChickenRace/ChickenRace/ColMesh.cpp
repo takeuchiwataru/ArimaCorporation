@@ -720,7 +720,6 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				{//ŠÑ’Ê‚µ‚Ä‚¢‚½‚ç
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
-					if (m_Effect == EFFECT_GRASS) { Effect = EFFECT_SWAMP; }
 
 					pos.y = WKpos.y + WKm_pos.y;
 					move.y = 0.0f;

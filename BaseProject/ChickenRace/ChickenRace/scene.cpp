@@ -213,7 +213,9 @@ void CScene::DrawMap(void)
 				if (pScene->m_ObjType == OBJTYPE_OBJECT)
 				{
 					CObject *pObject = (CObject*)pScene;
-					if (pObject->GetType() != 3 && pObject->GetType() != 4)
+
+					//山・空・橋
+					if (pObject->GetType() != 3 && pObject->GetType() != 4 && pObject->GetType() != 11)
 						goto skip;		// スキップするよ
 				}
 				else if (pScene->m_ObjType == OBJTYPE_BILLBOORD)
