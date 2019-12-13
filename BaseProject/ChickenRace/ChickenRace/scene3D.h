@@ -94,9 +94,10 @@ public:
 		TYPE_Light,
 		TYPE_Shadow,
 		TYPE_FootSteps,
+		TYPE_Wind,
 		TYPE_MAX
 	}TYPE;
-	C3DPolygon(int nPriority = 1) : CScene3D(nPriority) {};
+	C3DPolygon(int nPriority = 0) : CScene3D(nPriority, OBJTYPE_3DPOLYGON) {};
 	~C3DPolygon() {};
 
 	static C3DPolygon *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nPriority = 1);
@@ -132,10 +133,10 @@ public:
 		ANIM_ONE,
 		ANIM_MAX
 	}ANIM;
-	C3DAnim(int nPriority = 4) : C3DPolygon(nPriority) {};
+	C3DAnim(int nPriority = 5) : C3DPolygon(nPriority) {};
 	~C3DAnim() {};
 
-	static C3DAnim *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot);
+	static C3DAnim *Create(TYPE Type, D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nPriority);
 	HRESULT Init(void);
 	void Update(void);
 

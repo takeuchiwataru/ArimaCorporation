@@ -12,10 +12,12 @@
 #include "model.h"
 #include "renderer.h"
 #include "manager.h"
+#include "gamecamera.h"
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define FILE_TEXTURE		("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
+#define FILE_NAME_WOOD	"data\\TEXT\\Player\\WindWood.txt"// 読み込むtxtファイルの名前
+#define FILE_TEXTURE		("data\\MODEL\\WindWood\\tree000.jpg")	//テクスチャの読み込み
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -86,10 +88,12 @@ CCharcter	*CCharcter::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot)
 //==================================================================================================//
 void	CCharcter::Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot)
 {
-	CModel::ParentModel(m_apModel, CModel::TYPE_CHICKEN);
-	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
+	ResetCheck(m_pos, &m_fCola[0]);
+	CModel::ParentModel(m_apModel, CModel::TYPE_WOOD);
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_WOOD);
 	for (int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
 	{
+		m_apModel[nCountIndex]->BindTexture(m_pTexture);
 		if (m_aIndexParent[nCountIndex] == -1)
 		{
 			//モデルの親を指定
@@ -121,6 +125,10 @@ HRESULT	CCharcter::Init(void)
 	m_nMotionType = 0;
 	m_apModel = NULL;
 	m_fCntState = 0.0f;
+	m_p3D = NULL;
+	m_bDraw = false;
+
+	for (int nCount = 0; nCount < MAX_PLAYCOL; nCount++) { m_fCola[nCount] = 0.0f; }
 	return S_OK;
 }
 //==================================================================================================//
@@ -128,7 +136,8 @@ HRESULT	CCharcter::Init(void)
 //==================================================================================================//
 void	CCharcter::Uninit(void)
 {
-	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICKEN);
+	if (m_p3D != NULL) { m_p3D->Uninit(); m_p3D = NULL; }
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_WOOD);
 	for (int nCount = 0; nCount < nMaxModel; nCount++)
 	{
 		if (m_apModel[nCount] != NULL)
@@ -150,14 +159,18 @@ void	CCharcter::Uninit(void)
 //==================================================================================================//
 void	CCharcter::Update(void)
 {
-	UpdateMotion();
-	//m_rot.y += D3DX_PI * 0.2f;
+	if (m_bDraw) { UpdateMotion(); }
+	m_bDraw = false;
 }
 //==================================================================================================//
 //    * 描画関数 *
 //==================================================================================================//
 void	CCharcter::Draw(void)
 {
+	float fCola;
+	if (!DrawCheck(m_pos, &m_fCola[0], fCola)) { return; }
+	m_bDraw = true;
+
 	//レンダリングクラスを取得
 	CRenderer * pRenderer = NULL;
 	pRenderer = CManager::GetRenderer();
@@ -167,11 +180,11 @@ void	CCharcter::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans, mtx;			// 計算用マトリックス
 
-	// ワールドマトリックスの初期化
+														// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&mtx);
 
 	// 回転を反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
+	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y + D3DX_PI, m_rot.x, m_rot.z);
 	D3DXMatrixMultiply(&mtx, &mtx, &mtxRot);
 
 	// 位置を反映
@@ -179,7 +192,8 @@ void	CCharcter::Draw(void)
 	D3DXMatrixMultiply(&mtx, &mtx, &mtxTrans);
 
 	//拡大処理
-	mtx._44 = (1.0f / 4.0f);
+	mtx._22 = 1.5f;
+	mtx._44 = (1.0f / 0.375f);
 	mtx._41 *= mtx._44;
 	mtx._42 *= mtx._44;
 	mtx._43 *= mtx._44;
@@ -187,15 +201,59 @@ void	CCharcter::Draw(void)
 	// ワールドマトリックスの設定
 	pDevice->SetTransform(D3DTS_WORLD, &mtx);
 
-	for (int nCount = 0; nCount < MAX_PARTS; nCount++)
+	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_WOOD);
+	for (int nCount = 0; nCount < nMaxModel; nCount++)
 	{//モデルの描画
 		if (m_apModel[nCount] != NULL)
 		{
 			//描画する
-			m_apModel[nCount]->Draw(1.0f);
+			m_apModel[nCount]->Draw(fCola);
 		}
 	}
 
+}
+//=============================================================================
+// 描画判定
+//=============================================================================
+bool	CCharcter::DrawCheck(D3DXVECTOR3 &pos, float *fCol, float &fCola)
+{
+	fCola = 1.0f;
+	int nNumber = CGame::GetCameraNumber();
+	CGameCamera *pCamera = CGame::GetGameCamera(nNumber);
+	if (pCamera == NULL) { return true; }
+
+	if (pCamera->Clipping(pos, pos, pos))
+	{
+		fCol[nNumber] -= 0.05f;
+		if (fCol[nNumber] < 0.0f) { fCol[nNumber] = 0.0f; return false; }
+	}
+	else
+	{
+		fCol[nNumber] += 0.05f;
+		if (fCol[nNumber] > 1.0f) { fCol[nNumber] = 1.0f; }
+	}
+	fCola = fCol[nNumber];
+	return true;
+}
+//=============================================================================
+// 描画判定の初期化
+//=============================================================================
+void	CCharcter::ResetCheck(D3DXVECTOR3 &pos, float *fCol)
+{
+	CGameCamera *pCamera;
+	for (int nCnt = 0; nCnt < MAX_PLAYCOL; nCnt++)
+	{
+		pCamera = CGame::GetGameCamera(nCnt);
+		if (pCamera == NULL) { fCol[nCnt] = 1.0f; continue; }
+		if (pCamera->Clipping(pos, pos, pos))
+		{
+			fCol[nCnt] = 1.0f;
+		}
+		else
+		{
+			fCol[nCnt] = 0.0f;
+		}
+	}
 }
 //=============================================================================
 // 全ての当たり判定
@@ -405,7 +463,7 @@ void CCharcter::FileLoad(void)
 
 #if 1
 						//ファイルを開く 読み込み
-	pFile = fopen(FILE_NAME_PRISONER, "r");
+	pFile = fopen(FILE_NAME_WOOD, "r");
 	//NULLチェック
 	if (pFile != NULL)
 	{
@@ -428,7 +486,7 @@ void CCharcter::FileLoad(void)
 
 				for (int nCntModel = 0; nCntModel < m_nNumModel; nCntModel++)
 				{
-					int nNumber = nCntModel + CModel::PARTS_CHICKEN_BODY;
+					int nNumber = nCntModel + CModel::PARTS_WOOD_LEG;
 					LPD3DXBUFFER &m_pBuffMat = CModel::GetpBuffMat(nNumber);
 					DWORD &m_nNumMat = CModel::GetnNumMat(nNumber);
 					LPD3DXMESH &m_pMesh = CModel::GetpMesh(nNumber);
@@ -457,15 +515,17 @@ void CCharcter::FileLoad(void)
 						//対象の文字列から抜き出し
 						strcpy(&m_aFileNameModel[nCntModel][0], aStr);
 
-						// Xファイルの読み込み
-						//D3DXLoadMeshFromX(&m_aFileNameModel[nCntModel][0],
-						//	D3DXMESH_SYSTEMMEM,
-						//	pDevice,
-						//	NULL,
-						//	&m_pBuffMat,
-						//	NULL,
-						//	&m_nNumMat,
-						//	&m_pMesh);
+						//Xファイルの読み込み
+						D3DXLoadMeshFromX(&m_aFileNameModel[nCntModel][0],
+							D3DXMESH_SYSTEMMEM,
+							pDevice,
+							NULL,
+							&m_pBuffMat,
+							NULL,
+							&m_nNumMat,
+							&m_pMesh);
+						aStr[nNullNum - 1] = '\0';
+
 					}
 				}
 				//文字列の先頭を設定

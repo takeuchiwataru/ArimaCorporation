@@ -87,8 +87,8 @@ CFeed * CFeed::Create(D3DXVECTOR3 pos, int nZone, int nType)
 			// ˆÊ’u‚ð‘ã“ü
 			pFeed->SetPosition(pos);
 
-			pFeed->m_pPin = C3DPolygon::Create(C3DPolygon::TYPE_Pin, pos, INIT_VECTOR, 4);
-			pFeed->m_pLight = C3DAnim::Create(C3DPolygon::TYPE_Light, pos, INIT_VECTOR);
+			pFeed->m_pPin = C3DPolygon::Create(C3DPolygon::TYPE_Pin, pos, INIT_VECTOR, 5);
+			pFeed->m_pLight = C3DAnim::Create(C3DPolygon::TYPE_Light, pos, INIT_VECTOR, 5);
 			switch (nType)
 			{
 			case FEEDTYPE_ATTACK:	col = D3DXCOLOR(1.0f, 0.1f, 0.03f, 1.0f);	break;

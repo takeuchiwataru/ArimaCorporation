@@ -455,6 +455,7 @@ void CEgg::Move(void)
 							CParticle::TYPE_NORMAL,
 							m_nNumPlayer);
 					}
+					CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_EATK);
 				}
 			}
 		}
