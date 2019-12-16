@@ -265,7 +265,7 @@ HRESULT CPlayer::Init(void)
 		m_pEnmPoint = CRoad_Manager::GetManager()->GetTop(1);
 	}
 
-	m_nStartFrame = (CServer::CServer::Rand() % 50);
+	m_nStartFrame = (CServer::Rand() % 50);
 	m_nStartCounter = 0;
 
 	m_pDispEffect = NULL;
@@ -557,7 +557,7 @@ void CPlayer::UpdateRace(void)
 
 	UpdateField();
 
-	CollisionFeed();		// ‰a‚Ì“–‚½‚è”»’è
+	//CollisionFeed();		// ‰a‚Ì“–‚½‚è”»’è
 
 	CollisionEgg();			// —‘‚Æ‚Ì“–‚½‚è”»’è
 
@@ -2838,6 +2838,7 @@ void CPlayer::EggJump(void)
 //=============================================================================
 void CPlayer::CollisionCharacter(void)
 {
+	return;
 	CPlayer **pPlayer = NULL;
 	switch (CManager::GetMode())
 	{
