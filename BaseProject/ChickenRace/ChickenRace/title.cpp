@@ -410,7 +410,7 @@ void CTitle::SetTitleMode(void)
 		if (m_pTitleCamera != NULL)
 			m_pTitleCamera->SetType(CTitleCamera::CAMERA_CHARSELECT);
 	}
-	else if (nCounter == CHARUP_TITLEMODE)
+	else if (nCounter == CHARUP_TITLEMODE)												
 	{// キャラアップ
 		if (m_pTitleCamera != NULL)
 		{

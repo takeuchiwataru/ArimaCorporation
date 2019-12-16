@@ -925,9 +925,7 @@ void CTitleMenu::ControllEntry(void)
 	{// •\¦’†‚¶‚á‚È‚¢
 		if (1 < nClient)
 		{// 1lˆÈã
-			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
-				pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
-				pXpad->GetTrigger(INPUT_START) == true)
+			if (pXpad->GetTrigger(INPUT_START) == true)
 			{// Œˆ’è
 				CFade::Create(CManager::MODE_GAME);		// ƒQ[ƒ€‚Ö
 				return;

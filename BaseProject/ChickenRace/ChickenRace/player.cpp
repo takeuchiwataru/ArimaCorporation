@@ -122,9 +122,15 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 	pPlayer->m_nPlayerNum = nPlayerNum;
 	pPlayer->Init();
 
+
 	if (playerType == PLAYERTYPE_PLAYER)
 	{//画面エフェクトの生成
-		pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer);
+		if (CClient::GetpmyClient() != NULL)
+		{//オンラインなら
+			if (nPlayerNum == CClient::GetnID()) 
+			{ pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer); }
+		}
+		else { pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer); }
 	}
 	pPlayer->m_fRoad = nPlayerNum * (140.0f / 8.0f) - 70.0f;
 
@@ -557,7 +563,7 @@ void CPlayer::UpdateRace(void)
 
 	UpdateField();
 
-	//CollisionFeed();		// 餌の当たり判定
+	CollisionFeed();		// 餌の当たり判定
 
 	CollisionEgg();			// 卵との当たり判定
 
@@ -2838,7 +2844,6 @@ void CPlayer::EggJump(void)
 //=============================================================================
 void CPlayer::CollisionCharacter(void)
 {
-	return;
 	CPlayer **pPlayer = NULL;
 	switch (CManager::GetMode())
 	{

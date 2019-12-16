@@ -847,9 +847,9 @@ void CGamePlay::Update(void)
 					{// ƒIƒ“ƒ‰ƒCƒ“
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-							(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
-								(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
-								((((SCREEN_HEIGHT * 0.5f) - GOUL_SIZE_2P.y)* (1.0f - (0.5f * (float)((float)nFrame / (float)60)))) * (float)((float)nFrame / (float)60)),
+								(SCREEN_WIDTH * 0.5f),
+								(SCREEN_HEIGHT * 0.5f) -
+								(((SCREEN_HEIGHT * 0.5f) - (GOUL_SIZE_2P.y * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),
 							GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
 					}

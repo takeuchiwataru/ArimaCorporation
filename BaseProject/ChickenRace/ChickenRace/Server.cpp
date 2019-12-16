@@ -86,7 +86,7 @@ void	CServer::Update(void)
 	if (nMaxClient <= 0) { return; }
 
 	strcpy(&m_aInformation[0], "");
-	wsprintf(&m_aInformation[0], "%d %d %d ", FLAG_INPUT, nMaxClient, 9);
+	wsprintf(&m_aInformation[0], "%d %d %d ", FLAG_INPUT, nMaxClient, rand());
 	for (int nCount = 0; nCount < nMaxClient; nCount++)
 	{//ŽóM
 	 //Ú‘±‚³‚ê‚Ä‚¢‚È‚¢‚È‚ç–³Ž‹
@@ -231,7 +231,7 @@ void	CServer::Stop(void)
 //==================================================================================================//
 int	CServer::Rand(void)
 {
-	if (m_pmyServer != NULL)
+	if (CClient::GetpmyClient() != NULL)
 	{
 		m_nRand += 1234;
 		return m_nRand;
