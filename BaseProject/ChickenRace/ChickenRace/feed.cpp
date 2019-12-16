@@ -186,11 +186,11 @@ void CFeed::Update(void)
 			{
 				D3DXVECTOR2 fSize;
 
-				fSize.x = 15.0f + (float)(rand() % 3);
-				fSize.y = 15.0f + (float)(rand() % 3);
+				fSize.x = 15.0f + (float)(CServer::Rand() % 3);
+				fSize.y = 15.0f + (float)(CServer::Rand() % 3);
 
 				CParticle::Create(D3DXVECTOR3(pos.x, pos.y - 10.0f, pos.z),
-					D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 2 + 1)), 0.0f, cosf((rand() % 628) / 100.0f) * ((rand() % 2 + 1))),
+					D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 2 + 1)), 0.0f, cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 2 + 1))),
 					D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
 					fSize,
 					20,

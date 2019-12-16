@@ -923,7 +923,7 @@ void CTitleMenu::ControllEntry(void)
 
 	if (m_nCntMainMenu == 0/* && m_nCntEntry == (60 - 1)*/)
 	{// •\Ž¦’†‚¶‚á‚È‚¢
-		if (1 < nClient && CClient::GetnID() == 0)
+		if (1 < nClient)
 		{// 1lˆÈã
 			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 				pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||

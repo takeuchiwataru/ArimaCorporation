@@ -439,11 +439,11 @@ void CEgg::Move(void)
 
 					for (int nCntParticle = 0; nCntParticle < EGG_PARTICLE; nCntParticle++)
 					{
-						fSize.x = 5.0f + (float)(rand() % 5);
-						fSize.y = 5.0f + (float)(rand() % 5);
+						fSize.x = 5.0f + (float)(CServer::Rand() % 5);
+						fSize.y = 5.0f + (float)(CServer::Rand() % 5); 
 
 						CParticle::Create(m_pos,
-							D3DXVECTOR3(sinf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1)), cosf((rand() % 628) / 100.0f) * ((rand() % 5 + 1))),
+							D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1))),
 							D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f),
 							fSize,
 							20,

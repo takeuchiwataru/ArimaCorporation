@@ -25,8 +25,6 @@
 #define EFFECT_FRAME	(300)		// 季節のエフェクトフレーム
 #define SEASON_MAX		(4)			// 季節のカウント
 #define EFFECT_CREATE	(10)		// エフェクト生成時間
-#define EFFECT_ROS		(D3DXVECTOR3(rand() % 1200 + 10.0f, -20.0f, 0.0f))	// 位置(ランダム)
-#define EFFECT_SIZE		(rand() % RADIUS_CONDIUIONS + 10)					// サイズ(ランダム)
 #define RESULT_POS		(D3DXVECTOR3(SCREEN_WIDTH /2, SCREEN_HEIGHT / 2 - 80.0f, 0.0f))	// 位置(タイトルロゴ000)
 #define RESULT_SIZE		(D3DXVECTOR2(480.0f, 100.0f))										// サイズ(タイトルロゴ000)
 #define LOGO_POS		(D3DXVECTOR3(RESULT_POS.x + 130.0f, RESULT_POS.y + 100.0f, 0.0f))		// 位置(タイトルロゴ001)

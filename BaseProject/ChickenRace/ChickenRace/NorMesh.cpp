@@ -77,13 +77,6 @@ void CNorMesh::Set(TYPE type, D3DXVECTOR3 pos, int nVertical, int nCorss, bool b
 			case TYPE_WALL:
 				pVtx[0].pos = D3DXVECTOR3(-100.0f * nCntCorss, 100.0f * nCntVertical, 100.0f * nCntCorss);
 				break;
-			case TYPE_CEILING:
-				pVtx[0].pos = D3DXVECTOR3(-100.0f * 2 + 100.0f * nCntCorss, 100.0f - rand() % 10 * 10.0f, 100.0f * 2 + 100.0f * nCntVertical);
-				if (nCntCorss == 0 || nCntCorss == nCorss || nCntVertical == 0 || nCntVertical == nVertical)
-				{
-					pVtx[0].pos.y = 0.0f;
-				}
-				break;
 			case TYPE_CYLINDER:
 				fUV_Y = 0.5f;
 				fRotY = (1.0f / nCorss) * (float)nCntCorss;

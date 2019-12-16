@@ -704,8 +704,8 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			switch (m_Effect)
 			{
 			case EFFECT_BOOST:	//‰Á‘¬
-				fWK = atan2f(VtxPos[0].x - VtxPos[1].x, VtxPos[0].z - VtxPos[1].z);
-				pPlayer->SetWind(fWK);
+				//fWK = atan2f(VtxPos[0].x - VtxPos[1].x, VtxPos[0].z - VtxPos[1].z);
+				//pPlayer->SetWind(fWK);
 				break;
 			case EFFECT_SWAMP:	//Œ¸‘¬
 				if (!bJump) { Effect = m_Effect; pPlayer->GetbSJump() = true; }

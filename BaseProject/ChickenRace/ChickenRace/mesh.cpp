@@ -98,7 +98,7 @@ HRESULT CMesh::Init(void)
 			for (nCntMeshX = 0; nCntMeshX <= m_nMeshX; nCntMeshX++)
 			{//‰¡Ž²
 				// ’¸“_‚ÌÀ•W
-				pVtx[0].pos = D3DXVECTOR3(((nCntMeshX * m_fMeshWidth) / m_nMeshX), 0.0f/*rand() % 100 * 1.0f*/, ((nCntMeshZ * -m_fMeshDepth) / m_nMeshZ));
+				pVtx[0].pos = D3DXVECTOR3(((nCntMeshX * m_fMeshWidth) / m_nMeshX), 0.0f, ((nCntMeshZ * -m_fMeshDepth) / m_nMeshZ));
 
 				// –@ü‚ÌÝ’è
 				pVtx[0].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
