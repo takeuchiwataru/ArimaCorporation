@@ -34,6 +34,7 @@ public:
 		TEXTURE_NUMBER,
 		TEXTURE_ENTER,
 		TEXTURE_BUTTON,
+		TEXTURE_ACTION,
 		TEXTURE_YOU,
 		TEXTURE_READY,
 		TEXTURE_TUTORIAL,
@@ -70,6 +71,8 @@ private:
 	CScene2D *m_pSelect[MAX_PLAYER];		// 選択
 	CScene2D *m_pEnter[MAX_PLAYER];			// 決定
 	CScene2D *m_pButton[MAX_PLAYER];		// ボタン
+
+	CScene2D *m_pAction;					// アクション
 
 	CScene2D *m_pYor;						// あなた
 	CScene2D *m_pReturnFrame;				// 戻るフレーム

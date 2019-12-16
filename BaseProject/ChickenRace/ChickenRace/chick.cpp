@@ -376,7 +376,7 @@ bool CChick::Move(void)
 
 		if (m_type == TYPE_SPEED)
 		{
-			fDisTime = (60.0f * SPEEDUP_TIME) + 40;
+			fDisTime = (60.0f * 0.5f) + 40;
 		}
 		else if (m_type == TYPE_SPEED_S)
 		{
@@ -769,8 +769,17 @@ void CChick::AttackS(void)
 		{
 			for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 			{// 1位のやつを見つける
-				bGoal = CGame::GetPlayer()[nCntChar]->GetGoal();
-				nDestRank = CGame::GetRanking(nCntChar);
+				bGoal = pPlayer[nCntChar]->GetGoal();
+
+				switch (CManager::GetMode())
+				{
+				case CManager::MODE_TITLE:
+					nDestRank = CTitle::GetRanking(nCntChar);
+					break;
+				case CManager::MODE_GAME:
+					nDestRank = CGame::GetRanking(nCntChar);
+					break;
+				}
 
 				if (!bGoal && nTarget > nDestRank)
 				{//ゴールしていない && ターゲットより順位が上

@@ -925,7 +925,7 @@ void CPlayer::UpdateFEffect(void)
 
 		m_nDropCounter++;
 	}
-
+	
 	if (m_bJump) { Effect = CDispEffect::EFFECT_MAX; }
 	if (m_pDispEffect != NULL) { m_pDispEffect->SetEffect(Effect); }
 }
@@ -998,8 +998,8 @@ void CPlayer::SetState(PLAYERSTATE state)
 	}
 	switch (state)
 	{
+	case PLAYERSTATE_SPEEDUP_S:	SetKiller();
 	case PLAYERSTATE_SPEEDUP:
-	case PLAYERSTATE_SPEEDUP_S:
 		UseBoost();
 		break;
 	case PLAYERSTATE_DAMAGE:	break;
@@ -1334,6 +1334,7 @@ void CPlayer::UpdateMove(void)
 
 		if (m_nCountSpeed > fTime)
 		{
+			EndBoost();
 			SetState(PLAYERSTATE_NORMAL);
 			m_nCountSpeed = 0;
 		}
@@ -1543,9 +1544,8 @@ void CPlayer::UpdateMove(void)
 		{
 			if (m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
 			{
-				m_State = PLAYERSTATE_NORMAL;
+				SetState(PLAYERSTATE_NORMAL);
 				m_nCntDamage = 0;
-
 				m_bDamage = false;
 			}
 		}
@@ -2076,6 +2076,8 @@ void CPlayer::ChaseEgg(void)
 //=============================================================================
 void CPlayer::BulletEgg(void)
 {
+	CPlayer **pPlayer = NULL;
+	
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
 
 	int nTarget = 99;
@@ -2127,8 +2129,7 @@ if (m_nNumEgg + m_nNumChick > 0)
 
 				// 加速
 			case CChick::TYPE_SPEED:
-				UseBoost();
-				m_State = PLAYERSTATE_SPEEDUP;
+				SetState(PLAYERSTATE_SPEEDUP);
 				m_fSpeed += SPEED_CHICK;
 				m_pChick[0]->SetDis(false);
 				m_pChick[0]->Jump(CHICK_SPEEDJUMP);
@@ -2137,18 +2138,38 @@ if (m_nNumEgg + m_nNumChick > 0)
 				// 減速
 			case CChick::TYPE_ANNOY:
 				CancelMotion(PLAYERANIM_INTIMIDATION, false);
+				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HDEF);
 				m_pChick[0]->SetDis(false);
 				break;
 
 				// 強い攻撃
 			case CChick::TYPE_ATTACK_S:
+				switch (CManager::GetMode())
+				{
+				case CManager::MODE_TITLE:
+					pPlayer = CTitle::GetPlayer();
+					break;
+				case CManager::MODE_GAME:
+					pPlayer = CGame::GetPlayer();
+					break;
+				}
+
 				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK_SC);
 
 				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
 				{// 1位のやつを見つける
-					bGoal = CGame::GetPlayer()[nCntChar]->GetGoal();
-					nDestRank = CGame::GetRanking(nCntChar);
+					bGoal = pPlayer[nCntChar]->GetGoal();
+
+					switch (CManager::GetMode())
+					{
+					case CManager::MODE_TITLE:
+						nDestRank = CTitle::GetRanking(nCntChar);
+						break;
+					case CManager::MODE_GAME:
+						nDestRank = CGame::GetRanking(nCntChar);
+						break;
+					}
 
 					if (!bGoal && nTarget > nDestRank)
 					{//ゴールしていない && ターゲットより順位が上
@@ -2185,7 +2206,7 @@ if (m_nNumEgg + m_nNumChick > 0)
 
 				// 加速
 			case CChick::TYPE_SPEED_S:
-				m_State = PLAYERSTATE_SPEEDUP_S;
+				SetState(PLAYERSTATE_SPEEDUP_S);
 				m_fSpeed += SPEED_CHICK;
 				m_pChick[0]->SetDis(false);
 				m_pChick[0]->SetSpeedS(true);
@@ -2205,9 +2226,19 @@ if (m_nNumEgg + m_nNumChick > 0)
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
-			m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
-			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
-
+			
+			switch (CManager::GetMode())
+			{
+			case CManager::MODE_TITLE:
+				m_pEgg[0]->SetRank(CTitle::GetRanking(m_nPlayerNum));
+				m_nPlayerRank = CTitle::GetRanking(m_nPlayerNum);
+				break;
+			case CManager::MODE_GAME:
+				m_pEgg[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
+				m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
+				break;
+			}
+			
 			m_nNumEgg--;	// 所持数を減らす
 
 			m_nNumItem--;
@@ -2361,6 +2392,7 @@ void CPlayer::CollisionChick(void)
 						// ダメージ状態にする
 						if (m_State != PLAYERSTATE_DAMAGE)
 						{
+							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
 							m_nCntDamage = 0;
@@ -2391,6 +2423,7 @@ void CPlayer::CollisionChick(void)
 						// ダメージ状態にする
 						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
 						{
+							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
 							m_nCntDamage = 0;
@@ -2447,7 +2480,19 @@ void CPlayer::ChickAppear(void)
 			m_pEgg[0]->SetHatchingTimer(0);
 
 			int nRank = CServer::Rand() % 101;
-			int nGameTime = (CGame::GetGameCounter() - START_SET_TIME) / 60;
+			int nGameTime = 0;
+			int nRanking = 0;
+
+			switch (CManager::GetMode())
+			{
+			case CManager::MODE_TITLE:
+				nRanking = CTitle::GetRanking(m_nPlayerNum);
+				break;
+			case CManager::MODE_GAME:
+				nGameTime = (CGame::GetGameCounter() - START_SET_TIME) / 60;
+				nRanking = CGame::GetRanking(m_nPlayerNum);
+				break;
+			}
 
 			CChick::TYPE type = CChick::TYPE_MAX;
 
@@ -2458,16 +2503,16 @@ void CPlayer::ChickAppear(void)
 			}
 			else if (nGameTime >= 60)
 			{
-				if (CGame::GetRanking(m_nPlayerNum) < CHICK_BORDER - 1)
+				if (nRanking < CHICK_BORDER - 1)
 				{// 4位より上の場合
 				 // タイプ設定
 					type = SetChickType(type, false);
 				}
-				else if (CGame::GetRanking(m_nPlayerNum) >= CHICK_BORDER - 1)
+				else if (nRanking >= CHICK_BORDER - 1)
 				{// 4位より下の場合
 					for (int nCntRank = 0; nCntRank < (MAX_MEMBER / 2) + 1; nCntRank++)
 					{
-						if (CGame::GetRanking(m_nPlayerNum) == nCntRank + CHICK_BORDER - 1)
+						if (nRanking == nCntRank + CHICK_BORDER - 1)
 						{
 							if (m_bSChick == false)
 							{
@@ -2495,18 +2540,8 @@ void CPlayer::ChickAppear(void)
 				}
 			}
 
-			if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_ATTACK)
-			{
-				m_bulletType[m_nNumChick] = BULLET_CHICK_ATTACK;
-			}
-			else if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_ANNOY)
-			{
-				m_bulletType[m_nNumChick] = BULLET_CHICK_ANNOY;
-			}
-			else if (m_pEgg[0]->GetType() == CEgg::EGGTYPE_SPEED)
-			{
-				m_bulletType[m_nNumChick] = BULLET_CHICK_SPEED;
-			}
+			// 種類設定
+			m_bulletType[m_nNumChick] = (BULLET)(BULLET_CHICK_ATTACK + (type));
 
 			if (type != CChick::TYPE_MAX)
 			{
@@ -2545,9 +2580,20 @@ float CPlayer::HatchTime(float fTime, float fAddTime)
 {
 	float fHatchTime = fTime;
 
-	if (CGame::GetRanking(m_nPlayerNum) >= 3)
+	int nRanking = 0;
+	switch (CManager::GetMode())
 	{
-		fHatchTime = fTime * (1.0f / (CGame::GetRanking(m_nPlayerNum) + 1)) + fAddTime;
+	case CManager::MODE_TITLE:
+		nRanking = CTitle::GetRanking(m_nPlayerNum);
+		break;
+	case CManager::MODE_GAME:
+		nRanking = CGame::GetRanking(m_nPlayerNum);
+		break;
+	}
+
+	if (nRanking >= 3)
+	{
+		fHatchTime = fTime * (1.0f / (nRanking + 1)) + fAddTime;
 	}
 
 	return fHatchTime;
@@ -2633,7 +2679,18 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 			{
 				pChick->SetAttackS(true);
 				pChick->SetDis(false);
-				pChick->SetRank(CGame::GetRanking(m_nPlayerNum));
+
+				int nRanking = 0;
+				switch (CManager::GetMode())
+				{
+				case CManager::MODE_TITLE:
+					nRanking = CTitle::GetRanking(m_nPlayerNum);
+					break;
+				case CManager::MODE_GAME:
+					nRanking = CGame::GetRanking(m_nPlayerNum);
+					break;
+				}
+				pChick->SetRank(nRanking);
 				pChick->SetDestRank(m_nDestRank);
 			}
 		}
@@ -2648,13 +2705,16 @@ void CPlayer::FallChicks(D3DXVECTOR3 pos)
 void CPlayer::AnnoyChicks(void)
 {
 	CPlayer **pPlayer = NULL;
+	int nRanking = 0;
 	switch (CManager::GetMode())
 	{
 	case CManager::MODE_TITLE:
 		pPlayer = CTitle::GetPlayer();
+		nRanking = CTitle::GetRanking(m_nPlayerNum);
 		break;
 	case CManager::MODE_GAME:
 		pPlayer = CGame::GetPlayer();
+		nRanking = CGame::GetRanking(m_nPlayerNum);
 		break;
 	}
 	for (int nCntPlayer = 0; nCntPlayer < MAX_MEMBER; nCntPlayer++)
@@ -2680,7 +2740,7 @@ void CPlayer::AnnoyChicks(void)
 						&& m_pAnnoyChick[nCntPlayer]->GetDis() == true)
 					{
 						m_pAnnoyChick[nCntPlayer]->SetAttackS(true);
-						m_pAnnoyChick[nCntPlayer]->SetRank(CGame::GetRanking(m_nPlayerNum));
+						m_pAnnoyChick[nCntPlayer]->SetRank(nRanking);
 					}
 
 					D3DXVECTOR2 fSize;
@@ -2736,7 +2796,8 @@ void CPlayer::ChaseAnnoyS(void)
 		{
 			m_bDamage = true;
 			m_nCntDamage = 0;
-			m_State = PLAYERSTATE_SPEEDDOWN_S;
+			SetState(PLAYERSTATE_SPEEDDOWN_S);
+
 		}
 	}
 }

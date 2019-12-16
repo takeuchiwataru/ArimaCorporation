@@ -66,6 +66,10 @@ public:
 
 	static CTitleCamera * GetTitleCamera(void) { return m_pTitleCamera; }
 
+	// ƒ‰ƒ“ƒLƒ“ƒO
+	static int GetRanking(int nPlayerNum) { return m_nRanking[nPlayerNum]; }
+	static int *GetRanking(void) { return m_nRanking; }
+
 	void SetStage(void);
 	void SetTitleMode(void);
 	void Ranking(void);

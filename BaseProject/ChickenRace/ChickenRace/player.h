@@ -35,7 +35,7 @@
 #define MAX_EGG				(3)								// 卵の最大数
 #define SMOKE_SIZE			(20.0f)							// 煙の大きさ
 #define MAX_SMOKE			(5)								// 煙の数
-#define SPEEDUP_TIME		(0.5f)								// 加速している時間
+#define SPEEDUP_TIME		(60.0f)								// 加速している時間
 #define KILLER_TIME			(5)								// キラーひよこの時間
 #define FILE_NAME_PRISONER	"data\\TEXT\\Player\\Player.txt"// 読み込むtxtファイルの名前
 #define MAX_PLAYERANIM		(8)								// アニメーション数

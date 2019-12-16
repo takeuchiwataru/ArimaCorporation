@@ -44,6 +44,7 @@ CGameCharSelect::CGameCharSelect()
 		m_bEntry[nCntPlayer] = false;
 		m_bEnter[nCntPlayer] = false;
 	}
+	m_pAction = NULL;					// アクション
 
 	m_pYor = NULL;						// あなた
 	m_pReturnFrame = NULL;				// 戻るフレーム
@@ -62,7 +63,7 @@ CGameCharSelect::CGameCharSelect()
 
 	m_pTutorial = NULL;					// チュートリアル
 	for (int nCount = 0; nCount < MAX_HINT; nCount++)
-		m_pHint[nCount]= NULL;						// ヒント
+		m_pHint[nCount] = NULL;						// ヒント
 	m_pGo = NULL;						// GO
 
 	m_nTutorialNum = 0;					// チュートリアル番号
@@ -103,6 +104,9 @@ HRESULT CGameCharSelect::Load(void)
 			break;
 		case TEXTURE_BUTTON:
 			strcpy(cName, "data/TEXTURE/Title/UI/modeselect_15.png");
+			break;
+		case TEXTURE_ACTION:
+			strcpy(cName, "data/TEXTURE/game/charselect/charaselect00.png");
 			break;
 		case TEXTURE_YOU:
 			strcpy(cName, "data/TEXTURE/game/charselect/modeselect_17.png");
@@ -287,6 +291,19 @@ HRESULT CGameCharSelect::Init()
 	m_pCharacter[nCntChar]->BindTexture(m_pTexture[TEXTURE_CHAR]);
 	}
 	}*/
+
+	if (m_pAction == NULL)
+	{// NULL
+		m_pAction = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
+		m_pAction->Init();
+		m_pAction->SetPosSize(
+			D3DXVECTOR3(
+			(SCREEN_WIDTH * 0.5f),
+				(SCREEN_HEIGHT * 0.88f),
+				0.0f),
+			D3DXVECTOR2(SCREEN_HEIGHT * 0.3f, SCREEN_HEIGHT * 0.04f));
+		m_pAction->BindTexture(m_pTexture[TEXTURE_ACTION]);
+	}
 
 	if (bOnine == true)
 	{// オンライン
@@ -478,14 +495,14 @@ HRESULT CGameCharSelect::Init()
 			m_pHint[nCount]->SetPosSize(
 				D3DXVECTOR3
 				(
-					((nCount ^ 1) == 0 ? (SCREEN_HEIGHT * 0.13f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.13f)),
+				((nCount ^ 1) == 0 ? (SCREEN_HEIGHT * 0.13f) : SCREEN_WIDTH - (SCREEN_HEIGHT * 0.13f)),
 					(SCREEN_HEIGHT * 0.5f),
 					0.0f
 				),
 				D3DXVECTOR2(SCREEN_HEIGHT * 0.13f, (SCREEN_HEIGHT * 0.06f)));
 			m_pHint[nCount]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 			m_pHint[nCount]->BindTexture(m_pTexture[TEXTURE_HINT]);
-			m_pHint[nCount]->SetTexture(0, 2, 1, 1);
+			m_pHint[nCount]->SetTexture(0, 3, 1, 1);
 		}
 	}
 
@@ -548,10 +565,17 @@ void CGameCharSelect::Uninit(void)
 	}
 
 	// あなた
+	if (m_pAction != NULL)
+	{// NULL以外
+		m_pAction->Uninit();		// 終了処理
+		m_pAction = NULL;			// NULLへ
+	}
+
+	// あなた
 	if (m_pYor != NULL)
 	{// NULL以外
-		m_pYor->Uninit();		// 終了処理
-		m_pYor = NULL;			// NULLへ
+		m_pYor->Uninit();			// 終了処理
+		m_pYor = NULL;				// NULLへ
 	}
 
 	// もどるフレーム
@@ -1443,16 +1467,19 @@ void CGameCharSelect::Tutorial(void)
 		{
 			if (m_nTutorialNum < 2)
 			{
-				if (m_nTutorialNum == nCount)
+				if (m_nTutorialNum == nCount || m_nTutorialNum == 1)
 					m_pHint[nCount]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
 				else
 					m_pHint[nCount]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 
-				m_pHint[nCount]->SetTexture((nCount ^ 1), 2, 1, 1);
+				m_pHint[nCount]->SetTexture((nCount ^ 1), 3, 1, 1);
+
+				if (nCount == 0 && m_nTutorialNum == 1)
+					m_pHint[nCount]->SetTexture(2, 3, 1, 1);
 			}
 			else
 			{
-				m_pHint[nCount]->SetUV(D3DXVECTOR2(1.0f, 0.0f), D3DXVECTOR2(0.5f, 0.0f), D3DXVECTOR2(1.0f, 1.0f), D3DXVECTOR2(0.5f, 1.0f));
+				m_pHint[nCount]->SetUV(D3DXVECTOR2(0.666f, 0.0f), D3DXVECTOR2(0.333f, 0.0f), D3DXVECTOR2(0.666f, 1.0f), D3DXVECTOR2(0.333f, 1.0f));
 
 				if (nCount == 0)
 					m_pHint[nCount]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
