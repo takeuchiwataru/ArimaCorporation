@@ -29,6 +29,10 @@
 #define ITEM_SIZE_4P		(0.06f)														// 4P時のアイテムの大きさ
 #define GOUL_SIZE_2P		(D3DXVECTOR2(SCREEN_WIDTH * 0.20f, SCREEN_WIDTH * 0.07f))	// 2P時のゴールの大きさ
 #define GOUL_SIZE_4P		(D3DXVECTOR2(SCREEN_WIDTH * 0.15f, SCREEN_WIDTH * 0.05f))	// 4P時のゴールの大きさ
+#define VIEW_SIZE_2P		(D3DXVECTOR2(SCREEN_WIDTH * 0.08f, SCREEN_WIDTH * 0.03f))	// 2P時の観戦中の大きさ
+#define VIEW_SIZE_4P		(D3DXVECTOR2(SCREEN_WIDTH * 0.04f, SCREEN_WIDTH * 0.015f))	// 4P時の観戦中の大きさ
+#define CAMERAHINT_SIZE_2P	(D3DXVECTOR2(SCREEN_WIDTH * 0.1f, SCREEN_WIDTH * 0.05f))	// 2P時のカメラ説明の大きさ
+#define CAMERAHINT_SIZE_4P	(D3DXVECTOR2(SCREEN_WIDTH * 0.06f, SCREEN_WIDTH * 0.03f))	// 4P時のカメラ説明の大きさ
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -69,6 +73,8 @@ CGamePlay::CGamePlay()
 
 		m_pGoul[nCntPlayer] = NULL;					// ランキング
 		m_pTime[nCntPlayer] = NULL;					// タイム
+		m_pView[nCntPlayer] = NULL;					// 観戦中
+		m_pCameraHint[nCntPlayer] = NULL;			// カメラ説明
 
 		m_nGoulCounter[nCntPlayer] = 0;				// ゴールカウント
 		m_nCameraNumber[nCntPlayer] = nCntPlayer;	// カメラ番号
@@ -109,6 +115,12 @@ HRESULT CGamePlay::Load(void)
 			break;
 		case TEXTURE_GOUL:
 			strcpy(cName, "data/TEXTURE/game/play/finish.png");
+			break;
+		case TEXTURE_VIEW:
+			strcpy(cName, "data/TEXTURE/game/play/game00.png");
+			break;
+		case TEXTURE_CAMERAHINT:
+			strcpy(cName, "data/TEXTURE/game/play/camera_arrows.png");
 			break;
 		}
 
@@ -421,7 +433,7 @@ HRESULT CGamePlay::Init()
 					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
 						(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))),
 						0.0f),
-						((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P : GOUL_SIZE_4P));
+						((nMaxPlayer - 1) == 0 ? GOUL_SIZE_2P : GOUL_SIZE_4P));
 			}
 			m_pGoul[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_GOUL]);
 			//m_pGoul[nCntPlayer]->SetTexture(nCntDown, 3, 1, 1);
@@ -467,6 +479,60 @@ HRESULT CGamePlay::Init()
 
 			if (bOnine == true && nClient != nCntPlayer)
 				m_pTime[nCntPlayer]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		}
+
+		if (m_pView[nCntPlayer] == NULL)
+		{// NULL以外
+			m_pView[nCntPlayer] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
+			m_pView[nCntPlayer]->Init();
+			if (bOnine == true)
+			{// オンライン
+				m_pView[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f),
+						(SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * 0.25f),
+						0.0f),
+					VIEW_SIZE_2P);
+			}
+			else
+			{// オンラインじゃない
+				m_pView[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+						(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
+						(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.25f : 0.125f)),
+						0.0f),
+						((nMaxPlayer - 1) == 0 ? VIEW_SIZE_2P : VIEW_SIZE_4P));
+			}
+			m_pView[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_VIEW]);
+			m_pView[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		}
+
+		if (m_pCameraHint[nCntPlayer] == NULL)
+		{// NULL以外
+			m_pCameraHint[nCntPlayer] = new CScene2D(6, CScene::OBJTYPE_2DPOLYGON);
+			m_pCameraHint[nCntPlayer]->Init();
+			if (bOnine == true)
+			{// オンライン
+				m_pCameraHint[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+					(SCREEN_WIDTH * 0.5f),
+						(SCREEN_HEIGHT * 0.5f) + (SCREEN_HEIGHT * 0.25f),
+						0.0f),
+					CAMERAHINT_SIZE_2P);
+			}
+			else
+			{// オンラインじゃない
+				m_pCameraHint[nCntPlayer]->SetPosSize(
+					D3DXVECTOR3(
+					(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+						(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) +
+						((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) - ((nMaxPlayer - 1) == 0 ? CAMERAHINT_SIZE_2P.y : CAMERAHINT_SIZE_4P.y)),
+						0.0f),
+						((nMaxPlayer - 1) == 0 ? CAMERAHINT_SIZE_2P : CAMERAHINT_SIZE_4P));
+			}
+			m_pCameraHint[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_CAMERAHINT]);
+			m_pCameraHint[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		}
 	}
 
@@ -537,6 +603,18 @@ void CGamePlay::Uninit(void)
 			m_pTime[nCntPlayer]->Uninit();
 			m_pTime[nCntPlayer] = NULL;
 		}
+
+		if (m_pView[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pView[nCntPlayer]->Uninit();
+			m_pView[nCntPlayer] = NULL;
+		}
+
+		if (m_pCameraHint[nCntPlayer] != NULL)
+		{// NULL以外
+			m_pCameraHint[nCntPlayer]->Uninit();
+			m_pCameraHint[nCntPlayer] = NULL;
+		}
 	}
 
 	//自身の削除
@@ -551,7 +629,7 @@ void CGamePlay::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 
-	// プレイヤー
+																// プレイヤー
 	CPlayer **pPlayer = NULL;
 	switch (CManager::GetMode())
 	{
@@ -745,13 +823,13 @@ void CGamePlay::Update(void)
 					{// アイテムカウント
 						int nNum = pPlayer[nCntMember]->GetItemNum();
 
-						// アイテムフレーム
-						if (m_pItemFrame[nPlayerNum][nCntItem] != NULL)
-						{// NULL以外
-							if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
-							{
-								int nFrame = m_nGoulCounter[nPlayerNum] - 60;
+						if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
+						{
+							int nFrame = m_nGoulCounter[nPlayerNum] - 60;
 
+							// アイテムフレーム
+							if (m_pItemFrame[nPlayerNum][nCntItem] != NULL)
+							{// NULL以外
 								int nCount = (nFrame % 20) + 1;
 								if (nCntItem < nNum)
 								{
@@ -767,14 +845,9 @@ void CGamePlay::Update(void)
 									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 
 							}
-						}
-						// アイテム
-						if (m_pItem[nPlayerNum][nCntItem] != NULL)
-						{// NULL以外
-							if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
-							{
-								int nFrame = m_nGoulCounter[nPlayerNum] - 60;
-
+							// アイテム
+							if (m_pItem[nPlayerNum][nCntItem] != NULL)
+							{// NULL以外
 								int nCount = (nFrame % 20) + 1;
 								if (nCntItem < nNum)
 								{
@@ -788,11 +861,9 @@ void CGamePlay::Update(void)
 
 								if (bOnine == true && nClient != nPlayerNum)
 									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
-
 							}
 						}
 					}
-
 				}
 
 				// タイム
@@ -847,7 +918,7 @@ void CGamePlay::Update(void)
 					{// オンライン
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-								(SCREEN_WIDTH * 0.5f),
+							(SCREEN_WIDTH * 0.5f),
 								(SCREEN_HEIGHT * 0.5f) -
 								(((SCREEN_HEIGHT * 0.5f) - (GOUL_SIZE_2P.y * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),
@@ -867,8 +938,6 @@ void CGamePlay::Update(void)
 
 				if (m_pFade[nCntPlayer] != NULL)
 				{// NULL以外
-					int nFrame = m_nGoulCounter[nCntPlayer] - 60;
-
 					int nNum = (nFrame % 20) + 1;
 					if (nFrame / 20 == 1)
 						m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
@@ -877,6 +946,26 @@ void CGamePlay::Update(void)
 
 					if (bOnine == true && nClient != nCntPlayer)
 						m_pFade[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+				}
+
+				if (m_pView[nCntPlayer] != NULL)
+				{// NULL以外
+					int nNum = (nFrame % 20) + 1;
+					if (40 <= nFrame)
+						m_pView[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.6f * (float)((float)nNum / (float)20)));
+
+					if (bOnine == true && nClient != nCntPlayer)
+						m_pView[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+				}
+
+				if (m_pCameraHint[nCntPlayer] != NULL)
+				{// NULL以外
+					int nNum = (nFrame % 20) + 1;
+					if (40 <= nFrame)
+						m_pCameraHint[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (float)((float)nNum / (float)20)));
+
+					if (bOnine == true && nClient != nCntPlayer)
+						m_pCameraHint[nCntPlayer]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 				}
 			}
 

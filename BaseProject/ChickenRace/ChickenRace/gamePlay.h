@@ -38,6 +38,8 @@ public:
 		TEXTURE_ITEMFRAME,
 		TEXTURE_ITEM,
 		TEXTURE_GOUL,
+		TEXTURE_VIEW,
+		TEXTURE_CAMERAHINT,
 		TEXTURE_MAX
 	}TEXTURE;
 
@@ -64,6 +66,8 @@ private:
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pGoul[MAX_PLAYER];			// ゴール
 	CTime	*m_pTime[MAX_PLAYER];			// タイム
+	CScene2D *m_pView[MAX_PLAYER];			// 観戦中
+	CScene2D *m_pCameraHint[MAX_PLAYER];	// カメラ説明
 
 	int		m_nGoulCounter[MAX_PLAYER];		// ゴールカウント
 	int		m_nCameraNumber[MAX_PLAYER];	// カメラ番号

@@ -136,7 +136,8 @@ void CGameCamera::UpdateCharUp(void)
 		float frot = ((float)nCounter * 0.008f);
 
 		D3DXVECTOR3 pos = m_pPlayer->Getpos();
-		m_posR = pos + D3DXVECTOR3(0.0f, 30.0f, 0.0f);
+		m_posR += ((pos + D3DXVECTOR3(0.0f, 30.0f, 0.0f)) - m_posR) * 0.1f;
+		//m_posR = pos + D3DXVECTOR3(0.0f, 30.0f, 0.0f);
 		m_posV = m_posR + D3DXVECTOR3(sinf(-(D3DX_PI * 0.5f) + frot) * 30.0f, 0.0f, cosf(-(D3DX_PI * 0.5f) + frot) * 30.0f);
 	}
 }
