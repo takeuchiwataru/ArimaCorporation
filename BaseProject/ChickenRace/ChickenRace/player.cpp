@@ -369,9 +369,12 @@ HRESULT CPlayer::Init(void)
 		m_apModel[nCountIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nCountIndex].fposX,
 			m_pos.y + m_aKayOffset[nCountIndex].fposY,
 			m_pos.z + m_aKayOffset[nCountIndex].fposZ));
+
+		m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICKEN));
 	}
 	ResetMotion();
 
+	m_apModel[MAX_PARTS]->BindTexture(CModel::GetTexAll(m_nCharacterNum));
 	m_apModel[MAX_PARTS]->SetParent(m_apModel[CModel::PARTS_CHICKEN_HEAD - CModel::PARTS_CHICKEN_BODY]);
 	m_apModel[MAX_PARTS]->AddPos(PLAYER_Cap);
 

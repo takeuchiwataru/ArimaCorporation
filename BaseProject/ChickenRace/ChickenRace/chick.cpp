@@ -67,9 +67,9 @@ int						CChick::m_aIndexParent[MAX_CHICK_PARTS] = {};	//親のインデックス
 CChick::KEY				CChick::m_aKayOffset[MAX_CHICK_PARTS] = {};		//オフセット情報
 CChick::MOTION_INFO		CChick::m_aMotionInfo[MAX_CHICK_MOTION] = {};	//モーション情報
 
-																		//--------------------------------------------
-																		//グローバル変数
-																		//--------------------------------------------
+//--------------------------------------------
+//グローバル変数
+//--------------------------------------------
 int g_nChickNumModel;
 char g_aChickFileNameModel[MAX_CHICK_PARTS][256];
 
@@ -220,6 +220,10 @@ HRESULT CChick::Init(void)
 		m_apModel[nCountIndex]->SetPos(D3DXVECTOR3(m_pos.x + m_aKayOffset[nCountIndex].fposX,
 			m_pos.y + m_aKayOffset[nCountIndex].fposY,
 			m_pos.z + m_aKayOffset[nCountIndex].fposZ));
+
+		if (m_type == TYPE_ATTACK || m_type == TYPE_ATTACK_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_ATTACK));
+		if (m_type == TYPE_ANNOY || m_type == TYPE_ANNOY_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_ANNOY));
+		if (m_type == TYPE_SPEED || m_type == TYPE_SPEED_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_SPEED));
 	}
 
 	return S_OK;

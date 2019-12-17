@@ -33,6 +33,7 @@ D3DXVECTOR3			CModel::m_VtxMax[PARTS_MAX];								//最大値
 D3DXVECTOR3			CModel::m_VtxMin[PARTS_MAX];								//最小値
 CModel::PARTS_TYPE	*CModel::m_partstype[TYPE_MAX] = {};
 int					CModel::m_nModelMax[TYPE_MAX];								// モデルの種類
+LPDIRECT3DTEXTURE9	CModel::m_pTexAll[TEX_MAX] = {};
 
 //=============================================================================
 // 生成処理
@@ -139,6 +140,21 @@ void CModel::Load(void)
 			}
 		}
 	}
+
+	//使っているテクスチャ
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\happyboy.jpg", &m_pTexAll[0]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\hat.jpg", &m_pTexAll[1]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\featherbone.jpg", &m_pTexAll[2]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\pirate.jpg", &m_pTexAll[3]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\kabuto.jpg", &m_pTexAll[4]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\helmet.jpg", &m_pTexAll[5]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\beret.jpg", &m_pTexAll[6]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\clown.jpg", &m_pTexAll[7]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\ニワトリ00.jpg", &m_pTexAll[8]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_02.jpg", &m_pTexAll[9]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_00.jpg", &m_pTexAll[10]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_01.jpg", &m_pTexAll[11]);
+
 }
 
 //===============================================================================
@@ -457,33 +473,7 @@ void CModel::ParentModel(CModel **&apModel, TYPE type, int nSelectParts)
 
 				if (apModel[nCount]->m_Type == PARTS_MAX)
 				{//キャラごとに設定
-					switch (nSelectParts)//←ニワトリの番号を入れる
-					{
-					case 0://ハッピーボーイ
-						apModel[nCount]->m_Type = PARTS_CHICKEN_11;
-						break;
-					case 1://ハット帽子
-						apModel[nCount]->m_Type = PARTS_CHICKEN_12;
-						break;
-					case 2://フェザーボーン
-						apModel[nCount]->m_Type = PARTS_CHICKEN_13;
-						break;
-					case 3://海賊帽子
-						apModel[nCount]->m_Type = PARTS_CHICKEN_14;
-						break;
-					case 4://兜
-						apModel[nCount]->m_Type = PARTS_CHICKEN_15;
-						break;
-					case 5://ヘルメット
-						apModel[nCount]->m_Type = PARTS_CHICKEN_16;
-						break;
-					case 6://ベレー帽
-						apModel[nCount]->m_Type = PARTS_CHICKEN_17;
-						break;
-					case 7://ピエロ帽子
-						apModel[nCount]->m_Type = PARTS_CHICKEN_18;
-						break;
-					}
+					apModel[nCount]->m_Type = (CModel::PARTS_TYPE)(PARTS_CHICKEN_11 + nSelectParts);
 				}
 
 				apModel[nCount]->Init();

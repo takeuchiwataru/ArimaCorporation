@@ -69,8 +69,8 @@ public://誰でも扱える
 	{// オブジェクトの種類
 		TYPE_CHICKEN = 0,			//鳥
 		TYPE_CHICK,					//ひよこ
-		TYPE_WOOD,
-		TYPE_MAX,					//
+		TYPE_WOOD,					//木
+		TYPE_MAX,					//最大数
 	}TYPE;
 
 	typedef enum
@@ -83,6 +83,10 @@ public://誰でも扱える
 		TEX_HELMET,					//ヘルメット
 		TEX_BERET,					//ベレー
 		TEX_CLOWN,					//ピエロ
+		TEX_CHICKEN,				//ニワトリ
+		TEX_CHICK_R,				//ヒヨコ赤
+		TEX_CHICK_B,				//ヒヨコ青
+		TEX_CHICK_Y,				//ヒヨコ黄
 		TEX_MAX,					//最大数
 	}TEXTURE;
 
@@ -114,6 +118,7 @@ public://誰でも扱える
 	static LPD3DXBUFFER &GetpBuffMat(int nNumber) { return m_pBuffMat[nNumber]; }
 	static LPD3DXMESH &GetpMesh(int nNumber) { return m_pMesh[nNumber]; }
 	static DWORD &GetnNumMat(int nNumber) { return m_nNumMat[nNumber]; }
+	static LPDIRECT3DTEXTURE9 &GetTexAll(int nNumber) { return m_pTexAll[nNumber]; }
 
 	D3DXVECTOR3 GetScale(void) { return m_Scale; }
 	void SetColor(D3DXCOLOR col);
@@ -134,6 +139,7 @@ private://派生クラスでも使える
 	static D3DXVECTOR3			m_VtxMin[PARTS_MAX], m_VtxMax[PARTS_MAX];							//モデルの最小値・最大値
 	static PARTS_TYPE			*m_partstype[TYPE_MAX];
 	static int					m_nModelMax[TYPE_MAX];								// モデルの種類
+	static LPDIRECT3DTEXTURE9	m_pTexAll[TEX_MAX];							//テクスチャ
 
 	PARTS_TYPE					m_Type;										// モデルの種類
 	LPDIRECT3DTEXTURE9			m_pTextures;								//テクスチャ
