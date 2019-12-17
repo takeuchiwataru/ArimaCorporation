@@ -62,6 +62,7 @@
 #define CHICK_SPEEDJUMP		(6.5f)										// ひよこに乗るときのジャンプ
 #define ANNOY_TO_PLAYER		(40.0f)										// 減速ひよことプレイヤーの間隔
 #define SCHICK_TIME			(5)										// 強いひよことひよこの出る時間の間隔
+#define STRONG_TIME			(45)										// 強いひよこが出るようになる時間
 
 // プレイヤー情報
 #define PLAYER_ACCEL		(0.5f)										// 加速値（前進）
@@ -261,6 +262,7 @@ HRESULT CPlayer::Init(void)
 	m_nCntSTime = 0;
 	m_bAnnoyS = false;
 	m_bSChick = false;
+	m_bSpeedEgg = false;
 
 	m_nDriftCounter = 0;		// ドリフトカウント
 
@@ -530,18 +532,18 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
-			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			//{
-			//	if (m_State != PLAYERSTATE_SPEEDUP_S)
-			//	{
-			//		ControlKey();
-			//	}
-			//	else
-			//	{
-			//		UpdateKiller();
-			//	}
-			//}
-			//else
+			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			{
+				if (m_State != PLAYERSTATE_SPEEDUP_S)
+				{
+					ControlKey();
+				}
+				else
+				{
+					UpdateKiller();
+				}
+			}
+			else
 			{
 				UpdateAI();
 			}
@@ -1370,7 +1372,12 @@ void CPlayer::UpdateMove(void)
 		m_PlayerInfo.fCountTime = PLAYER_COUNT;
 		if (m_State == PLAYERSTATE_SPEEDUP_S)
 		{
+			CancelMotion(PLAYERANIM_CHICKGETON, false);
 			fTime = 60.0f * KILLER_TIME;
+		}
+		else if (m_State == PLAYERSTATE_SPEEDUP && m_bSpeedEgg == true)
+		{
+			CancelMotion(PLAYERANIM_EGGGETON, false);
 		}
 
 		if (m_nCountSpeed > fTime)
@@ -1379,6 +1386,10 @@ void CPlayer::UpdateMove(void)
 			SetState(PLAYERSTATE_NORMAL);
 			m_nCountSpeed = 0;
 			CancelMotion(PLAYERANIM_NEUTRAL, false);
+			if (m_bSpeedEgg == true)
+			{
+				m_bSpeedEgg = false;
+			}
 		}
 	}
 	if (m_fPower > PLAYER_POWMAX) { m_fPower = PLAYER_POWMAX; }
@@ -2251,7 +2262,6 @@ void CPlayer::BulletEgg(void)
 				m_fSpeed += SPEED_CHICK;
 				m_pChick[0]->SetDis(false);
 				m_pChick[0]->SetSpeedS(true);
-				CancelMotion(PLAYERANIM_CHICKGETON, false);
 				break;
 			}
 
@@ -2301,7 +2311,7 @@ void CPlayer::BulletEgg(void)
 				m_pEgg[0]->SetRot(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 				SetState(PLAYERSTATE_SPEEDUP);
 				m_fSpeed += SPEED_EGG;
-				CancelMotion(PLAYERANIM_EGGGETON, false);
+				m_bSpeedEgg = true;
 				break;
 
 				// 減速
@@ -2536,12 +2546,12 @@ void CPlayer::ChickAppear(void)
 
 			CChick::TYPE type = CChick::TYPE_MAX;
 
-			if (nGameTime < 60)
+			if (nGameTime < STRONG_TIME)
 			{
 				// タイプ設定
 				type = SetChickType(type, false);
 			}
-			else if (nGameTime >= 60)
+			else if (nGameTime >= STRONG_TIME)
 			{
 				if (nRanking < CHICK_BORDER - 1)
 				{// 4位より上の場合

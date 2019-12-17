@@ -381,6 +381,7 @@ private:
 	bool						  m_bJumpSave;
 	bool						  m_bJumpFlag;
 	bool						  m_bAnnoyS;
+	bool						  m_bSpeedEgg;
 	int							  m_nNumItem;
 	int							  m_nAnnoySTimer;
 	BULLET						  m_bulletType[MAX_EGG];

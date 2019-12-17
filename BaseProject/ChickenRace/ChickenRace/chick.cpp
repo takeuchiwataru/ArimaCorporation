@@ -882,7 +882,8 @@ void CChick::AnnoyS(void)
 		}
 	}
 
-	if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP || pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
+	if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP ||
+		pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
 	{// ‚È‚ª‚â‚ÜC³(12/17)
 		m_fDisTime = 0.0f;
 	}

@@ -23,7 +23,7 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define EGG_SPEED				(10.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(15.0f)		// 卵が飛んでくスピード// ながやま修正
 #define EXPLOSION_RANGE			(80)		// 爆発の範囲
 #define EGG_PARTICLE			(30)		// パーティクルの数
 #define EGG_DIS_TIME			(30)		// 消えるまでの時間
@@ -172,8 +172,6 @@ void CEgg::Uninit(void)
 //=============================================================================
 void CEgg::Update(void)
 {
-	//m_pos = CModel3D::GetPosition();
-
 	m_nHatchingTimer++;
 
 	m_posOld = m_pos;	//前回の位置を保存する
@@ -196,23 +194,6 @@ void CEgg::Update(void)
 	CModel3D::SetMove(m_move);
 	CModel3D::SetPosition(D3DXVECTOR3(m_pos.x, m_pos.y + 10.0f, m_pos.z));
 	CModel3D::SetRot(m_rot);
-
-	/*CDebugProc::Print("%.1f\n", m_move.y);
-	CDebugProc::Print("m_fHeight : %.1f\n", m_fHeight);*/
-	//CDebugProc::Print("%.1f : %.1f : %.1f\n", m_pos.x, m_pos.y, m_pos.z);
-
-	/*if (m_bJump == true)
-	{
-	CDebugProc::Print("ジャンプ : 〇\n");
-	}
-	else
-	{
-	CDebugProc::Print("ジャンプ : ×\n");
-	}
-
-	CDebugProc::Print("%.1f\n", m_fHeight);
-	CDebugProc::Print("%.1f\n", m_move.y);*/
-
 }
 
 //=============================================================================
@@ -440,7 +421,7 @@ void CEgg::Move(void)
 					for (int nCntParticle = 0; nCntParticle < EGG_PARTICLE; nCntParticle++)
 					{
 						fSize.x = 5.0f + (float)(CServer::Rand() % 5);
-						fSize.y = 5.0f + (float)(CServer::Rand() % 5); 
+						fSize.y = 5.0f + (float)(CServer::Rand() % 5);
 
 						CParticle::Create(m_pos,
 							D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 5 + 1))),
