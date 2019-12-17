@@ -51,7 +51,8 @@ public:
 		MODEL_TYPE_FEED_S,			//速度餌
 		MODEL_TYPE_EGG,				//卵
 		MODEL_TYPE_CHICK,			//ヒヨコ
-		MODEL_TYPE_EFFECT,			//エフェクト
+		MODEL_TYPE_DRIT,			//土煙エフェクト
+		MODEL_TYPE_GRASS,			//草エフェクト
 		MODEL_TYPE_MAX,				//最大数
 	}MODEL_TYPE;
 
@@ -90,6 +91,8 @@ public:
 		TEXTURE_TYPE_CHICK_B_S,		//強い妨害ヒヨコ
 		TEXTURE_TYPE_CHICK_S_S,		//強い速度ヒヨコ
 		TEXTURE_TYPE_DRIT,			//土煙エフェクト
+		TEXTURE_TYPE_WATER,			//水エフェクト
+		TEXTURE_TYPE_GRASS,			//草エフェクト
 		TEXTURE_TYPE_MAX,			//最大数
 	}TEXTURE_TYPE;
 
@@ -110,6 +113,8 @@ public:
 	static D3DXVECTOR3	&GetVtxMin(int nNumber) { return m_VtxMinModel[nNumber]; }
 	static D3DXVECTOR3	&GetVtxMax(int nNumber) { return m_VtxMaxModel[nNumber]; }
 	D3DXVECTOR3			&GetposR(void) { return m_Pos; }
+	D3DXVECTOR3			&GetrotR(void) { return m_Rot; }
+
 	static CModel3D		*Create(void);
 	void				SetMove(D3DXVECTOR3 m_move) { m_Move = m_move; }
 	void				SetScale(D3DXVECTOR3 Scale) { m_Scale = Scale; }

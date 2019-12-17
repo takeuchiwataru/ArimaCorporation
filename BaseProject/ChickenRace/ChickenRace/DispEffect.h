@@ -39,7 +39,7 @@ public:
 		TEX_FootSteps, TEX_Shadow,	//ë´å≥
 		TEX_Pin, TEX_Light,			//íÉíå
 		TEX_Warning,				//åxçê
-		TEX_White,
+		TEX_White, TEX_Water,
 		TEX_MAX,
 	}TEX;
 	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_DISPEFFECT) : CScene(nPriority, objType) {};

@@ -25,9 +25,9 @@
 //*****************************************************************************
 LPDIRECT3DTEXTURE9	CDispEffect::m_pTexAll[TEX_MAX] = {};			// テクスチャ番号
 
-																	//==================================================================================================//
-																	//    * 読み込み関数 *
-																	//==================================================================================================//
+//==================================================================================================//
+//    * 読み込み関数 *
+//==================================================================================================//
 void CDispEffect::Load(void)
 {
 	LPDIRECT3DDEVICE9		pD3DDevice = CManager::GetRenderer()->GetDevice();
@@ -47,7 +47,7 @@ void CDispEffect::Load(void)
 			case TEX_Pin:		strcat(aStr, "ItemEfc_Pin.jpg");		break;
 			case TEX_Light:		strcat(aStr, "ItemEfc_Light.jpg");		break;
 			case TEX_Warning:	strcat(aStr, "Warning000.jpg");			break;
-			case TEX_White:	strcat(aStr, "White.jpg");			break;
+			case TEX_White:		strcat(aStr, "White.jpg");				break;
 			}
 			D3DXCreateTextureFromFile(pD3DDevice, aStr, &m_pTexAll[nCount]);
 		}
