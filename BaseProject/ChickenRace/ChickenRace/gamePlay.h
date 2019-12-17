@@ -67,6 +67,5 @@ private:
 
 	int		m_nGoulCounter[MAX_PLAYER];		// ゴールカウント
 	int		m_nCameraNumber[MAX_PLAYER];	// カメラ番号
-
 };
 #endif

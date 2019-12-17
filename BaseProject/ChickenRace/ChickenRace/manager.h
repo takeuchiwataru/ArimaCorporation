@@ -57,6 +57,9 @@ public://誰でも扱える
 	void Update(void);
 	void Draw(void);
 	static void SetMode(MODE mode);
+	static bool GetAging(void) { return m_bAging; }
+	static void AgingCouneter(void) { m_nAgingCounter++; }
+	static int GetAgingCouneter(void) { return m_nAgingCounter; }
 	static MODE GetMode(void) { return m_mode; }
 	static CRenderer *GetRenderer(void) { return m_pRenderer; }
 	static CInputKeyBoard *GetInput(void) { return m_pInputKeyBoard; }
@@ -76,6 +79,8 @@ public://誰でも扱える
 
 private://個人でのみ使う
 	static MODE m_mode;
+	static bool m_bAging;
+	static int	m_nAgingCounter;
 	static CRenderer *m_pRenderer;
 	static CSound *m_pSound;
 	static CInputKeyBoard *m_pInputKeyBoard;

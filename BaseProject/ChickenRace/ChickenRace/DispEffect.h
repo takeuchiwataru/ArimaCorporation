@@ -42,7 +42,7 @@ public:
 		TEX_White,
 		TEX_MAX,
 	}TEX;
-	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_2DPOLYGON) : CScene(nPriority, objType) {};
+	CDispEffect(int nPriority = 5, CScene::OBJTYPE objType = CScene::OBJTYPE_DISPEFFECT) : CScene(nPriority, objType) {};
 	~CDispEffect() {};
 	static void Load(void);
 	static void UnLoad(void);

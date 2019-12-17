@@ -50,7 +50,7 @@ HRESULT CServer::Init(void)
 
 	//ソケットの設定
 	m_addrServer.sin_family = AF_INET;				//接続の形式
-	m_addrServer.sin_port = htons(12345);				//番号の設定
+	m_addrServer.sin_port = htons(12345);			//番号の設定
 	m_addrServer.sin_addr.S_un.S_addr = INADDR_ANY;	//よくわかんない
 
 	//ソケットに名称を付与

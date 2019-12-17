@@ -204,7 +204,8 @@ void CResult::Update(void)
 	{
 		if (pFade == CFade::FADE_NONE)
 		{
-			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
+			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true ||
+				RESULT_END <= m_nResultCounter)
 				CFade::Create(CManager::MODE_TITLE);
 		}
 	}

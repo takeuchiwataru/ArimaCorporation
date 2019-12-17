@@ -29,7 +29,8 @@ public://誰でも扱える
 		OBJTYPE_3DPOLYGON,		//3D画像
 		OBJTYPE_3DMODEL,		//3Dモデル
 		OBJTYPE_OBJECT,			//3Dオブジェクト
-		OBJTYPE_WINDWOOD,			//3Dオブジェクト
+		OBJTYPE_WINDWOOD,		//3Dオブジェクト
+		OBJTYPE_DISPEFFECT,		// ディスプエフェクト
 		OBJTYPE_SHADOWMODEL,	//ステンシルシャドウ
 		OBJTYPE_PAUSE,			//ポーズ
 		OBJTYPE_SERECT,			//セレクト

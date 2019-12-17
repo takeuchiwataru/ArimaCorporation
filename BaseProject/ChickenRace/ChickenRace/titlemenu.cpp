@@ -730,7 +730,8 @@ void CTitleMenu::ControllTitle(void)
 	{// 表示中じゃない
 		if (bMenu == false)
 		{// メニュー非表示
-			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true)
+			if (pCInputKeyBoard->GetKeyboardAny(1) == true || pXpad->GetAllTrigger() == true ||
+				CManager::GetAging() == true)
 				bMenu = true;	// メニューを出す
 		}
 	}
@@ -780,8 +781,12 @@ void CTitleMenu::ControllMainMenu(void)
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 					pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
 					pXpad->GetTrigger(INPUT_B) == true ||
-					pXpad->GetTrigger(INPUT_START) == true)
+					pXpad->GetTrigger(INPUT_START) == true ||
+					CManager::GetAging() == true)
 				{// 決定
+					if (CManager::GetAging() == true)
+						m_nSelectNum = 0;
+
 					switch (m_nSelectNum)
 					{// 選択番号
 					case 0:

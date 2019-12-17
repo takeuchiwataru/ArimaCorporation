@@ -1120,12 +1120,25 @@ void CGameCharSelect::Local(void)
 			}
 		}
 
+		if (CManager::GetAging() == true)
+		{
+			int nNum = CServer::Rand() % MAX_MEMBER;
+			int nMax = (CServer::Rand() % 4) + 1;
+			for (int nCount = 0; nCount < nMax; nCount++)
+			{
+				pnCharSelectNum[nCount] = (nNum + nCount) % MAX_MEMBER;
+				m_bEntry[nCount] = true;
+				m_bEnter[nCount] = true;
+				pPlayer[pnCharSelectNum[nCount]]->SetSelectNum(1);
+			}
+		}
+
 		// キーボード
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true || (m_bEntry[0] == false && pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true))
 		{
 			if (m_bEntry[0] == true)
 			{
-				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
+				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);					
 
 				if (m_bEnter[0] == true)
 					pPlayer[pnCharSelectNum[0]]->SetSelectNum(1);
@@ -1299,7 +1312,8 @@ void CGameCharSelect::Local(void)
 				m_pReady->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 
 			if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
-				pXpad->GetTrigger(INPUT_START) == true)
+				pXpad->GetTrigger(INPUT_START) == true ||
+				CManager::GetAging() == true)
 			{
 				m_bReady = true;
 			}
@@ -1540,7 +1554,8 @@ void CGameCharSelect::Tutorial(void)
 
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 			pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
-			pXpad->GetTrigger(INPUT_START) == true)
+			pXpad->GetTrigger(INPUT_START) == true ||
+			CManager::GetAging() == true)
 		{
 			if (m_nTutorialNum < 2)
 				m_nTutorialNum++;

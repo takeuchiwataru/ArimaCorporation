@@ -551,7 +551,7 @@ void CGamePlay::Update(void)
 	CInputKeyBoard *pCInputKeyBoard = CManager::GetInput();
 	CInputJoyPad_0 * pXpad = CManager::GetInputJoyPad0(0);		//ジョイパットの取得
 
-																// プレイヤー
+	// プレイヤー
 	CPlayer **pPlayer = NULL;
 	switch (CManager::GetMode())
 	{

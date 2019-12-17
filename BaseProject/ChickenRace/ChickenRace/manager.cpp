@@ -44,13 +44,15 @@ CRanking *CManager::m_pRanking = NULL;
 CSelect  *CManager::m_pSelect = NULL;
 CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
-CInputJoyPad_0	*CManager::m_pJoyPad0[JOYPAD_MAX] = {};	//ジョイパッド
+CInputJoyPad_0	*CManager::m_pJoyPad0[JOYPAD_MAX] = {};			//ジョイパッド
 int				CManager::m_nInput = 0;
 CServer			*CManager::m_pServer = NULL;					//デバックログ
 CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
 CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
+bool			CManager::m_bAging = false;
+int				CManager::m_nAgingCounter = 0;
 
 //===============================================================================
 //　デフォルトコンストラクタ
@@ -399,6 +401,8 @@ void CManager::Update(void)
 	//CDebugProc::Print("F1 ワイヤーフレーム　F2　通常\n");
 
 	CDebugProc::Print("Client数 %d\n", CServer::GetnMaxClient());
+
+	m_nAgingCounter;
 
 	switch (m_mode)
 	{

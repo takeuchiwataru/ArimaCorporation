@@ -156,6 +156,7 @@ void CFade::Update(void)
 
 				if (m_modegame == MODEFADE_MODE)
 				{
+					CManager::AgingCouneter();
 					//ÉÇÅ[Éhê›íË
 					CManager::SetMode((CManager::MODE)m_nModeNext);
 				}
