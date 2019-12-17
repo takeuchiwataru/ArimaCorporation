@@ -297,6 +297,7 @@ HRESULT CPlayer::Init(void)
 	m_fStick = 1.0f;
 	m_bJumpOld = m_bJump;
 	m_bSJump = false;
+	m_pFMesh = NULL;
 
 	m_fCountFlame = 0;
 	m_nKey = 0;
@@ -1028,7 +1029,7 @@ void CPlayer::EffectUp(void)
 		switch (m_FEffect)
 		{
 		case CCOL_MESH::EFFECT_SWAMP:	EffectWater(pos);	break;
-		case CCOL_MESH::EFFECT_GRASS:	EffectWater(pos);	break;
+		case CCOL_MESH::EFFECT_GRASS:	EffectGrass(pos); 	break;
 		case CCOL_MESH::EFFECT_NORMAL:
 		case CCOL_MESH::EFFECT_BOOST:
 			EffectNor(pos);
@@ -1110,12 +1111,20 @@ void CPlayer::EffectWater(D3DXVECTOR3 &pos)
 	{//足が付いたなら足跡
 		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
 		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
-		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
-		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
-		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_WATER_S);
 	}
 }
+//=============================================================================
+// 草エフェクトの生成処理
+//=============================================================================
+void CPlayer::EffectGrass(D3DXVECTOR3 &pos)
+{
+	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_GRASS);
 
+	if (m_nKey % 2 == 0)
+	{//足が付いたなら足跡
+		CModelEffect::Create(&pos, m_move * 1.5f, CModelEffect::TYPE_GRASS);
+	}
+}
 //=============================================================================
 // コントロールキー
 //=============================================================================
@@ -1335,7 +1344,7 @@ void CPlayer::UpdateMove(void)
 		m_PlayerInfo.fCountTime = PLAYER_COUNT;
 		if (m_State == PLAYERSTATE_SPEEDUP_S)
 		{
-			fTime = SPEEDUP_TIME * 3;
+			fTime = 60.0f * KILLER_TIME;
 		}
 
 		if (m_nCountSpeed > fTime)
@@ -1343,6 +1352,7 @@ void CPlayer::UpdateMove(void)
 			EndBoost();
 			SetState(PLAYERSTATE_NORMAL);
 			m_nCountSpeed = 0;
+			CancelMotion(PLAYERANIM_NEUTRAL, false);
 		}
 	}
 	if (m_fPower > PLAYER_POWMAX) { m_fPower = PLAYER_POWMAX; }
@@ -1493,7 +1503,8 @@ void CPlayer::UpdateMove(void)
 
 	case PLAYERSTATE_SPEEDDOWN_S:
 		//進行方向の設定
-		m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;	// 減速
+		if (m_PlayerInfo.fCountTime > SPEED_COUNT_ANNOY)
+		{ m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY; }	// 減速
 
 		if (m_nCntParticle > ANNOY_PARTICLE)
 		{
@@ -2083,7 +2094,7 @@ void CPlayer::ChaseEgg(void)
 void CPlayer::BulletEgg(void)
 {
 	CPlayer **pPlayer = NULL;
-	
+
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
 
 	int nTarget = 99;
@@ -2091,11 +2102,9 @@ void CPlayer::BulletEgg(void)
 	bool bGoal;
 	CSound *pSound = CManager::GetSound();
 
-	//if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP && m_State != PLAYERSTATE_SPEEDUP_S)
-	//{// ダメージを食らっているときは使えない
-if (m_nNumEgg + m_nNumChick > 0)
+	if (m_nNumEgg + m_nNumChick > 0)
 	{// 卵かひよこを持っているとき
-		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE)
+		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE && m_State != PLAYERSTATE_SPEEDUP_S)
 		{
 			m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
 			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
@@ -2232,7 +2241,7 @@ if (m_nNumEgg + m_nNumChick > 0)
 		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
-			
+
 			switch (CManager::GetMode())
 			{
 			case CManager::MODE_TITLE:
@@ -2244,7 +2253,7 @@ if (m_nNumEgg + m_nNumChick > 0)
 				m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
 				break;
 			}
-			
+
 			m_nNumEgg--;	// 所持数を減らす
 
 			m_nNumItem--;
@@ -2289,7 +2298,6 @@ if (m_nNumEgg + m_nNumChick > 0)
 		pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
 		pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
 	}
-	//}
 }
 
 //=============================================================================
@@ -2319,7 +2327,7 @@ void CPlayer::CollisionEgg(void)
 						// 攻撃
 					case CEgg::EGGTYPE_ATTACK:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE)
+						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S)
 						{
 							CancelMotion(PLAYERANIM_DAMAGE, false);
 
@@ -2349,7 +2357,7 @@ void CPlayer::CollisionEgg(void)
 
 						// 減速
 					case CEgg::EGGTYPE_ANNOY:
-						if (m_bDamage == false)
+						if (m_bDamage == false && m_State != PLAYERSTATE_SPEEDUP_S)
 						{
 							CancelMotion(PLAYERANIM_DAMAGE, false);
 
@@ -2396,7 +2404,7 @@ void CPlayer::CollisionChick(void)
 						// 攻撃
 					case CChick::TYPE_ATTACK:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE)
+						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
@@ -2427,7 +2435,7 @@ void CPlayer::CollisionChick(void)
 						// 強い攻撃
 					case CChick::TYPE_ATTACK_S:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
+						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
@@ -3170,6 +3178,7 @@ void CPlayer::ResetMotion(void)
 void CPlayer::CancelMotion(PlayerAnim Anim, bool bRow)
 {
 	if (!bRow && m_PlayerAnim == Anim) { return; }
+	if (m_PlayerAnim != PLAYERANIM_NEUTRAL && Anim == PLAYERANIM_RUN) { return; }
 	m_PlayerAnim = Anim;
 	m_pKey = &m_pKeyInfo[m_PlayerAnim][0];
 	m_nKey = 0;

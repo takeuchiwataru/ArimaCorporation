@@ -24,6 +24,7 @@ public:
 	typedef enum
 	{
 		TYPE_SMOKE,		//土煙
+		TYPE_GRASS,		//草
 		TYPE_WATER,		//水しぶき
 		TYPE_WATER_S,	//水しぶき強
 		TYPE_MAX
@@ -46,6 +47,7 @@ private://**********************************************************************
 		//変数宣言//***********************************************************************
 	D3DXVECTOR3		*m_pPos;
 	D3DXVECTOR3		m_move;
+	D3DXVECTOR3		m_MoveRot;
 	C2D::DRAW_TYPE	m_DrawType;		// 描画する方法(加算合成など)
 
 	TYPE	m_Type;			//タイプ

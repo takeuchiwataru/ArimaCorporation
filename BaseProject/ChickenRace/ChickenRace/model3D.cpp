@@ -92,7 +92,8 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	//=============================
 	//　          エフェクト
 	//=============================
-	"data\\MODEL\\Effect\\Dirt.x"
+	"data\\MODEL\\Effect\\Dirt.x",
+	"data\\MODEL\\Effect\\Grass.x"
 };
 //*****************************************************************************
 //						 テクスチャの読み込みファイル名
@@ -150,7 +151,9 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	//=============================
 	//　          エフェクト
 	//=============================
-	"data\\TEXTURE\\modeltex\\ModelEffect.jpg"
+	"data\\TEXTURE\\modeltex\\ModelEffect.jpg",
+	"data\\TEXTURE\\modeltex\\water.jpg",
+	"data\\TEXTURE\\modeltex\\Grass.jpg"
 };
 //===============================================================================
 //　オーバーロードコンストラクタ

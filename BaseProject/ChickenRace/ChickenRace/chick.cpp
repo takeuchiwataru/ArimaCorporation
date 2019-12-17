@@ -39,8 +39,8 @@
 #define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
 #define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
 #define MAX_SMOKE_SPEED			(15)		// キラーひよこ出現時の煙の数
-#define ATTACK_TIME				(3)		// 隕石ひよこが落ちるまでの時間
-
+#define ATTACK_TIME				(3)			// 隕石ひよこが落ちるまでの時間
+#define MAX_SMOKE_S				(2)			// キラーひよこの煙の数(ながやま修正12/17)
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
 #define LEAF_LENGTH				(10500)		//葉の更新処理
@@ -67,9 +67,9 @@ int						CChick::m_aIndexParent[MAX_CHICK_PARTS] = {};	//親のインデックス
 CChick::KEY				CChick::m_aKayOffset[MAX_CHICK_PARTS] = {};		//オフセット情報
 CChick::MOTION_INFO		CChick::m_aMotionInfo[MAX_CHICK_MOTION] = {};	//モーション情報
 
-//--------------------------------------------
-//グローバル変数
-//--------------------------------------------
+																		//--------------------------------------------
+																		//グローバル変数
+																		//--------------------------------------------
 int g_nChickNumModel;
 char g_aChickFileNameModel[MAX_CHICK_PARTS][256];
 
@@ -104,6 +104,7 @@ CChick::CChick() : CScene(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_nCntUpDown = 0;
 	m_nCntAttackTime = 0;
 	m_fUpDown = 0.0f;
+	m_fDisTime = 0.0f;	// (ながやま修正12/17)
 }
 //===============================================================================
 //　デストラクタ
@@ -191,6 +192,15 @@ HRESULT CChick::Init(void)
 	m_nCntUpDown = 0;
 	m_nCntAttackTime = 0;
 	m_fUpDown = 10.0f;
+	m_fDisTime = DISTIME;	// (ながやま修正12/17)
+	if (m_type == TYPE_SPEED)
+	{
+		m_fDisTime = (60.0f * 0.5f) + 40;
+	}
+	else if (m_type == TYPE_SPEED_S)
+	{
+		m_fDisTime = (60.0f * KILLER_TIME);
+	}
 
 	CModel::ParentModel(m_apModel, CModel::TYPE_CHICK);
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICK);
@@ -246,18 +256,15 @@ void CChick::Uninit(void)
 //=============================================================================
 void CChick::Update(void)
 {
-	//m_pos = CModel3D::GetPosition();
 	m_posOld = m_pos;	//前回の位置を保存する
 
-	// ひよこの動き
+						// ひよこの動き
 	if (Move()) { return; }
 
 	m_nMotionType = m_nAnimnow;
 
 	//モーション更新
 	UpdateMotion();
-
-	//CDebugProc::Print("m_rot x : %.1f y : %.1f z : %.1f\n", m_rot.x, m_rot.y, m_rot.z);
 }
 //=============================================================================
 // 描画処理
@@ -276,7 +283,7 @@ void CChick::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-	// ワールドマトリックスの初期化
+												// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -313,7 +320,7 @@ void CChick::Load(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	int			nNumVtx = 0;	//頂点数
-	//モデルのオフセットと読み込み
+								//モデルのオフセットと読み込み
 	FileLoad();
 
 	//モデルの最大値・最小値を取得する
@@ -356,10 +363,11 @@ bool CChick::Move(void)
 
 	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{
-		float fGravity = 0.1f;
+		// 重力
+		float fGravity = 0.2f;
 
 		if (m_type == TYPE_SPEED && m_state == STATE_BULLET)
-		{
+		{// 重力
 			fGravity = 0.3f;
 		}
 
@@ -371,21 +379,10 @@ bool CChick::Move(void)
 	m_pos.z += m_move.z;
 
 	if (m_bDis == false)
-	{
-		float fDisTime = DISTIME;
-
-		if (m_type == TYPE_SPEED)
-		{
-			fDisTime = (60.0f * 0.5f) + 40;
-		}
-		else if (m_type == TYPE_SPEED_S)
-		{
-			fDisTime = (60.0f * KILLER_TIME) + 20.0f;
-		}
-
+	{// 消えるまでの処理(ながやま修正12/17)
 		m_nDisTimer++;
 
-		if (m_nDisTimer > fDisTime)
+		if (m_nDisTimer > m_fDisTime)
 		{// 消す
 			if (m_type == TYPE_SPEED || m_type == TYPE_SPEED_S)
 			{
@@ -393,16 +390,16 @@ bool CChick::Move(void)
 				int nNumSmoke = 0;
 
 				if (m_type == TYPE_SPEED)
-				{
+				{// 加速ひよこのパーティクルの数を設定
 					nNumSmoke = MAX_SMOKE;
 				}
 				else if (m_type == TYPE_SPEED_S)
-				{
-					nNumSmoke = 2;
+				{// キラーひよこのパーティクルの数を設定(ながやま修正12/17)
+					nNumSmoke = MAX_SMOKE_S;
 				}
 
 				for (int nCntParticle = 0; nCntParticle < nNumSmoke; nCntParticle++)
-				{
+				{// パーティクル
 					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
 					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
 
@@ -446,7 +443,7 @@ bool CChick::Move(void)
 			if (m_pos.y < m_fHeight)
 			{
 				m_move.y = 0.0f;
-				m_pos.y = m_fHeight/* + 10.0f*/;
+				m_pos.y = m_fHeight;
 				//ジャンプの状態設定
 				m_bJump = false;
 			}
@@ -505,7 +502,6 @@ bool CChick::Move(void)
 	}
 
 	return false;
-	//CDebugProc::Print("%.1f\n", m_move.y);
 }
 
 //===============================================================================
@@ -567,7 +563,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 {
 	//あたっているかあたってないか
 	bool bHit = false;
-	
+
 	if (m_state == STATE_BULLET)
 	{
 		// 各種情報の取得
@@ -583,7 +579,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		}
 
 		//距離計算
- 		float fDistance = sqrtf(powf(pPos->x - m_pos.x, 2) + powf(pPos->z - m_pos.z, 2));
+		float fDistance = sqrtf(powf(pPos->x - m_pos.x, 2) + powf(pPos->z - m_pos.z, 2));
 
 		if (fDistance < PLAYER_DEPTH + fDepth)
 		{//距離チェック
@@ -885,6 +881,11 @@ void CChick::AnnoyS(void)
 			m_bAttackS = true;
 		}
 	}
+
+	if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP || pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
+	{// ながやま修正(12/17)
+		m_fDisTime = 0.0f;
+	}
 }
 
 //=============================================================================
@@ -1041,9 +1042,9 @@ void CChick::SpeedS(void)
 
 	m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange,
 		pPlayer[m_nNumPlayer]->GetPos().y,
-		pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange),
+		pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange);// ながやま修正(12/17)
 
-		m_rot = pPlayer[m_nNumPlayer]->GetRot();
+	m_rot = pPlayer[m_nNumPlayer]->GetRot();
 }
 
 //=============================================================================
@@ -1254,7 +1255,7 @@ void CChick::FileLoad(void)
 	int nWord = 0;		//ポップで返された値を保持
 
 #if 1
-	//ファイルを開く 読み込み
+						//ファイルを開く 読み込み
 	pFile = fopen(FILE_NAME_CHICK, "r");
 	//NULLチェック
 	if (pFile != NULL)

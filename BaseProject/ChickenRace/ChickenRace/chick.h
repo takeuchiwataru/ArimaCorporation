@@ -195,6 +195,7 @@ private:
 	float				m_fUpDown;				// スピードアップひよこの上下
 	float				m_fRangePos;					// 位置保存用
 	float				m_fRange;
+	float				m_fDisTime;						// 消えるまでの時間(ながやま修正12/17)
 	bool				m_bJump;						// ジャンプしているかどうか
 	bool				m_bDis;							// 消すかどうか
 	bool				m_bAttackS;

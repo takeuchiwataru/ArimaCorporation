@@ -261,6 +261,7 @@ public:
 	bool			&GetbDivided(void)		{ return m_bDivided; };
 	bool			&GetbSJump(void)		{ return m_bSJump; }
 	C3DPolygon		*&GetpShadow(void)		{ return m_pShadow; };
+	CCOL_MESH		*&GetpFMesh(void)		{ return m_pFMesh; };
 
 	int GetItemNum(void) { return m_nNumItem; }
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
@@ -300,7 +301,7 @@ private:
 	bool UseATK(int &nRank);				bool UseDEF(int &nRank);				bool UseSPD(int &nRank);
 	void UpdateKiller(void);				void SetKiller(void);
 	void UpdateFEffect(void);				void EffectUp(void);
-	void EffectNor(D3DXVECTOR3 &pos);		void EffectWater(D3DXVECTOR3 &pos);
+	void EffectNor(D3DXVECTOR3 &pos);		void EffectWater(D3DXVECTOR3 &pos);		void EffectGrass(D3DXVECTOR3 &pos);
 	void Accelerator(bool bAccel);
 
 	void WarpNext(void);
@@ -422,6 +423,7 @@ private:
 	D3DXVECTOR3					  m_WindMove;			//風の移動量
 	float						  m_fCntWind;			//風の管理用
 	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
+	CCOL_MESH					  *m_pFMesh;			//地面のポインタ
 	//AI用----------------------------------
 	float						  m_fRoad;				// IN_OUTの％
 	bool						  m_bSJump;				// ジャンプ情報保存

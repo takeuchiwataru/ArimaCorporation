@@ -17,8 +17,8 @@
 // マクロ定義
 //=============================================================================
 #define CHAR_PRIORITY	(1)
-#define WOOD_DIS		(40.0f)				//木と木の間の距離（半分）
-#define WOOD_LEN		(5.0f)				//木の長さ
+#define WOOD_DIS		(45.0f)				//木と木の間の距離（半分）
+#define WOOD_LEN		(8.0f)				//木の長さ
 //=============================================================================
 // 前方宣言
 //=============================================================================
@@ -42,10 +42,10 @@ public:
 	static void Load(void);
 	static void Unload(void);
 	static void	FileLoad(void);
-	static CCharcter	*Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot);
+	static CCharcter	*Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, float fScale);
 	static void	CollisionAll(CPlayer *pPlayer);
 
-	void				Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot);
+	void				Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot, float &fScale);
 	HRESULT				Init(void);
 	void				Uninit(void);
 	void				Update(void);
@@ -80,6 +80,7 @@ private:
 	int							  m_nCountFlame;				// フレーム数
 	int							  m_nMotionType;				// モーションのタイプ(int型)
 	bool						  m_bMotionEnd;					// モーション終了
+	float						  m_fScale;
 
 	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
 	C3DPolygon					  *m_p3D;

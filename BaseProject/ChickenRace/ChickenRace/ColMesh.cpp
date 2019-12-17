@@ -658,8 +658,10 @@ void	CCOL_MESH::Load(FILE *pFile)
 	{//加速なら木を配置
 		D3DXVECTOR3 pos;
 		float	fRot = atan2f(m_pVtx[1].x - m_pVtx[0].x, m_pVtx[1].z - m_pVtx[0].z);
+		float	fDis = sqrtf(powf(m_pVtx[2].x - m_pVtx[0].x, 2) + powf(m_pVtx[2].z - m_pVtx[0].z, 2));
+		fDis /= (WOOD_DIS * 2.0f);
 		pos = (m_pVtx[0] + m_pVtx[1] + m_pVtx[2] + m_pVtx[3]) / 4.0f + D3DXVECTOR3(0.0f, 0.0f, 0.0f) + m_pos;
-		CCharcter::Create(pos, D3DXVECTOR3(0.0f, fRot - D3DX_PI, 0.0f));
+		CCharcter::Create(pos, D3DXVECTOR3(0.0f, fRot, 0.0f), fDis);
 		//CCharcter::Create(D3DXVECTOR3(-250.0f, -90.0f, -100.0f), D3DXVECTOR3(0.0f, fRot - D3DX_PI, 0.0f));
 
 	}
@@ -677,7 +679,8 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 	D3DXVECTOR3 &FNor = pPlayer->GetFNor();
 	EFFECT		&Effect = pPlayer->GgetFEffect();
 	float		fLength = pPlayer->GetfLength() * 1.5f;
-	float		fWK;
+	CCOL_MESH	*&pFMesh = pPlayer->GetpFMesh();
+	float		fWK, fUpY, fDownY;
 
 	bool		bLand = true;
 	D3DXVECTOR3 WKnor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -704,7 +707,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			switch (m_Effect)
 			{
 			case EFFECT_BOOST:	//加速
-				fWK = atan2f(VtxPos[0].x - VtxPos[1].x, VtxPos[0].z - VtxPos[1].z);
+				fWK = atan2f(VtxPos[0].x - VtxPos[1].x, VtxPos[0].z - VtxPos[1].z) - D3DX_PI;
 				pPlayer->SetWind(fWK);
 				break;
 			case EFFECT_SWAMP:	//減速
@@ -714,10 +717,16 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			case EFFECT_NORMAL:
 			case EFFECT_RIVER:
 			case EFFECT_DROP:
+				if (pFMesh == this) { fUpY = 11.5f; fDownY = 30.0f; }
+				else { fUpY = 3.0f; fDownY = 3.0f; }
+
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
-				if (m_Effect != EFFECT_DROP) { pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z)); }
-				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? 11.5f : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + 30.0f)
+				if (m_Effect != EFFECT_DROP && WKpos.y + WKm_pos.y <= pos.y)
+				{ pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z)); }
+
+				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? fUpY : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + fDownY)
 				{//貫通していたら
+					pFMesh = this;
 					Effect = m_Effect;
 					if (m_Effect == EFFECT_DROP) { return bLand; }
 					if (m_Effect == EFFECT_GRASS) { Effect = EFFECT_GRASS; }
@@ -946,7 +955,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		fDistance = sqrtf(powf((Wpos2.x - Wpos0.x), 2) + powf((Wpos2.z - Wpos0.z), 2));
 		fPercent = fDistance / sqrtf(powf((Wpos1.x - Wpos0.x), 2) + powf((Wpos1.z - Wpos0.z), 2));
 		fPercent = (Wpos1.y - Wpos0.y) * fPercent;
-		if (pos.y < Wpos0.y + fPercent - 30.0f || pos.y > fPercent + WUpos0.y)
+		if (pos.y - move.y < Wpos0.y + fPercent - 30.0f || pos.y - move.y > fPercent + WUpos0.y)
 		{//Y軸が範囲外なら
 			nEnd = 1;
 			return nEnd;
@@ -956,6 +965,7 @@ int CCOL_MESH::WallCollision(D3DXVECTOR3 Wpos0, D3DXVECTOR3 Wpos1, D3DXVECTOR3 W
 		if (nCntHit < 2 || bReflection)
 		{//2回以上ヒット
 		 //交点を求める
+
 			nEnd = 1;
 
 			if (fLength >= 3.0f)

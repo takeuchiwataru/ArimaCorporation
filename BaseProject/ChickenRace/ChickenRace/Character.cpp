@@ -71,14 +71,14 @@ void CCharcter::Unload(void)
 //==================================================================================================//
 //    * ê∂ê¨ä÷êî *
 //==================================================================================================//
-CCharcter	*CCharcter::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+CCharcter	*CCharcter::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, float fScale)
 {
 	CCharcter *pChar = NULL;
 	pChar = new CCharcter;
 	if (pChar != NULL)
 	{
 		pChar->Init();
-		pChar->Setting(pos, rot);
+		pChar->Setting(pos, rot, fScale);
 	}
 
 	return pChar;
@@ -86,9 +86,8 @@ CCharcter	*CCharcter::Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot)
 //==================================================================================================//
 //    * ê›íËä÷êî *
 //==================================================================================================//
-void	CCharcter::Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot)
+void	CCharcter::Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot, float &fScale)
 {
-	ResetCheck(m_pos, &m_fCola[0]);
 	CModel::ParentModel(m_apModel, CModel::TYPE_WOOD);
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_WOOD);
 	for (int nCountIndex = 0; nCountIndex < nMaxModel; nCountIndex++)
@@ -110,7 +109,11 @@ void	CCharcter::Setting(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot)
 			m_pos.z + m_aKayOffset[nCountIndex].fposZ));
 	}
 
-	m_pos = pos;	m_rot = rot;
+	m_pos = pos + D3DXVECTOR3(0.0f, -15.0f, 0.0f);
+	m_rot = rot;
+	ResetCheck(m_pos, &m_fCola[0]);
+
+	m_fScale = 0.375f * fScale;
 }
 //==================================================================================================//
 //    * èâä˙âªä÷êî *
@@ -127,6 +130,7 @@ HRESULT	CCharcter::Init(void)
 	m_fCntState = 0.0f;
 	m_p3D = NULL;
 	m_bDraw = false;
+	m_fScale = 0.375f;
 
 	for (int nCount = 0; nCount < MAX_PLAYCOL; nCount++) { m_fCola[nCount] = 0.0f; }
 	return S_OK;
@@ -193,7 +197,7 @@ void	CCharcter::Draw(void)
 
 	//ägëÂèàóù
 	mtx._22 = 1.5f;
-	mtx._44 = (1.0f / 0.375f);
+	mtx._44 = (1.0f / m_fScale);
 	mtx._41 *= mtx._44;
 	mtx._42 *= mtx._44;
 	mtx._43 *= mtx._44;
@@ -280,7 +284,7 @@ void	CCharcter::Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos)
 {
 	D3DXVECTOR3 &pos = pPlayer->GetPos();
 	float fLenght = sqrtf(powf(pos.x - Mypos.x, 2.0f) + powf(pos.z - Mypos.z, 2.0f));
-	float fRange = PLAYER_LENGTH + WOOD_LEN;
+	float fRange = PLAYER_LENGTH + WOOD_LEN * (m_fScale / 0.375f);
 	if (fLenght < fRange)
 	{// îÕàÕì‡
 	 // äpìxåvéZ
@@ -300,10 +304,11 @@ void	CCharcter::CollisionWood(CPlayer *&pPlayer)
 {
 	D3DXVECTOR3 pos;
 	float fRot;
+	float fDis = (WOOD_DIS - 5.0f) * (m_fScale / 0.375f);
 	for (int nCount = 0; nCount < 2; nCount++)
 	{
 		fRot = m_rot.y - D3DX_PI * 0.5f + D3DX_PI * (float)nCount;
-		pos = m_pos + D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * WOOD_DIS;
+		pos = m_pos + D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fDis;
 		Collision(pPlayer, pos);
 	}
 }
