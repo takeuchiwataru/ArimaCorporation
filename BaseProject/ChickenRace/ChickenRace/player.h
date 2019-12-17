@@ -425,6 +425,8 @@ private:
 	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
 	CCOL_MESH					  *m_pFMesh;			//地面のポインタ
 	//AI用----------------------------------
+	float						  m_fAddRotOld;			// 前の加算角度
+	float						  m_fCntAho;			// アホカウント
 	float						  m_fRoad;				// IN_OUTの％
 	bool						  m_bSJump;				// ジャンプ情報保存
 	//--------------------------------------

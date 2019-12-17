@@ -721,7 +721,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 				else { fUpY = 3.0f; fDownY = 3.0f; }
 
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
-				if (m_Effect != EFFECT_DROP && WKpos.y + WKm_pos.y <= pos.y)
+				if (m_Effect != EFFECT_DROP && WKpos.y + WKm_pos.y <= pos.y + 10.0f)
 				{ pPlayer->GetpShadow()->SetShadow(D3DXVECTOR3(pos.x, WKpos.y + WKm_pos.y + 3.0f, pos.z)); }
 
 				if (WKpos.y + WKm_pos.y >= pos.y - (!bJump ? fUpY : 0.0f) && WKpos.y + WKm_pos.y <= posold.y + fDownY)

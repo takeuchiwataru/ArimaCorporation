@@ -304,6 +304,7 @@ HRESULT CPlayer::Init(void)
 
 	m_bGoal = false;					// ゴール
 	m_fAddRot = 0.0f;					// 加算角度
+	m_fCntAho = 0.0f;
 
 	m_nSelectNum = 0;					// 選択
 	m_nSelectCounter = 0;				// 選択カウント
@@ -529,18 +530,18 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
-			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			{
-				if (m_State != PLAYERSTATE_SPEEDUP_S)
-				{
-					ControlKey();
-				}
-				else
-				{
-					UpdateKiller();
-				}
-			}
-			else
+			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//{
+			//	if (m_State != PLAYERSTATE_SPEEDUP_S)
+			//	{
+			//		ControlKey();
+			//	}
+			//	else
+			//	{
+			//		UpdateKiller();
+			//	}
+			//}
+			//else
 			{
 				UpdateAI();
 			}
@@ -710,18 +711,45 @@ void CPlayer::UpdateResult(void)
 void CPlayer::UpdateAI(void)
 {
 	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, m_nNumRoad);
+	float fRotY;
 
 	fRot = fRot - m_rot.y;
 	RemakeAngle(&fRot);
 
-	m_rot.y += fRot * 0.05f;
+	fRot = fRot * 0.05f;
+	fRotY = fRot + m_rot.y;
 	RemakeAngle(&m_rot.y);
 
 	if (m_nStartCounter == m_nStartFrame)
-		SetStateSpeed(STATE_SPEED_ACCEL);
+	{
+		if (m_fCntAho == 0.0f)
+		{//アホになれる
+			if (sqrtf(powf(fRot - m_fAddRotOld, 2)) > PLAYER_ADDROT * 0.95f)
+			{//条件でアホになる
+				if (CServer::Rand() % (m_nCharacterNum + 2) == 0) 
+				{ m_fCntAho = 60.0f; }
+				else { m_fCntAho = -300.0f; }
+			}
+		}
+
+		if (m_fCntAho > 0.0f)
+		{
+			m_fCntAho--;
+			if (m_fCntAho <= 0.0f) { m_fCntAho = -300.0f; }
+		}
+		else
+		{
+			m_rot.y = fRotY;
+			if (fRot < PLAYER_ADDROT * 1.15f) { SetStateSpeed(STATE_SPEED_ACCEL); }
+			else { SetStateSpeed(STATE_SPEED_DRIFT); }
+
+		}
+	}
 	else
 		m_nStartCounter++;
 
+	m_fAddRotOld = fRot;
+	if (m_fCntAho < 0.0f) { m_fCntAho++; }
 	if (!m_bJump && m_bSJump)
 	{//ジャンプ
 		m_bSJump = false;
@@ -1044,8 +1072,6 @@ void CPlayer::EffectUp(void)
 void CPlayer::EffectNor(D3DXVECTOR3 &pos)
 {//煙
 	CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-	//CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
-	//CModelEffect::Create(&pos, m_move, CModelEffect::TYPE_SMOKE);
 
 	if (m_nKey % 2 == 0)
 	{//足が付いたなら足跡
