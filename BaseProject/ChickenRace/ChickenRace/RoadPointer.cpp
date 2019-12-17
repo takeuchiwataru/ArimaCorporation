@@ -467,7 +467,7 @@ bool	CRoad_Pointer::Beyond(CPlayer *&pPlayer, CRoad_Pointer *&pmyPoint, int &nNu
 		//’´‚¦‚é•â•
 		if (pPoint->m_pNextPointer[0] != NULL || nMap != CRoad_Manager::MAP_MAX - 1)
 		{//ŽŸ‚ªƒS[ƒ‹‚Å‚È‚¢‚È‚ç
-			if (pPlayer->GetPlayerType() == CPlayer::PLAYERTYPE_ENEMY && !bRank)
+			if (!bRank)
 			{//“G && ƒ‰ƒ“ƒLƒ“ƒO‚Å‚È‚¢‚È‚ç
 				fRot = atan2f(pos.x - pPoint->m_pos.x, pos.z - pPoint->m_pos.z);
 				pos -= D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * IGNOR_DIS;

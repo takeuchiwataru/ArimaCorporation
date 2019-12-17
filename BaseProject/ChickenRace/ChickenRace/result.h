@@ -15,6 +15,7 @@
 //*****************************************************************************
 #define MAX_MAP_OBJECT			(3500)
 #define RESULT_WAIT				(310)
+#define RESULT_END				(RESULT_WAIT + 600)
 #define RESULT_CAMERA_WAIT_0	(30)
 #define RESULT_CAMERA_DOWN		(90)
 #define RESULT_CAMERA_WAIT_1	(120)

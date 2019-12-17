@@ -126,7 +126,7 @@ public:
 		TYPE_HALF1,		//èIÇÌÇËÇÃîºï™
 		TYPE_MAX,
 	}TYPE;
-	CCOL_MESH_MANAGER(int nPrioryity = COLMESH_PRIORITY) : CScene::CScene(nPrioryity) {};
+	CCOL_MESH_MANAGER(int nPrioryity = COLMESH_PRIORITY) : CScene::CScene(nPrioryity, CScene::OBJTYPE_COLMESH) {};
 	~CCOL_MESH_MANAGER() {};
 
 	static void LoadMap(void);

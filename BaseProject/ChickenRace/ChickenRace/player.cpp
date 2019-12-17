@@ -528,7 +528,7 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
-			if (m_PlayerType == PLAYERTYPE_PLAYER)
+			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S)
 				{
