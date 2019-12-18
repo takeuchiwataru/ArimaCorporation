@@ -47,6 +47,9 @@
 #define WOOD_LENGTH				(8000)		//木をビルボードに入れ替える距離
 #define FLOWER_LENGTH			(5500)		//花壇の描画範囲
 
+//モーション関連
+#define PLAYERSPEED_MOTION		(0.12f)		//プレイヤーの速さに応じて、足を動かす
+#define PLAYERSPEED_BACKMOTION	(-0.12f)	//プレイヤーの速さに応じて、足を動かす
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************
@@ -364,6 +367,53 @@ bool CChick::Move(void)
 {
 	// 使ったとき
 	if (Item()) { return true; }
+
+	CPlayer **pPlayer = NULL;
+
+	switch (CManager::GetMode())
+	{
+	case CManager::MODE_TITLE:
+		pPlayer = CTitle::GetPlayer();
+		break;
+	case CManager::MODE_GAME:
+		pPlayer = CGame::GetPlayer();
+		break;
+	}
+
+	float fSpeed = pPlayer[m_nNumPlayer]->GetSpeed();
+
+	if (fSpeed > PLAYERSPEED_MOTION)
+	{
+		//後ろについて行ってるとき
+		if (m_state == STATE_CHASE)
+		{
+			m_nAnimnow = CHICK_ANIM_RUN;
+		}
+		else if (m_state == STATE_BULLET)
+		{
+			if (m_type == TYPE_ATTACK || m_type == TYPE_ANNOY || m_type == TYPE_SPEED_S)
+			{
+				//走る
+				m_nAnimnow = CHICK_ANIM_RUN;
+			}
+		}
+	}
+	else if (fSpeed < PLAYERSPEED_BACKMOTION)
+	{
+		//後ろについて行ってるとき
+		if (m_state == STATE_CHASE)
+		{
+			m_nAnimnow = CHICK_ANIM_RUN;
+		}
+	}
+	else
+	{
+		//後ろについて行ってるとき
+		if (m_state == STATE_CHASE)
+		{
+			m_nAnimnow = CHICK_ANIM_NEUTRAL;
+		}
+	}
 
 	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{

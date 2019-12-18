@@ -151,9 +151,9 @@ void CModel::Load(void)
 	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\beret.jpg", &m_pTexAll[6]);
 	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\costumetex\\clown.jpg", &m_pTexAll[7]);
 	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\ÉjÉèÉgÉä00.jpg", &m_pTexAll[8]);
-	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_02.jpg", &m_pTexAll[9]);
-	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_00.jpg", &m_pTexAll[10]);
-	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick_01.jpg", &m_pTexAll[11]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick01.jpg", &m_pTexAll[9]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick02.jpg", &m_pTexAll[10]);
+	D3DXCreateTextureFromFile(pDevice, "data\\TEXTURE\\modeltex\\chick00.jpg", &m_pTexAll[11]);
 
 }
 

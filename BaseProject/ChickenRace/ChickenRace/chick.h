@@ -77,9 +77,6 @@ public:
 	{
 		CHICK_ANIM_NEUTRAL = 0,		//ニュートラルモーション
 		CHICK_ANIM_RUN,				//走る
-		CHICK_ANIM_JUMP,			//ジャンプ
-		CHICK_ANIM_LAND,			//着地
-		CHICK_ANIM_DAMAGE,			//ダメージ
 		CHICK_MAX					//モーションの最大数
 	}ChickAnim;
 
@@ -164,6 +161,7 @@ private:
 	void Speed(void);
 	void SpeedS(void);
 	void Annoy(void);
+	void CancelMotion(ChickAnim Anim, bool bRow);
 	float AdjustAngle(float rot);
 	D3DXMATRIX			m_mtxWorld;						// ワールドマトリックス
 	static D3DXVECTOR3	m_VtxMaxModel[MAX_CHICK];		//モデルの最大値

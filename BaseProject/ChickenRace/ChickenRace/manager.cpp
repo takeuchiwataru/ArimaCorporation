@@ -51,7 +51,7 @@ CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
 CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
-bool			CManager::m_bAging = true;
+bool			CManager::m_bAging = false;
 int				CManager::m_nAgingCounter = 0;
 
 //===============================================================================
