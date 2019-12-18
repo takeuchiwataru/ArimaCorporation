@@ -363,6 +363,15 @@ void	CCylinder::Set(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot, TYPE type)
 		m_fLengthY = 30.0f;
 		GetnNumDraw() = 1;
 		break;
+	case TYPE_RARE:
+		state = STATE_NORMAL;
+		m_col = D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f);
+		m_fPlusA = 0.0f;
+		m_fCntState = 0.0f;
+		m_fLengthY = 30.0f;
+		GetnNumDraw() = 1;
+		m_fLengthXZ[0] = 20.0f; m_fLengthXZ[1] = 20.0f;
+		break;
 	case TYPE_HATK:
 		state = STATE_FADE;
 		m_col = D3DXCOLOR(1.0f, 0.1f, 0.02f, 1.0f);

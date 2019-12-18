@@ -81,6 +81,7 @@ public:
 	typedef enum
 	{
 		TYPE_BOOST,		//ブースト
+		TYPE_RARE,		//レアピヨコ
 		TYPE_EATK,		//卵攻撃
 		TYPE_HATK,		//ヒヨコ攻撃
 		TYPE_HATK_S,	//強ヒヨコ攻撃
