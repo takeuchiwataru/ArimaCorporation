@@ -34,7 +34,7 @@
 #define CHICK_SPEED				(15.0f)		// ひよこが飛んでくスピード
 #define CHICK_JUMP				(3.5f)		// ジャンプ力
 #define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
-#define CHICK_FALL_SPEED		(12.0f)		// 落ちてくるひよこの速さ
+#define CHICK_FALL_SPEED		(18.0f)		// 落ちてくるひよこの速さ
 #define CHICK_PARTICLE			(30)		// パーティクルの数
 #define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
 #define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
