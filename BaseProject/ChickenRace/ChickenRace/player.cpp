@@ -50,7 +50,7 @@
 #define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
 #define SPEED_CHICK			(0.4f)										// 加速する量ひよこ
 #define SPEED_EGG			(0.2f)										// 加速する量卵
-#define SPEED_COUNT_ANNOY	(5.0f)										// 減速状態
+#define SPEED_COUNT_ANNOY	(8.0f)										// 減速状態
 #define SPEED_COUNT_DAMAGE	(0.0f)											// ダメージ状態
 #define SPEED_COUNT_UP		(9.0f)										// 加速状態
 #define EGGJUMP				(2.0f)										// 卵のジャンプ力
@@ -539,12 +539,12 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
-			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			//{
-			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-			//	else { UpdateKiller(); }
-			//}
-			//else
+			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			{
+				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+				else { UpdateKiller(); }
+			}
+			else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
@@ -2201,7 +2201,7 @@ void CPlayer::BulletEgg(void)
 
 	if (m_nNumEgg + m_nNumChick > 0)
 	{// 卵かひよこを持っているとき
-		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE && m_State != PLAYERSTATE_SPEEDUP_S)
+		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE && m_State != PLAYERSTATE_SPEEDUP_S && m_State != PLAYERSTATE_SPEEDDOWN_S && m_State != PLAYERSTATE_SPEEDDOWN)
 		{
 			m_pChick[0]->SetState(CChick::STATE_BULLET);	// 状態を弾にする
 			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
@@ -2334,7 +2334,7 @@ void CPlayer::BulletEgg(void)
 			m_bulletType[1] = m_bulletType[2];
 			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
-		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE)
+		else if (m_pEgg[0] != NULL && m_pEgg[0]->GetState() == CEgg::EGGSTATE_CHASE && m_State != PLAYERSTATE_SPEEDUP_S && m_State != PLAYERSTATE_SPEEDDOWN_S && m_State != PLAYERSTATE_SPEEDDOWN)
 		{// 一個目の卵に情報が入っていて、プレイヤーについてくる時
 			m_pEgg[0]->SetState(CEgg::EGGSTATE_BULLET);	// 状態を弾にする
 
