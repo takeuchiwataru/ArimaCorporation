@@ -616,6 +616,8 @@ void CPlayer::UpdateRace(void)
 	if (!bLand && m_bJump)
 	{//着地したなら
 	 //着地モーション
+		//CancelMotion(PLAYERANIM_LAND, false);
+
 	}
 	m_bJump = bLand;
 
@@ -763,9 +765,7 @@ void CPlayer::UpdateAI(void)
 	if (m_fCntAho < 0.0f) { m_fCntAho++; }
 	if (!m_bJump && m_bSJump)
 	{//ジャンプ
-		m_bSJump = false;
-		m_bJump = true;
-		m_move.y += PLAYER_JUMP;
+		SetJump();
 	}
 
 	UseItem();
@@ -1335,17 +1335,14 @@ void CPlayer::ControlKey(void)
 	//}
 
 	// ジャンプ
-	if (m_bJump == false)
-	{// ジャンプしていない
 
-		if ((bOnline == false &&
-			(pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
-				pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
-			pXpad->GetTrigger(INPUT_A) == true)
-		{// ジャンプキー
-			m_bJump = true;
-			m_move.y += PLAYER_JUMP;
-		}
+
+	if ((bOnline == false &&
+		(pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
+			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
+		pXpad->GetTrigger(INPUT_A) == true)
+	{// ジャンプキー
+		SetJump();
 	}
 
 	if (pInputKeyboard->GetKeyboardTrigger(DIK_SPACE) == true ||
@@ -1834,7 +1831,19 @@ void CPlayer::SetStateSpeed(CPlayer::STATE_SPEED state)
 	//状態の設定
 	m_StateSpeed = state;
 }
-
+//=============================================================================
+// ジャンプ処理
+//=============================================================================
+void CPlayer::SetJump(void)
+{
+	if (m_bJump == false)
+	{// ジャンプしていない
+		CancelMotion(PLAYERANIM_JUMP, false);
+		m_bJump = true;
+		m_bSJump = false;
+		m_move.y += PLAYER_JUMP;
+	}
+}
 //=============================================================================
 // 設定処理
 //=============================================================================

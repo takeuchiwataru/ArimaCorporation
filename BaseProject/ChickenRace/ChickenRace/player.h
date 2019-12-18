@@ -306,6 +306,7 @@ private:
 	void UpdateSelect(void);
 	void UpdateResult(void);
 
+	void SetJump(void);
 	void Set(const D3DXVECTOR3 pos, const D3DXVECTOR3 size);
 	void RemakeAngle(float * pAngle);
 	void UpdateMove(void);

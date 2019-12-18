@@ -35,7 +35,7 @@ public:
 		STATE_LOCK,		//í«è]
 		STATE_MAX
 	}STATE;
-	CModelEffect() {};
+	CModelEffect(int nPriority = 4) : CModel3D::CModel3D(nPriority) {};
 	~CModelEffect() {};
 
 	static	CModelEffect	*Create(D3DXVECTOR3 *pos, D3DXVECTOR3 &move, TYPE type, STATE state = STATE_NORMAL);
