@@ -935,12 +935,6 @@ void CChick::AnnoyS(void)
 			m_bAttackS = true;
 		}
 	}
-
-	if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP ||
-		pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
-	{// Ç»Ç™Ç‚Ç‹èCê≥(12/17)
-		m_fDisTime = 0.0f;
-	}
 }
 
 //=============================================================================
