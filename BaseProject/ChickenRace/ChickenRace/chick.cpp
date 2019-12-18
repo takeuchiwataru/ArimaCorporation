@@ -905,6 +905,8 @@ void CChick::AttackS(void)
 	{
 		// ˆÚ“®—Ê‚ðÝ’è
 		m_move.y = -CHICK_FALL_SPEED;
+		m_move.x = pPlayer[m_nNumPlayer]->GetMove().x * 0.8f;
+		m_move.z = pPlayer[m_nNumPlayer]->GetMove().z * 0.8f;
 	}
 }
 
