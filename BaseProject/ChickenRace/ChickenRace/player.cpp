@@ -87,6 +87,7 @@
 #define PLAYER_ADDROT_INIT	(0.65f)										//回転初期
 #define PLAYER_DRIFT_ACCEL	(0.32f)										//ドリフト、アクセル
 #define PLAYER_DRIFT_DOWN	(0.25f)										//ドリフト、ダウン
+#define PLAYER_MAX_ROAD		(65.0f)										//インアウトの最大値
 
 #define PLAYER_Cap			(D3DXVECTOR3(0.0f, 8.2f, -2.0f))			//帽子の位置
 //=============================================================================
@@ -133,7 +134,7 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 		}
 		else { pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer); }
 	}
-	pPlayer->m_fRoad = nPlayerNum * (140.0f / 8.0f) - 70.0f;
+	pPlayer->m_fRoad = nPlayerNum * ((PLAYER_MAX_ROAD * 2.0f) / 8.0f) - PLAYER_MAX_ROAD;
 
 	pPlayer->m_nControllerNum = nControllerNum;
 	pPlayer->m_PlayerType = playerType;
@@ -307,6 +308,9 @@ HRESULT CPlayer::Init(void)
 	m_bGoal = false;					// ゴール
 	m_fAddRot = 0.0f;					// 加算角度
 	m_fCntAho = 0.0f;
+	m_Induction = INDUCTION_MAX;
+	m_fFeedRot = 0.0f;
+	m_FeedType = (CFeed::FEEDTYPE)(CServer::Rand() % CFeed::FEEDTYPE_MAX);
 
 	m_nSelectNum = 0;					// 選択
 	m_nSelectCounter = 0;				// 選択カウント
@@ -535,20 +539,15 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
-			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//{
+			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+			//	else { UpdateKiller(); }
+			//}
+			//else
 			{
-				if (m_State != PLAYERSTATE_SPEEDUP_S)
-				{
-					ControlKey();
-				}
-				else
-				{
-					UpdateKiller();
-				}
-			}
-			else
-			{
-				UpdateAI();
+				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
+				else { UpdateKiller(); }
 			}
 		}
 		else
@@ -561,6 +560,8 @@ void CPlayer::UpdateRace(void)
 		SetStateHandle(HANDLE_MAX);
 		SetStateSpeed(STATE_SPEED_DOWN);
 	}
+	m_fInduction = 9999.9f;
+	m_Induction = INDUCTION_MAX;
 
 	//タイムアップ状態なら以降は更新しない
 	//if (CTime::GetTime() == 0 && CManager::MODE_GAME == CManager::GetMode()) { return; }
@@ -608,6 +609,8 @@ void CPlayer::UpdateRace(void)
 	}
 
 	bool bLand = CCOL_MESH_MANAGER::Collision(this);
+	if (bLand) { m_nCntSky++; if (m_nCntSky > 60 * 5) { m_bDrop = true; } }
+	else { m_nCntSky = 0; }
 	UpdateFEffect();
 
 	if (!bLand && m_bJump)
@@ -715,25 +718,28 @@ void CPlayer::UpdateResult(void)
 //=============================================================================
 void CPlayer::UpdateAI(void)
 {
-	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, m_nNumRoad);
-	float fRotY;
+	AIMovement();
+	float fRot = AIInduction();
+	float fRotY, fDifference;
 
-	fRot = fRot - m_rot.y;
-	RemakeAngle(&fRot);
+	fDifference = fRot;
+	if (fDifference < 0.0f) { fDifference *= -1.0f; }
 
-	fRot = fRot * 0.05f;
+	AICurve(fRot, fDifference);
 	fRotY = fRot + m_rot.y;
-	RemakeAngle(&m_rot.y);
+	RemakeAngle(&fRotY);
 
 	if (m_nStartCounter == m_nStartFrame)
 	{
 		if (m_fCntAho == 0.0f)
 		{//アホになれる
-			if (sqrtf(powf(fRot - m_fAddRotOld, 2)) > PLAYER_ADDROT * 0.95f)
+			if (fDifference >= PLAYER_ADDROT * 0.65f)
 			{//条件でアホになる
-				if (CServer::Rand() % (m_nCharacterNum + 2) == 0) 
-				{ m_fCntAho = 60.0f; }
-				else { m_fCntAho = -300.0f; }
+				if (CServer::Rand() % (m_nCharacterNum * 2 + 3) == 0)
+				{
+					m_fCntAho = 30.0f;
+				}
+				else { m_fCntAho = -180.0f; }
 			}
 		}
 
@@ -744,8 +750,8 @@ void CPlayer::UpdateAI(void)
 		}
 		else
 		{
-			m_rot.y = fRotY;
-			if (fRot < PLAYER_ADDROT * 1.15f) { SetStateSpeed(STATE_SPEED_ACCEL); }
+			m_fAddRot += fRot;
+			if (fRot <= PLAYER_ADDROT * 0.65f) { SetStateSpeed(STATE_SPEED_ACCEL); }
 			else { SetStateSpeed(STATE_SPEED_DRIFT); }
 
 		}
@@ -753,7 +759,7 @@ void CPlayer::UpdateAI(void)
 	else
 		m_nStartCounter++;
 
-	m_fAddRotOld = fRot;
+	m_fAddRotOld = fDifference;
 	if (m_fCntAho < 0.0f) { m_fCntAho++; }
 	if (!m_bJump && m_bSJump)
 	{//ジャンプ
@@ -763,6 +769,55 @@ void CPlayer::UpdateAI(void)
 	}
 
 	UseItem();
+}
+//=============================================================================
+// AIの移動方向設定処理
+//=============================================================================
+float CPlayer::AIInduction(void)
+{
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, m_nNumRoad, m_FEffect);
+
+	if (m_Induction != INDUCTION_MAX)
+	{//誘導
+	 //誘導のキャンセル
+		float fWK = m_fFeedRot - fRot;
+		if (fWK < 0.0f) { fWK *= -1.0f; }
+
+		if (fWK > D3DX_PI * 0.5f)
+		{//90度以上違うなら
+			fRot += (m_fFeedRot - fRot) * 0.5f;
+		}
+		else { fRot = m_fFeedRot; }
+	}
+
+	fRot = fRot - (m_rot.y + m_fAddRot);
+	RemakeAngle(&fRot);
+	fRot *= 0.05f + (m_nCharacterNum * 0.05f);
+	return fRot;
+}
+//=============================================================================
+// AIのカーブ処理
+//=============================================================================
+void CPlayer::AICurve(float &fRot, float &fDifference)
+{
+	if (fDifference <= PLAYER_ADDROT * 0.65f)
+	{//アクセル範囲内なら
+		return;
+	}
+	//ドリフトに修正
+	if (fRot < 0.0f) { fRot = -PLAYER_ADDROT; }
+	else { fRot = PLAYER_ADDROT; }
+}
+//=============================================================================
+// AIの動き更新処理
+//=============================================================================
+void CPlayer::AIMovement(void)
+{
+	if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
+	{//スピードアップ中なら 終わりぎわジャンプ
+		float fTime = (m_State == PLAYERSTATE_SPEEDUP ? SPEEDUP_TIME : 60.0f * KILLER_TIME);
+		if (m_nCountSpeed > fTime - 1) { m_bSJump = true; }
+	}
 }
 //=============================================================================
 // アイテムの使用の更新処理
@@ -818,7 +873,7 @@ bool CPlayer::UseATK(int &nRank)
 //=============================================================================
 bool CPlayer::UseDEF(int &nRank)
 {
-	if (m_nNumItem > 2 || nRank <= 0) { return true; }
+	if ((m_nNumItem > 2 || nRank <= 0) && m_Induction == INDUCTION_ITEM) { return true; }
 	float fWk = m_rot.y - m_fRotOld;
 
 	switch (m_bulletType[0])
@@ -826,11 +881,11 @@ bool CPlayer::UseDEF(int &nRank)
 	case BULLET_CHICK_ANNOY:	//近かったら
 		if (nRank - 1 > 0)
 		{//次の順位のやつ
-			if (GetDistance(nRank - 1) < 200.0f) { return true; }
+			if (GetDistance(nRank - 1) < 80.0f) { return true; }
 		}
 		if (nRank + 1 < MAX_RACER - 1)
 		{//前の順位のやつ
-			if (GetDistance(nRank + 1) < 200.0f) { return true; }
+			if (GetDistance(nRank + 1) < 80.0f) { return true; }
 		}
 		break;
 	case BULLET_EGG_ANNOY:		//曲がっていたら
@@ -847,14 +902,14 @@ bool CPlayer::UseDEF(int &nRank)
 //=============================================================================
 bool CPlayer::UseSPD(int &nRank)
 {
-	if (m_nNumItem > 2 || nRank <= 0) { return true; }
-
+	if (m_nNumItem > 2 && m_Induction == INDUCTION_ITEM) { return true; }
+	if (m_PlayerInfo.fCountTime < 7.0f) { return true; }
+	if (m_pEnmPoint->GetpNextPointer(0) == NULL && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1) { return true; }
 	switch (m_bulletType[0])
 	{
-	case BULLET_CHICK_SPEED:	//近かったら
-		return true;
+	case BULLET_CHICK_SPEED:
 		break;
-	case BULLET_EGG_SPEED:		//曲がっていたら
+	case BULLET_EGG_SPEED:
 		break;
 	default:
 		return true;
@@ -895,7 +950,7 @@ void CPlayer::SetKiller(void)
 void CPlayer::UpdateKiller(void)
 {
 	m_fRoad = 0.0f;
-	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 1);
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 1, m_FEffect);
 
 	fRot = fRot - m_rot.y;
 	RemakeAngle(&fRot);
@@ -958,6 +1013,7 @@ void CPlayer::UpdateFEffect(void)
 		{// フェード終了
 			m_bControl = true;				// コントロールする
 			m_nDropCounter = 0;				// 初期化
+			m_nCntSky = 0;
 			m_bDrop = false;				// おちていない
 
 			return;
@@ -1875,10 +1931,9 @@ void CPlayer::RemakeAngle(float * pAngle)
 //=============================================================================
 void CPlayer::CollisionFeed(void)
 {
-	if (m_nNumItem >= MAX_EGG) { return; }
-
 	CSound *pSound = CManager::GetSound();
 	CScene *pScene;
+	float fValue = 9999.9f;
 
 	// プライオリティーチェック
 	pScene = CScene::GetTop(FEED_PRIOTITY);
@@ -1892,7 +1947,7 @@ void CPlayer::CollisionFeed(void)
 
 			if (pFeed->GetDeath() != true)
 			{
-				if (pFeed->CollisionFeed(&m_pos, &m_OldPos) == true)
+				if (pFeed->TargetFeed(this, fValue) == true)
 				{// 衝突した
 					EggAppear(pFeed);	// 卵出現
 					m_nNumEgg++;
@@ -2136,6 +2191,8 @@ void CPlayer::BulletEgg(void)
 	CPlayer **pPlayer = NULL;
 
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
+	if (m_PlayerAnim == PLAYERANIM_DAMAGE) { return; }
+
 
 	int nTarget = 99;
 	int nDestRank, nChar;
@@ -3057,6 +3114,7 @@ void CPlayer::SetStick(CInputJoyPad_0 *&pPad)
 //=============================================================================
 void CPlayer::ChangeRoad(void)
 {
+	m_FeedType = (CFeed::FEEDTYPE)(CServer::Rand() % CFeed::FEEDTYPE_MAX);
 	int nRank = CRoad_Manager::GetManager()->GetRank(m_nPlayerNum);
 	if (nRank < 3) { m_nNumRoad = 1; }
 	else
@@ -3073,12 +3131,12 @@ void CPlayer::ChangeRoad(void)
 
 	if (bPlus)
 	{
-		if (m_fRoad + fPlus <= 70.0f) { m_fRoad += fPlus; }
+		if (m_fRoad + fPlus <= PLAYER_MAX_ROAD) { m_fRoad += fPlus; }
 		else { m_fRoad -= fPlus; }
 	}
 	else
 	{
-		if (m_fRoad - fPlus >= -70.0f) { m_fRoad -= fPlus; }
+		if (m_fRoad - fPlus >= -PLAYER_MAX_ROAD) { m_fRoad -= fPlus; }
 		else { m_fRoad += fPlus; }
 	}
 }

@@ -17,7 +17,7 @@
 // マクロ定義
 //*****************************************************************************
 #define IGNOR_DIS	(200.0f)
-#define BENT_DIS	(750.0f)
+#define BENT_DIS	(650.0f)
 #define BENTX_DIS	(500.0f)
 //*****************************************************************************
 // プロトタイプ宣言
@@ -162,7 +162,7 @@ bool	CRoad_Pointer::BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal)
 //==================================================================================================//
 //    * 道のポインタ保存関数 *
 //==================================================================================================//
-float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber)
+float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber, CCOL_MESH::EFFECT &effect)
 {
 	float fDistance, fRot;
 	D3DXVECTOR3 Point;
@@ -184,7 +184,10 @@ float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &
 	}
 	fRot = atan2f(Point.x - pos.x, Point.z - pos.z);
 
-	fRot = BentRot(pos, pPoint, fRot, fDistance, fRoad);
+	if (effect != CCOL_MESH::EFFECT_GRASS)
+	{//草はすぐ抜ける
+		fRot = BentRot(pos, pPoint, fRot, fDistance, fRoad);
+	}
 	return fRot;
 }
 //==================================================================================================//

@@ -280,7 +280,7 @@ void	CCharcter::CollisionAll(CPlayer *pPlayer)
 //=============================================================================
 // “–‚½‚è”»’è
 //=============================================================================
-void	CCharcter::Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos)
+bool	CCharcter::Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos)
 {
 	D3DXVECTOR3 &pos = pPlayer->GetPos();
 	float fLenght = sqrtf(powf(pos.x - Mypos.x, 2.0f) + powf(pos.z - Mypos.z, 2.0f));
@@ -295,21 +295,47 @@ void	CCharcter::Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos)
 
 		//’e‚­
 		pPlayer->Strike(NULL, Mypos, INIT_VECTOR);
+
+		return true;
 	}
+	return false;
 }
 //=============================================================================
 // –Ø‚Ì“–‚½‚è”»’è
 //=============================================================================
 void	CCharcter::CollisionWood(CPlayer *&pPlayer)
 {
-	D3DXVECTOR3 pos;
-	float fRot;
+	D3DXVECTOR3 pos = pPlayer->Getpos();
 	float fDis = (WOOD_DIS - 5.0f) * (m_fScale / 0.375f);
-	for (int nCount = 0; nCount < 2; nCount++)
-	{
-		fRot = m_rot.y - D3DX_PI * 0.5f + D3DX_PI * (float)nCount;
-		pos = m_pos + D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fDis;
-		Collision(pPlayer, pos);
+	float fValue = pPlayer->GetfInduction();
+	float fRot;
+
+	float fLenght = sqrtf(powf(pos.x - m_pos.x, 2.0f) + powf(pos.z - m_pos.z, 2.0f));
+	if (fLenght < 500.0f)
+	{//ˆê’èˆÈã‹ß‚¢‚È‚ç
+		D3DXVECTOR3 WKpos;
+		for (int nCount = 0; nCount < 2; nCount++)
+		{
+			fRot = m_rot.y - D3DX_PI * 0.5f + D3DX_PI * (float)nCount;
+			WKpos = m_pos + D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * fDis;
+			if (Collision(pPlayer, WKpos)) { return; }
+		}
+		if (pPlayer->GetInduction() < CPlayer::INDUCTION_WIND) { return; }
+		float fRot = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
+		float &fRotY = pPlayer->Getrot().y;
+		float fWK;
+		fWK = fRot - fRotY;
+		if (fWK < 0.0f) { fWK *= -1.0f; }
+
+		if (fWK < D3DX_PI * 0.07f)
+		{//Šp“xƒ`ƒFƒbƒN
+			if (fValue > fWK)
+			{//‰a—U“±
+				fValue = fWK;
+				pPlayer->GetfFeedRot() = fRot;
+				pPlayer->GetInduction() = CPlayer::INDUCTION_WIND;
+			}
+		}
 	}
 }
 //=============================================================================

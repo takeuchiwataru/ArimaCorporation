@@ -50,7 +50,7 @@ public:
 	void				Uninit(void);
 	void				Update(void);
 	void				Draw(void);
-	void				Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos);
+	bool				Collision(CPlayer *&pPlayer, D3DXVECTOR3 &Mypos);
 	void				CollisionWood(CPlayer *&pPlayer);
 
 	void UpdateMotion(void);

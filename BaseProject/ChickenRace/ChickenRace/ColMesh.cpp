@@ -96,7 +96,7 @@ void	CCOL_MESH::Draw(void)
 	 //	//if (m_Effect == EFFECT_NORMAL && m_bField) {}
 	 //	m_pMesh->Draw();
 	 //}
-		if (m_Effect != EFFECT_NORMAL && m_Effect != EFFECT_DROP)
+		if (m_Effect == EFFECT_SWAMP || m_Effect == EFFECT_GRASS)
 		{
 			m_pMesh->Draw();
 		}

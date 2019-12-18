@@ -23,6 +23,7 @@
 //*****************************************************************************
 class C3DPolygon;
 class C3DAnim;
+class CPlayer;
 //=====================
 //  CModel3DÇÃîhê∂ÉNÉâÉX
 //=====================
@@ -47,6 +48,7 @@ public:
 	void Draw(void);
 	static CFeed *Create(D3DXVECTOR3 pos, int nZone, int nType);
 	bool CollisionFeed(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
+	bool TargetFeed(CPlayer *pPlayer, float &fValue);
 	FEEDTYPE GetFeedType(void) { return m_feedType; }
 
 private:

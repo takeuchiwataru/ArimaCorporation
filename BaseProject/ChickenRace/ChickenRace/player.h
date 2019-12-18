@@ -17,6 +17,7 @@
 #include "ColMesh.h"
 #include "game.h"
 #include "chick.h"
+#include "feed.h"
 
 //=============================================================================
 // マクロ定義
@@ -56,7 +57,6 @@ class CLoadTextPlayer;
 class CLoadEffect;
 class CCombo;
 class CSound;
-class CFeed;
 class CEgg;
 class CChick;
 class CBillBoord;
@@ -169,6 +169,16 @@ public:
 		BULLET_MAX,
 	}BULLET;
 
+	typedef enum
+	{//誘導
+		INDUCTION_AVOID,		//避ける
+		INDUCTION_BRAKE,		//ブレーキ 
+		INDUCTION_TACKLE,		//タックル
+		INDUCTION_ITEM,			//アイテム
+		INDUCTION_WIND,			//風
+		INDUCTION_MAX,
+	}INDUCTION;
+
 	//テキスト情報
 	typedef struct
 	{
@@ -262,6 +272,10 @@ public:
 	bool			&GetbSJump(void)		{ return m_bSJump; }
 	C3DPolygon		*&GetpShadow(void)		{ return m_pShadow; };
 	CCOL_MESH		*&GetpFMesh(void)		{ return m_pFMesh; };
+	INDUCTION		&GetInduction(void) { return m_Induction; };
+	CFeed::FEEDTYPE	&GetFeedType(void) { return m_FeedType; };
+	float			&GetfFeedRot(void) { return m_fFeedRot; };
+	float			&GetfInduction(void) { return m_fInduction; };
 
 	int GetItemNum(void) { return m_nNumItem; }
 	int GetItemType(int nNum) { return m_bulletType[nNum]; }
@@ -297,7 +311,9 @@ private:
 	void UpdateMove(void);
 	void ControlKey(void);
 
-	void UpdateAI(void);					void UseItem(void);
+	void UpdateAI(void);					float AIInduction(void);				void AICurve(float &fRot, float &fDifference);
+	void AIMovement(void);
+	void UseItem(void);
 	bool UseATK(int &nRank);				bool UseDEF(int &nRank);				bool UseSPD(int &nRank);
 	void UpdateKiller(void);				void SetKiller(void);
 	void UpdateFEffect(void);				void EffectUp(void);
@@ -423,9 +439,14 @@ private:
 	bool						  m_bOrbit;				//オービットの削除制御用
 	D3DXVECTOR3					  m_WindMove;			//風の移動量
 	float						  m_fCntWind;			//風の管理用
-	float						  m_fCola[MAX_PLAYCOL];			//キャラ分α値保存
+	float						  m_fCola[MAX_PLAYCOL];	//キャラ分α値保存
 	CCOL_MESH					  *m_pFMesh;			//地面のポインタ
+	int							  m_nCntSky;			//空中にいるF数
 	//AI用----------------------------------
+	CFeed::FEEDTYPE				  m_FeedType;			//いらない餌
+	INDUCTION					  m_Induction;			// 誘導の有無
+	float						  m_fInduction;			// 誘導比較用
+	float						  m_fFeedRot;			// 餌までの角度
 	float						  m_fAddRotOld;			// 前の加算角度
 	float						  m_fCntAho;			// アホカウント
 	float						  m_fRoad;				// IN_OUTの％

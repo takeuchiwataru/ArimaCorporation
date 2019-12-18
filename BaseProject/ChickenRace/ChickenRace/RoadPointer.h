@@ -9,6 +9,7 @@
 
 #include "main.h"
 #include "scene.h"
+#include "ColMesh.h"
 class CPlayer;
 //*****************************************************************************
 // É}ÉNÉçÇÃíËã`
@@ -72,7 +73,7 @@ public:
 	static void				RankPoint(CPlayer *pPlayer, bool &bGoal);
 	static bool				BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal);
 
-	static	float			NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber);
+	static	float			NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber, CCOL_MESH::EFFECT &effect);
 	static	float			BentRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, float &fRot, float &fDistance, float &fRoad);
 	static	float			BentRotX(D3DXVECTOR3 &pos, CRoad_Pointer *&pPoint, float &fRot, float &fDistance);
 

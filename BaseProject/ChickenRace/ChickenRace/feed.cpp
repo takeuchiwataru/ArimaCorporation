@@ -378,3 +378,40 @@ bool CFeed::CollisionFeed(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 
 	return bHit;
 }
+//===============================================================================
+// 当たり判定
+//===============================================================================
+bool CFeed::TargetFeed(CPlayer *pPlayer, float &fValue)
+{
+	if (m_bGet == false) { return false; }
+
+	D3DXVECTOR3 &m_pos = GetposR();
+	D3DXVECTOR3 &pos = pPlayer->Getpos();
+
+	float fDis = sqrtf(powf(m_pos.x - pos.x, 2) + powf(m_pos.z - pos.z, 2));
+	if (fDis < 500.0f)
+	{//距離チェック
+		if (pPlayer->GetItemNum() < MAX_EGG)
+		{//アイテムの当たり判定
+			if (CollisionFeed(&pos, &pPlayer->Getposold())) { return true; }
+		}
+
+		if (pPlayer->GetInduction() < CPlayer::INDUCTION_ITEM || fDis <= 100.0f) { return false; }
+		float fRot = atan2f(m_pos.x - pos.x, m_pos.z - pos.z);
+		float &fRotY = pPlayer->Getrot().y;
+		float fWK;
+		fWK = fRot - fRotY;
+		if (fWK < 0.0f) { fWK *= -1.0f; }
+
+		if (fWK < D3DX_PI * 0.05f)
+		{//角度チェック
+			if (fValue > fWK && pPlayer->GetFeedType() != m_feedType)
+			{//餌誘導
+				fValue = fWK;
+				pPlayer->GetfFeedRot() = fRot;
+				pPlayer->GetInduction() = CPlayer::INDUCTION_ITEM;
+			}
+		}
+	}
+	return false;
+}
