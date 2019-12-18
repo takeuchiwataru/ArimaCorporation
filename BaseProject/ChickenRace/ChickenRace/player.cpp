@@ -314,6 +314,7 @@ HRESULT CPlayer::Init(void)
 
 	m_nSelectNum = 0;					// 選択
 	m_nSelectCounter = 0;				// 選択カウント
+	m_nCntSky = 0;
 
 	// プレイヤー番号（追従）
 	if (CManager::GetMode() == CManager::MODE_GAME && CGame::GetGameMode() == CGame::GAMEMODE_PLAY ||
@@ -539,6 +540,7 @@ void CPlayer::UpdateRace(void)
 	{//コントロールキー
 		if (m_bGoal == false)
 		{
+			m_nCntSky++;
 			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
@@ -609,8 +611,9 @@ void CPlayer::UpdateRace(void)
 	}
 
 	bool bLand = CCOL_MESH_MANAGER::Collision(this);
-	if (bLand) { m_nCntSky++; if (m_nCntSky > 60 * 5) { m_bDrop = true; } }
-	else { m_nCntSky = 0; }
+	if (!m_bJump) { m_nCntSky = 0; }
+	else if (m_nCntSky > 300) { m_bDrop = true; }
+
 	UpdateFEffect();
 
 	if (!bLand && m_bJump)
