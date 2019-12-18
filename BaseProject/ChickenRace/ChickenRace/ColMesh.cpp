@@ -718,7 +718,7 @@ bool CCOL_MESH::MeshField(CPlayer *&pPlayer)
 			case EFFECT_RIVER:
 			case EFFECT_DROP:
 				if (pFMesh == this) { fUpY = 11.5f; fDownY = 30.0f; }
-				else { fUpY = 3.0f; fDownY = 3.0f; }
+				else { fUpY = 5.0f; fDownY = 5.0f; }
 
 				WKpos.y = FieldCollision(VtxPos[0], VtxPos[1], VtxPos[2], VtxPos[3], pos - WKm_pos, pos, WKnor);
 				if (m_Effect != EFFECT_DROP && WKpos.y + WKm_pos.y <= pos.y + 10.0f)
