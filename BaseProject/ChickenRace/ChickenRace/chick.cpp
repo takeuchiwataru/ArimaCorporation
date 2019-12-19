@@ -196,6 +196,7 @@ HRESULT CChick::Init(void)
 	m_nCntAttackTime = 0;
 	m_fUpDown = 10.0f;
 	m_fDisTime = DISTIME;	// (ながやま修正12/17)
+	m_pClyinder = NULL;
 	if (m_type == TYPE_SPEED)
 	{
 		m_fDisTime = (60.0f * 0.5f) + 40;
@@ -228,7 +229,6 @@ HRESULT CChick::Init(void)
 		if (m_type == TYPE_ANNOY || m_type == TYPE_ANNOY_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_ANNOY));
 		if (m_type == TYPE_SPEED || m_type == TYPE_SPEED_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_SPEED));
 	}
-
 	return S_OK;
 }
 
@@ -237,6 +237,7 @@ HRESULT CChick::Init(void)
 //=============================================================================
 void CChick::Uninit(void)
 {
+	DeleteEfc();
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICK);
 	if (m_apModel != NULL)
 	{
@@ -688,6 +689,27 @@ float CChick::SetHeight(void)
 	}
 
 	return m_fHeight;
+}
+//=============================================================================
+// エフェクトの生成
+//=============================================================================
+void CChick::NewEfc(void)
+{
+	DeleteEfc();
+	if (m_type >= TYPE_ATTACK_S && m_state != STATE_BULLET)
+	{//レアなら
+		m_pClyinder = CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_RARE);
+	}
+}
+//=============================================================================
+// エフェクトの削除
+//=============================================================================
+void CChick::DeleteEfc(void)
+{
+	if (m_pClyinder != NULL)
+	{
+		m_pClyinder->Uninit(); m_pClyinder = NULL;
+	}
 }
 
 //=============================================================================

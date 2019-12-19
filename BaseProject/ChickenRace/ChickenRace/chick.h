@@ -39,6 +39,7 @@
 class CObjBillboad;
 class CPlayer;
 class CModel;
+class CCylinder;
 
 //=====================
 //  CModel3Dの派生クラス
@@ -118,6 +119,9 @@ public:
 	static CChick *Create(D3DXVECTOR3 pos, D3DXVECTOR3 rot, D3DXVECTOR3 scale, TYPE type, BULLETTYPE bulletType, STATE state, int nNumPlayer);
 	bool CollisionChick(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld);
 	float SetHeight(void);
+	void NewEfc(void);
+	void DeleteEfc(void);
+
 	STATE GetState(void) { return m_state; }
 	void SetState(STATE state) { m_state = state; }
 	TYPE GetType(void) { return m_type; }
@@ -202,6 +206,7 @@ private:
 	bool				m_bJumpOk;
 	bool				m_bSpeedS;
 	bool				m_bAttackCol;
+	CCylinder			*m_pClyinder;
 
 	// モーション関数	新規								 
 	CModel				**m_apModel;	// パーツモデルのポインタ

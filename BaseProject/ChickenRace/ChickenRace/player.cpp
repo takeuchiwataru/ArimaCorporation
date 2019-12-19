@@ -544,12 +544,12 @@ void CPlayer::UpdateRace(void)
 		if (m_bGoal == false)
 		{
 			m_nCntSky++;
-			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			//{
-			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-			//	else { UpdateKiller(); }
-			//}
-			//else
+			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			{
+				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+				else { UpdateKiller(); }
+			}
+			else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
@@ -2266,14 +2266,13 @@ void CPlayer::BulletEgg(void)
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
 	if (m_PlayerAnim == PLAYERANIM_DAMAGE) { return; }
 
-	int nDestRank;
-	bool bGoal;
 	CSound *pSound = CManager::GetSound();
 
 	if (m_nNumEgg + m_nNumChick > 0)
 	{// —‘‚©‚Ð‚æ‚±‚ðŽ‚Á‚Ä‚¢‚é‚Æ‚«
 		if (m_pChick[0] != NULL && m_pChick[0]->GetState() == CChick::STATE_CHASE && m_State != PLAYERSTATE_SPEEDUP_S && m_State != PLAYERSTATE_SPEEDDOWN_S && m_State != PLAYERSTATE_SPEEDDOWN)
 		{
+			m_pChick[0]->DeleteEfc();
 			m_pChick[0]->SetState(CChick::STATE_BULLET);	// ó‘Ô‚ð’e‚É‚·‚é
 			m_pChick[0]->SetRank(CGame::GetRanking(m_nPlayerNum));
 			m_nPlayerRank = CGame::GetRanking(m_nPlayerNum);
@@ -2706,10 +2705,11 @@ void CPlayer::ChickAppear(void)
 				//m_pChick[m_nNumChick] = CChick::Create(m_pos,
 				//	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				//	CHICK_SCALE,
-				//	CChick::TYPE_ANNOY,
+				//	CChick::TYPE_ANNOY_S,
 				//	CChick::BULLETTYPE_PLAYER,
 				//	CChick::STATE_CHASE,
 				//	m_nPlayerNum);
+				m_pChick[m_nNumChick]->NewEfc();
 			}
 
 			m_pEgg[0]->Uninit();

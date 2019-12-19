@@ -368,9 +368,9 @@ void	CCylinder::Set(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot, TYPE type)
 		m_col = D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f);
 		m_fPlusA = 0.0f;
 		m_fCntState = 0.0f;
-		m_fLengthY = 30.0f;
+		m_fLengthY = 15.0f;
 		GetnNumDraw() = 1;
-		m_fLengthXZ[0] = 20.0f; m_fLengthXZ[1] = 20.0f;
+		m_fLengthXZ[0] = 10.0f; m_fLengthXZ[1] = 10.0f;
 		break;
 	case TYPE_HATK:
 		state = STATE_FADE;
@@ -503,7 +503,10 @@ void	CCylinder::Update(void)
 
 	switch (m_State)
 	{
-	case STATE_NORMAL:		break;
+	case STATE_NORMAL:	
+		SetCylinder(m_fLengthY, m_fLengthXZ[0], m_fLengthXZ[1], m_col
+			, D3DXVECTOR2((1.0f / (ECT_CROSS + 2.0f)) * m_nPtn, 1.0f), D3DXVECTOR2((1.0f / (ECT_CROSS + 2.0f)) * (m_nPtn + 1), 0.0f));
+		break;
 	case STATE_SPREAD:	//çLÇ™ÇÈ
 		m_fLengthXZ[0] += powf(m_fCntState, 2) * 0.5f;
 		m_fLengthXZ[1] += powf(m_fCntState, 2);
