@@ -274,7 +274,7 @@ HRESULT CPlayer::Init(void)
 		m_pEnmPoint = CRoad_Manager::GetManager()->GetTop(1);
 	}
 
-	m_nStartFrame = (CServer::Rand() % 50);
+	m_nStartFrame = (CServer::Rand() % 20);
 	m_nStartCounter = 0;
 
 	m_pDispEffect = NULL;
@@ -315,6 +315,8 @@ HRESULT CPlayer::Init(void)
 	m_nSelectNum = 0;					// 選択
 	m_nSelectCounter = 0;				// 選択カウント
 	m_nCntSky = 0;
+	m_fCntTackle = 0.0f;
+	m_fUseTime = 0.0f;
 
 	// プレイヤー番号（追従）
 	if (CManager::GetMode() == CManager::MODE_GAME && CGame::GetGameMode() == CGame::GAMEMODE_PLAY ||
@@ -396,6 +398,7 @@ HRESULT CPlayer::Init(void)
 //=============================================================================
 void CPlayer::Uninit(void)
 {
+	EndBoost();
 	if (m_pPlayerNum != NULL)
 	{
 		m_pPlayerNum->Uninit();
@@ -541,12 +544,12 @@ void CPlayer::UpdateRace(void)
 		if (m_bGoal == false)
 		{
 			m_nCntSky++;
-			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			{
-				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-				else { UpdateKiller(); }
-			}
-			else
+			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//{
+			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+			//	else { UpdateKiller(); }
+			//}
+			//else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
@@ -723,9 +726,9 @@ void CPlayer::UpdateResult(void)
 //=============================================================================
 void CPlayer::UpdateAI(void)
 {
-	AIMovement();
 	float fRot = AIInduction();
 	float fRotY, fDifference;
+	AIMovement(fRot);
 
 	fDifference = fRot;
 	if (fDifference < 0.0f) { fDifference *= -1.0f; }
@@ -740,25 +743,25 @@ void CPlayer::UpdateAI(void)
 		{//アホになれる
 			if (fDifference >= PLAYER_ADDROT * 0.65f)
 			{//条件でアホになる
-				if (CServer::Rand() % (m_nCharacterNum * 2 + 3) == 0)
+				if (CServer::Rand() % (m_nCharacterNum * 3 + 3) == 0)
 				{
-					m_fCntAho = 30.0f;
+					m_fCntAho = 60.0f;
 				}
-				else { m_fCntAho = -180.0f; }
+				else { m_fCntAho = -120.0f * (1.0f + m_nCharacterNum * 0.25f); }
 			}
 		}
 
 		if (m_fCntAho > 0.0f)
 		{
 			m_fCntAho--;
-			if (m_fCntAho <= 0.0f) { m_fCntAho = -300.0f; }
+			if (m_fCntAho <= 0.0f) { m_fCntAho = -300.0f * (1.0f + m_nCharacterNum * 0.25f); }
 		}
 		else
 		{
 			m_fAddRot += fRot;
-			if (fRot <= PLAYER_ADDROT * 0.65f) { SetStateSpeed(STATE_SPEED_ACCEL); }
-			else { SetStateSpeed(STATE_SPEED_DRIFT); }
-
+			SetStateSpeed(STATE_SPEED_ACCEL);
+			if (fRot > PLAYER_ADDROT * (0.95f + (m_nCharacterNum * 0.05f))) 
+			{ SetStateSpeed(STATE_SPEED_DRIFT); }
 		}
 	}
 	else
@@ -795,7 +798,8 @@ float CPlayer::AIInduction(void)
 
 	fRot = fRot - (m_rot.y + m_fAddRot);
 	RemakeAngle(&fRot);
-	fRot *= 0.05f + (m_nCharacterNum * 0.05f);
+	fRot *= 0.05f + (m_nCharacterNum * 0.0075f);
+	RemakeAngle(&fRot);
 	return fRot;
 }
 //=============================================================================
@@ -803,6 +807,7 @@ float CPlayer::AIInduction(void)
 //=============================================================================
 void CPlayer::AICurve(float &fRot, float &fDifference)
 {
+	float fCurve = fRot;
 	if (fDifference <= PLAYER_ADDROT * 0.65f)
 	{//アクセル範囲内なら
 		return;
@@ -810,16 +815,66 @@ void CPlayer::AICurve(float &fRot, float &fDifference)
 	//ドリフトに修正
 	if (fRot < 0.0f) { fRot = -PLAYER_ADDROT; }
 	else { fRot = PLAYER_ADDROT; }
+	fRot += (fCurve - fRot) * (m_nCharacterNum * 0.1f);
+	RemakeAngle(&fRot);
 }
 //=============================================================================
 // AIの動き更新処理
 //=============================================================================
-void CPlayer::AIMovement(void)
+void CPlayer::AIMovement(float &fRotY)
 {
-	if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
-	{//スピードアップ中なら 終わりぎわジャンプ
-		float fTime = (m_State == PLAYERSTATE_SPEEDUP ? SPEEDUP_TIME : 60.0f * KILLER_TIME);
-		if (m_nCountSpeed > fTime - 1) { m_bSJump = true; }
+	if (m_nCharacterNum >= 4)
+	{//ジャンプ
+		if (m_State == PLAYERSTATE_SPEEDUP || m_State == PLAYERSTATE_SPEEDUP_S)
+		{//スピードアップ中なら 終わりぎわジャンプ
+			float fTime = (m_State == PLAYERSTATE_SPEEDUP ? SPEEDUP_TIME : 60.0f * KILLER_TIME);
+			if (m_nCountSpeed > fTime - 1) { m_bSJump = true; }
+		}
+	}
+	if (m_pNear != NULL &&
+		m_PlayerInfo.fCountTime > PLAYER_COUNT * 0.7f &&
+		m_pNear->m_PlayerInfo.fCountTime > PLAYER_COUNT * 0.7f)
+	{//一定以上速いなら
+		D3DXVECTOR3 &pos = m_pNear->Getpos();
+		float fRot = atan2f(pos.x - m_pos.x, pos.z - m_pos.z);
+		float fDis = sqrtf(powf(pos.x - m_pos.x, 2) + powf(pos.x - m_pos.x, 2));
+		float fDifference = fRot - (m_rot.y + m_fAddRot);	RemakeAngle(&fRot);
+		float fPlayRot = fDifference;
+
+		if (fDifference < 0.0f) { fDifference *= -1.0f; }
+
+		if (fDis < 60.0f && fDifference < D3DX_PI * 0.2f)
+		{//真ん前なら 躱す
+			if (fRotY >= 0.0f)
+			{
+				if (fRotY < PLAYER_ADDROT) { fRotY = PLAYER_ADDROT; }
+			}
+			else
+			{
+				if (fRotY > -PLAYER_ADDROT) { fRotY = -PLAYER_ADDROT; }
+			}
+		}
+		if (m_fCntTackle <= 0.0f)
+		{
+			if (m_nCharacterNum % 3 == 1)
+			{
+				if (fDis < 40.0f && fDifference > D3DX_PI * 0.95f)
+				{//真後ろなら ブレーキ
+					m_move.x *= 0.85f;
+					m_move.z *= 0.85f;
+				}
+			}
+			if (m_nCharacterNum % 2 == 1)
+			{
+				if (fDis < 45.0f && fDifference > D3DX_PI * 0.6f && fDifference < D3DX_PI * 0.75f)
+				{//横なら タックル
+					fRotY += (fPlayRot - fRotY) * 0.3f;
+					if (fRotY > PLAYER_ADDROT * 0.65f) { fRotY = PLAYER_ADDROT * 0.65f; }
+					if (fRotY < -PLAYER_ADDROT * 0.65f) { fRotY = -PLAYER_ADDROT * 0.65f; }
+				}
+			}
+		}
+		else { m_fCntTackle--; }
 	}
 }
 //=============================================================================
@@ -828,6 +883,7 @@ void CPlayer::AIMovement(void)
 void CPlayer::UseItem(void)
 {
 	bool bUse = false;
+	float fTime = 0.0f;
 
 	//アイテムがないなら
 	if (m_nNumItem <= 0) { return; }
@@ -836,22 +892,23 @@ void CPlayer::UseItem(void)
 	BULLET Type = (BULLET)(m_bulletType[0] % BULLET_CHICK_ATTACK);
 	switch (Type)
 	{//アイテムごとに判断
-	case BULLET_EGG_ATTACK:	bUse = UseATK(nRank);	break;
-	case BULLET_EGG_ANNOY:	bUse = UseDEF(nRank);	break;
-	case BULLET_EGG_SPEED:	bUse = UseSPD(nRank);	break;
+	case BULLET_EGG_ATTACK:	if (UseATK(nRank)) { fTime = 90.0f;	bUse = true; }	break;
+	case BULLET_EGG_ANNOY:	if (UseDEF(nRank)) { fTime = 120.0f;	bUse = true; }	break;
+	case BULLET_EGG_SPEED:	if (UseSPD(nRank)) { fTime = 90.0f;	bUse = true; }	break;
 	}
 
-	if (bUse)
+	if (m_fUseTime <= 0.0f)
 	{//アイテムの使用
-		BulletEgg();
+		if (bUse) { m_fUseTime = fTime; BulletEgg(); }
 	}
+	else { m_fUseTime--; }
 }
 //=============================================================================
 // 妨害アイテムの攻撃処理
 //=============================================================================
 bool CPlayer::UseATK(int &nRank)
 {
-	if (nRank > 6 && m_nNumItem > 2) { return true; }
+	if ((m_Induction == INDUCTION_ITEM || nRank > 6) && m_nNumItem > 2) { return true; }
 	float fWk;
 
 	switch (m_bulletType[0])
@@ -868,6 +925,10 @@ bool CPlayer::UseATK(int &nRank)
 	default:
 		return true;
 		break;
+	}
+	if (m_nNumItem > 2 && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1) 
+	{
+		if (CServer::Rand() % 240 == 0) { return true; }
 	}
 	return false;
 }
@@ -1036,6 +1097,7 @@ void CPlayer::WarpNext(void)
 	CRoad_Pointer *pNext = m_pPoint;
 	if (pNext == NULL) { return; }
 
+	SetState(PLAYERSTATE_NORMAL);
 	m_rot.y = pNext->GetfRotY();
 	m_pos = pNext->Getpos() + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * 5.0f;
 	m_OldPos = m_pos;
@@ -1078,7 +1140,6 @@ void CPlayer::UseBoost(void)
 //=============================================================================
 void CPlayer::EndBoost(void)
 {
-	if (m_fCntWind > 0.0f) { return; }
 	m_bOrbit = true;
 	CEfcOrbit::Delete(false);
 	m_bOrbit = false;
@@ -1403,7 +1464,7 @@ void CPlayer::UpdateMove(void)
 	if (m_fCntWind > 0.0f)	
 	{//風の更新
 		m_fCntWind--;
-		EndBoost();
+		if (m_fCntWind <= 0.0f) { EndBoost(); }
 	}
 	else					{ m_WindMove *= 0.95f; }
 	if (m_fPower > 0.0f)
@@ -2973,6 +3034,7 @@ void CPlayer::CollisionCharacter(void)
 
 	if (pPlayer != NULL)
 	{
+		float fDis = 999999.9f;
 		for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 		{// プレイヤーカウント
 			if (pPlayer[nCntMember] != NULL)
@@ -2983,6 +3045,11 @@ void CPlayer::CollisionCharacter(void)
 					D3DXVECTOR3 pos = pPlayer[nCntMember]->GetPos();
 					float fLenght = sqrtf(powf(pos.x - m_pos.x, 2.0f) + powf(pos.z - m_pos.z, 2.0f));
 
+					if (fDis > fLenght)
+					{//より近いなら
+						fDis = fLenght;
+						m_pNear = pPlayer[nCntMember];
+					}
 					if (fLenght < PLAYER_LENGTH * 2.0f)
 					{// 範囲内
 					 // 角度計算
@@ -3055,6 +3122,7 @@ float CPlayer::ColMove(float &fTargetRot, float &fMoveRot, float fPow0, float fP
 //=============================================================================
 void CPlayer::Tackle(float fValue)
 {
+	m_fCntTackle = 60.0f;
 	if (fValue >= 0.0f)
 	{
 		if (m_fPower < fValue) { m_fPower = fValue * (PLAYER_POWMAX / 100.0f); }

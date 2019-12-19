@@ -73,7 +73,6 @@ CEfcOrbit	*CEfcOrbit::Set(D3DXMATRIX &mtxWorld, D3DXVECTOR3 length0, D3DXVECTOR3
 	//メッシュ設定
 	//CMesh::Set(CMesh::TYPE_ORBIT, D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1, 100, true);
 	SetObjType(OBJTYPE_ORBIT);
-	SetVtx(true);
 	ReSet();
 
 	return this;
@@ -85,6 +84,7 @@ HRESULT	CEfcOrbit::Init(void)
 {
 	m_Type = TYPE_FADE;
 	m_pTex = NULL;
+	m_bUpdate = false;
 	return S_OK;
 }
 //=============================================================================
@@ -92,6 +92,13 @@ HRESULT	CEfcOrbit::Init(void)
 //=============================================================================
 void	CEfcOrbit::Uninit(void)
 {
+	// 頂点バッファの開放
+	if (m_pVtxBuff != NULL)
+	{
+		m_pVtxBuff->Release();
+		m_pVtxBuff = NULL;
+	}
+
 	CScene::Release();
 }
 //=============================================================================
@@ -103,8 +110,9 @@ void	CEfcOrbit::Update(void)
 	else
 	{
 		SwapVtx();		//頂点の入れ替え
+		m_bUpdate = true;
 
-						//最新の頂点を代入
+		//最新の頂点を代入
 		if (m_pmtxWorld != NULL) { SetVtx(false); }
 		if (m_bDelete == NULL)
 		{
@@ -126,7 +134,8 @@ void	CEfcOrbit::Update(void)
 //=============================================================================
 void	CEfcOrbit::Draw(void)
 {
-	//デバイスを取得
+	if (!m_bUpdate) { return; }
+
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 	D3DXMATRIX mtxRot, mtxTrans, mtxView;	//計算用マトリックス
 	D3DXMATRIX	mtxWorld;					//ワールドマトリックス

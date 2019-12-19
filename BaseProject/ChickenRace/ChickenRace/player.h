@@ -313,7 +313,7 @@ private:
 	void ControlKey(void);
 
 	void UpdateAI(void);					float AIInduction(void);				void AICurve(float &fRot, float &fDifference);
-	void AIMovement(void);
+	void AIMovement(float &fRotY);
 	void UseItem(void);
 	bool UseATK(int &nRank);				bool UseDEF(int &nRank);				bool UseSPD(int &nRank);
 	void UpdateKiller(void);				void SetKiller(void);
@@ -444,6 +444,7 @@ private:
 	CCOL_MESH					  *m_pFMesh;			//地面のポインタ
 	int							  m_nCntSky;			//空中にいるF数
 	//AI用----------------------------------
+	CPlayer						  *m_pNear;				//近いプレイヤー
 	CFeed::FEEDTYPE				  m_FeedType;			//いらない餌
 	INDUCTION					  m_Induction;			// 誘導の有無
 	float						  m_fInduction;			// 誘導比較用
@@ -451,6 +452,8 @@ private:
 	float						  m_fAddRotOld;			// 前の加算角度
 	float						  m_fCntAho;			// アホカウント
 	float						  m_fRoad;				// IN_OUTの％
+	float						  m_fUseTime;			// 使用間隔制御用
+	float						  m_fCntTackle;			//タックル制御用
 	bool						  m_bSJump;				// ジャンプ情報保存
 	//--------------------------------------
 
