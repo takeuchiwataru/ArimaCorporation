@@ -370,11 +370,11 @@ void CEgg::Item(void)
 //===============================================================================
 void CEgg::Move(void)
 {
-	float fGravity = 0.1f;
+	float fGravity = 0.2f;
 
 	if (m_eggType == EGGTYPE_ATTACK && m_eggState == EGGSTATE_BULLET)
 	{
-		fGravity = 0.4f;
+		fGravity = 0.3f;
 	}
 	else if (m_eggType == EGGTYPE_ANNOY && m_eggState == EGGSTATE_BULLET)
 	{

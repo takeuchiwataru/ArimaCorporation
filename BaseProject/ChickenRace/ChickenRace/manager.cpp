@@ -40,7 +40,6 @@ CDebugProc *CManager::m_pDebugProc = NULL;
 CGame *CManager::m_pGame = NULL;
 CTitle *CManager::m_pTitle = NULL;
 CResult *CManager::m_pResult = NULL;
-CRanking *CManager::m_pRanking = NULL;
 CSelect  *CManager::m_pSelect = NULL;
 CTutorial * CManager::m_pTutorial = NULL;
 bool CManager::m_bInput = true;
@@ -50,7 +49,8 @@ CServer			*CManager::m_pServer = NULL;					//デバックログ
 CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
+CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+// エイジング
 bool			CManager::m_bAging = false;
 int				CManager::m_nAgingCounter = 0;
 
@@ -245,12 +245,7 @@ void CManager::Uninit(void)
 			m_pResult = NULL;
 		}
 	case MODE_RANKING:	// ランキング
-		if (m_pRanking != NULL)
-		{
-			m_pRanking->Uninit();
-			delete m_pRanking;
-			m_pRanking = NULL;
-		}
+
 		break;
 	case MODE_SELECT:	// セレクト
 		if (m_pSelect != NULL)
@@ -402,6 +397,7 @@ void CManager::Update(void)
 
 	CDebugProc::Print("Client数 %d\n", CServer::GetnMaxClient());
 
+	// フェード数（/3で何周したか）
 	m_nAgingCounter;
 
 	switch (m_mode)
@@ -429,10 +425,7 @@ void CManager::Update(void)
 		}
 		break;
 	case MODE_RANKING:	// ランキング
-		if (m_pRanking != NULL)
-		{
-			m_pRanking->Update();
-		}
+
 		break;
 	case MODE_SELECT:	// セレクト
 		if (m_pSelect != NULL)
@@ -494,12 +487,7 @@ void CManager::SetMode(MODE mode)
 		}
 		break;
 	case MODE_RANKING:	// ランキング
-		if (m_pRanking != NULL)
-		{
-			m_pRanking->Uninit();
-			delete m_pRanking;
-			m_pRanking = NULL;
-		}
+
 		break;
 	case MODE_SELECT:
 		if (m_pSelect != NULL)
@@ -574,19 +562,7 @@ void CManager::SetMode(MODE mode)
 		}
 		break;
 	case MODE_RANKING:	//ランキング
-		if (m_pRanking == NULL)
-		{//メモリを動的確保
-			m_pRanking = new CRanking;
 
-			if (m_pRanking != NULL)
-			{
-				m_pRanking->Init();
-				m_pSound->StopSound();
-				//m_pSound->SetVolume(CSound::SOUND_LABEL_BGM_RESULT, 0.8f);
-
-				//m_pSound->PlaySound(CSound::SOUND_LABEL_BGM_RESULT);
-			}
-		}
 		break;
 
 	case MODE_SELECT:	// セレクト

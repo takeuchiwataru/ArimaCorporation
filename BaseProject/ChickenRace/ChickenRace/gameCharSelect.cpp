@@ -268,8 +268,8 @@ HRESULT CGameCharSelect::Init()
 			m_pButton[nCntPlayer]->BindTexture(m_pTexture[TEXTURE_BUTTON]);
 			m_pButton[nCntPlayer]->SetUV
 			(
-				D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.5325f, 0.5f),
-				D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.5325f, 1.0f)
+				D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.6422f, 0.5f),
+				D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.6422f, 1.0f)
 			);
 		}
 	}
@@ -523,8 +523,8 @@ HRESULT CGameCharSelect::Init()
 		m_pGo->BindTexture(m_pTexture[TEXTURE_BUTTON]);
 		m_pGo->SetUV
 		(
-			D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.5325f, 0.5f),
-			D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.5325f, 1.0f)
+			D3DXVECTOR2(0.0f, 0.5f), D3DXVECTOR2(0.6422f, 0.5f),
+			D3DXVECTOR2(0.0f, 1.0f), D3DXVECTOR2(0.6422f, 1.0f)
 		);
 	}
 
@@ -716,6 +716,7 @@ void CGameCharSelect::Online(void)
 		pPlayer = CGame::GetPlayer();
 		break;
 	}
+
 	// プレイヤー最大数取得
 	int nMaxPlayer = CGame::GetMaxPlayer();
 	// キャラ選択番号取得
@@ -834,14 +835,14 @@ void CGameCharSelect::Online(void)
 				}
 			}
 
-			if (pXpad->GetTrigger(INPUT_B) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true ||
+				pXpad->GetTrigger(INPUT_R2) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
 				{
 					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
 
-					if (m_bEnter[nCntPlayer] == true)
-						pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum(1);;
+					pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum((int)(m_bEnter[nCntPlayer]));
 
 					//決定音の設定
 					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1079,14 +1080,14 @@ void CGameCharSelect::Local(void)
 				}
 			}
 
-			if (pXpad->GetTrigger(INPUT_B) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true ||
+				pXpad->GetTrigger(INPUT_R2) == true)
 			{// 決定キー
 				if (m_bEntry[nCntPlayer] == true)
 				{
 					m_bEnter[nCntPlayer] = (m_bEnter[nCntPlayer] ^ 1 ? true : false);
 
-					if (m_bEnter[nCntPlayer] == true)
-						pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum(1);
+					pPlayer[pnCharSelectNum[nCntPlayer]]->SetSelectNum((int)(m_bEnter[nCntPlayer]));
 
 					//決定音の設定
 					pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1138,10 +1139,9 @@ void CGameCharSelect::Local(void)
 		{
 			if (m_bEntry[0] == true)
 			{
-				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);					
+				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
 
-				if (m_bEnter[0] == true)
-					pPlayer[pnCharSelectNum[0]]->SetSelectNum(1);
+				pPlayer[pnCharSelectNum[0]]->SetSelectNum((int)(m_bEnter[0]));
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1160,8 +1160,7 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[0] = (m_bEnter[0] ^ 1 ? true : false);
 
-				if (m_bEnter[0] == true)
-					pPlayer[pnCharSelectNum[0]]->SetSelectNum(1);
+				pPlayer[pnCharSelectNum[0]]->SetSelectNum((int)(m_bEnter[0]));
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1178,8 +1177,7 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[1] = (m_bEnter[1] ^ 1 ? true : false);
 
-				if (m_bEnter[1] == true)
-					pPlayer[pnCharSelectNum[1]]->SetSelectNum(1);
+				pPlayer[pnCharSelectNum[1]]->SetSelectNum((int)(m_bEnter[1]));
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1196,8 +1194,7 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[2] = (m_bEnter[2] ^ 1 ? true : false);
 
-				if (m_bEnter[2] == true)
-					pPlayer[pnCharSelectNum[2]]->SetSelectNum(1);
+				pPlayer[pnCharSelectNum[2]]->SetSelectNum((int)(m_bEnter[2]));
 
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
@@ -1214,9 +1211,8 @@ void CGameCharSelect::Local(void)
 			{
 				m_bEnter[3] = (m_bEnter[3] ^ 1 ? true : false);
 
-				if (m_bEnter[3] == true)
-					pPlayer[pnCharSelectNum[3]]->SetSelectNum(1);
-
+				pPlayer[pnCharSelectNum[3]]->SetSelectNum((int)(m_bEnter[3]));
+			
 				//決定音の設定
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_CHARACTERSERECT, 1.3f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_CHARACTERSERECT);
@@ -1523,7 +1519,9 @@ void CGameCharSelect::Tutorial(void)
 				m_nTutorialNum++;
 		}
 
-		if (pXpad->GetTrigger(INPUT_START) == true)
+		if (pXpad->GetTrigger(INPUT_B) == true ||
+			pXpad->GetTrigger(INPUT_R2) == true ||
+			pXpad->GetTrigger(INPUT_START) == true)
 		{
 			if (m_nTutorialNum < 2)
 				m_nTutorialNum++;
@@ -1554,6 +1552,8 @@ void CGameCharSelect::Tutorial(void)
 
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 			pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
+			pXpad->GetTrigger(INPUT_B) == true ||
+			pXpad->GetTrigger(INPUT_R2) == true ||
 			pXpad->GetTrigger(INPUT_START) == true ||
 			CManager::GetAging() == true)
 		{

@@ -34,6 +34,8 @@
 #define CAMERAHINT_SIZE_2P	(D3DXVECTOR2(SCREEN_WIDTH * 0.1f, SCREEN_WIDTH * 0.05f))	// 2P時のカメラ説明の大きさ
 #define CAMERAHINT_SIZE_4P	(D3DXVECTOR2(SCREEN_WIDTH * 0.06f, SCREEN_WIDTH * 0.03f))	// 4P時のカメラ説明の大きさ
 
+#define CLOSE_FADE			(10)														// クローズフェード時間
+
 //*****************************************************************************
 // プロトタイプ宣言
 //*****************************************************************************
@@ -67,9 +69,11 @@ CGamePlay::CGamePlay()
 
 		for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
 		{// アイテムフレームカウント
-			m_pItemFrame[nCntPlayer][nCntItem] = NULL;	// アイテムフレームフレーム
-			m_pItem[nCntPlayer][nCntItem] = NULL;	// アイテムフレーム
+			m_pItemFrame[nCntPlayer][nCntItem] = NULL;		// アイテムフレームフレーム
+			m_pItem[nCntPlayer][nCntItem] = NULL;			// アイテムフレーム
+			m_pItemClose[nCntPlayer][nCntItem] = NULL;		// アイテム×
 		}
+		m_nCloseCounter[nCntPlayer] = 0;			// ×カウント
 
 		m_pGoul[nCntPlayer] = NULL;					// ランキング
 		m_pTime[nCntPlayer] = NULL;					// タイム
@@ -112,6 +116,9 @@ HRESULT CGamePlay::Load(void)
 			break;
 		case TEXTURE_ITEM:
 			strcpy(cName, "data/TEXTURE/game/play/egg_chickslot.png");
+			break;
+		case TEXTURE_ITEMCLOSE:
+			strcpy(cName, "data/TEXTURE/game/play/batu.png");
 			break;
 		case TEXTURE_GOUL:
 			strcpy(cName, "data/TEXTURE/game/play/finish.png");
@@ -411,6 +418,44 @@ HRESULT CGamePlay::Init()
 				if (bOnine == true && nClient != nCntPlayer)
 					m_pItem[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 			}
+			// アイテム×
+			if (m_pItemClose[nCntPlayer][nCntItem] == NULL)
+			{// NULL
+				m_pItemClose[nCntPlayer][nCntItem] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+				m_pItemClose[nCntPlayer][nCntItem]->Init();
+				// 各ビューポートの中心点から計算（中心点 -> 指定の位置へ）
+				if (bOnine == true)
+				{// オンライン
+					m_pItemClose[nCntPlayer][nCntItem]->SetPosSize(
+						D3DXVECTOR3(
+						(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) * -1.0f),
+							(SCREEN_HEIGHT * 0.5f) - ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) + (((SCREEN_HEIGHT * ITEM_SIZE_1P) * 2.1f) * nCntItem),
+							0.0f),
+						D3DXVECTOR2(
+							SCREEN_HEIGHT * ITEM_SIZE_1P,
+							SCREEN_HEIGHT * ITEM_SIZE_1P));
+					m_pItemClose[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.5f));
+				}
+				else
+				{// オンラインじゃない
+					m_pItemClose[nCntPlayer][nCntItem]->SetPosSize(
+						D3DXVECTOR3(
+						(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntPlayer % 2 == 0 ? -1.0f : 1.0f))),
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) - ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) +
+								(((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)) * 2.1f) * nCntItem),
+							0.0f),
+						D3DXVECTOR2(
+							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P),
+							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)));
+					m_pItemClose[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+				}
+				m_pItemClose[nCntPlayer][nCntItem]->BindTexture(m_pTexture[TEXTURE_ITEMCLOSE]);
+
+				if (bOnine == true && nClient != nCntPlayer)
+					m_pItemClose[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			}
 		}
 
 		if (m_pGoul[nCntPlayer] == NULL)
@@ -589,6 +634,11 @@ void CGamePlay::Uninit(void)
 			{// NULL以外
 				m_pItem[nCntPlayer][nCntItem]->Uninit();
 				m_pItem[nCntPlayer][nCntItem] = NULL;
+			}
+			if (m_pItemClose[nCntPlayer][nCntItem] != NULL)
+			{// NULL以外
+				m_pItemClose[nCntPlayer][nCntItem]->Uninit();
+				m_pItemClose[nCntPlayer][nCntItem] = NULL;
 			}
 		}
 
@@ -814,6 +864,17 @@ void CGamePlay::Update(void)
 								m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 						}
+
+						// アイテム×
+						if (m_pItemClose[nPlayerNum][nCntItem] != NULL)
+						{
+							if (pPlayer[nCntMember]->GetDamage() == true)
+							{	if (m_nCloseCounter[nPlayerNum] < CLOSE_FADE) m_nCloseCounter[nPlayerNum]++;	}
+							else
+							{	if (0 < m_nCloseCounter[nPlayerNum]) m_nCloseCounter[nPlayerNum]--;		}
+
+							m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (float)((float)(m_nCloseCounter[nPlayerNum]) / (float)(CLOSE_FADE))));
+						}
 					}
 				}
 				else
@@ -918,17 +979,17 @@ void CGamePlay::Update(void)
 					{// オンライン
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-							(SCREEN_WIDTH * 0.5f),
+								(SCREEN_WIDTH * 0.5f),
 								(SCREEN_HEIGHT * 0.5f) -
 								(((SCREEN_HEIGHT * 0.5f) - (GOUL_SIZE_2P.y * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),
-							GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
+								GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
 					}
 					else
 					{// オンラインじゃない
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-							(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+								(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
 								(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
 								((((nMaxPlayer - 1) == 0 ? (SCREEN_HEIGHT * 0.5f) : (SCREEN_HEIGHT * 0.25f)) - (((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P.y : GOUL_SIZE_4P.y) * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),

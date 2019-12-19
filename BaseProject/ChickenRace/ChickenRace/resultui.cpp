@@ -20,6 +20,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define RANKING_TEXT	"data/TEXT/RANKING/score.bin"
 
 //*****************************************************************************
 // プロトタイプ宣言
@@ -45,6 +46,12 @@ CResultUI::CResultUI()
 	}
 	m_pPress = NULL;						// プレス
 	m_pFade = NULL;							// フェード
+
+	for (int nCntRanking = 0; nCntRanking < MAX_RANKING; nCntRanking++)
+	{
+		m_nCharacter[nCntRanking] = 0;
+		m_nRanking[nCntRanking] = 0;
+	}
 }
 //=============================================================================
 // デストラクタ
@@ -138,11 +145,16 @@ HRESULT CResultUI::Init()
 	int *pnRankingSort = NULL;
 	int *nTimer = NULL;
 
-	if (mode == CManager::MODE_TITLE)
+	LoadRanking();
+	if (mode == CManager::MODE_RESULT)
 	{
-
+		//for (int nCntRanking = 0; nCntRanking < MAX_RANKING; nCntRanking++)
+		//	m_nRanking[nCntRanking] = MAX_TIME;
+		SortRanking();
+		SaveRanking();
 	}
-	else
+
+	if (mode == CManager::MODE_RESULT)
 	{
 		pnCharSelectNum = CGame::GetCharSelectNum();
 		nMaxPlayer = CGame::GetMaxPlayer();
@@ -152,16 +164,16 @@ HRESULT CResultUI::Init()
 
 	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 	{// メンバーカウント
-		if (mode != CManager::MODE_TITLE || (mode == CManager::MODE_TITLE && nCntMember < 3))
+		if (mode == CManager::MODE_RESULT || ((mode == CManager::MODE_TITLE || (mode == CManager::MODE_GAME && CGame::GetGameMode() == CGame::GAMEMODE_COURSE_VIEW)) && nCntMember < MAX_RANKING))
 		{
-			if (mode != CManager::MODE_TITLE || (mode == CManager::MODE_TITLE && nCntMember == 0))
+			if (mode == CManager::MODE_RESULT || ((mode == CManager::MODE_TITLE || (mode == CManager::MODE_GAME && CGame::GetGameMode() == CGame::GAMEMODE_COURSE_VIEW)) && nCntMember == 0))
 			{
 				// ランクBG
 				if (m_pRankBG[nCntMember] == NULL)
 				{// NULL
 					m_pRankBG[nCntMember] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
 					m_pRankBG[nCntMember]->Init();
-					if (mode == CManager::MODE_TITLE)
+					if (mode != CManager::MODE_RESULT)
 					{
 						m_pRankBG[nCntMember]->SetPosSize(
 							D3DXVECTOR3
@@ -192,7 +204,7 @@ HRESULT CResultUI::Init()
 			{// NULL
 				m_pRank[nCntMember] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
 				m_pRank[nCntMember]->Init();
-				if (mode == CManager::MODE_TITLE)
+				if (mode != CManager::MODE_RESULT)
 				{
 					m_pRank[nCntMember]->SetPosSize(
 						D3DXVECTOR3
@@ -223,7 +235,7 @@ HRESULT CResultUI::Init()
 			{// NULL
 				m_pChar[nCntMember] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
 				m_pChar[nCntMember]->Init();
-				if (mode == CManager::MODE_TITLE)
+				if (mode != CManager::MODE_RESULT)
 				{
 					m_pChar[nCntMember]->SetPosSize(
 						D3DXVECTOR3
@@ -246,14 +258,14 @@ HRESULT CResultUI::Init()
 						D3DXVECTOR2(SCREEN_HEIGHT * 0.05f, SCREEN_HEIGHT * 0.05f));
 				}
 				m_pChar[nCntMember]->BindTexture(m_pTexture[TEXTURE_CHAR]);
-				
-				if (mode == CManager::MODE_TITLE)
-					m_pChar[nCntMember]->SetTexture(nCntMember, 8, 1, 1);
+
+				if (mode != CManager::MODE_RESULT)
+					m_pChar[nCntMember]->SetTexture(m_nCharacter[nCntMember], 8, 1, 1);
 				else
 					m_pChar[nCntMember]->SetTexture(pnCharSelectNum[pnRankingSort[nCntMember]], 8, 1, 1);
 			}
 
-			if (mode != CManager::MODE_TITLE)
+			if (mode == CManager::MODE_RESULT)
 			{
 				// プレイヤー
 				if (m_pPlayer[nCntMember] == NULL)
@@ -276,7 +288,7 @@ HRESULT CResultUI::Init()
 			// タイム
 			if (m_pTime[nCntMember] == NULL)
 			{// NULL
-				if (mode == CManager::MODE_TITLE)
+				if (mode != CManager::MODE_RESULT)
 				{
 					m_pTime[nCntMember] = CTime::Create(
 						D3DXVECTOR3
@@ -299,7 +311,11 @@ HRESULT CResultUI::Init()
 						D3DXVECTOR3((SCREEN_HEIGHT * 0.03f), (SCREEN_HEIGHT * 0.05f), 0.0f));
 				}
 
-				if (mode != CManager::MODE_TITLE)
+				if (mode != CManager::MODE_RESULT)
+				{
+					m_pTime[nCntMember]->TexTime(m_nRanking[nCntMember], true);
+				}
+				else
 				{
 					m_pTime[nCntMember]->TexTime(nTimer[pnRankingSort[nCntMember]], true);
 
@@ -310,7 +326,7 @@ HRESULT CResultUI::Init()
 		}
 	}
 
-	if (mode != CManager::MODE_TITLE)
+	if (mode == CManager::MODE_RESULT)
 	{
 		// プレス
 		if (m_pPress == NULL)
@@ -419,6 +435,9 @@ void CResultUI::Update(void)
 	case CManager::MODE_TITLE:
 		Title();
 		break;
+	case CManager::MODE_GAME:
+		Game();
+		break;
 	default:
 		Result();
 		break;
@@ -510,6 +529,68 @@ void CResultUI::Title(void)
 						));
 				}
 			}
+		}
+	}
+}
+
+//=============================================================================
+// ゲーム処理
+//=============================================================================
+void CResultUI::Game(void)
+{
+	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	{// メンバーカウント
+		float fDiff = 0.0f;// (-SCREEN_WIDTH);
+
+		// ランクBG
+		if (m_pRankBG[nCntMember] != NULL)
+		{// NULL以外
+			m_pRankBG[nCntMember]->SetPosSize(
+				D3DXVECTOR3
+				(
+				(SCREEN_WIDTH * 0.5f) + (fDiff),
+					(SCREEN_HEIGHT * 0.05f),
+					0.0f
+				),
+				D3DXVECTOR2(SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.05f));
+		}
+
+		// ランク
+		if (m_pRank[nCntMember] != NULL)
+		{// NULL以外
+			m_pRank[nCntMember]->SetPosSize(
+				D3DXVECTOR3
+				(
+				(SCREEN_HEIGHT * 0.07f) + ((SCREEN_HEIGHT * 0.6f) * nCntMember) + (fDiff),
+					(SCREEN_HEIGHT * 0.05f),
+					0.0f
+				),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.07f, SCREEN_HEIGHT * 0.04f));
+		}
+
+		// キャラ
+		if (m_pChar[nCntMember] != NULL)
+		{// NULL以外
+			m_pChar[nCntMember]->SetPosSize(
+				D3DXVECTOR3
+				(
+				(SCREEN_HEIGHT * 0.07f) + (SCREEN_HEIGHT * 0.10f) + ((SCREEN_HEIGHT * 0.6f) * nCntMember) + (fDiff),
+					(SCREEN_HEIGHT * 0.05f),
+					0.0f
+				),
+				D3DXVECTOR2(SCREEN_HEIGHT * 0.04f, SCREEN_HEIGHT * 0.04f));
+		}
+
+		// タイム
+		if (m_pTime[nCntMember] != NULL)
+		{// NULL以外
+			m_pTime[nCntMember]->Setpos(
+				D3DXVECTOR3
+				(
+				(SCREEN_HEIGHT * 0.07f) + (SCREEN_HEIGHT * 0.45f) + ((SCREEN_HEIGHT * 0.6f) * nCntMember) + (fDiff),
+					(SCREEN_HEIGHT * 0.05f),
+					0.0f
+				));
 		}
 	}
 }
@@ -621,5 +702,104 @@ void CResultUI::Result(void)
 			if (nFrame / 10 != 1)
 				m_pFade->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (nFrame < 10 ? (float)((float)nNum / (float)10) : 1.0f - (float)((float)nNum / (float)10))));
 		}
+	}
+}
+
+//=============================================================================
+// ロード処理
+//=============================================================================
+void CResultUI::LoadRanking(void)
+{
+	// ファイルポインタ
+	FILE *pFile = NULL;
+	pFile = fopen(RANKING_TEXT, "rb");
+
+	if (pFile != NULL)
+	{// NULL以外
+		fread(m_nCharacter, sizeof(int), MAX_RANKING, pFile);
+		fread(m_nRanking, sizeof(int), MAX_RANKING, pFile);
+		fclose(pFile);
+	}
+}
+
+//=============================================================================
+// セーブ処理
+//=============================================================================
+void CResultUI::SaveRanking(void)
+{
+	// ファイルポインタ
+	FILE *pFile = NULL;
+	pFile = fopen(RANKING_TEXT, "wb");
+
+	if (pFile != NULL)
+	{// NULL以外
+		fwrite(m_nCharacter, sizeof(int), MAX_RANKING, pFile);
+		fwrite(m_nRanking, sizeof(int), MAX_RANKING, pFile);
+		fclose(pFile);
+	}
+}
+
+//=============================================================================
+// ソート処理
+//=============================================================================
+void CResultUI::SortRanking(void)
+{
+	int *pnCharSelectNum = CGame::GetCharSelectNum();
+	int nMaxPlayer = CGame::GetMaxPlayer();
+	int *pnRankingSort = CGame::GetRankingSort();
+	int *nTimer = CGame::GetTimer();
+
+	int nCharacter[(MAX_PLAYER + MAX_RANKING)] = { 0 };
+	int nRanking[(MAX_PLAYER + MAX_RANKING)] = { 0 };
+
+	for (int nCntMember = 0; nCntMember < (MAX_PLAYER + MAX_RANKING); nCntMember++)
+		nRanking[nCntMember] = MAX_TIME;
+
+	// 値設定（現レース）
+	int nNumber = 0;
+	for (int nCntMember = 0; nCntMember < (MAX_MEMBER); nCntMember++)
+	{
+		if (pnRankingSort[nCntMember] < nMaxPlayer)
+		{
+			nCharacter[nNumber] = pnCharSelectNum[pnRankingSort[nCntMember]];
+			if (nTimer[pnRankingSort[nCntMember]] == 0)
+				nRanking[nNumber] = MAX_TIME;
+			else
+				nRanking[nNumber] = nTimer[pnRankingSort[nCntMember]];
+			nNumber++;
+		}
+	}
+
+	// 値設定（トップレコード）
+	for (int nCntRanking = 0; nCntRanking < (MAX_RANKING); nCntRanking++)
+	{
+		nCharacter[nNumber + nCntRanking] = m_nCharacter[nCntRanking];
+		nRanking[nNumber + nCntRanking] = m_nRanking[nCntRanking];
+	}
+
+	// ソート
+	for (int nCntSort = 0; nCntSort < (MAX_PLAYER + MAX_RANKING) - 1; nCntSort++)
+	{
+		for (int nCntCheck = nCntSort; nCntCheck < (MAX_PLAYER + MAX_RANKING); nCntCheck++)
+		{
+			if (nRanking[nCntCheck] < nRanking[nCntSort])
+			{
+				int nData = 0;
+				nData = nCharacter[nCntSort];
+				nCharacter[nCntSort] = nCharacter[nCntCheck];
+				nCharacter[nCntCheck] = nData;
+
+				nData = nRanking[nCntSort];
+				nRanking[nCntSort] = nRanking[nCntCheck];
+				nRanking[nCntCheck] = nData;
+			}
+		}
+	}
+
+	// 設定
+	for (int nCntRanking = 0; nCntRanking < (MAX_RANKING); nCntRanking++)
+	{
+		m_nCharacter[nCntRanking] = nCharacter[nCntRanking];
+		m_nRanking[nCntRanking] = nRanking[nCntRanking];
 	}
 }

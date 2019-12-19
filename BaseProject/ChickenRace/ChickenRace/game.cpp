@@ -38,6 +38,7 @@
 #include "number.h"
 #include "Character.h"
 #include "toonshader.h"
+#include "resultui.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -133,6 +134,7 @@ HRESULT CGame::Init()
 
 	CTime::Load();
 	CNumber::Load();
+	CResultUI::Load();
 
 	//====================================================================
 	//						 必要な変数の初期化
@@ -146,6 +148,8 @@ HRESULT CGame::Init()
 	m_nGameCounter = 0;					//カウンターの初期化
 
 	m_nCameraNumber = 0;				// 現在使用しているカメラ番号
+
+	m_pResultUI = NULL;					// UIメニュー
 
 	m_nMaxPlayer = 0;					// プレイヤー数
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
@@ -203,6 +207,7 @@ void CGame::Uninit(void)
 
 	CTime::Unload();
 	CNumber::Unload();
+	CResultUI::Unload();
 
 	//ポーズ削除
 	if (m_pPause != NULL)
@@ -257,6 +262,13 @@ void CGame::Uninit(void)
 			delete m_pGameCamera[nCntPlayer];
 			m_pGameCamera[nCntPlayer] = NULL;
 		}
+	}
+
+	// リザルト
+	if (m_pResultUI != NULL)
+	{
+		m_pResultUI->Uninit();
+		m_pResultUI = NULL;
 	}
 
 	//マップの破棄
@@ -431,7 +443,7 @@ void CGame::Draw(void)
 		D3DVIEWPORT9 viewport;
 		pDevice->GetViewport(&viewport);	// ビューポート取得
 
-											// バックバッファ＆Ｚバッファのクリア
+		// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
@@ -472,12 +484,15 @@ void CGame::Draw(void)
 
 		pDevice->SetViewport(&viewport);	// ビューポート設定
 
-											//２Dの描画
+		//２Dの描画
 		CScene::DrawSeting(true, 6, true);
 	}
 	else if (m_gameMode == GAMEMODE_COURSE_VIEW)
 	{// その他
-	 // バックバッファ＆Ｚバッファのクリア
+		D3DVIEWPORT9 viewport;
+		pDevice->GetViewport(&viewport);	// ビューポート取得
+	
+		// バックバッファ＆Ｚバッファのクリア
 		pDevice->Clear(0,
 			NULL,
 			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
@@ -491,6 +506,11 @@ void CGame::Draw(void)
 
 		//全ての描画
 		CScene::DrawAll();
+
+		pDevice->SetViewport(&viewport);	// ビューポート設定
+
+		//２Dの描画
+		CScene::DrawSeting(true);
 	}
 	else if (m_gameMode == GAMEMODE_PLAY)
 	{// プレイ
@@ -639,6 +659,13 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 			m_pCuorseCamera = NULL;
 		}
 
+		// リザルト
+		if (m_pResultUI != NULL)
+		{
+			m_pResultUI->Uninit();
+			m_pResultUI = NULL;
+		}
+
 		break;
 	case GAMEMODE_PLAY:				// プレイ
 		if (m_pGamePlay != NULL)
@@ -721,6 +748,12 @@ void CGame::SetGameMode(GAMEMODE gameMode)
 
 		if (m_nCntSetStage == 0)
 			SetStage();
+
+		// リザルト
+		if (m_pResultUI == NULL)
+		{
+			m_pResultUI = CResultUI::Create();
+		}
 
 		break;
 	case GAMEMODE_PLAY:				// プレイ

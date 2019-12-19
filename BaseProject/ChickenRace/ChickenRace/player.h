@@ -287,6 +287,10 @@ public:
 
 	void SetSelectNum(int nSelectNum) { m_nSelectNum = nSelectNum; }
 
+	bool GetDamage(void) {
+		if (m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S || m_State == PLAYERSTATE_DAMAGE) return true;
+		else return false; }
+
 	//モーションの更新関数
 	void UpdateMotion(void);
 	void UpMParts(void);
@@ -323,7 +327,7 @@ private:
 
 	void WarpNext(void);
 	void UseBoost(void);		void EndBoost(void);
-	void UpVecUZ(void);			void SetStick(CInputJoyPad_0 *&pPad);
+	void UpVecUZ(void);			void SetStick(CInputJoyPad_0 *&pPad, int nNum = 0);
 	void SetState(PLAYERSTATE state);
 	float GetDistance(int nRank);
 

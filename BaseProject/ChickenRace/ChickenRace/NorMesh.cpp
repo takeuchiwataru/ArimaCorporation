@@ -503,7 +503,7 @@ void	CCylinder::Update(void)
 
 	switch (m_State)
 	{
-	case STATE_NORMAL:	
+	case STATE_NORMAL:
 		SetCylinder(m_fLengthY, m_fLengthXZ[0], m_fLengthXZ[1], m_col
 			, D3DXVECTOR2((1.0f / (ECT_CROSS + 2.0f)) * m_nPtn, 1.0f), D3DXVECTOR2((1.0f / (ECT_CROSS + 2.0f)) * (m_nPtn + 1), 0.0f));
 		break;

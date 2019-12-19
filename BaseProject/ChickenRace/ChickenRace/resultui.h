@@ -14,6 +14,7 @@
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
+#define MAX_RANKING	(3)
 
 //*****************************************************************************
 // 前方宣言
@@ -50,7 +51,12 @@ public:
 
 private:
 	void Title(void);
+	void Game(void);
 	void Result(void);
+
+	void LoadRanking(void);
+	void SaveRanking(void);
+	void SortRanking(void);
 
 	static LPDIRECT3DTEXTURE9	m_pTexture[TEXTURE_MAX];	// テクスチャへのポインタ
 
@@ -61,5 +67,8 @@ private:
 	CTime				*m_pTime[MAX_MEMBER];	// タイム
 	CScene2D			*m_pPress;				// プレス
 	CScene2D			*m_pFade;				// フェード
+
+	int					m_nCharacter[MAX_RANKING];// キャラクター
+	int					m_nRanking[MAX_RANKING];// ランキング
 };
 #endif

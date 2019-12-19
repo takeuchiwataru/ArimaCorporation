@@ -18,7 +18,6 @@
 #include "game.h"
 #include "title.h"
 #include "result.h"
-#include "ranking.h"
 #include "select.h"
 #include "Server.h"
 
@@ -93,7 +92,6 @@ private://ŒÂl‚Å‚Ì‚İg‚¤
 	static CGame *m_pGame;
 	static CTitle *m_pTitle;
 	static CResult *m_pResult;
-	static CRanking *m_pRanking;
 	static CSelect	*m_pSelect;
 	static CTutorial * m_pTutorial;
 	static bool m_bInput;				//“ü—Íó‘Ô‚Ìæ“¾

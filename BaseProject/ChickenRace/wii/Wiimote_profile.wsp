@@ -32,19 +32,19 @@
     <string>xDOWN</string>
     <string>xUP</string>
     <string>xB</string>
-    <string>xA</string>
+    <string>xLT</string>
     <string>xLT</string>
     <string>xRT</string>
     <string>xSTART</string>
     <string>xB</string>
     <string />
+    <string>xRUP</string>
     <string />
     <string />
     <string />
     <string />
-    <string />
-    <string>xLLEFT</string>
-    <string>xLRIGHT</string>
+    <string>xRLEFT</string>
+    <string>xRRIGHT</string>
     <string />
     <string />
     <string />

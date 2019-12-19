@@ -80,7 +80,7 @@ HRESULT CPause::Init(void)
 	// 頂点情報を設定
 	VERTEX_2D *pVtx;	// 頂点情報へのポインタ
 
-	// 頂点バッファの生成
+						// 頂点バッファの生成
 	pDevice->CreateVertexBuffer
 	(
 		sizeof(VERTEX_2D) * 4 * MAX_PAUSE_TEXTURE,
@@ -102,7 +102,7 @@ HRESULT CPause::Init(void)
 
 		if (nCount == 0)
 		{//カウント０だった場合
-			//頂点設定
+		 //頂点設定
 			pVtx[0].pos = D3DXVECTOR3(PAUSE_POS_X, PAUSE_POS_Y, 0.0f);
 			pVtx[1].pos = D3DXVECTOR3(PAUSE_WIDTH, PAUSE_POS_Y, 0.0f);
 			pVtx[2].pos = D3DXVECTOR3(PAUSE_POS_X, PAUSE_HEIGHT, 0.0f);
@@ -121,7 +121,7 @@ HRESULT CPause::Init(void)
 			pVtx[2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 320, (SCREEN_HEIGHT / 2) - 195 + 50, 0.0f);		//左下
 			pVtx[3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320, (SCREEN_HEIGHT / 2) - 195 + 50, 0.0f);		//右下
 
-				//頂点カラー設定
+																										//頂点カラー設定
 			pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 			pVtx[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 			pVtx[2].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
@@ -129,7 +129,7 @@ HRESULT CPause::Init(void)
 		}
 		else
 		{//それ以外の場合
-			//頂点設定
+		 //頂点設定
 			pVtx[0].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 250, PosPause, 0.0f);			//左上
 			pVtx[1].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 250, PosPause, 0.0f);			//右上
 			pVtx[2].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 - 250, PosPause + 150, 0.0f);		//左下
@@ -213,18 +213,18 @@ void CPause::Update(void)
 
 	VERTEX_2D *pVtx;	// 頂点情報へのポインタ
 
-	//頂点バッファをロック
+						//頂点バッファをロック
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
-	if (m_bSerectEnd == false && 
+	if (m_bSerectEnd == false &&
 		(pCInputKeyBoard->GetKeyboardTrigger(DIK_UP) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_W) == true ||
-		pXpad->GetTrigger(INPUT_UP) == true || pXpad->GetTrigger(INPUT_LS_U) == true))
+			pXpad->GetTrigger(INPUT_UP) == true || pXpad->GetTrigger(INPUT_LS_U) == true))
 	{//矢印キーの上を押したとき
 
-		//ポーズの選択肢移動音
-		//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
+	 //ポーズの選択肢移動音
+	 //pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
 
-		// 頂点カラー設定
+	 // 頂点カラー設定
 		pVtx[m_SelectNum * 4 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 		pVtx[m_SelectNum * 4 + 1 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 		pVtx[m_SelectNum * 4 + 2 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
@@ -233,15 +233,15 @@ void CPause::Update(void)
 		m_SelectNum = (m_SelectNum + 2) % 3;
 		m_SelectColor = PAUSE_COLOR_INIT;
 	}
-	if (m_bSerectEnd == false && 
+	if (m_bSerectEnd == false &&
 		(pCInputKeyBoard->GetKeyboardTrigger(DIK_DOWN) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_S) == true ||
-		pXpad->GetTrigger(INPUT_DOWN) == true || pXpad->GetTrigger(INPUT_LS_D) == true))
+			pXpad->GetTrigger(INPUT_DOWN) == true || pXpad->GetTrigger(INPUT_LS_D) == true))
 	{//矢印キーの下を押したとき
 
-		//ポーズの選択し移動音
-		//pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
+	 //ポーズの選択し移動音
+	 //pSound->PlaySound(CSound::SOUND_LABEL_SE_PAUSE_MOVE);
 
-		// 頂点カラー設定
+	 // 頂点カラー設定
 		pVtx[m_SelectNum * 4 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 		pVtx[m_SelectNum * 4 + 1 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 		pVtx[m_SelectNum * 4 + 2 + 4].col = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
@@ -274,12 +274,12 @@ void CPause::Update(void)
 	pVtx[(4 * 4) + 3].pos = D3DXVECTOR3(PAUSE_WIDTH / 2 + 320.0f, (SCREEN_HEIGHT / 2) - 195.0f + 50.0f + (m_SelectNum * 200.0f), 0.0f);		//右下
 
 
-	//頂点バッファをアンロック
+																																			//頂点バッファをアンロック
 	m_pVtxBuff->Unlock();
 
-	if (m_bSerectEnd == false && 
+	if (m_bSerectEnd == false &&
 		(pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true || pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
-		pXpad->GetTrigger(INPUT_B) == true))
+			pXpad->GetTrigger(INPUT_B) == true || pXpad->GetTrigger(INPUT_R2) == true))
 	{
 		if (m_SelectNum == 0)
 		{

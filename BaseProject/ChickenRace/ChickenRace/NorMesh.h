@@ -56,7 +56,7 @@ protected://********************************************************************
 	LPDIRECT3DVERTEXBUFFER9 &GetVtxBuff(void) { return m_pVtxBuff; }
 private://*****************************************************************************
 	void PlusNor(VERTEX_3D *pVtx, VERTEX_3D *pVtxL, VERTEX_3D *pVtxR);	//法線のセット処理
-	//変数宣言//***********************************************************************
+																		//変数宣言//***********************************************************************
 	TYPE					m_Type;			//タイプ
 	D3DXMATRIX				m_mtxWorld;		//ワールドマトリックス
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuff;		//頂点バッファ
