@@ -1,8 +1,8 @@
-﻿  game.cpp
+﻿  manager.cpp
   コード生成しています。
-  4 of 1100 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  16 of 1106 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   コード生成が終了しました。
-  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\05_β\ChickenRace00\\ChickenRace\ChickenRace.exe
-  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\05_β\ChickenRace00\\ChickenRace\ChickenRace.pdb (Full PDB)
+  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\05_β\ChickenRace01\\ChickenRace\ChickenRace.exe
+  ChickenRace.vcxproj -> C:\Users\game116\Desktop\BaseProject\05_β\ChickenRace01\\ChickenRace\ChickenRace.pdb (Full PDB)

@@ -49,7 +49,7 @@ CServer			*CManager::m_pServer = NULL;					//デバックログ
 CClient			*CManager::m_pClient = NULL;					//デバックログ
 
 //ゲームの一番最初
-CManager::MODE CManager::m_mode = CManager::MODE_GAME;
+CManager::MODE CManager::m_mode = CManager::MODE_TITLE;
 // エイジング
 bool			CManager::m_bAging = false;
 int				CManager::m_nAgingCounter = 0;
@@ -71,6 +71,8 @@ CManager::~CManager()
 //=============================================================================
 HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, bool bWindows)
 {
+	srand((unsigned int)time(0));
+
 	//NULLチェック
 	if (m_pRenderer == NULL)
 	{
