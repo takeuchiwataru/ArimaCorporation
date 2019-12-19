@@ -2266,9 +2266,7 @@ void CPlayer::BulletEgg(void)
 	if (m_State == PLAYERSTATE_DAMAGE) { return; }
 	if (m_PlayerAnim == PLAYERANIM_DAMAGE) { return; }
 
-
-	int nTarget = 99;
-	int nDestRank, nChar;
+	int nDestRank;
 	bool bGoal;
 	CSound *pSound = CManager::GetSound();
 
@@ -2329,39 +2327,8 @@ void CPlayer::BulletEgg(void)
 
 				// 強い攻撃
 			case CChick::TYPE_ATTACK_S:
-				switch (CManager::GetMode())
-				{
-				case CManager::MODE_TITLE:
-					pPlayer = CTitle::GetPlayer();
-					break;
-				case CManager::MODE_GAME:
-					pPlayer = CGame::GetPlayer();
-					break;
-				}
-
 				CancelMotion(PLAYERANIM_INTIMIDATION, false);
 				CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK_SC);
-
-				for (int nCntChar = 0; nCntChar < MAX_MEMBER; nCntChar++)
-				{// 1位のやつを見つける
-					bGoal = pPlayer[nCntChar]->GetGoal();
-
-					switch (CManager::GetMode())
-					{
-					case CManager::MODE_TITLE:
-						nDestRank = CTitle::GetRanking(nCntChar);
-						break;
-					case CManager::MODE_GAME:
-						nDestRank = CGame::GetRanking(nCntChar);
-						break;
-					}
-
-					if (!bGoal && nTarget > nDestRank)
-					{//ゴールしていない && ターゲットより順位が上
-						nTarget = nDestRank;
-						nChar = nCntChar;
-					}
-				}
 
 				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
 				{

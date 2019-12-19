@@ -810,7 +810,7 @@ void CChick::AttackS(void)
 	}
 	if (m_bAttackS == false)
 	{// ‚PˆÊ‚ÌŽü‚è‚ð‚Ü‚í‚é
-		int nDestRank, nChar;
+		int nDestRank, nChar = 99;;
 		int nTarget = 99;
 		bool bGoal;
 		D3DXVECTOR3 Goal;
@@ -831,11 +831,15 @@ void CChick::AttackS(void)
 					break;
 				}
 
-				if (!bGoal && nTarget > nDestRank)
+				if (!bGoal && nTarget > nDestRank && m_nNumPlayer != nCntChar)
 				{//ƒS[ƒ‹‚µ‚Ä‚¢‚È‚¢ && ƒ^[ƒQƒbƒg‚æ‚è‡ˆÊ‚ªã
 					nTarget = nDestRank;
 					nChar = nCntChar;
 				}
+			}
+			if (nChar == 99)
+			{
+				nChar = MAX_MEMBER - 1;
 			}
 			m_DestRank = nChar;
 			m_nCntAttackTime++;
@@ -905,8 +909,8 @@ void CChick::AttackS(void)
 	{
 		// ˆÚ“®—Ê‚ðÝ’è
 		m_move.y = -CHICK_FALL_SPEED;
-		m_move.x = pPlayer[m_nNumPlayer]->GetMove().x * 0.8f;
-		m_move.z = pPlayer[m_nNumPlayer]->GetMove().z * 0.8f;
+		m_move.x = pPlayer[m_DestRank]->GetMove().x * 0.8f;
+		m_move.z = pPlayer[m_DestRank]->GetMove().z * 0.8f;
 	}
 }
 
@@ -1093,7 +1097,7 @@ void CChick::SpeedS(void)
 
 	m_pos = D3DXVECTOR3(pPlayer[m_nNumPlayer]->GetPos().x + sinf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange,
 		pPlayer[m_nNumPlayer]->GetPos().y,
-		pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange);// ‚È‚ª‚â‚ÜC³(12/17)
+		pPlayer[m_nNumPlayer]->GetPos().z + cosf(m_rot.y + -D3DX_PI * m_fRangePos) * m_fRange);
 
 	m_rot = pPlayer[m_nNumPlayer]->GetRot();
 }
