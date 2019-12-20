@@ -402,7 +402,7 @@ CRoad_Pointer	*&CRoad_Pointer::SearchKiller(D3DXVECTOR3 &pos, float &fDistance, 
 {
 	float fDis = sqrtf(powf(pos.x - m_pos.x, 2) + powf(pos.z - m_pos.z, 2));
 
-	if (fDis < fDistance)
+	if (fDis < fDistance && m_pNextPointer[0] != NULL)
 	{//‹ß‚¢‚È‚ç
 		fDistance = fDis;
 		pPoint = this;

@@ -261,8 +261,9 @@ void	CEfcOrbit::ReSetAll(void)
 	{//I‚í‚é‚Ü‚Å
 		if (pScene->GetObjType() == OBJTYPE_ORBIT)
 		{//ƒƒbƒVƒ…”­Œ©
-			if (((CEfcOrbit*)pScene)->m_nInitReset == 0) { pScene->Uninit(); }
-			else { ((CEfcOrbit*)pScene)->ReSet(); }
+			pScene->Uninit();
+			//if (((CEfcOrbit*)pScene)->m_nInitReset == 0) { pScene->Uninit(); }
+			//else { ((CEfcOrbit*)pScene)->ReSet(); }
 		}
 		pScene = pScene->GetNext();
 	}
