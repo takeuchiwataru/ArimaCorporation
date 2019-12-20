@@ -1131,9 +1131,9 @@ void CPlayer::UseBoost(void)
 	pOrbit->GetDrawType() = C2D::DRAW_TYPE_SUBTRACT;
 
 	//‰H‚©‚ç
-	pOrbit = CEfcOrbit::Create()->Set(m_mtxWorld, D3DXVECTOR3(8.0f, 15.0f, 0.0f), D3DXVECTOR3(13.0f, 25.0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 0.1f, 0.02f, 0.0f), 0, 0, 3);
+	pOrbit = CEfcOrbit::Create()->Set(m_mtxWorld, D3DXVECTOR3(8.0f, 15.0f, 0.0f), D3DXVECTOR3(13.0f, 25.0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 0.98f, 0.02f, 0.0f), 0, 0, 3);
 	pOrbit->GetType() = CEfcOrbit::TYPE_FADE;
-	pOrbit = CEfcOrbit::Create()->Set(m_mtxWorld, D3DXVECTOR3(-8.0f, 15.0f, 0.0f), D3DXVECTOR3(-13.0f, 25.0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 0.1f, 0.02f, 0.0f), 0, 0, 3);
+	pOrbit = CEfcOrbit::Create()->Set(m_mtxWorld, D3DXVECTOR3(-8.0f, 15.0f, 0.0f), D3DXVECTOR3(-13.0f, 25.0f, 0.0f), m_bOrbit, D3DXCOLOR(1.0f, 0.98f, 0.02f, 0.0f), 0, 0, 3);
 	pOrbit->GetType() = CEfcOrbit::TYPE_FADE;
 
 	//‚í‚«‚©‚ç
