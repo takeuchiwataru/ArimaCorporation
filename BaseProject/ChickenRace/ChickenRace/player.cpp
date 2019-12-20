@@ -643,7 +643,7 @@ void CPlayer::UpdateRace(void)
 	if (m_pPlayerpos != NULL)
 	{
 		m_pPlayerpos->SetPosSize(m_pos + D3DXVECTOR3(0.0f, 500.0f, 0.0f), D3DXVECTOR2(800.0f, 800.0f));
-		m_pPlayerpos->SetTexture(m_nPlayerNum, 8, 1, 1);
+		m_pPlayerpos->SetTexture(m_nCharacterNum, 8, 1, 1);
 	}
 
 	//モーション更新

@@ -20,6 +20,7 @@
 // マクロ定義
 //*****************************************************************************
 #define COUNTDOWN_SIZE		(SCREEN_HEIGHT * 0.12f)										// カウントダウンの大きさ
+#define TUTORIAL_SIZE		(D3DXVECTOR2(SCREEN_WIDTH * 0.14f, SCREEN_HEIGHT * 0.14f))	// チュートリアルの大きさ
 #define GO_SIZE				(D3DXVECTOR2(SCREEN_WIDTH * 0.12f, SCREEN_WIDTH * 0.06f))	// GOの大きさ
 #define RANKING_SIZE_1P_X	(0.13f)														// 1P時のランキングの大きさX
 #define RANKING_SIZE_1P_Y	(0.09f)														// 1P時のランキングの大きさY
@@ -62,6 +63,7 @@ CGamePlay::CGamePlay()
 	{// ダウンカウント
 		m_pCountDown[nCntDown] = NULL;				// カウントダウン
 	}
+	m_pTutorial = NULL;								// チュートリアル
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{// プレイヤーカウント
@@ -104,6 +106,9 @@ HRESULT CGamePlay::Load(void)
 		{
 		case TEXTURE_COUNT:
 			strcpy(cName, "data/TEXTURE/game/play/count.png");
+			break;
+		case TEXTURE_TUTORIAL:
+			strcpy(cName, "data/TEXTURE/tutorial/Tutorial.jpg");
 			break;
 		case TEXTURE_GO:
 			strcpy(cName, "data/TEXTURE/game/play/go.png");
@@ -270,6 +275,21 @@ HRESULT CGamePlay::Init()
 		}
 	}
 
+	if (m_pTutorial == NULL)
+	{// NULL
+		m_pTutorial = new CScene2D(7, CScene::OBJTYPE_2DPOLYGON);
+		m_pTutorial->Init();
+		m_pTutorial->SetPosSize(
+			D3DXVECTOR3(
+				(SCREEN_WIDTH * 0.5f),
+				((nMaxPlayer - 1) == 0 ? (TUTORIAL_SIZE.y) : (SCREEN_HEIGHT * 0.5f)),
+				0.0f),
+			TUTORIAL_SIZE);
+		m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.8f));
+		m_pTutorial->BindTexture(m_pTexture[(TEXTURE)(TEXTURE_TUTORIAL)]);
+		m_pTutorial->SetTexture(2, 3, 1, 1);
+	}
+
 	for (int nCntPlayer = 0; nCntPlayer < nMaxPlayer; nCntPlayer++)
 	{// プレイヤーカウント
 	 // ランキング
@@ -282,7 +302,7 @@ HRESULT CGamePlay::Init()
 			{// オンライン
 				m_pRanking[nCntPlayer]->SetPosSize(
 					D3DXVECTOR3(
-					(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_X)) * -1.0f),
+						(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_X)) * -1.0f),
 						(SCREEN_HEIGHT * 0.5f) + ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_Y)),
 						0.0f),
 					D3DXVECTOR2(
@@ -614,6 +634,11 @@ void CGamePlay::Uninit(void)
 			m_pCountDown[nCntDown] = NULL;
 		}
 	}
+	if (m_pTutorial != NULL)
+	{// NULL以外
+		m_pTutorial->Uninit();
+		m_pTutorial = NULL;
+	}
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{// プレイヤーカウント
@@ -727,6 +752,14 @@ void CGamePlay::Update(void)
 				//ゲーム開始のカウントダウン
 				pSound->SetVolume(CSound::SOUND_LABEL_SE_STARTCOUNT, 1.0f);
 				pSound->PlaySound(CSound::SOUND_LABEL_SE_STARTCOUNT);
+			}
+		}
+
+		if (m_pTutorial != NULL)
+		{// NULL以外
+			if (nCounter / 60 == 0)
+			{
+				m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.8f - (0.8f * (float)((float)(nCounter) / (float)(60)))));
 			}
 		}
 	}
@@ -874,6 +907,9 @@ void CGamePlay::Update(void)
 							{	if (0 < m_nCloseCounter[nPlayerNum]) m_nCloseCounter[nPlayerNum]--;		}
 
 							m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (float)((float)(m_nCloseCounter[nPlayerNum]) / (float)(CLOSE_FADE))));
+
+							if (bOnine == true && nClient != nPlayerNum)
+								m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 						}
 					}
 				}

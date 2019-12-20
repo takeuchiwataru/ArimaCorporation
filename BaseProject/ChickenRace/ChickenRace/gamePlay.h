@@ -33,6 +33,7 @@ public:
 	typedef enum
 	{
 		TEXTURE_COUNT = 0,
+		TEXTURE_TUTORIAL,
 		TEXTURE_GO,
 		TEXTURE_RANK,
 		TEXTURE_ITEMFRAME,
@@ -62,6 +63,7 @@ private:
 	CScene2D *m_pFade[MAX_PLAYER];					// フェード
 	CScene2D *m_pLine[MAX_LINE];					// 線
 	CScene2D *m_pCountDown[COUNT_DOWN];				// カウントダウン
+	CScene2D *m_pTutorial;							// チュートリアル
 	CScene2D *m_pRanking[MAX_PLAYER];				// ランキング
 	CScene2D *m_pItemFrame[MAX_PLAYER][MAX_EGG];	// アイテム
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];			// アイテム
