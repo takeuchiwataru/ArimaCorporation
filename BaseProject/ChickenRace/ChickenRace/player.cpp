@@ -2540,7 +2540,7 @@ void CPlayer::CollisionChick(void)
 		{
 			CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-			if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S)
+			if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S && m_State != PLAYERSTATE_SPEEDUP_S)
 			{
 				if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
 				{// 衝突した
@@ -2549,7 +2549,7 @@ void CPlayer::CollisionChick(void)
 						// 攻撃
 					case CChick::TYPE_ATTACK:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S)
+						if (m_State != PLAYERSTATE_DAMAGE)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
@@ -2580,7 +2580,7 @@ void CPlayer::CollisionChick(void)
 						// 強い攻撃
 					case CChick::TYPE_ATTACK_S:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
+						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
