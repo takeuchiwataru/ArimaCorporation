@@ -121,7 +121,6 @@ public:
 	float SetHeight(void);
 	void NewEfc(void);
 	void DeleteEfc(void);
-
 	STATE GetState(void) { return m_state; }
 	void SetState(STATE state) { m_state = state; }
 	TYPE GetType(void) { return m_type; }
@@ -206,9 +205,9 @@ private:
 	bool				m_bJumpOk;
 	bool				m_bSpeedS;
 	bool				m_bAttackCol;
-	CCylinder			*m_pClyinder;
 
-	// モーション関数	新規								 
+	// モーション関数	新規		
+	CCylinder			*m_pClyinder;
 	CModel				**m_apModel;	// パーツモデルのポインタ
 	ChickAnim			m_nAnimnow;						// 現在のアニメーション
 	static KEY_INFO		*m_pKeyInfo[MAX_CHICK_MOTION];	// キー情報へのポインタ

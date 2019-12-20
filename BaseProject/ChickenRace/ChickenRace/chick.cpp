@@ -229,6 +229,7 @@ HRESULT CChick::Init(void)
 		if (m_type == TYPE_ANNOY || m_type == TYPE_ANNOY_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_ANNOY));
 		if (m_type == TYPE_SPEED || m_type == TYPE_SPEED_S) m_apModel[nCountIndex]->BindTexture(CModel::GetTexAll(CModel::TEX_CHICK_R + TYPE_SPEED));
 	}
+
 	return S_OK;
 }
 
@@ -238,6 +239,7 @@ HRESULT CChick::Init(void)
 void CChick::Uninit(void)
 {
 	DeleteEfc();
+
 	int &nMaxModel = CModel::GetnModelMax(CModel::TYPE_CHICK);
 	if (m_apModel != NULL)
 	{
@@ -690,6 +692,7 @@ float CChick::SetHeight(void)
 
 	return m_fHeight;
 }
+
 //=============================================================================
 // エフェクトの生成
 //=============================================================================
@@ -701,6 +704,7 @@ void CChick::NewEfc(void)
 		m_pClyinder = CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_RARE);
 	}
 }
+
 //=============================================================================
 // エフェクトの削除
 //=============================================================================

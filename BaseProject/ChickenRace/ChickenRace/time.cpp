@@ -22,7 +22,6 @@
 #define CENTER_WIDTH		(SCREEN_WIDTH / 2)				// Xの中心座標
 #define TIMER_SPACE			(50.0f)							// 数字と数字の間のサイズ(ゲーム時間)
 #define TIMER_POSITION_Y	(70.0f)							// タイマーのY座標(ゲーム時間)
-#define MAX_TIME			(999)							// 最大制限時間(ゲーム時間)
 #define TIME_SPACE			(40.0f)							// 数字と数字の間のサイズ(お客様の時間)
 #define TIME_POSITION_Y		((SCREEN_HEIGHT / 2) - 80.0f)	// タイマーのY座標(お客様の時間)
 #define TIME_POSITION_X		((SCREEN_WIDTH / 2) + 180.0f)	// タイマーのX座標(お客様の時間)

@@ -13,7 +13,6 @@
 #include "input.h"
 #include "fade.h"
 #include "sound.h"
-#include "ranking.h"
 #include "ui.h"
 #include "titlecamera.h"
 #include "object.h"

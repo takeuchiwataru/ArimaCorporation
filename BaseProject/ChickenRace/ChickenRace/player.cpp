@@ -398,7 +398,8 @@ HRESULT CPlayer::Init(void)
 //=============================================================================
 void CPlayer::Uninit(void)
 {
-	EndBoost();
+	CEfcOrbit::ReSetAll();
+
 	if (m_pPlayerNum != NULL)
 	{
 		m_pPlayerNum->Uninit();
@@ -667,10 +668,10 @@ void CPlayer::UpdateSelect(void)
 		//ジャンプモーション
 		CancelMotion(PLAYERANIM_JUMP, false);
 
-		if (m_nSelectCounter < 20)
+		/*if (m_nSelectCounter < 20)
 			m_nSelectCounter++;
 		else
-			m_nSelectNum = 0;
+			m_nSelectNum = 0;*/
 	}
 
 	//モーション更新
@@ -713,7 +714,13 @@ void CPlayer::UpdateResult(void)
 			m_rot.y = 0.95f;
 
 			//待機モーション
-			CancelMotion(PLAYERANIM_NEUTRAL, false);
+			if ((MAX_MEMBER - 1) - m_nPlayerNum < 3)
+			{
+				if ((MAX_MEMBER - 1) - m_nPlayerNum == 0)
+					CancelMotion(PLAYERANIM_WINNING, false);
+				else
+					CancelMotion(PLAYERANIM_APPLAUSE, false);
+			}
 		}
 	}
 
@@ -1308,19 +1315,21 @@ void CPlayer::ControlKey(void)
 			(pInputKeyboard->GetKeyboardPress(DIK_A) == true ||
 				pInputKeyboard->GetKeyboardPress(DIK_LEFT) == true)) ||
 			pXpad->GetPress(INPUT_LS_L) == true ||
+			pXpad->GetPress(INPUT_RS_L) == true ||
 			pXpad->GetPress(INPUT_LEFT) == true)
 		{ //左ハンドル状態
 			SetStateHandle(HANDLE_LEFT);
-			SetStick(pXpad);
+			SetStick(pXpad, (pXpad->GetPress(INPUT_RS_L) == true ? 1 : 0));
 		}
 		else if ((bOnline == false &&
 			(pInputKeyboard->GetKeyboardPress(DIK_D) == true ||
 				pInputKeyboard->GetKeyboardPress(DIK_RIGHT) == true)) ||
 			pXpad->GetPress(INPUT_LS_R) == true ||
+			pXpad->GetPress(INPUT_RS_R) == true ||
 			pXpad->GetPress(INPUT_RIGHT) == true)
 		{//右ハンドル状態
 			SetStateHandle(HANDLE_RIGHT);
-			SetStick(pXpad);
+			SetStick(pXpad, (pXpad->GetPress(INPUT_RS_R) == true ? 1 : 0));
 		}
 		else
 		{//ハンドルを触っていない状態
@@ -1404,7 +1413,8 @@ void CPlayer::ControlKey(void)
 	if ((bOnline == false &&
 		(pInputKeyboard->GetKeyboardTrigger(DIK_W) == true ||
 			pInputKeyboard->GetKeyboardTrigger(DIK_UP) == true)) ||
-		pXpad->GetTrigger(INPUT_A) == true)
+		pXpad->GetTrigger(INPUT_A) == true ||
+		pXpad->GetTrigger(INPUT_RS_U) == true)
 	{// ジャンプキー
 		SetJump();
 	}
@@ -2530,7 +2540,7 @@ void CPlayer::CollisionChick(void)
 		{
 			CChick *pChick = (CChick*)pScene;	// オブジェクトクラスのポインタ変数にする
 
-			if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S)
+			if (pChick->GetNumPlayer() != m_nPlayerNum && pChick->GetType() != CChick::TYPE_ANNOY_S && m_State != PLAYERSTATE_SPEEDUP_S)
 			{
 				if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
 				{// 衝突した
@@ -2539,7 +2549,7 @@ void CPlayer::CollisionChick(void)
 						// 攻撃
 					case CChick::TYPE_ATTACK:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S)
+						if (m_State != PLAYERSTATE_DAMAGE)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
@@ -2570,7 +2580,7 @@ void CPlayer::CollisionChick(void)
 						// 強い攻撃
 					case CChick::TYPE_ATTACK_S:
 						// ダメージ状態にする
-						if (m_State != PLAYERSTATE_DAMAGE && m_State != PLAYERSTATE_SPEEDUP_S && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
+						if (m_State != PLAYERSTATE_DAMAGE && pChick->GetAttackS() == true && pChick->GetAttackCol() == true)
 						{
 							CCylinder::Create(m_pos, m_rot, CCylinder::TYPE_HATK);
 							CancelMotion(PLAYERANIM_DAMAGE, false);
@@ -2705,6 +2715,7 @@ void CPlayer::ChickAppear(void)
 				//m_pChick[m_nNumChick] = CChick::Create(m_pos,
 				//	D3DXVECTOR3(0.0f, 0.0f, 0.0f),
 				//	CHICK_SCALE,
+				//	CChick::TYPE_ANNOY,
 				//	CChick::TYPE_ANNOY_S,
 				//	CChick::BULLETTYPE_PLAYER,
 				//	CChick::STATE_CHASE,
@@ -3142,13 +3153,13 @@ void CPlayer::UpVecUZ(void)
 //=============================================================================
 // スティック値代入
 //=============================================================================
-void CPlayer::SetStick(CInputJoyPad_0 *&pPad)
+void CPlayer::SetStick(CInputJoyPad_0 *&pPad, int nNum)
 {
 	if (pPad != NULL)
 	{
-		if (pPad->GetStickDefeat(0))
+		if (pPad->GetStickDefeat(nNum))
 		{//32767, -32768
-			float fValue = (float)pPad->GetnStickX(0);
+			float fValue = (float)pPad->GetnStickX(nNum);
 			if (fValue < 0.0f) { fValue = -fValue - 1.0f; }
 			m_fStick = fValue / 32767.0f;
 		}

@@ -486,6 +486,15 @@ void CModel::ParentModel(CModel **&apModel, TYPE type, int nSelectParts)
 //=============================================================================
 void CModel::PartsTypeUnLoad(void)
 {
+	for (int nCount = 0; nCount < TEX_MAX; nCount++)
+	{
+		if (m_pTexAll[nCount] != NULL)
+		{
+			m_pTexAll[nCount]->Release();
+			m_pTexAll[nCount] = NULL;
+		}
+	}
+
 	for (int nCount = 0; nCount < PARTS_MAX; nCount++)
 	{
 		// ƒƒbƒVƒ…‚ÌŠJ•ú

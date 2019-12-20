@@ -123,6 +123,9 @@ HRESULT CTitleMenu::Load(void)
 		case TEXTURE_INPUT:
 			strcpy(cName, "data\\TEXTURE\\Title\\UI\\modeselect_15.png");
 			break;
+		case TEXTURE_RETURN:
+			strcpy(cName, "data\\TEXTURE\\Title\\UI\\modeselect_19.png");
+			break;
 		case TEXTURE_ENTRY:
 			strcpy(cName, "data\\TEXTURE\\Title\\UI\\modeselect_16.png");
 			break;
@@ -365,7 +368,7 @@ HRESULT CTitleMenu::Init()
 
 	for (int nCntMainMenu = 0; nCntMainMenu < MAX_MAINMENU; nCntMainMenu++)
 	{// メインメニューカウント
-	 // メインメニュー
+		// メインメニュー
 		if (m_pMainMenu[nCntMainMenu] == NULL)
 		{// NULL
 			m_pMainMenu[nCntMainMenu] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
@@ -410,9 +413,9 @@ HRESULT CTitleMenu::Init()
 						SCREEN_HEIGHT * 0.9f,
 						0.0f
 					),
-					D3DXVECTOR2(SCREEN_WIDTH * 0.13f, SCREEN_WIDTH * 0.025f));
-				m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_INPUT]);
-				m_pNameMenu[nCntMainMenu]->SetTexture(0, 1, 2, 1);
+					//D3DXVECTOR2(SCREEN_WIDTH * 0.13f, SCREEN_WIDTH * 0.025f));
+					D3DXVECTOR2(SCREEN_WIDTH * 0.048f, SCREEN_WIDTH * 0.021f));
+				m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_RETURN]);
 			}
 		}
 	}
@@ -480,11 +483,11 @@ HRESULT CTitleMenu::Init()
 		m_pEnter->SetPosSize(
 			D3DXVECTOR3
 			(
-				SCREEN_WIDTH * 0.5f,
+				SCREEN_WIDTH * 0.45f,
 				SCREEN_HEIGHT * 0.9f,
 				0.0f
 			),
-			D3DXVECTOR2(SCREEN_WIDTH * 0.088f, SCREEN_WIDTH * 0.025f));
+			D3DXVECTOR2(SCREEN_WIDTH * 0.12f, SCREEN_WIDTH * 0.025f));
 		m_pEnter->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		m_pEnter->BindTexture(m_pTexture[TEXTURE_INPUT]);
 		m_pEnter->SetTexture(1, 1, 2, 1);
@@ -781,6 +784,7 @@ void CTitleMenu::ControllMainMenu(void)
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 					pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
 					pXpad->GetTrigger(INPUT_B) == true ||
+					pXpad->GetTrigger(INPUT_R2) == true ||
 					pXpad->GetTrigger(INPUT_START) == true ||
 					CManager::GetAging() == true)
 				{// 決定
@@ -803,7 +807,8 @@ void CTitleMenu::ControllMainMenu(void)
 				}
 
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_X) == true ||
-					pXpad->GetTrigger(INPUT_A) == true)
+					pXpad->GetTrigger(INPUT_A) == true ||
+					pXpad->GetTrigger(INPUT_L2) == true)
 				{// キャンセル
 					bMenu = false;			// メニューを閉じる
 				}
@@ -863,6 +868,7 @@ void CTitleMenu::ControllSubMenu(void)
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_RETURN) == true ||
 					pCInputKeyBoard->GetKeyboardTrigger(DIK_Z) == true ||
 					pXpad->GetTrigger(INPUT_B) == true ||
+					pXpad->GetTrigger(INPUT_R2) == true ||
 					pXpad->GetTrigger(INPUT_START) == true)
 				{// 決定
 					switch (m_nSelectNum)
@@ -882,7 +888,8 @@ void CTitleMenu::ControllSubMenu(void)
 				}
 
 				if (pCInputKeyBoard->GetKeyboardTrigger(DIK_X) == true ||
-					pXpad->GetTrigger(INPUT_A) == true)
+					pXpad->GetTrigger(INPUT_A) == true ||
+					pXpad->GetTrigger(INPUT_L2) == true)
 				{// キャンセル
 					bOnline = false;		// オンラインをやめる
 				}
@@ -930,7 +937,8 @@ void CTitleMenu::ControllEntry(void)
 	{// 表示中じゃない
 		if (1 < nClient)
 		{// 1人以上
-			if (pXpad->GetTrigger(INPUT_START) == true)
+			if (pXpad->GetTrigger(INPUT_B) == true ||
+				pXpad->GetTrigger(INPUT_START) == true)
 			{// 決定
 				CFade::Create(CManager::MODE_GAME);		// ゲームへ
 				return;
@@ -955,7 +963,8 @@ void CTitleMenu::ControllEntry(void)
 		pXpad = CManager::GetInputJoyPad0(nCntPlayer);
 
 		if (pCInputKeyBoard->GetKeyboardTrigger(DIK_X) == true ||
-			pXpad->GetTrigger(INPUT_A) == true)
+			pXpad->GetTrigger(INPUT_A) == true ||
+			pXpad->GetTrigger(INPUT_L2) == true)
 		{// キャンセル
 			m_bSubMenu = true;				// サブメニュー表示				
 
@@ -1439,8 +1448,16 @@ void CTitleMenu::EditMainMenu(void)
 						}
 						else
 						{// 戻る
-							m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_INPUT]);
-							m_pNameMenu[nCntMainMenu]->SetTexture(0, 1, 2, 1);
+							m_pNameMenu[nCntMainMenu]->SetPosSize(
+								D3DXVECTOR3
+								(
+									SCREEN_WIDTH * 0.5f - (SCREEN_WIDTH * 0.08f * 2.5f) + ((SCREEN_WIDTH * 0.08f * 2.5f) * nCntMainMenu),
+									SCREEN_HEIGHT * 0.9f,
+									0.0f
+								),
+								D3DXVECTOR2(SCREEN_WIDTH * 0.048f, SCREEN_WIDTH * 0.021f));
+							m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_RETURN]);
+							m_pNameMenu[nCntMainMenu]->SetTexture(0, 1, 1, 1);
 						}
 					}
 				}
@@ -1532,8 +1549,16 @@ void CTitleMenu::EditSubMenu(void)
 						}
 						else
 						{// 戻る
-							m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_INPUT]);
-							m_pNameMenu[nCntMainMenu]->SetTexture(0, 1, 2, 1);
+							m_pNameMenu[nCntMainMenu]->SetPosSize(
+								D3DXVECTOR3
+								(
+									SCREEN_WIDTH * 0.5f - (SCREEN_WIDTH * 0.08f * 2.5f) + ((SCREEN_WIDTH * 0.08f * 2.5f) * nCntMainMenu),
+									SCREEN_HEIGHT * 0.9f,
+									0.0f
+								),
+								D3DXVECTOR2(SCREEN_WIDTH * 0.048f, SCREEN_WIDTH * 0.021f));
+							m_pNameMenu[nCntMainMenu]->BindTexture(m_pTexture[TEXTURE_RETURN]);
+							m_pNameMenu[nCntMainMenu]->SetTexture(0, 1, 1, 1);
 						}
 					}
 

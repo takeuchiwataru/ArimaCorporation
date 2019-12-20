@@ -33,6 +33,8 @@
 #define START_SET_TIME		(360)
 #define START_COUNT_TIME	(180)
 
+#define MAX_TIME			(35999)
+
 //*****************************************************************************
 // 前方宣言
 //*****************************************************************************
@@ -53,6 +55,7 @@ class CGameCamera;
 
 class CGameCharSelect;
 class CGamePlay;
+class CResultUI;
 
 //=====================
 // 基本クラス
@@ -255,6 +258,8 @@ private:
 	static int m_nCameraNumber;					// 現在使用しているカメラ番号
 
 	static int m_nTime[MAX_MEMBER];				// タイム
+
+	CResultUI			*m_pResultUI;			// リザルトUI
 
 };
 #endif
