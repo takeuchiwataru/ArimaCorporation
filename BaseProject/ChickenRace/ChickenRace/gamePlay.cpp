@@ -279,12 +279,24 @@ HRESULT CGamePlay::Init()
 	{// NULL
 		m_pTutorial = new CScene2D(7, CScene::OBJTYPE_2DPOLYGON);
 		m_pTutorial->Init();
-		m_pTutorial->SetPosSize(
+		if (bOnine == true)
+		{// オンライン
+			m_pTutorial->SetPosSize(
 			D3DXVECTOR3(
 				(SCREEN_WIDTH * 0.5f),
-				((nMaxPlayer - 1) == 0 ? (TUTORIAL_SIZE.y) : (SCREEN_HEIGHT * 0.5f)),
+				(TUTORIAL_SIZE.y),
 				0.0f),
-			TUTORIAL_SIZE);
+				TUTORIAL_SIZE);
+		}
+		else
+		{// オンラインじゃない
+			m_pTutorial->SetPosSize(
+				D3DXVECTOR3(
+				(SCREEN_WIDTH * 0.5f),
+					((nMaxPlayer - 1) == 0 ? (TUTORIAL_SIZE.y) : (SCREEN_HEIGHT * 0.5f)),
+					0.0f),
+				TUTORIAL_SIZE);
+		}
 		m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.8f));
 		m_pTutorial->BindTexture(m_pTexture[(TEXTURE)(TEXTURE_TUTORIAL)]);
 		m_pTutorial->SetTexture(2, 3, 1, 1);
@@ -341,7 +353,7 @@ HRESULT CGamePlay::Init()
 		// アイテム
 		for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
 		{// アイテムカウント
-		 // アイテムフレーム
+			// アイテムフレーム
 			if (m_pItemFrame[nCntPlayer][nCntItem] == NULL)
 			{// NULL
 				m_pItemFrame[nCntPlayer][nCntItem] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
