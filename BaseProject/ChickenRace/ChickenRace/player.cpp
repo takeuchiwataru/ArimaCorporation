@@ -1107,6 +1107,7 @@ void CPlayer::WarpNext(void)
 	SetState(PLAYERSTATE_NORMAL);
 	m_rot.y = pNext->GetfRotY();
 	m_pos = pNext->Getpos() + D3DXVECTOR3(sinf(m_rot.y), 0.0f, cosf(m_rot.y)) * 5.0f;
+	m_pos.y = CCOL_MESH_MANAGER::GetHeight(m_pos, m_nMap) + 3.0f;
 	m_OldPos = m_pos;
 	m_move *= 0.0f;
 	m_PlayerInfo.fCountTime = 0;
