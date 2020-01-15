@@ -770,9 +770,9 @@ void CGamePlay::Update(void)
 		if (m_pTutorial != NULL)
 		{// NULLˆÈŠO
 			if (nCounter / 60 == 0)
-			{
 				m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.8f - (0.8f * (float)((float)(nCounter) / (float)(60)))));
-			}
+			else
+				m_pTutorial->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 		}
 	}
 	else
