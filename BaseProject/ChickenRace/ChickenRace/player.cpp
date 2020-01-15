@@ -2374,6 +2374,10 @@ void CPlayer::BulletEgg(void)
 				break;
 			}
 
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
+
 			// î•ñ“ü‚ê‘Ö‚¦
 			m_pChick[0] = m_pChick[1];
 			m_pChick[1] = m_pChick[2];
@@ -2429,6 +2433,10 @@ void CPlayer::BulletEgg(void)
 				break;
 			}
 
+			pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
+			pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
+			pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
+
 			// î•ñ“ü‚ê‘Ö‚¦
 			m_pEgg[0] = m_pEgg[1];
 			m_pEgg[1] = m_pEgg[2];
@@ -2438,10 +2446,6 @@ void CPlayer::BulletEgg(void)
 			m_bulletType[1] = m_bulletType[2];
 			m_bulletType[2] = BULLET_EGG_ATTACK;
 		}
-
-		pSound->PlaySound(CSound::SOUND_LABEL_SE_THROW);
-		pSound->SetVolume(CSound::SOUND_LABEL_SE_THROW, 3.0f);
-		pSound->SetFrequency(CSound::SOUND_LABEL_SE_THROW, 0.5f);
 	}
 }
 
