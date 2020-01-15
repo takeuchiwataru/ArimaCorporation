@@ -78,6 +78,7 @@ bool CGame::m_bDrawUI = false;
 
 int CGame::m_nMaxPlayer = 0;						// プレイヤー数
 int CGame::m_nCharSelectNum[MAX_MEMBER] = { 0 };	// キャラ選択番号
+int CGame::m_nPlayerposNum[MAX_PLAYER] = { 0 };		// プレイヤー位置番号
 int CGame::m_nControllerNum[MAX_PLAYER] = { 0 };	// コントローラー番号
 int CGame::m_nRanking[MAX_MEMBER] = { 0 };			// ランキング
 int CGame::m_nRankingSort[MAX_MEMBER] = { 0 };		// ランキング
@@ -152,6 +153,24 @@ HRESULT CGame::Init()
 	m_pResultUI = NULL;					// UIメニュー
 
 	m_nMaxPlayer = 0;					// プレイヤー数
+
+	// プレイヤー位置をランダム
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{
+		bool bCheck = false;
+		do
+		{
+			bCheck = false; 
+			m_nPlayerposNum[nCntPlayer] = CServer::Rand() % 4;		// プレイヤー位置番号
+
+			for (int nCntCheck = 0; nCntCheck < nCntPlayer; nCntCheck++)
+			{
+				if (nCntPlayer != nCntCheck && m_nPlayerposNum[nCntPlayer] == m_nPlayerposNum[nCntCheck])
+					bCheck = true;
+			}
+		} while (bCheck != false);
+	}
+
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
 		m_nControllerNum[nCntPlayer] = nCntPlayer;		// コントローラー番号
@@ -973,10 +992,13 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 		case GAMEMODE_PLAY:				// プレイ選択
 			for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 			{// メンバーカウント
-			 //プレイヤーの生成
+				// プレイヤーの生成
 				if (m_pPlayer[nCntMember] == NULL)
 					m_pPlayer[nCntMember] = CPlayer::Create(
-						D3DXVECTOR3(-250.0f + (100.0f * (nCntMember / 4)), -90.0f, -100.0f + (((70.0f * 2.0f) / 3.0f) * (nCntMember % 4)) + (35.0f * (nCntMember / 4))),
+						D3DXVECTOR3(
+							-250.0f + (100.0f * ((nCntMember < 4 ? m_nPlayerposNum[nCntMember] : nCntMember) / 4)),
+							-90.0f,
+							-100.0f + (((70.0f * 2.0f) / 3.0f) * ((nCntMember < 4 ? m_nPlayerposNum[nCntMember] : nCntMember) % 4)) + (35.0f * ((nCntMember < 4 ? m_nPlayerposNum[nCntMember] : nCntMember) / 4))),
 						D3DXVECTOR3(0.0f, frot, 0.0f),
 						nCntMember, (nCntMember < m_nMaxPlayer ? m_nControllerNum[nCntMember] : 0), m_nCharSelectNum[nCntMember], (nCntMember < m_nMaxPlayer ? CPlayer::PLAYERTYPE_PLAYER : CPlayer::PLAYERTYPE_ENEMY));
 

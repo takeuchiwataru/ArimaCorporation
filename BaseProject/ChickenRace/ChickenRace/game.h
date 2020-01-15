@@ -246,6 +246,7 @@ private:
 	static int m_nMaxPlayer;					// プレイヤー数
 	static int m_nCharSelectNum[MAX_MEMBER];	// キャラ選択番号
 
+	static int m_nPlayerposNum[MAX_PLAYER];		// プレイヤー位置番号
 	static int m_nControllerNum[MAX_PLAYER];	// コントローラー番号
 
 	static int m_nRanking[MAX_MEMBER];			// ランキング
