@@ -971,6 +971,12 @@ void CGamePlay::Update(void)
 								if (bOnine == true && nClient != nPlayerNum)
 									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
+
+							// アイテム×
+							if (m_pItemClose[nPlayerNum][nCntItem] != NULL)
+							{// NULL以外
+								m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							}
 						}
 					}
 				}
