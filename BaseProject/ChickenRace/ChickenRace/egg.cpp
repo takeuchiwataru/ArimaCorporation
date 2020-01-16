@@ -23,10 +23,11 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define EGG_SPEED				(15.0f)		// 卵が飛んでくスピード// ながやま修正
+#define EGG_SPEED				(15.0f)		// 卵が飛んでくスピード
 #define EXPLOSION_RANGE			(80)		// 爆発の範囲
 #define EGG_PARTICLE			(30)		// パーティクルの数
 #define EGG_DIS_TIME			(30)		// 消えるまでの時間
+#define EGG_GRAVITY				(0.2f)		// 重力
 
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
@@ -370,11 +371,11 @@ void CEgg::Item(void)
 //===============================================================================
 void CEgg::Move(void)
 {
-	float fGravity = 0.2f;
+	float fGravity = EGG_GRAVITY;
 
 	if (m_eggType == EGGTYPE_ATTACK && m_eggState == EGGSTATE_BULLET)
 	{
-		fGravity = 0.3f;
+		fGravity = EGG_GRAVITY + 0.1f;
 	}
 	else if (m_eggType == EGGTYPE_ANNOY && m_eggState == EGGSTATE_BULLET)
 	{

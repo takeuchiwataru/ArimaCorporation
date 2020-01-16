@@ -1626,7 +1626,10 @@ void CPlayer::UpdateMove(void)
 		break;
 	default:
 		//走るモーション
-		CancelMotion(PLAYERANIM_NEUTRAL, false);
+		if (m_bJump == false)
+		{// ジャンプしたときはニュートラルに入らない
+			CancelMotion(PLAYERANIM_NEUTRAL, false);
+		}
 		Accelerator(false);
 		break;
 	}

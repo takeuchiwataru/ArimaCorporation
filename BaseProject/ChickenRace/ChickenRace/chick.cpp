@@ -28,19 +28,26 @@
 #define FILE_TEXTURE			("data\\TEXTURE\\modeltex\\ニワトリ.jpg")	//テクスチャの読み込み
 
 #define MODEL_SPEED				(5.0f)
-#define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
-#define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
-#define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define CHICK_SPEED				(15.0f)		// ひよこが飛んでくスピード
-#define CHICK_JUMP				(3.5f)		// ジャンプ力
-#define CHICK_FALL_TIME			(30)		// ひよこが落ちてくるタイミングの間隔
-#define CHICK_FALL_SPEED		(18.0f)		// 落ちてくるひよこの速さ
-#define CHICK_PARTICLE			(30)		// パーティクルの数
-#define CHICK_UPDOWN_TIME		(5)			// ひよこが上下する間隔の時間
-#define CHICK_SPEED_RANGE		(15)		// 加速ひよこの間隔
-#define MAX_SMOKE_SPEED			(15)		// キラーひよこ出現時の煙の数
-#define ATTACK_TIME				(3)			// 隕石ひよこが落ちるまでの時間
-#define MAX_SMOKE_S				(2)			// キラーひよこの煙の数(ながやま修正12/17)
+#define OBJCT_ANGLE_REVISION	(0.2f)								// 角度補正
+#define EFFECT_HIGHT			(250.0f)							// エミッターの高さ
+#define FOUNTAIN_UP				(20.0f)								// 噴水の上昇させる値
+#define CHICK_SPEED				(15.0f)								// ひよこが飛んでくスピード
+#define CHICK_JUMP				(3.5f)								// ジャンプ力
+#define CHICK_FALL_TIME			(30)								// ひよこが落ちてくるタイミングの間隔
+#define CHICK_FALL_SPEED		(18.0f)								// 落ちてくるひよこの速さ
+#define CHICK_PARTICLE			(30)								// パーティクルの数
+#define CHICK_UPDOWN_TIME		(5)									// ひよこが上下する間隔の時間
+#define CHICK_SPEED_RANGE		(15)								// 加速ひよこの間隔
+#define CHICK_GRAVITY			(0.2f)								// 重力
+#define MAX_SMOKE_SPEED			(15)								// キラーひよこ出現時の煙の数
+#define ATTACK_TIME				(3)									// 隕石ひよこが落ちるまでの時間
+#define MAX_SMOKE_S				(2)									// キラーひよこの煙の数
+#define SMOKE_SIZE_RANGE		(3)									// 煙の大きさにプラスする数値の範囲
+#define SMOKE_MOVE_RANGE		(3)									// 煙の移動量にプラスする数値の範囲
+#define SMOKE_POS_ADD			(-30.0f)							// 煙がこの数値分プレイヤーから離れて出る
+#define SMOKE_COLOR				(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f))	// 煙の色
+#define SMOKE_LIFE				(30)								// 煙のライフ
+#define EXPLOSION_RANGE			(80)								// 爆発の範囲
 //更新範囲
 #define FOUNTAIN_LENGTH			(15000)		//噴水の更新範囲
 #define LEAF_LENGTH				(10500)		//葉の更新処理
@@ -70,9 +77,9 @@ int						CChick::m_aIndexParent[MAX_CHICK_PARTS] = {};	//親のインデックス
 CChick::KEY				CChick::m_aKayOffset[MAX_CHICK_PARTS] = {};		//オフセット情報
 CChick::MOTION_INFO		CChick::m_aMotionInfo[MAX_CHICK_MOTION] = {};	//モーション情報
 
-//--------------------------------------------
-//グローバル変数
-//--------------------------------------------
+																		//--------------------------------------------
+																		//グローバル変数
+																		//--------------------------------------------
 int g_nChickNumModel;
 char g_aChickFileNameModel[MAX_CHICK_PARTS][256];
 
@@ -107,7 +114,7 @@ CChick::CChick() : CScene(EGG_PRIOTITY, CScene::OBJTYPE_CHICK)
 	m_nCntUpDown = 0;
 	m_nCntAttackTime = 0;
 	m_fUpDown = 0.0f;
-	m_fDisTime = 0.0f;	// (ながやま修正12/17)
+	m_fDisTime = 0.0f;
 }
 //===============================================================================
 //　デストラクタ
@@ -195,7 +202,7 @@ HRESULT CChick::Init(void)
 	m_nCntUpDown = 0;
 	m_nCntAttackTime = 0;
 	m_fUpDown = 10.0f;
-	m_fDisTime = DISTIME;	// (ながやま修正12/17)
+	m_fDisTime = DISTIME;
 	m_pClyinder = NULL;
 	if (m_type == TYPE_SPEED)
 	{
@@ -421,11 +428,11 @@ bool CChick::Move(void)
 	if ((m_type != TYPE_ANNOY && m_type != TYPE_ATTACK_S && m_type != TYPE_ANNOY_S) || m_state != STATE_BULLET)
 	{
 		// 重力
-		float fGravity = 0.2f;
+		float fGravity = CHICK_GRAVITY;
 
 		if (m_type == TYPE_SPEED && m_state == STATE_BULLET)
 		{// 重力
-			fGravity = 0.3f;
+			fGravity = CHICK_GRAVITY + 0.1f;
 		}
 
 		m_move.y -= fGravity;
@@ -436,7 +443,7 @@ bool CChick::Move(void)
 	m_pos.z += m_move.z;
 
 	if (m_bDis == false)
-	{// 消えるまでの処理(ながやま修正12/17)
+	{// 消えるまでの処理
 		m_nDisTimer++;
 
 		if (m_nDisTimer > m_fDisTime)
@@ -451,22 +458,24 @@ bool CChick::Move(void)
 					nNumSmoke = MAX_SMOKE;
 				}
 				else if (m_type == TYPE_SPEED_S)
-				{// キラーひよこのパーティクルの数を設定(ながやま修正12/17)
+				{// キラーひよこのパーティクルの数を設定
 					nNumSmoke = MAX_SMOKE_S;
 				}
 
 				for (int nCntParticle = 0; nCntParticle < nNumSmoke; nCntParticle++)
 				{// パーティクル
-					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
-					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
+					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
 
-					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.x,
+					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * SMOKE_POS_ADD) + m_pos.x,
 						m_pos.y - 2.0f,
-						(cosf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.z),
-						D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), 0.0f, cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
-						D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+						(cosf(m_rot.y + D3DX_PI) * SMOKE_POS_ADD) + m_pos.z),
+						D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % SMOKE_MOVE_RANGE + 1)),
+							0.0f,
+							cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % SMOKE_MOVE_RANGE + 1))),
+						SMOKE_COLOR,
 						fSize,
-						30,
+						SMOKE_LIFE,
 						CParticle::TEXTURE_SMOKE,
 						CParticle::TYPE_TURN,
 						m_nNumPlayer);
@@ -632,7 +641,7 @@ bool CChick::CollisionChick(D3DXVECTOR3 * pPos, D3DXVECTOR3 * pPosOld)
 		}
 		if (m_bExplosion == true)
 		{
-			fDepth = 80.0f;
+			fDepth = EXPLOSION_RANGE;
 		}
 
 		//距離計算
@@ -677,9 +686,9 @@ float CChick::SetHeight(void)
 				if (m_bJump == false || (m_bJump == true && m_fHeight < fHeight))
 				{
 					m_fHeight = fHeight + 15.0f;				//地面の高さを取得
-					m_move.y = 0.0f;					//移動量を初期化する
+					m_move.y = 0.0f;						//移動量を初期化する
 
-														//ジャンプの状態設定
+															//ジャンプの状態設定
 					m_bJump = false;
 
 					break;
@@ -892,12 +901,12 @@ void CChick::AttackS(void)
 				D3DXVECTOR2 fSize = D3DXVECTOR2(0.0f, 0.0f);
 				for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
 				{
-					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
-					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+					fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
+					fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
 
-					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.x,
+					CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * SMOKE_POS_ADD) + m_pos.x,
 						m_pos.y,
-						(cosf(m_rot.y + D3DX_PI) * -30.0f) + m_pos.z),
+						(cosf(m_rot.y + D3DX_PI) * SMOKE_POS_ADD) + m_pos.z),
 						D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 1 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
 						D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
 						fSize,
@@ -1105,8 +1114,8 @@ void CChick::SpeedS(void)
 
 		for (int nCntParticle = 0; nCntParticle < MAX_SMOKE_SPEED; nCntParticle++)
 		{
-			fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
-			fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+			fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
+			fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % SMOKE_SIZE_RANGE);
 
 			CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[m_nNumPlayer]->GetPos().x,
 				pPlayer[m_nNumPlayer]->GetPos().y - 2.0f,
