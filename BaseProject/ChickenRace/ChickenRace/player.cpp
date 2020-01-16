@@ -45,7 +45,7 @@
 #define EGG_RANGE			(25.0f)										// 卵とプレイヤーの距離
 #define EGG_POS				(7)											// 卵同士の間隔の広さ（増やすと広くなる）
 #define CHICK_SCALE			(D3DXVECTOR3(1.0f, 1.0f, 1.0f))				//ひよこの大きさ
-#define THROW				(11.0f)										// 卵を投げる力
+#define THROW				(9.0f)										// 卵を投げる力
 #define EGG_RAND			(2.0f)										// 卵に乗るときのジャンプ力
 #define EGG_HEIGHT			(40.0f)										// 卵に乗ったように見える高さ
 #define SPEED_CHICK			(0.4f)										// 加速する量ひよこ

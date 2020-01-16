@@ -23,7 +23,7 @@
 #define OBJCT_ANGLE_REVISION	(0.2f)		// 角度補正
 #define EFFECT_HIGHT			(250.0f)	// エミッターの高さ
 #define FOUNTAIN_UP				(20.0f)		// 噴水の上昇させる値
-#define EGG_SPEED				(15.0f)		// 卵が飛んでくスピード
+#define EGG_SPEED				(12.0f)		// 卵が飛んでくスピード
 #define EXPLOSION_RANGE			(80)		// 爆発の範囲
 #define EGG_PARTICLE			(30)		// パーティクルの数
 #define EGG_DIS_TIME			(30)		// 消えるまでの時間
