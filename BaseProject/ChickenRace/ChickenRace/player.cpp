@@ -70,7 +70,7 @@
 #define PLAYER_DOWN			(0.08f)										// 減速度
 #define PLAYER_ADDROT		(0.005f)									// 回転量
 #define PLAYER_DOWNROT		(0.2f)										// 回転量
-																		   
+
 #define PLAYER_JUMP			(2.0f)										// 回転量
 #define PLAYER_GRAVITY		(0.09f)										// 回転量
 
@@ -129,8 +129,10 @@ CPlayer * CPlayer::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, int nPla
 	{//画面エフェクトの生成
 		if (CClient::GetpmyClient() != NULL)
 		{//オンラインなら
-			if (nPlayerNum == CClient::GetnID()) 
-			{ pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer); }
+			if (nPlayerNum == CClient::GetnID())
+			{
+				pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer);
+			}
 		}
 		else { pPlayer->m_pDispEffect = CDispEffect::Create(pPlayer); }
 	}
@@ -500,7 +502,7 @@ void CPlayer::Draw(void)
 
 	D3DXMATRIX		  mtxRot, mtxTrans;			// 計算用マトリックス
 
-	// ワールドマトリックスの初期化
+												// ワールドマトリックスの初期化
 	D3DXMatrixIdentity(&m_mtxWorld);
 
 	// 回転を反映
@@ -603,7 +605,7 @@ void CPlayer::UpdateRace(void)
 		}
 	}
 
-							//マップとの当たり判定
+	//マップとの当たり判定
 	bool bGoal = false;
 
 	CRoad_Pointer::RankPoint(this, bGoal);
@@ -623,7 +625,7 @@ void CPlayer::UpdateRace(void)
 	if (!bLand && m_bJump)
 	{//着地したなら
 	 //着地モーション
-		//CancelMotion(PLAYERANIM_LAND, false);
+	 //CancelMotion(PLAYERANIM_LAND, false);
 
 	}
 	m_bJump = bLand;
@@ -669,9 +671,9 @@ void CPlayer::UpdateSelect(void)
 		CancelMotion(PLAYERANIM_JUMP, false);
 
 		/*if (m_nSelectCounter < 20)
-			m_nSelectCounter++;
+		m_nSelectCounter++;
 		else
-			m_nSelectNum = 0;*/
+		m_nSelectNum = 0;*/
 	}
 
 	//モーション更新
@@ -689,7 +691,7 @@ void CPlayer::UpdateResult(void)
 	{
 		if (RESULT_CAMERA_ROLL <= nCounter)
 		{// 指定カウントまで
-			//走るモーション
+		 //走るモーション
 			CancelMotion(PLAYERANIM_RUN, false);
 			m_PlayerInfo.fCountTime = 7.0f;
 
@@ -767,8 +769,10 @@ void CPlayer::UpdateAI(void)
 		{
 			m_fAddRot += fRot;
 			SetStateSpeed(STATE_SPEED_ACCEL);
-			if (fRot > PLAYER_ADDROT * (0.95f + (m_nCharacterNum * 0.05f))) 
-			{ SetStateSpeed(STATE_SPEED_DRIFT); }
+			if (fRot > PLAYER_ADDROT * (0.95f + (m_nCharacterNum * 0.05f)))
+			{
+				SetStateSpeed(STATE_SPEED_DRIFT);
+			}
 		}
 	}
 	else
@@ -933,7 +937,7 @@ bool CPlayer::UseATK(int &nRank)
 		return true;
 		break;
 	}
-	if (m_nNumItem > 2 && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1) 
+	if (m_nNumItem > 2 && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1)
 	{
 		if (CServer::Rand() % 240 == 0) { return true; }
 	}
@@ -1063,7 +1067,7 @@ void CPlayer::UpdateFEffect(void)
 			}
 		}
 	}
-	
+
 	if (m_FEffect == CCOL_MESH::EFFECT_DROP)
 	{//落下
 		if (m_bDrop == false)
@@ -1092,7 +1096,7 @@ void CPlayer::UpdateFEffect(void)
 
 		m_nDropCounter++;
 	}
-	
+
 	if (m_bJump) { Effect = CDispEffect::EFFECT_MAX; }
 	if (m_pDispEffect != NULL) { m_pDispEffect->SetEffect(Effect); }
 }
@@ -1249,9 +1253,11 @@ void CPlayer::Accelerator(bool bAccel)
 		float fMin = 0.0f;
 		switch (m_StateSpeed)
 		{
-		case STATE_SPEED_BRAKS:	
+		case STATE_SPEED_BRAKS:
 			if (m_PlayerInfo.fCountTime > 0.0f)
-			{ m_PlayerInfo.fCountTime *= 0.5f; }
+			{
+				m_PlayerInfo.fCountTime *= 0.5f;
+			}
 			fMin = -PLAYER_COUNT * 0.35f; break;
 		}
 		m_PlayerInfo.fCountTime -= PLAYER_SPDDOWN * (1.0f / powf(1.0f + (m_PlayerInfo.fCountTime), 2.0f));
@@ -1472,12 +1478,12 @@ void CPlayer::UpdateMove(void)
 
 	RemakeAngle(&m_rot.y);
 
-	if (m_fCntWind > 0.0f)	
+	if (m_fCntWind > 0.0f)
 	{//風の更新
 		m_fCntWind--;
 		if (m_fCntWind <= 0.0f) { EndBoost(); }
 	}
-	else					{ m_WindMove *= 0.95f; }
+	else { m_WindMove *= 0.95f; }
 	if (m_fPower > 0.0f)
 	{//加速度プラス用　時間経過で減少
 		m_fPower -= PLAYER_POWDOWN;
@@ -1531,7 +1537,7 @@ void CPlayer::UpdateMove(void)
 	float fAddRot = m_PlayerInfo.fAddRot;
 	float fDown = m_PlayerInfo.fDown;
 	float fPow = (m_PlayerInfo.fCountTime + m_fPower) / PLAYER_COUNT;
-	
+
 	fAddRot *= PLAYER_ADDROT_INIT;
 
 	//状態ごとの更新処理
@@ -1539,7 +1545,7 @@ void CPlayer::UpdateMove(void)
 	{
 	case STATE_SPEED_ACCEL:	//アクセル状態
 
-		//走るモーション
+							//走るモーション
 		CancelMotion(PLAYERANIM_RUN, false);
 
 		//ジャンプ状態なら
@@ -1558,9 +1564,9 @@ void CPlayer::UpdateMove(void)
 		break;
 	case STATE_SPEED_BRAKS: //ブレーキ状態
 
-		//走るモーション
+							//走るモーション
 		CancelMotion(PLAYERANIM_RUN, false);
-		
+
 		//ジャンプ状態なら
 		if (m_bJump == true) { break; }
 
@@ -1594,7 +1600,7 @@ void CPlayer::UpdateMove(void)
 		{
 			m_fSpeed = fAccel * fPow * (1.0f - m_fTilt);
 		}
-		
+
 		//進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed * PLAYER_DRIFT_ACCEL);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed * PLAYER_DRIFT_ACCEL);
@@ -1608,7 +1614,7 @@ void CPlayer::UpdateMove(void)
 		if (m_fSpeed < 0.15f) { m_fSpeed *= 0.1f; }
 		m_fSpeed += (0.0f - m_fSpeed) * 0.015f;// ((1.0f - (m_PlayerInfo.fCountTime < 90 ? (m_PlayerInfo.fCountTime / 90) : 1.0f)) * (1.0f - m_fTilt * 1.5f));
 
-		//進行方向の設定
+											   //進行方向の設定
 		m_move.x += sinf(m_rot.y) * (m_fSpeed);
 		m_move.z += cosf(m_rot.y) * (m_fSpeed);
 
@@ -1675,7 +1681,9 @@ void CPlayer::UpdateMove(void)
 	case PLAYERSTATE_SPEEDDOWN_S:
 		//進行方向の設定
 		if (m_PlayerInfo.fCountTime > SPEED_COUNT_ANNOY)
-		{ m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY; }	// 減速
+		{
+			m_PlayerInfo.fCountTime = SPEED_COUNT_ANNOY;
+		}	// 減速
 
 		if (m_nCntParticle > ANNOY_PARTICLE)
 		{
@@ -2931,8 +2939,18 @@ void CPlayer::AnnoyChicks(void)
 							m_nPlayerNum);
 					}
 
+					if (pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP || pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
+					{
+						pPlayer[nCntPlayer]->EndBoost();
+						pPlayer[nCntPlayer]->m_nCountSpeed = 0;
+						if (pPlayer[nCntPlayer]->m_bSpeedEgg == true)
+						{
+							pPlayer[nCntPlayer]->m_bSpeedEgg = false;
+						}
+					}
 					pPlayer[nCntPlayer]->SetState(PLAYERSTATE_SPEEDDOWN_S);
 
+					pPlayer[nCntPlayer]->CancelMotion(PLAYERANIM_DAMAGE, false); // ながやま修正1/16
 					m_bAnnoyS = true;
 				}
 			}
@@ -3366,7 +3384,7 @@ void CPlayer::FileLoad(void)
 	int nWord = 0;		//ポップで返された値を保持
 
 #if 1
-	//ファイルを開く 読み込み
+						//ファイルを開く 読み込み
 	pFile = fopen(FILE_NAME_PRISONER, "r");
 	//NULLチェック
 	if (pFile != NULL)
