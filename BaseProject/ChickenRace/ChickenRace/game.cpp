@@ -160,8 +160,13 @@ HRESULT CGame::Init()
 		bool bCheck = false;
 		do
 		{
-			bCheck = false; 
-			m_nPlayerposNum[nCntPlayer] = CServer::Rand() % 4;		// プレイヤー位置番号
+			bCheck = false;
+			if (nCntPlayer != (MAX_PLAYER - 1))
+				m_nPlayerposNum[nCntPlayer] += CServer::Rand() % (4 - nCntPlayer);		// プレイヤー位置番号
+			else
+				m_nPlayerposNum[nCntPlayer]++;
+
+			m_nPlayerposNum[nCntPlayer] %= 4;
 
 			for (int nCntCheck = 0; nCntCheck < nCntPlayer; nCntCheck++)
 			{
