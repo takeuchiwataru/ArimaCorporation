@@ -1115,6 +1115,8 @@ void CPlayer::WarpNext(void)
 	m_OldPos = m_pos;
 	m_move *= 0.0f;
 	m_PlayerInfo.fCountTime = 0;
+	m_fPower = 0.0f;
+	m_fSpeed = 0.0f;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
 	SetKiller();
 }
