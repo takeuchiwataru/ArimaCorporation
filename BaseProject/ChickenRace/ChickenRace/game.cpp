@@ -154,33 +154,47 @@ HRESULT CGame::Init()
 
 	m_nMaxPlayer = 0;					// プレイヤー数
 
-	int nType = CManager::GetAgingCouneter() % 4;
-	int nNum = CServer::Rand() % 4;
-
-	// プレイヤー位置をランダム
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
-		switch (nType % 2)
-		{
-		case 0:
-			m_nPlayerposNum[nCntPlayer] = (nNum + nCntPlayer) % 4;
-			break;
-		case 1:
-			m_nPlayerposNum[nCntPlayer] = (nNum + nCntPlayer + 3) % 4;
-			break;
-		}
-
-		bool bCheck = false;
+		m_nPlayerposNum[nCntPlayer] = 99;
+	}
+	// プレイヤー位置をランダム
+	bool bLoop;
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{
+		m_nPlayerposNum[nCntPlayer] = CServer::Rand() % (MAX_PLAYER - nCntPlayer);
 		do
 		{
-			bCheck = false;
-
-			for (int nCntCheck = 0; nCntCheck < nCntPlayer; nCntCheck++)
+			bLoop = false;
+			for (int nCntPlayer2 = 0; nCntPlayer2 < MAX_PLAYER; nCntPlayer2++)
 			{
-				if (nCntPlayer != nCntCheck && m_nPlayerposNum[nCntPlayer] == m_nPlayerposNum[nCntCheck])
-					bCheck = true;
+				if (nCntPlayer == nCntPlayer2) { continue; }
+				if (m_nPlayerposNum[nCntPlayer2] < 99 && m_nPlayerposNum[nCntPlayer2] == m_nPlayerposNum[nCntPlayer])
+				{
+					m_nPlayerposNum[nCntPlayer]++;
+					bLoop = true;
+				}
 			}
-		} while (bCheck != false);
+		} while (bLoop);
+
+		//bool bCheck = false;
+		//m_nPlayerposNum[0] = 0 
+		//do
+		//{
+		//	bCheck = false;
+		//	if (nCntPlayer != (MAX_PLAYER - 1))
+		//		m_nPlayerposNum[nCntPlayer] += CServer::Rand() % (4 - nCntPlayer);		// プレイヤー位置番号
+		//	else
+		//		m_nPlayerposNum[nCntPlayer]++;
+
+		//	m_nPlayerposNum[nCntPlayer] %= 4;
+
+		//	for (int nCntCheck = 0; nCntCheck < nCntPlayer; nCntCheck++)
+		//	{
+		//		if (nCntPlayer != nCntCheck && m_nPlayerposNum[nCntPlayer] == m_nPlayerposNum[nCntCheck])
+		//			bCheck = true;
+		//	}
+		//} while (bCheck != false);
 	}
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
