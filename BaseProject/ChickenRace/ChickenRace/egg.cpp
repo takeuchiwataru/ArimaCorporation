@@ -355,7 +355,7 @@ void CEgg::Item(void)
 
 			m_rot.y = pPlayer[m_nNumPlayer]->GetRot().y;
 
-			if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_NORMAL)
+			if (pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_NORMAL || pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_DAMAGE || pPlayer[m_nNumPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDDOWN_S)
 			{// ‰Á‘¬ó‘Ô‚¶‚á‚È‚­‚È‚Á‚½‚çíœ
 				Uninit();
 			}
