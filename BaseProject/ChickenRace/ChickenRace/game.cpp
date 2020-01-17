@@ -157,45 +157,7 @@ HRESULT CGame::Init()
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
 		m_nPlayerposNum[nCntPlayer] = 99;
-	}
-	// プレイヤー位置をランダム
-	bool bLoop;
-	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
-	{
-		m_nPlayerposNum[nCntPlayer] = CServer::Rand() % (MAX_PLAYER - nCntPlayer);
-		do
-		{
-			bLoop = false;
-			for (int nCntPlayer2 = 0; nCntPlayer2 < MAX_PLAYER; nCntPlayer2++)
-			{
-				if (nCntPlayer == nCntPlayer2) { continue; }
-				if (m_nPlayerposNum[nCntPlayer2] < 99 && m_nPlayerposNum[nCntPlayer2] == m_nPlayerposNum[nCntPlayer])
-				{
-					m_nPlayerposNum[nCntPlayer]++;
-					bLoop = true;
-				}
-			}
-		} while (bLoop);
-
-		//bool bCheck = false;
-		//m_nPlayerposNum[0] = 0 
-		//do
-		//{
-		//	bCheck = false;
-		//	if (nCntPlayer != (MAX_PLAYER - 1))
-		//		m_nPlayerposNum[nCntPlayer] += CServer::Rand() % (4 - nCntPlayer);		// プレイヤー位置番号
-		//	else
-		//		m_nPlayerposNum[nCntPlayer]++;
-
-		//	m_nPlayerposNum[nCntPlayer] %= 4;
-
-		//	for (int nCntCheck = 0; nCntCheck < nCntPlayer; nCntCheck++)
-		//	{
-		//		if (nCntPlayer != nCntCheck && m_nPlayerposNum[nCntPlayer] == m_nPlayerposNum[nCntCheck])
-		//			bCheck = true;
-		//	}
-		//} while (bCheck != false);
-	}
+	}	
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
@@ -466,6 +428,13 @@ void CGame::Update(void)
 		//	カウンター進める
 		m_nGameCounter++;
 	}
+
+	CDebugProc::Print("m_nPlayerposNum");
+	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+	{
+		CDebugProc::Print(" : %d", m_nPlayerposNum[nCntPlayer]);
+	}
+	CDebugProc::Print("\n");
 
 	//CDebugProc::Print("MaxPlayer:%d\n", m_nMaxPlayer);	// プレイヤー数
 	//CDebugProc::Print("m_bPause:%d\n", m_bPause);		// ポーズ
@@ -1015,6 +984,25 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 		case GAMEMODE_COURSESELECT:		// コース選択
 			break;
 		case GAMEMODE_COURSE_VIEW:		// コースビュー選択
+			// プレイヤー位置をランダム
+			bool bLoop;
+			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			{
+				m_nPlayerposNum[nCntPlayer] = CServer::Rand() % (MAX_PLAYER - nCntPlayer);
+				do
+				{
+					bLoop = false;
+					for (int nCntPlayer2 = 0; nCntPlayer2 < MAX_PLAYER; nCntPlayer2++)
+					{
+						if (nCntPlayer == nCntPlayer2) { continue; }
+						if (m_nPlayerposNum[nCntPlayer2] < 99 && m_nPlayerposNum[nCntPlayer2] == m_nPlayerposNum[nCntPlayer])
+						{
+							m_nPlayerposNum[nCntPlayer]++;
+							bLoop = true;
+						}
+					}
+				} while (bLoop);
+			}
 		case GAMEMODE_PLAY:				// プレイ選択
 			for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
 			{// メンバーカウント

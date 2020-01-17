@@ -360,9 +360,6 @@ void CManager::Update(void)
 {
 	m_nInput = (m_nInput + 1) % 2;
 
-	// 更新処理
-	m_pRenderer->Update();
-
 	// キーボード更新処理
 	m_pInputKeyBoard->Update();
 
@@ -384,6 +381,9 @@ void CManager::Update(void)
 			m_pClient->GetbRecv() = false;
 		}
 	}
+
+	// 更新処理
+	m_pRenderer->Update();
 
 	//ライトの更新処理
 	m_pLight->Update();

@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <process.h>
 
+int nCntRand;
+
 //==================================================================================================//
 //    * Ã“I•Ï”éŒ¾ *
 //==================================================================================================//
@@ -234,6 +236,7 @@ int	CServer::Rand(void)
 	if (CClient::GetpmyClient() != NULL)
 	{
 		m_nRand += 1234;
+		nCntRand++;
 		return m_nRand;
 	}
 	else
@@ -554,7 +557,7 @@ void	CClient::Assign(void)
 void	CClient::Reflect(void)
 {
 	//CManager::GetDLog()->Printf(CDebugLog::MODE_LOG, "\naStr0: %s", m_aStr);
-
+	nCntRand = 0;
 	CServer::FLAG	flag;
 	int				nClient;
 	char			WKBox[32];
