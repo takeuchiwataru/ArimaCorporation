@@ -39,6 +39,7 @@
 #include "Character.h"
 #include "toonshader.h"
 #include "resultui.h"
+#include "ground.h"
 
 //*****************************************************************************
 // マクロ定義
@@ -126,6 +127,7 @@ HRESULT CGame::Init()
 	CParticle::Load();			// パーティクルのテクスチャのロード
 	m_pPause->Load();			//ポーズのテクスチャの読み込み
 	CToonShader::Load();
+	CGround::Load();
 
 	CGameCharSelect::Load();	// ゲーム（キャラ選択）
 	CGamePlay::Load();			// ゲーム（プレイ）
@@ -205,6 +207,7 @@ void CGame::Uninit(void)
 	CFeed::UnLoad();				//餌のテクスチャの破棄
 	CEgg::UnLoad();					//卵のテクスチャの破棄
 	CChick::UnLoad();				//ひよこのテクスチャの破棄
+	CGround::UnLoad();
 
 	CGameCharSelect::Unload();		// ゲーム（キャラ選択）
 	CGamePlay::Unload();			// ゲーム（プレイ）
@@ -857,6 +860,14 @@ void CGame::SetStage(void)
 		WallTextLoad(6);
 		MeshTextLoad(6);
 		FeedTextLoad();
+
+		//山の外側の海
+		CGround::Create(D3DXVECTOR3(13500.0, -9000.0, 8000.0), D3DXVECTOR3(-0.6f, 0.0f, 0.0f), D3DXVECTOR2(5700.0f, 8300.0f), CGround::TYPE_WATER);
+		CGround::Create(D3DXVECTOR3(13500.0, -8950.0, 8000.0), D3DXVECTOR3(0.3f, 0.0f, 0.0f), D3DXVECTOR2(5700.0f, 8300.0f), CGround::TYPE_WATER_HIGHLIGHT);
+
+		//川の処理
+		CGround::Create(D3DXVECTOR3(-12000.0f, -4000.0f, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 0.4f), D3DXVECTOR2(5000.0f, 9000.0f), CGround::TYPE_WATER);
+		CGround::Create(D3DXVECTOR3(-12000.0f, -3950.0f, 0.0f), D3DXVECTOR3(-0.2f, 0.0f, 0.0f), D3DXVECTOR2(5000.0f, 9000.0f), CGround::TYPE_WATER_HIGHLIGHT);
 
 		//===================================
 		//		Create

@@ -198,6 +198,9 @@
     <ClCompile Include="Character.cpp">
       <Filter>ソース ファイル\杉本</Filter>
     </ClCompile>
+    <ClCompile Include="ground.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboord.h">
@@ -373,6 +376,9 @@
     </ClInclude>
     <ClInclude Include="Character.h">
       <Filter>ヘッダー ファイル\杉本</Filter>
+    </ClInclude>
+    <ClInclude Include="ground.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

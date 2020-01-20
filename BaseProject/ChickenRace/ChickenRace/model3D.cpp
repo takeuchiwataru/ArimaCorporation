@@ -71,6 +71,7 @@ const char *CModel3D::m_apModelFile[MODEL_TYPE_MAX] =
 	"data\\MODEL\\Object\\ŠR_ŠÅ”Â.x",
 	"data\\MODEL\\Object\\‰a_ŠÅ”Â.x",
 	"data\\MODEL\\Object\\…_ŠÅ”Â.x",
+	"data\\MODEL\\Object\\–å.x",
 
 	//=============================
 	//@          ‰a
@@ -123,6 +124,7 @@ const char *CModel3D::m_apTextureFile[TEXTURE_TYPE_MAX] =
 	"data\\TEXTURE\\modeltex\\ŠÅ”Â(ŠR).jpg",
 	"data\\TEXTURE\\modeltex\\ŠÅ”Â(‰a).jpg",
 	"data\\TEXTURE\\modeltex\\ŠÅ”Â(…‚½‚Ü‚è).jpg",
+	"data\\TEXTURE\\modeltex\\ò.jpg",
 
 	//=============================
 	//@          ‰a
