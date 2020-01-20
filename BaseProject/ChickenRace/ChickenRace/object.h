@@ -61,5 +61,7 @@ private://個人でのみ使う
 	bool				m_bStageNext;								// ステージ遷移中
 	CShadow				*m_pShadow;									// 影のポインタ
 	CObjBillboad *		m_pObjBill;									// オブジェクトビルボードのポインタ
+
+	float				m_fRoll;									// 回転
 };
 #endif

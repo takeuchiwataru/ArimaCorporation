@@ -52,6 +52,8 @@ CObject::CObject(int nPriority) : CModel3D(nPriority, CScene::OBJTYPE_OBJECT)
 	m_Spin = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_nStageCount = 0;
 	m_bStageNext = false;
+
+	m_fRoll = 0.0f;									// 回転
 }
 //===============================================================================
 //　デストラクタ
@@ -108,6 +110,79 @@ void CObject::Update(void)
 	if (m_nType == 6)
 	{
 		m_rot.y -= 0.0004f;
+	}
+	else if (m_nType == 20)
+	{
+		if (CManager::GetMode() == CManager::MODE_TITLE)
+		{
+			// タイトルカウンター
+			int nTitleCounter = CTitle::GetCounter() % RESET_TITLEMODE;
+
+			if (RACEMOVE_TITLEMODE - 30 < nTitleCounter && nTitleCounter <= RACEMOVE_TITLEMODE)
+			{
+				if (CModel3D::GetPosition().z < 0.0f)
+				{
+					float fAngle = atan2f(0.0f, -70.0f);
+					CModel3D::SetPosition(
+						D3DXVECTOR3(-350.0f, -113.0f, -71.0f - 70.0f) +
+						D3DXVECTOR3(sinf(fAngle - m_fRoll) * -70.0f, 0.0f, cosf(fAngle - m_fRoll) * -70.0f));
+					CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f) - D3DXVECTOR3(0.0f, m_fRoll * 1.1f, 0.0f));
+				}
+				else
+				{
+					float fAngle = atan2f(0.0f, 70.0f);
+					CModel3D::SetPosition(
+						D3DXVECTOR3(-350.0f, -113.0f, 49.0f + 70.0f) +
+						D3DXVECTOR3(sinf(fAngle + m_fRoll) * -70.0f, 0.0f, cosf(fAngle + m_fRoll) * -70.0f));
+					CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f) + D3DXVECTOR3(0.0f, m_fRoll * 1.1f, 0.0f));
+				}
+				m_fRoll += ((D3DX_PI / 2.0f) / 30.0f);
+			}
+			else if (nTitleCounter == HOME_TITLEMODE)
+			{
+				if (CModel3D::GetPosition().z < 0.0f)
+				{
+					CModel3D::SetPosition(D3DXVECTOR3(-350.0f, -113.0f, -71.0f));
+					CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f));
+				}
+				else
+				{
+					CModel3D::SetPosition(D3DXVECTOR3(-350.0f, -113.0f, 49.0f));
+					CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f));
+				}
+				m_fRoll = 0.0f;
+			}
+		}
+		else if (CManager::GetMode() == CManager::MODE_GAME)
+		{
+			if (CGame::GetGameMode() == CGame::GAMEMODE_PLAY)
+			{
+				// ゲームカウンター
+				int nGameCounter = CGame::GetGameCounter();
+				int nCounter = nGameCounter - (START_SET_TIME - START_COUNT_TIME);
+
+				if ((START_SET_TIME - START_COUNT_TIME) <= nGameCounter && nGameCounter < START_SET_TIME && nCounter / 60 == 2 && 30 < (nCounter % 60))
+				{
+					if (CModel3D::GetPosition().z < 0.0f)
+					{
+						float fAngle = atan2f(0.0f, -70.0f);
+						CModel3D::SetPosition(
+							D3DXVECTOR3(-350.0f, -113.0f, -71.0f - 70.0f) +
+							D3DXVECTOR3(sinf(fAngle - m_fRoll) * -70.0f, 0.0f, cosf(fAngle - m_fRoll) * -70.0f));
+						CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f) - D3DXVECTOR3(0.0f, m_fRoll * 1.1f, 0.0f));
+					}
+					else
+					{
+						float fAngle = atan2f(0.0f, 70.0f);
+						CModel3D::SetPosition(
+							D3DXVECTOR3(-350.0f, -113.0f, 49.0f + 70.0f) +
+							D3DXVECTOR3(sinf(fAngle + m_fRoll) * -70.0f, 0.0f, cosf(fAngle + m_fRoll) * -70.0f));
+						CModel3D::SetRot(D3DXVECTOR3(0.0f, -(D3DX_PI / 2.0f), 0.0f) + D3DXVECTOR3(0.0f, m_fRoll * 1.1f, 0.0f));
+					}
+					m_fRoll += ((D3DX_PI / 2.0f) / 30.0f);
+				}
+			}
+		}
 	}
 }
 //=============================================================================
