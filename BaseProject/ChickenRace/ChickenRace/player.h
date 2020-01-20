@@ -32,7 +32,7 @@
 #define DAMAGE_TIME			(6)								// ダメージを食らっている時間
 #define SPEEDDOWN_TIME		(180)							// 減速している時間
 #define FALL_CHICK_RANGE	(250)							// ひよこが降る範囲
-#define CHICK_FALL_NUM		(5)								// 落ちてくるひよこの数
+#define CHICK_FALL_NUM		(10)							// 落ちてくるひよこの数
 #define MAX_EGG				(3)								// 卵の最大数
 #define SMOKE_SIZE			(20.0f)							// 煙の大きさ
 #define MAX_SMOKE			(5)								// 煙の数
@@ -42,7 +42,7 @@
 #define MAX_PLAYERANIM		(8)								// アニメーション数
 #define MAX_PLAYERKEY		(8)								// キーフレーム数
 #define MAX_MOTION			(10)							// モーションの最大数
-															   
+
 #define MAX_FALL_FADE		(60)							// おちるエフェクト
 #define MAX_FALL_WAIT		(60)							// おちるエフェクト待機
 
@@ -251,27 +251,27 @@ public:
 	void Strike(CPlayer *pPlayer, D3DXVECTOR3 pos, D3DXVECTOR3 move);
 
 	void ChangeRoad(void);
-	CCOL_MESH::EFFECT &GgetFEffect(void)	{ return m_FEffect; }
-	CRoad_Pointer	*&GetpPoint(void)		{ return m_pPoint; }
-	CRoad_Pointer	*&GetpEnmPoint(void)	{ return m_pEnmPoint; }
-	D3DXVECTOR3		&GetFNor(void)			{ return m_FNor; };
-	D3DXVECTOR3		&Getpos(void)			{ return m_pos; };
-	D3DXVECTOR3		&Getrot(void)			{ return m_rot; };
-	D3DXVECTOR3		&Getposold(void)		{ return m_OldPos; };
-	D3DXVECTOR3		&Getmove(void)			{ return m_move; };
-	bool			&GetbJump(void)			{ return m_bJump; };
-	float			&GetfLength(void)		{ return m_fLength; };
-	float			&GetfTiltV(void)		{ return m_fCTiltV; };
-	float			&GetfTiltW(void)		{ return m_fCTiltW; };
-	float			&GetfRotOld(void)		{ return m_fRotOld; };
-	float			&GetfRoad(void)			{ return m_fRoad; };
-	float			&GetfCntTime(void)		{ return m_PlayerInfo.fCountTime; }
-	int				&GetnMap(void)			{ return m_nMap; };
-	int				&GetnPlayerNum(void)	{ return m_nPlayerNum; }
-	bool			&GetbDivided(void)		{ return m_bDivided; };
-	bool			&GetbSJump(void)		{ return m_bSJump; }
-	C3DPolygon		*&GetpShadow(void)		{ return m_pShadow; };
-	CCOL_MESH		*&GetpFMesh(void)		{ return m_pFMesh; };
+	CCOL_MESH::EFFECT &GgetFEffect(void) { return m_FEffect; }
+	CRoad_Pointer	*&GetpPoint(void) { return m_pPoint; }
+	CRoad_Pointer	*&GetpEnmPoint(void) { return m_pEnmPoint; }
+	D3DXVECTOR3		&GetFNor(void) { return m_FNor; };
+	D3DXVECTOR3		&Getpos(void) { return m_pos; };
+	D3DXVECTOR3		&Getrot(void) { return m_rot; };
+	D3DXVECTOR3		&Getposold(void) { return m_OldPos; };
+	D3DXVECTOR3		&Getmove(void) { return m_move; };
+	bool			&GetbJump(void) { return m_bJump; };
+	float			&GetfLength(void) { return m_fLength; };
+	float			&GetfTiltV(void) { return m_fCTiltV; };
+	float			&GetfTiltW(void) { return m_fCTiltW; };
+	float			&GetfRotOld(void) { return m_fRotOld; };
+	float			&GetfRoad(void) { return m_fRoad; };
+	float			&GetfCntTime(void) { return m_PlayerInfo.fCountTime; }
+	int				&GetnMap(void) { return m_nMap; };
+	int				&GetnPlayerNum(void) { return m_nPlayerNum; }
+	bool			&GetbDivided(void) { return m_bDivided; };
+	bool			&GetbSJump(void) { return m_bSJump; }
+	C3DPolygon		*&GetpShadow(void) { return m_pShadow; };
+	CCOL_MESH		*&GetpFMesh(void) { return m_pFMesh; };
 	INDUCTION		&GetInduction(void) { return m_Induction; };
 	CFeed::FEEDTYPE	&GetFeedType(void) { return m_FeedType; };
 	float			&GetfFeedRot(void) { return m_fFeedRot; };
@@ -289,7 +289,8 @@ public:
 
 	bool GetDamage(void) {
 		if (m_State == PLAYERSTATE_SPEEDDOWN || m_State == PLAYERSTATE_SPEEDDOWN_S || m_State == PLAYERSTATE_DAMAGE) return true;
-		else return false; }
+		else return false;
+	}
 
 	//モーションの更新関数
 	void UpdateMotion(void);
@@ -352,11 +353,11 @@ private:
 	CChick::TYPE SetChickType(CChick::TYPE type, bool bStrong);
 
 	CModel						**m_apModel;			//パーツモデルのポインタ
-	//static CModel *		m_pModel;			//パーツモデルのポインタ
-	//static int				m_nMaxModel;	//読み込むモデルの最大数
-	//static int				m_nMaxParts;	//読み込むパーツの最大数
+														//static CModel *		m_pModel;			//パーツモデルのポインタ
+														//static int				m_nMaxModel;	//読み込むモデルの最大数
+														//static int				m_nMaxParts;	//読み込むパーツの最大数
 
-																//メンバ変数
+														//メンバ変数
 	static bool					  m_bSChick;
 	static int					  m_nCntSTime;
 	static int					  m_nMaxMotion;					// モーションの最大数
@@ -447,7 +448,7 @@ private:
 	float						  m_fCola[MAX_PLAYCOL];	//キャラ分α値保存
 	CCOL_MESH					  *m_pFMesh;			//地面のポインタ
 	int							  m_nCntSky;			//空中にいるF数
-	//AI用----------------------------------
+														//AI用----------------------------------
 	CPlayer						  *m_pNear;				//近いプレイヤー
 	CFeed::FEEDTYPE				  m_FeedType;			//いらない餌
 	INDUCTION					  m_Induction;			// 誘導の有無
@@ -459,9 +460,9 @@ private:
 	float						  m_fUseTime;			// 使用間隔制御用
 	float						  m_fCntTackle;			//タックル制御用
 	bool						  m_bSJump;				// ジャンプ情報保存
-	//--------------------------------------
+														//--------------------------------------
 
-	// モーション関数	新規
+														// モーション関数	新規
 	static KEY_INFO				  *m_pKeyInfo[MAX_MOTION];		// キー情報へのポインタ
 	PlayerAnim					  m_PlayerAnim;
 	KEY_INFO					  *m_pKey;						// 次のキー						

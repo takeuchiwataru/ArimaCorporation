@@ -970,7 +970,7 @@ void CChick::AnnoyS(void)
 		m_move.y = 3.0f;
 		m_move.z = pPlayer[m_nNumPlayer]->GetMove().z;
 
-		if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 200.0f)
+		if (m_pos.y > pPlayer[m_nNumPlayer]->GetPos().y + 100.0f)
 		{// 隕石になるタイミング
 			pPlayer[m_nNumPlayer]->AnnoyChicks();
 			m_bAttackS = true;

@@ -1114,6 +1114,7 @@ void CPlayer::WarpNext(void)
 	m_pos.y = CCOL_MESH_MANAGER::GetHeight(m_pos, m_nMap) + 3.0f;
 	m_OldPos = m_pos;
 	m_move *= 0.0f;
+	m_fSpeed *= 0.0f;
 	m_PlayerInfo.fCountTime = 0;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
 	SetKiller();
@@ -2625,7 +2626,7 @@ void CPlayer::CollisionChick(void)
 
 						// 減速
 					case CChick::TYPE_ANNOY:
-						if (m_bDamage == false)
+						if (m_State != PLAYERSTATE_SPEEDDOWN && m_bDamage == false)
 						{
 							CancelMotion(PLAYERANIM_DAMAGE, false);
 							m_bDamage = true;
@@ -2691,13 +2692,13 @@ void CPlayer::ChickAppear(void)
 						{
 							if (m_bSChick == false)
 							{
-								if (nRank <= 10 * (6 + nCntRank))
+								if (nRank <= 10 * (5 + nCntRank))
 								{// 強いほう
 								 // タイプ設定
 									type = SetChickType(type, true);
 									m_bSChick = true;
 								}
-								else if (nRank > 10 * (6 + nCntRank))
+								else if (nRank > 10 * (5 + nCntRank))
 								{// 普通のほう
 								 // タイプ設定
 									type = SetChickType(type, false);
