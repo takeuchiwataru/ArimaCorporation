@@ -63,6 +63,7 @@ void CDebugProc::Uninit(void)
 //=============================================================================
 void CDebugProc::Print(char *fmt, ...)
 {
+#ifdef _DEBUG
 	va_list argp;
 	char cString[256];
 	cString[0] = '\0';
@@ -89,6 +90,8 @@ void CDebugProc::Print(char *fmt, ...)
 
 	//•¶š‚ÌI—¹
 	va_end(argp);
+#endif
+
 }
 //=============================================================================
 // XVˆ—

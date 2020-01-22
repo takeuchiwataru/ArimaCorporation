@@ -162,7 +162,7 @@ bool	CRoad_Pointer::BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal)
 //==================================================================================================//
 //    * ìπÇÃÉ|ÉCÉìÉ^ï€ë∂ä÷êî *
 //==================================================================================================//
-float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber, CCOL_MESH::EFFECT &effect)
+float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &fRoad, int &nMap, int nNumber, CCOL_MESH::EFFECT &effect, float &fCntTime)
 {
 	float fDistance, fRot;
 	D3DXVECTOR3 Point;
@@ -184,9 +184,9 @@ float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &
 	}
 	fRot = atan2f(Point.x - pos.x, Point.z - pos.z);
 
-	if (effect != CCOL_MESH::EFFECT_GRASS)
+	if (effect != CCOL_MESH::EFFECT_GRASS && fCntTime > 3.0f)
 	{//ëêÇÕÇ∑ÇÆî≤ÇØÇÈ
-		fRot = BentRot(pos, pPoint, fRot, fDistance, fRoad);
+		fRot += (BentRot(pos, pPoint, fRot, fDistance, fRoad) - fRot) * (fCntTime / PLAYER_COUNT);
 	}
 	return fRot;
 }

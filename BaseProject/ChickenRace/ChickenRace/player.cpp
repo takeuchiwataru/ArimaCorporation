@@ -547,12 +547,12 @@ void CPlayer::UpdateRace(void)
 		if (m_bGoal == false)
 		{
 			m_nCntSky++;
-			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			{
-				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-				else { UpdateKiller(); }
-			}
-			else
+			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//{
+			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+			//	else { UpdateKiller(); }
+			//}
+			//else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
@@ -792,7 +792,7 @@ void CPlayer::UpdateAI(void)
 //=============================================================================
 float CPlayer::AIInduction(void)
 {
-	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, m_nNumRoad, m_FEffect);
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, m_nNumRoad, m_FEffect, m_PlayerInfo.fCountTime);
 
 	if (m_Induction != INDUCTION_MAX)
 	{//誘導
@@ -1018,6 +1018,7 @@ void CPlayer::SetKiller(void)
 {
 	//できるだけ近くのポイントを取得
 	m_pEnmPoint = m_pEnmPoint->SetKiller(m_pos, m_nMap);
+	m_pEnmPoint = m_pEnmPoint->GetpRoadPointer(0);
 }
 //=============================================================================
 // キラーの更新処理
@@ -1025,7 +1026,8 @@ void CPlayer::SetKiller(void)
 void CPlayer::UpdateKiller(void)
 {
 	m_fRoad = 0.0f;
-	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 1, m_FEffect);
+	m_PlayerInfo.fCountTime = PLAYER_COUNT;
+	float fRot = CRoad_Pointer::NextRot(m_pos, m_pEnmPoint, m_fRoad, m_nMap, 1, m_FEffect, m_PlayerInfo.fCountTime);
 
 	fRot = fRot - m_rot.y;
 	RemakeAngle(&fRot);

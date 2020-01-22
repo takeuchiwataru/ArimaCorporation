@@ -24,15 +24,9 @@ public://誰でも扱える
 	LPDIRECT3DDEVICE9 GetDevice(void) { return m_pD3DDevice; }//NULLチェックとかない＆＆1つだけの時
 
 private://個人でのみ使う
-#ifdef _DEBUG
-	void DrawFPS(void);
-#endif
 	LPDIRECT3D9				m_pD3D;					// Direct3Dオブジェクト
 	LPDIRECT3DDEVICE9		m_pD3DDevice;			// Deviceオブジェクト(描画に必要)
 	bool					m_bOnOff;
-#ifdef _DEBUG
-	//LPD3DXFONT				m_pFont;				// フォントへのポインタ
-#endif
 };
 
 
