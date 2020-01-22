@@ -547,12 +547,12 @@ void CPlayer::UpdateRace(void)
 		if (m_bGoal == false)
 		{
 			m_nCntSky++;
-			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			//{
-			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-			//	else { UpdateKiller(); }
-			//}
-			//else
+			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			{
+				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+				else { UpdateKiller(); }
+			}
+			else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
