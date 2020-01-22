@@ -1127,9 +1127,12 @@ void CGame::Ranking(void)
 	if (nGoulNum == m_nMaxPlayer)
 	{// 全てゴールした
 		SetGameState(GAMESTATE_END);
-
 		for (int nCount = 0; nCount < MAX_MEMBER; nCount++)
 		{// プレイヤーカウント
+			if (m_pPlayer[nCount]->GetGoal() == false && m_pPlayer[nCount]->GetpEnmPoint() != NULL)
+			{
+				m_nTime[nCount] += (int)(m_pPlayer[nCount]->GetpEnmPoint()->GetGDistance(m_pPlayer[nCount]->Getpos(), m_pPlayer[nCount]->GetnMap()) * 0.15f);
+			}
 			for (int nCntCheck = 0; nCntCheck < MAX_MEMBER; nCntCheck++)
 				if (m_nRanking[nCntCheck] == nCount)
 				{

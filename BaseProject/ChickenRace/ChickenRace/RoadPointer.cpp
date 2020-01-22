@@ -387,7 +387,7 @@ void	CRoad_Pointer::SetRoad(int &nNumRoad, bool &bRoad)
 //==================================================================================================//
 //    * キラーのポイント設定関数 *
 //==================================================================================================//
-CRoad_Pointer	*&CRoad_Pointer::SetKiller(D3DXVECTOR3 &pos, int &nMap)
+CRoad_Pointer	*CRoad_Pointer::SetKiller(D3DXVECTOR3 &pos, int &nMap)
 {
 	float fDis = 99999999.9f;
 	CRoad_Pointer *pTop = CRoad_Manager::GetManager()->GetTop(1, nMap);
@@ -603,6 +603,23 @@ float	CRoad_Pointer::GetfRotY(void)
 	if (fRot < D3DX_PI) { fRot += D3DX_PI; }
 	fRot = BentRot(m_pos - D3DXVECTOR3(sinf(fRot), 0.0f, cosf(fRot)) * 0.1f, pPoint, fRot, fDistance, fRoad);
 	return fRot;
+}
+//==================================================================================================//
+//    * ゴールまでの距離計算関数 *
+//==================================================================================================//
+float	CRoad_Pointer::GetGDistance(D3DXVECTOR3 &pos, int nMap)
+{
+	CRoad_Pointer *pPoint = this;
+	float fDis = pPoint->m_fNextDistance[0];
+
+	fDis -= sqrtf(powf(pos.x - pPoint->m_pos.x, 2) + powf(pos.z - pPoint->m_pos.z, 2));
+	while (1)
+	{
+		pPoint = pPoint->GetNext(0, nMap, 1);
+		if (pPoint == NULL) { break; }
+		fDis += pPoint->m_fNextDistance[0];
+	}
+	return fDis;
 }
 //==================================================================================================//
 //    * 道のポインタ設置関数 *

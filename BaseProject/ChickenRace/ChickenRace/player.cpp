@@ -547,12 +547,12 @@ void CPlayer::UpdateRace(void)
 		if (m_bGoal == false)
 		{
 			m_nCntSky++;
-			if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
-			{
-				if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
-				else { UpdateKiller(); }
-			}
-			else
+			//if (m_PlayerType == PLAYERTYPE_PLAYER && CManager::GetAging() == false)
+			//{
+			//	if (m_State != PLAYERSTATE_SPEEDUP_S) { ControlKey(); }
+			//	else { UpdateKiller(); }
+			//}
+			//else
 			{
 				if (m_State != PLAYERSTATE_SPEEDUP_S) { UpdateAI(); }
 				else { UpdateKiller(); }
@@ -736,15 +736,13 @@ void CPlayer::UpdateResult(void)
 void CPlayer::UpdateAI(void)
 {
 	float fRot = AIInduction();
-	float fRotY, fDifference;
+	float fDifference;
 	AIMovement(fRot);
 
 	fDifference = fRot;
 	if (fDifference < 0.0f) { fDifference *= -1.0f; }
 
 	AICurve(fRot, fDifference);
-	fRotY = fRot + m_rot.y;
-	RemakeAngle(&fRotY);
 
 	if (m_nStartCounter == m_nStartFrame)
 	{
@@ -1119,6 +1117,7 @@ void CPlayer::WarpNext(void)
 	m_fSpeed *= 0.0f;
 	m_PlayerInfo.fCountTime = 0;
 	m_FEffect = CCOL_MESH::EFFECT_NORMAL;
+	m_fRoad = 0.0f;
 	SetKiller();
 }
 //=============================================================================
