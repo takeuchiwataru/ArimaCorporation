@@ -865,14 +865,14 @@ void CPlayer::AIMovement(float &fRotY)
 		}
 		if (m_fCntTackle <= 0.0f)
 		{
-			if (m_nCharacterNum % 3 == 1)
-			{
-				if (fDis < 40.0f && fDifference > D3DX_PI * 0.95f)
-				{//真後ろなら ブレーキ
-					m_move.x *= 0.85f;
-					m_move.z *= 0.85f;
-				}
-			}
+			//if (m_nCharacterNum % 3 == 1)
+			//{
+			//	if (fDis < 40.0f && fDifference > D3DX_PI * 0.95f)
+			//	{//真後ろなら ブレーキ
+			//		m_move.x *= 0.85f;
+			//		m_move.z *= 0.85f;
+			//	}
+			//}
 			if (m_nCharacterNum % 2 == 1)
 			{
 				if (fDis < 45.0f && fDifference > D3DX_PI * 0.6f && fDifference < D3DX_PI * 0.75f)
@@ -904,6 +904,16 @@ void CPlayer::UseItem(void)
 	case BULLET_EGG_ATTACK:	if (UseATK(nRank)) { fTime = 90.0f;	bUse = true; }	break;
 	case BULLET_EGG_ANNOY:	if (UseDEF(nRank)) { fTime = 120.0f;	bUse = true; }	break;
 	case BULLET_EGG_SPEED:	if (UseSPD(nRank)) { fTime = 90.0f;	bUse = true; }	break;
+	}
+	for (int nCnt = 0; nCnt < m_nNumItem; nCnt++)
+	{
+		switch (m_bulletType[nCnt])
+		{//アイテムごとに判断
+		case BULLET_CHICK_ATTACK_S:	bUse = true;	m_fUseTime = 0.0f;	break;
+		case BULLET_CHICK_ANNOY_S:	bUse = true;	m_fUseTime = 0.0f;	break;
+		case BULLET_CHICK_SPEED_S:	bUse = true;	m_fUseTime = 0.0f;	break;
+		}
+
 	}
 
 	if (m_fUseTime <= 0.0f)
@@ -1016,7 +1026,7 @@ void CPlayer::SetKiller(void)
 {
 	//できるだけ近くのポイントを取得
 	m_pEnmPoint = m_pEnmPoint->SetKiller(m_pos, m_nMap);
-	m_pEnmPoint = m_pEnmPoint->GetpRoadPointer(0);
+	if (m_pEnmPoint->GetpRoadPointer(0) != NULL) { m_pEnmPoint = m_pEnmPoint->GetpRoadPointer(0); }
 }
 //=============================================================================
 // キラーの更新処理

@@ -144,7 +144,11 @@ bool	CRoad_Pointer::BeyondPoint(CPlayer *&pPlayer, bool bRank, bool &bGoal)
 		{//越えたなら
 			if (bRank)
 			{
-				if (pPoint->m_nNumber == 0) { pPlayer->GetnMap()++; }
+				if (pPoint->m_nNumber == 0) 
+				{
+					pPlayer->GetnMap()++;
+					if (pPlayer->GetnMap() >= CRoad_Manager::MAP_MAX) { pPlayer->GetnMap() = CRoad_Manager::MAP_MAX - 1; }
+				}
 				pPlayer->GetpPoint() = pPoint;
 				pPlayer->ChangeRoad();
 			}
@@ -167,6 +171,7 @@ float	CRoad_Pointer::NextRot(D3DXVECTOR3 &pos, CRoad_Pointer *&pmyPoint, float &
 	float fDistance, fRot;
 	D3DXVECTOR3 Point;
 
+	if (pmyPoint == NULL) { return 0.0f; }
 	CRoad_Pointer *pPoint = pmyPoint->GetNext(nNumber, nMap, 1);
 	if (pPoint == NULL) { return 0.0f; }
 
@@ -391,7 +396,7 @@ CRoad_Pointer	*CRoad_Pointer::SetKiller(D3DXVECTOR3 &pos, int &nMap)
 {
 	float fDis = 99999999.9f;
 	CRoad_Pointer *pTop = CRoad_Manager::GetManager()->GetTop(1, nMap);
-	CRoad_Pointer *pPoint = NULL;
+	CRoad_Pointer *pPoint = pTop;
 	//現在のマップで一番近いのを探す（一定以上近いのは無視する）
 	return pTop->SearchKiller(pos, fDis, pPoint);
 }
@@ -402,7 +407,7 @@ CRoad_Pointer	*&CRoad_Pointer::SearchKiller(D3DXVECTOR3 &pos, float &fDistance, 
 {
 	float fDis = sqrtf(powf(pos.x - m_pos.x, 2) + powf(pos.z - m_pos.z, 2));
 
-	if (fDis < fDistance && m_pNextPointer[0] != NULL)
+	if (fDis < fDistance)
 	{//近いなら
 		fDistance = fDis;
 		pPoint = this;

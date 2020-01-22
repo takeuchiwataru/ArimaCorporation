@@ -171,9 +171,6 @@
     <ClCompile Include="ModelEffect.cpp">
       <Filter>ソース ファイル\杉本</Filter>
     </ClCompile>
-    <ClCompile Include="NorMesh.cpp">
-      <Filter>ソース ファイル\杉本</Filter>
-    </ClCompile>
     <ClCompile Include="RoadPointer.cpp">
       <Filter>ソース ファイル\杉本</Filter>
     </ClCompile>
@@ -200,6 +197,9 @@
     </ClCompile>
     <ClCompile Include="ground.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="NorMesh.cpp">
+      <Filter>ソース ファイル\知らん奴</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
