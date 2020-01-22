@@ -72,6 +72,7 @@ CGamePlay::CGamePlay()
 		for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
 		{// アイテムフレームカウント
 			m_pItemFrame[nCntPlayer][nCntItem] = NULL;		// アイテムフレームフレーム
+			m_pItemGauge[nCntPlayer][nCntItem] = NULL;		// アイテムゲージ
 			m_pItem[nCntPlayer][nCntItem] = NULL;			// アイテムフレーム
 			m_pItemClose[nCntPlayer][nCntItem] = NULL;		// アイテム×
 		}
@@ -282,10 +283,10 @@ HRESULT CGamePlay::Init()
 		if (bOnine == true)
 		{// オンライン
 			m_pTutorial->SetPosSize(
-			D3DXVECTOR3(
+				D3DXVECTOR3(
 				(SCREEN_WIDTH * 0.5f),
-				(TUTORIAL_SIZE.y),
-				0.0f),
+					(TUTORIAL_SIZE.y),
+					0.0f),
 				TUTORIAL_SIZE);
 		}
 		else
@@ -314,7 +315,7 @@ HRESULT CGamePlay::Init()
 			{// オンライン
 				m_pRanking[nCntPlayer]->SetPosSize(
 					D3DXVECTOR3(
-						(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_X)) * -1.0f),
+					(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_X)) * -1.0f),
 						(SCREEN_HEIGHT * 0.5f) + ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * RANKING_SIZE_1P_Y)),
 						0.0f),
 					D3DXVECTOR2(
@@ -353,7 +354,7 @@ HRESULT CGamePlay::Init()
 		// アイテム
 		for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
 		{// アイテムカウント
-			// アイテムフレーム
+		 // アイテムフレーム
 			if (m_pItemFrame[nCntPlayer][nCntItem] == NULL)
 			{// NULL
 				m_pItemFrame[nCntPlayer][nCntItem] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
@@ -401,6 +402,43 @@ HRESULT CGamePlay::Init()
 
 				if (bOnine == true && nClient != nCntPlayer)
 					m_pItemFrame[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+			}
+			// アイテムゲージ
+			if (m_pItemGauge[nCntPlayer][nCntItem] == NULL)
+			{// NULL
+				m_pItemGauge[nCntPlayer][nCntItem] = new CScene2D(5, CScene::OBJTYPE_2DPOLYGON);
+				m_pItemGauge[nCntPlayer][nCntItem]->Init();
+				// 各ビューポートの中心点から計算（中心点 -> 指定の位置へ）
+				if (bOnine == true)
+				{// オンライン
+					m_pItemGauge[nCntPlayer][nCntItem]->SetPosSize(
+						D3DXVECTOR3(
+						(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) * -1.0f),
+							(SCREEN_HEIGHT * 0.5f) - ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) + (((SCREEN_HEIGHT * ITEM_SIZE_1P) * 2.1f) * nCntItem),
+							0.0f),
+						D3DXVECTOR2(
+							SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f,
+							SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f));
+					m_pItemGauge[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.8f));
+				}
+				else
+				{// オンラインじゃない
+					m_pItemGauge[nCntPlayer][nCntItem]->SetPosSize(
+						D3DXVECTOR3(
+						(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntPlayer % 2 == 0 ? -1.0f : 1.0f))),
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) - ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
+							(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) +
+								(((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)) * 2.1f) * nCntItem),
+							0.0f),
+						D3DXVECTOR2(
+							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f,
+							SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f));
+					m_pItemGauge[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.4f));
+				}
+
+				if (bOnine == true && nClient != nCntPlayer)
+					m_pItemGauge[nCntPlayer][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 			}
 			// アイテム
 			if (m_pItem[nCntPlayer][nCntItem] == NULL)
@@ -667,6 +705,11 @@ void CGamePlay::Uninit(void)
 				m_pItemFrame[nCntPlayer][nCntItem]->Uninit();
 				m_pItemFrame[nCntPlayer][nCntItem] = NULL;
 			}
+			if (m_pItemGauge[nCntPlayer][nCntItem] != NULL)
+			{// NULL以外
+				m_pItemGauge[nCntPlayer][nCntItem]->Uninit();
+				m_pItemGauge[nCntPlayer][nCntItem] = NULL;
+			}
 			if (m_pItem[nCntPlayer][nCntItem] != NULL)
 			{// NULL以外
 				m_pItem[nCntPlayer][nCntItem]->Uninit();
@@ -823,16 +866,15 @@ void CGamePlay::Update(void)
 		}
 	}
 
-	int nPlayerNum = 0;
-	for (int nCntMember = 0; nCntMember < MAX_MEMBER; nCntMember++)
+	for (int nCntMember = 0; nCntMember < nMaxPlayer; nCntMember++)
 	{// プレイヤーカウント
 		if (pPlayer[nCntMember] != NULL)
 		{// NULL以外
 			if (pPlayer[nCntMember]->GetPlayerType() == CPlayer::PLAYERTYPE_PLAYER)
 			{
-				if (pbGoul[nPlayerNum] == false)
+				if (pbGoul[nCntMember] == false)
 				{
-					if (m_pFade[nPlayerNum] != NULL)
+					if (m_pFade[nCntMember] != NULL)
 					{// NULL以外
 						if (pPlayer[nCntMember]->GetDrop() == true)
 						{
@@ -851,14 +893,14 @@ void CGamePlay::Update(void)
 
 							fcol_a *= fDiff;
 
-							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
+							m_pFade[nCntMember]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, fcol_a));
 
-							if (bOnine == true && nClient != nPlayerNum)
-								m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							if (bOnine == true && nClient != nCntMember)
+								m_pFade[nCntMember]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 						}
 						else
 						{
-							m_pFade[nPlayerNum]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							m_pFade[nCntMember]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 						}
 					}
 
@@ -866,62 +908,127 @@ void CGamePlay::Update(void)
 					{// アイテムカウント
 						int nNum = pPlayer[nCntMember]->GetItemNum();
 						int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
+						float fHatchTime_P = pPlayer[nCntMember]->HatchTime_P(nCntItem);
 
 						// アイテムフレーム
-						if (m_pItemFrame[nPlayerNum][nCntItem] != NULL)
+						if (m_pItemFrame[nCntMember][nCntItem] != NULL)
 						{// NULL以外
-							if ((bOnine == true && nClient == nPlayerNum) || bOnine == false)
+							if ((bOnine == true && nClient == nCntMember) || bOnine == false)
 							{// オンラインで自分なら、オンラインじゃない
 								if (nCntItem < nNum)
 								{
-									m_pItemFrame[nPlayerNum][nCntItem]->SetTexture((nType % 3), 4, 1, 1);
-									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+									m_pItemFrame[nCntMember][nCntItem]->SetTexture((nType % 3), 4, 1, 1);
+									m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 								}
 								else
 								{
-									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
-									m_pItemFrame[nPlayerNum][nCntItem]->SetTexture(3, 4, 1, 1);
+									m_pItemFrame[nCntMember][nCntItem]->SetTexture(3, 4, 1, 1);
+									m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 								}
 							}
 							else
 							{
-								m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							}
+						}
+
+						// アイテムゲージ
+						if (m_pItemGauge[nCntMember][nCntItem] != NULL)
+						{// NULL以外
+							if ((bOnine == true && nClient == nCntMember) || bOnine == false)
+							{// オンラインで自分なら、オンラインじゃない
+								D3DXCOLOR col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);;
+
+								if (nType % 3 == 0) { col = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f); }
+								if (nType % 3 == 1) { col = D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f); }
+								if (nType % 3 == 2) { col = D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f); }
+
+								if (nCntItem < nNum)
+								{
+									D3DXVECTOR3 pos;
+									D3DXVECTOR2 size;
+
+									if (bOnine == true)
+									{// オンライン
+										pos = D3DXVECTOR3(
+											(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) * -1.0f),
+											(SCREEN_HEIGHT * 0.5f) - ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) + (((SCREEN_HEIGHT * ITEM_SIZE_1P) * 2.1f) * nCntItem),
+											0.0f);
+										size = D3DXVECTOR2(
+											SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f,
+											SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f);
+									}
+									else
+									{// オンラインじゃない
+										pos = D3DXVECTOR3(
+											(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntMember % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
+											(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntMember % 2 == 0 ? -1.0f : 1.0f))),
+												(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntMember % 2 == 0 ? 0.25f : 0.75f) : (nCntMember / 2 == 0 ? 0.25f : 0.75f)))) - ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
+											(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) +
+													(((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)) * 2.1f) * nCntItem),
+											0.0f);
+										size = D3DXVECTOR2(
+											SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f,
+											SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f);
+									}
+
+									if (nType / 3 == 0)
+									{
+										pos.y += size.y * (1.0f - fHatchTime_P);
+										size.y *= fHatchTime_P;
+									}
+
+									m_pItemGauge[nCntMember][nCntItem]->SetPosSize(pos, size);
+									m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(col.r, col.g, col.b, (nType % 3 == 2 ? 0.6f : 0.4f)));
+								}
+								else
+								{
+									m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								}
+							}
+							else
+							{
+								m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 						}
 
 						// アイテム
-						if (m_pItem[nPlayerNum][nCntItem] != NULL)
+						if (m_pItem[nCntMember][nCntItem] != NULL)
 						{// NULL以外
-							if ((bOnine == true && nClient == nPlayerNum) || bOnine == false)
+							if ((bOnine == true && nClient == nCntMember) || bOnine == false)
 							{// オンラインで自分なら、オンラインじゃない
 								if (nCntItem < nNum)
 								{
-									m_pItem[nPlayerNum][nCntItem]->SetTexture(((nType % 3) * 3) + (nType / 3), 3, 3, 1);
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+									m_pItem[nCntMember][nCntItem]->SetTexture(((nType % 3) * 3) + (nType / 3), 3, 3, 1);
+									m_pItem[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 								}
 								else
 								{
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+									m_pItem[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 								}
 							}
 							else
 							{
-								m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								m_pItem[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 						}
 
 						// アイテム×
-						if (m_pItemClose[nPlayerNum][nCntItem] != NULL)
+						if (m_pItemClose[nCntMember][nCntItem] != NULL)
 						{
 							if (pPlayer[nCntMember]->GetDamage() == true)
-							{	if (m_nCloseCounter[nPlayerNum] < CLOSE_FADE) m_nCloseCounter[nPlayerNum]++;	}
+							{
+								if (m_nCloseCounter[nCntMember] < CLOSE_FADE) m_nCloseCounter[nCntMember]++;
+							}
 							else
-							{	if (0 < m_nCloseCounter[nPlayerNum]) m_nCloseCounter[nPlayerNum]--;		}
+							{
+								if (0 < m_nCloseCounter[nCntMember]) m_nCloseCounter[nCntMember]--;
+							}
 
-							m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (float)((float)(m_nCloseCounter[nPlayerNum]) / (float)(CLOSE_FADE))));
+							m_pItemClose[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, (float)((float)(m_nCloseCounter[nCntMember]) / (float)(CLOSE_FADE))));
 
-							if (bOnine == true && nClient != nPlayerNum)
-								m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							if (bOnine == true && nClient != nCntMember)
+								m_pItemClose[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 						}
 					}
 				}
@@ -931,71 +1038,130 @@ void CGamePlay::Update(void)
 					for (int nCntItem = 0; nCntItem < MAX_EGG; nCntItem++)
 					{// アイテムカウント
 						int nNum = pPlayer[nCntMember]->GetItemNum();
+						int nType = pPlayer[nCntMember]->GetItemType(nCntItem);
+						float fHatchTime_P = pPlayer[nCntMember]->HatchTime_P(nCntItem);
 
-						if (60 <= m_nGoulCounter[nPlayerNum] && m_nGoulCounter[nPlayerNum] < 120)
+						if (60 <= m_nGoulCounter[nCntMember] && m_nGoulCounter[nCntMember] < 120)
 						{
-							int nFrame = m_nGoulCounter[nPlayerNum] - 60;
+							int nFrame = m_nGoulCounter[nCntMember] - 60;
 
 							// アイテムフレーム
-							if (m_pItemFrame[nPlayerNum][nCntItem] != NULL)
+							if (m_pItemFrame[nCntMember][nCntItem] != NULL)
 							{// NULL以外
 								int nCount = (nFrame % 20) + 1;
 								if (nCntItem < nNum)
 								{
 									if (nFrame / 20 == 0)
-										m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nCount / (float)20)));
+										m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nCount / (float)20)));
 								}
 								else
 								{
-									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+									m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 								}
 
-								if (bOnine == true && nClient != nPlayerNum)
-									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								if (bOnine == true && nClient != nCntMember)
+									m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 
 							}
+							// アイテムゲージ
+							if (m_pItemGauge[nCntMember][nCntItem] != NULL)
+							{// NULL以外
+								D3DXCOLOR col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);;
+
+								if (nType % 3 == 0) { col = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f); }
+								if (nType % 3 == 1) { col = D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f); }
+								if (nType % 3 == 2) { col = D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f); }
+
+								int nCount = (nFrame % 20) + 1;
+								if (nCntItem < nNum)
+								{
+									D3DXVECTOR3 pos;
+									D3DXVECTOR2 size;
+
+									if (bOnine == true)
+									{// オンライン
+										pos = D3DXVECTOR3(
+											(SCREEN_WIDTH * 0.5f) + (((SCREEN_WIDTH * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) * -1.0f),
+											(SCREEN_HEIGHT * 0.5f) - ((SCREEN_HEIGHT * 0.5f) - (SCREEN_HEIGHT * ITEM_SIZE_1P)) + (((SCREEN_HEIGHT * ITEM_SIZE_1P) * 2.1f) * nCntItem),
+											0.0f);
+										size = D3DXVECTOR2(
+											SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f,
+											SCREEN_HEIGHT * ITEM_SIZE_1P * 0.95f);
+									}
+									else
+									{// オンラインじゃない
+										pos = D3DXVECTOR3(
+											(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntMember % 2 == 0 ? 0.25f : 0.75f))) + (((SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : 0.25f)) -
+											(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) * ((nMaxPlayer - 1) / 2 == 0 ? -1.0f : (nCntMember % 2 == 0 ? -1.0f : 1.0f))),
+												(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntMember % 2 == 0 ? 0.25f : 0.75f) : (nCntMember / 2 == 0 ? 0.25f : 0.75f)))) - ((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : 0.25f)) -
+											(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P))) +
+													(((SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P)) * 2.1f) * nCntItem),
+											0.0f);
+										size = D3DXVECTOR2(
+											SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f,
+											SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? ITEM_SIZE_1P : ITEM_SIZE_4P) * 0.95f);
+									}
+
+									if (nType / 3 == 0)
+									{
+										pos.y += size.y * (1.0f - fHatchTime_P);
+										size.y *= fHatchTime_P;
+									}
+
+									m_pItemGauge[nCntMember][nCntItem]->SetPosSize(pos, size);
+
+									if (nFrame / 20 == 0)
+										m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(col.r, col.g, col.b, (nType % 3 == 2 ? 0.6f : 0.4f) - ((nType % 3 == 2 ? 0.6f : 0.4f) * (float)((float)nCount / (float)20))));
+								}
+								else
+								{
+									m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								}
+
+								if (bOnine == true && nClient != nCntMember)
+									m_pItemGauge[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+							}
 							// アイテム
-							if (m_pItem[nPlayerNum][nCntItem] != NULL)
+							if (m_pItem[nCntMember][nCntItem] != NULL)
 							{// NULL以外
 								int nCount = (nFrame % 20) + 1;
 								if (nCntItem < nNum)
 								{
 									if (nFrame / 20 == 0)
-										m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nCount / (float)20)));
+										m_pItem[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f - (float)((float)nCount / (float)20)));
 								}
 								else
 								{
-									m_pItemFrame[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+									m_pItemFrame[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 								}
 
-								if (bOnine == true && nClient != nPlayerNum)
-									m_pItem[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								if (bOnine == true && nClient != nCntMember)
+									m_pItem[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 
 							// アイテム×
-							if (m_pItemClose[nPlayerNum][nCntItem] != NULL)
+							if (m_pItemClose[nCntMember][nCntItem] != NULL)
 							{// NULL以外
-								m_pItemClose[nPlayerNum][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+								m_pItemClose[nCntMember][nCntItem]->SetColor(&D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 							}
 						}
 					}
 				}
 
 				// タイム
-				if (m_pTime[nPlayerNum] != NULL)
+				if (m_pTime[nCntMember] != NULL)
 				{// NULL以外
-					m_pTime[nPlayerNum]->TexTime(nTimer[nCntMember], true);
-
-					if (pbGoul[nPlayerNum] == true)
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
+					if (pbGoul[nCntMember] == true)
+						m_pTime[nCntMember]->Setcol(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
 					else
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+					{
+						m_pTime[nCntMember]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+						m_pTime[nCntMember]->TexTime(nTimer[nCntMember], true);
+					}
 
-					if (bOnine == true && nClient != nPlayerNum)
-						m_pTime[nPlayerNum]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+					if (bOnine == true && nClient != nCntMember)
+						m_pTime[nCntMember]->Setcol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
 				}
-
-				nPlayerNum++;
 			}
 		}
 	}
@@ -1033,17 +1199,17 @@ void CGamePlay::Update(void)
 					{// オンライン
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-								(SCREEN_WIDTH * 0.5f),
+							(SCREEN_WIDTH * 0.5f),
 								(SCREEN_HEIGHT * 0.5f) -
 								(((SCREEN_HEIGHT * 0.5f) - (GOUL_SIZE_2P.y * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),
-								GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
+							GOUL_SIZE_2P * (1.0f - (0.5f * (float)((float)nFrame / (float)60))));
 					}
 					else
 					{// オンラインじゃない
 						m_pGoul[nCntPlayer]->SetPosSize(
 							D3DXVECTOR3(
-								(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
+							(SCREEN_WIDTH * ((nMaxPlayer - 1) / 2 == 0 ? 0.5f : (nCntPlayer % 2 == 0 ? 0.25f : 0.75f))),
 								(SCREEN_HEIGHT * ((nMaxPlayer - 1) == 0 ? 0.5f : ((nMaxPlayer - 1) / 2 == 0 ? (nCntPlayer % 2 == 0 ? 0.25f : 0.75f) : (nCntPlayer / 2 == 0 ? 0.25f : 0.75f)))) -
 								((((nMaxPlayer - 1) == 0 ? (SCREEN_HEIGHT * 0.5f) : (SCREEN_HEIGHT * 0.25f)) - (((nMaxPlayer - 1) / 2 == 0 ? GOUL_SIZE_2P.y : GOUL_SIZE_4P.y) * (1.0f - (0.5f * (float)((float)nFrame / (float)60))))) * (float)((float)nFrame / (float)60)),
 								0.0f),

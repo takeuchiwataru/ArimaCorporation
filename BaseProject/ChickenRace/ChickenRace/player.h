@@ -306,6 +306,8 @@ public:
 	static char *GetLineTop(char *pStr);						//s‚Ìæ“ª‚ğæ“¾
 	static int  PopString(char *pStr, char *pDest);			//s‚ÌÅŒã‚ğØ‚èÌ‚Ä
 
+	float HatchTime_P(int nItem);
+
 private:
 	void UpdateRace(void);
 	void UpdateSelect(void);

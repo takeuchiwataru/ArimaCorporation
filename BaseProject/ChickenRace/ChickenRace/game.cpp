@@ -158,7 +158,7 @@ HRESULT CGame::Init()
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
 	{
-		m_nPlayerposNum[nCntPlayer] = 99;
+		m_nPlayerposNum[nCntPlayer] = nCntPlayer;
 	}	
 
 	for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
@@ -995,6 +995,10 @@ void CGame::SetPlayer(bool bCreate, int nMode)
 		case GAMEMODE_COURSESELECT:		// コース選択
 			break;
 		case GAMEMODE_COURSE_VIEW:		// コースビュー選択
+			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)
+			{
+				m_nPlayerposNum[nCntPlayer] = 99;
+			}
 			// プレイヤー位置をランダム
 			bool bLoop;
 			for (int nCntPlayer = 0; nCntPlayer < MAX_PLAYER; nCntPlayer++)

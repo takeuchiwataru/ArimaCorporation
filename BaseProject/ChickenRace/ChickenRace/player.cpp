@@ -2789,6 +2789,31 @@ float CPlayer::HatchTime(float fTime, float fAddTime)
 }
 
 //=============================================================================
+// ひよこの成長速度（％）設定
+//=============================================================================
+float CPlayer::HatchTime_P(int nItem)
+{
+	float fHatchTime_P = 0.0f;
+
+	nItem -= m_nNumChick;
+	if (nItem < 0) { nItem = 0; }
+
+	if (m_pEgg[nItem] != NULL)
+	{
+		if (m_pEgg[nItem]->GetHatchingTimer() <= HatchTime(HATCH_TIME, 400.0f))
+			fHatchTime_P = ((float)(m_pEgg[nItem]->GetHatchingTimer()) / HatchTime(HATCH_TIME, 400.0f));
+		else
+			fHatchTime_P = 1.0f;
+	}
+	else
+	{
+		fHatchTime_P = 0.0f;
+	}
+
+	return fHatchTime_P;
+}
+
+//=============================================================================
 // ひよこの種類設定
 //=============================================================================
 CChick::TYPE CPlayer::SetChickType(CChick::TYPE type, bool bStrong)

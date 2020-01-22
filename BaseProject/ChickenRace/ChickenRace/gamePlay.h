@@ -66,6 +66,7 @@ private:
 	CScene2D *m_pTutorial;							// チュートリアル
 	CScene2D *m_pRanking[MAX_PLAYER];				// ランキング
 	CScene2D *m_pItemFrame[MAX_PLAYER][MAX_EGG];	// アイテム
+	CScene2D *m_pItemGauge[MAX_PLAYER][MAX_EGG];	// アイテムゲージ
 	CScene2D *m_pItem[MAX_PLAYER][MAX_EGG];			// アイテム
 	CScene2D *m_pItemClose[MAX_PLAYER][MAX_EGG];	// アイテム×
 	int		 m_nCloseCounter[MAX_PLAYER];			// ×カウント
