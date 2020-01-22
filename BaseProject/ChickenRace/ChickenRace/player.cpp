@@ -2901,60 +2901,63 @@ void CPlayer::AnnoyChicks(void)
 	{
 		if (pPlayer[nCntPlayer] != NULL)
 		{
-			if (nCntPlayer != m_nPlayerNum)
+			if (pPlayer[nCntPlayer]->m_State != PLAYERSTATE_SPEEDUP_S)
 			{
-				if (m_pAnnoyChick[nCntPlayer] == NULL)
+				if (nCntPlayer != m_nPlayerNum)
 				{
-					m_pAnnoyChick[nCntPlayer] = CChick::Create(
-						D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + ANNOY_TO_PLAYER, pPlayer[nCntPlayer]->GetPos().z),
-						D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-						CHICK_SCALE,
-						CChick::TYPE_ANNOY_S,
-						CChick::BULLETTYPE_PLAYER,
-						CChick::STATE_BULLET,
-						m_nPlayerNum);
-
-					if (m_pAnnoyChick[nCntPlayer]->GetState() == CChick::STATE_BULLET
-						&& m_pAnnoyChick[nCntPlayer]->GetType() == CChick::TYPE_ANNOY_S
-						&& m_pAnnoyChick[nCntPlayer]->GetAttackS() == false
-						&& m_pAnnoyChick[nCntPlayer]->GetDis() == true)
+					if (m_pAnnoyChick[nCntPlayer] == NULL)
 					{
-						m_pAnnoyChick[nCntPlayer]->SetAttackS(true);
-						m_pAnnoyChick[nCntPlayer]->SetRank(nRanking);
-					}
-
-					D3DXVECTOR2 fSize;
-
-					for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
-					{
-						fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
-						fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
-
-						CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[nCntPlayer]->GetPos().x,
-							pPlayer[nCntPlayer]->GetPos().y + ANNOY_TO_PLAYER,
-							(cosf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[nCntPlayer]->GetPos().z),
-							D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 1 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
-							D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
-							fSize,
-							30,
-							CParticle::TEXTURE_SMOKE,
-							CParticle::TYPE_TURN,
+						m_pAnnoyChick[nCntPlayer] = CChick::Create(
+							D3DXVECTOR3(pPlayer[nCntPlayer]->GetPos().x, pPlayer[nCntPlayer]->GetPos().y + ANNOY_TO_PLAYER, pPlayer[nCntPlayer]->GetPos().z),
+							D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+							CHICK_SCALE,
+							CChick::TYPE_ANNOY_S,
+							CChick::BULLETTYPE_PLAYER,
+							CChick::STATE_BULLET,
 							m_nPlayerNum);
-					}
 
-					if (pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP || pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
-					{
-						pPlayer[nCntPlayer]->EndBoost();
-						pPlayer[nCntPlayer]->m_nCountSpeed = 0;
-						if (pPlayer[nCntPlayer]->m_bSpeedEgg == true)
+						if (m_pAnnoyChick[nCntPlayer]->GetState() == CChick::STATE_BULLET
+							&& m_pAnnoyChick[nCntPlayer]->GetType() == CChick::TYPE_ANNOY_S
+							&& m_pAnnoyChick[nCntPlayer]->GetAttackS() == false
+							&& m_pAnnoyChick[nCntPlayer]->GetDis() == true)
 						{
-							pPlayer[nCntPlayer]->m_bSpeedEgg = false;
+							m_pAnnoyChick[nCntPlayer]->SetAttackS(true);
+							m_pAnnoyChick[nCntPlayer]->SetRank(nRanking);
 						}
-					}
-					pPlayer[nCntPlayer]->SetState(PLAYERSTATE_SPEEDDOWN_S);
 
-					pPlayer[nCntPlayer]->CancelMotion(PLAYERANIM_DAMAGE, false); // �Ȃ���܏C��1/16
-					m_bAnnoyS = true;
+						D3DXVECTOR2 fSize;
+
+						for (int nCntParticle = 0; nCntParticle < MAX_SMOKE; nCntParticle++)
+						{
+							fSize.x = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+							fSize.y = SMOKE_SIZE + (float)(CServer::Rand() % 3);
+
+							CParticle::Create(D3DXVECTOR3((sinf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[nCntPlayer]->GetPos().x,
+								pPlayer[nCntPlayer]->GetPos().y + ANNOY_TO_PLAYER,
+								(cosf(m_rot.y + D3DX_PI) * -30.0f) + pPlayer[nCntPlayer]->GetPos().z),
+								D3DXVECTOR3(sinf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 1 + 1)), cosf((CServer::Rand() % 628) / 100.0f) * ((CServer::Rand() % 3 + 1))),
+								D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f),
+								fSize,
+								30,
+								CParticle::TEXTURE_SMOKE,
+								CParticle::TYPE_TURN,
+								m_nPlayerNum);
+						}
+
+						if (pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP || pPlayer[nCntPlayer]->GetPlayerState() == CPlayer::PLAYERSTATE_SPEEDUP_S)
+						{
+							pPlayer[nCntPlayer]->EndBoost();
+							pPlayer[nCntPlayer]->m_nCountSpeed = 0;
+							if (pPlayer[nCntPlayer]->m_bSpeedEgg == true)
+							{
+								pPlayer[nCntPlayer]->m_bSpeedEgg = false;
+							}
+						}
+						pPlayer[nCntPlayer]->SetState(PLAYERSTATE_SPEEDDOWN_S);
+
+						pPlayer[nCntPlayer]->CancelMotion(PLAYERANIM_DAMAGE, false); // �Ȃ���܏C��1/16
+						m_bAnnoyS = true;
+					}
 				}
 			}
 		}
