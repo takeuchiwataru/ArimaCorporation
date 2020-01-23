@@ -776,7 +776,7 @@ void CPlayer::UpdateAI(void)
 	else
 		m_nStartCounter++;
 
-	m_move *= 0.99f;
+	m_move *= 0.9865f;
 	m_fAddRotOld = fDifference;
 	if (m_fCntAho < 0.0f) { m_fCntAho++; }
 	if (!m_bJump && m_bSJump)
@@ -3229,6 +3229,9 @@ void CPlayer::SetStick(CInputJoyPad_0 *&pPad, int nNum)
 			float fValue = (float)pPad->GetnStickX(nNum);
 			if (fValue < 0.0f) { fValue = -fValue - 1.0f; }
 			m_fStick = fValue / 32767.0f;
+			m_fStick *= 2.0f;
+			if (m_fStick > 1.0f) { m_fStick = 1.0f; }
+			if (m_fStick < -1.0f) { m_fStick = -1.0f; }
 		}
 		else { m_fStick = 1.0f; }
 

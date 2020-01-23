@@ -358,7 +358,7 @@ void CManager::Uninit(void)
 //=============================================================================
 void CManager::Update(void)
 {
-	m_nInput = (m_nInput + 1) % 2;
+	m_nInput = (m_nInput + 1) % 4;
 
 	// キーボード更新処理
 	m_pInputKeyBoard->Update();
