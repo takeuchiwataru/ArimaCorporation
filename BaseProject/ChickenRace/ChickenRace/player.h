@@ -409,6 +409,7 @@ private:
 	int							  m_nNumItem;
 	int							  m_nAnnoySTimer;
 	BULLET						  m_bulletType[MAX_EGG];
+	int								m_Int;
 
 	int							  m_nDriftCounter;				// ドリフトカウント
 

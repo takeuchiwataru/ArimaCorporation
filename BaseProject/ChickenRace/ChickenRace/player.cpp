@@ -303,7 +303,7 @@ HRESULT CPlayer::Init(void)
 	m_bJumpOld = m_bJump;
 	m_bSJump = false;
 	m_pFMesh = NULL;
-
+	m_Int = 0;
 	m_fCountFlame = 0;
 	m_nKey = 0;
 
@@ -581,10 +581,12 @@ void CPlayer::UpdateRace(void)
 
 	CollisionFeed();		// 餌の当たり判定
 
-	CollisionEgg();			// 卵との当たり判定
-
-	CollisionChick();		// ひよことの当たり判定
-
+	if (m_Int <= 0)
+	{
+		CollisionEgg();			// 卵との当たり判定
+		CollisionChick();		// ひよことの当たり判定
+	}
+	else { m_Int--; }
 	ChaseEgg();				// 卵がついてくる処理
 
 	CollisionCharacter();	// キャラクター同士の当たり判定
@@ -2496,6 +2498,7 @@ void CPlayer::CollisionEgg(void)
 			{
 				if (pEgg->CollisionEgg(&m_pos, &m_OldPos) == true)
 				{// 衝突した
+					m_Int = 120;
 					switch (pEgg->GetType())
 					{
 						// 攻撃
@@ -2573,6 +2576,7 @@ void CPlayer::CollisionChick(void)
 			{
 				if (pChick->CollisionChick(&m_pos, &m_OldPos) == true)
 				{// 衝突した
+					m_Int = 120;
 					switch (pChick->GetType())
 					{
 						// 攻撃
@@ -2938,8 +2942,9 @@ void CPlayer::AnnoyChicks(void)
 		{
 			if (pPlayer[nCntPlayer]->m_State != PLAYERSTATE_SPEEDUP_S)
 			{
-				if (nCntPlayer != m_nPlayerNum)
+				if (nCntPlayer != m_nPlayerNum && pPlayer[nCntPlayer]->m_Int <= 0)
 				{
+					pPlayer[nCntPlayer]->m_Int = 120;
 					if (m_pAnnoyChick[nCntPlayer] == NULL)
 					{
 						m_pAnnoyChick[nCntPlayer] = CChick::Create(
