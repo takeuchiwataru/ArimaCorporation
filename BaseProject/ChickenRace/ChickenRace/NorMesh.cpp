@@ -10,6 +10,7 @@
 #include "DispEffect.h"
 #include "renderer.h"
 #include "manager.h"
+#include "object.h"
 
 //*****************************************************************************
 // É}ÉNÉçíËã`
@@ -425,7 +426,7 @@ void	CCylinder::Set(D3DXVECTOR3 &pos, D3DXVECTOR3 &rot, TYPE type)
 		m_fCntState = DISTIME;
 		m_fLengthY = 25.0f;
 		GetnNumDraw() = 3;
-		m_fLengthXZ[0] = ANNOY_RANGE + 10.0f; m_fLengthXZ[1] = ANNOY_RANGE;
+		m_fLengthXZ[0] = ANNOY_RANGE + 10.0f + PLAYER_DEPTH; m_fLengthXZ[1] = ANNOY_RANGE + PLAYER_DEPTH;
 		break;
 	}
 	SetCylinder(m_fLengthY, m_fLengthXZ[0], m_fLengthXZ[1]);

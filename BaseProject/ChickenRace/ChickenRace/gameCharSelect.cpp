@@ -1225,7 +1225,8 @@ void CGameCharSelect::Local(void)
 
 		pXpad = CManager::GetInputJoyPad0(pnControllerNum[0]);		//ジョイパットの取得
 
-		if (pCInputKeyBoard->GetKeyboardPress(DIK_X) == true || pXpad->GetPress(INPUT_A) == true)
+		if (pCInputKeyBoard->GetKeyboardPress(DIK_X) == true || pXpad->GetPress(INPUT_A) == true
+			|| pXpad->GetPress(INPUT_L2) == true)
 		{
 			if (m_nReturnCounter < 90)
 				m_nReturnCounter++;

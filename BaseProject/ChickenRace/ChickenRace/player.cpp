@@ -266,7 +266,7 @@ HRESULT CPlayer::Init(void)
 	m_bAnnoyS = false;
 	m_bSChick = false;
 	m_bSpeedEgg = false;
-
+	
 	m_nDriftCounter = 0;		// ドリフトカウント
 
 	for (int nCount = 0; nCount < MAX_PLAYCOL; nCount++) { m_fCola[nCount] = 1.0f; }
@@ -744,7 +744,7 @@ void CPlayer::UpdateAI(void)
 
 	AICurve(fRot, fDifference);
 
-	if (m_nStartCounter == m_nStartFrame)
+	if (m_nStartCounter == m_nStartFrame / (m_nCharacterNum + 1))
 	{
 		if (m_fCntAho == 0.0f)
 		{//アホになれる
@@ -776,6 +776,7 @@ void CPlayer::UpdateAI(void)
 	else
 		m_nStartCounter++;
 
+	m_move *= 0.99f;
 	m_fAddRotOld = fDifference;
 	if (m_fCntAho < 0.0f) { m_fCntAho++; }
 	if (!m_bJump && m_bSJump)
@@ -807,7 +808,7 @@ float CPlayer::AIInduction(void)
 
 	fRot = fRot - (m_rot.y + m_fAddRot);
 	RemakeAngle(&fRot);
-	fRot *= 0.05f + (m_nCharacterNum * 0.0075f);
+	fRot *= 0.035f + (m_nCharacterNum * 0.1f);
 	RemakeAngle(&fRot);
 	return fRot;
 }
@@ -824,7 +825,7 @@ void CPlayer::AICurve(float &fRot, float &fDifference)
 	//ドリフトに修正
 	if (fRot < 0.0f) { fRot = -PLAYER_ADDROT; }
 	else { fRot = PLAYER_ADDROT; }
-	fRot += (fCurve - fRot) * (m_nCharacterNum * 0.1f);
+	fRot += (fCurve - fRot) * (m_nCharacterNum * 0.05f);
 	RemakeAngle(&fRot);
 }
 //=============================================================================
@@ -928,6 +929,8 @@ void CPlayer::UseItem(void)
 bool CPlayer::UseATK(int &nRank)
 {
 	if ((m_Induction == INDUCTION_ITEM || nRank > 6) && m_nNumItem > 2) { return true; }
+	if (m_pEnmPoint->GetpNextPointer(0) == NULL && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1) { return true; }
+
 	float fWk;
 
 	switch (m_bulletType[0])
@@ -957,6 +960,8 @@ bool CPlayer::UseATK(int &nRank)
 bool CPlayer::UseDEF(int &nRank)
 {
 	if ((m_nNumItem > 2 || nRank <= 0) && m_Induction == INDUCTION_ITEM) { return true; }
+	if (m_pEnmPoint->GetpNextPointer(0) == NULL && m_nMap == CCOL_MESH_MANAGER::TYPE_MAX - 1) { return true; }
+
 	float fWk = m_rot.y - m_fRotOld;
 
 	switch (m_bulletType[0])
@@ -964,11 +969,11 @@ bool CPlayer::UseDEF(int &nRank)
 	case BULLET_CHICK_ANNOY:	//近かったら
 		if (nRank - 1 > 0)
 		{//次の順位のやつ
-			if (GetDistance(nRank - 1) < 80.0f) { return true; }
+			if (GetDistance(nRank - 1) < 95.0f) { return true; }
 		}
 		if (nRank + 1 < MAX_RACER - 1)
 		{//前の順位のやつ
-			if (GetDistance(nRank + 1) < 80.0f) { return true; }
+			if (GetDistance(nRank + 1) < 95.0f) { return true; }
 		}
 		break;
 	case BULLET_EGG_ANNOY:		//曲がっていたら
@@ -1354,10 +1359,6 @@ void CPlayer::ControlKey(void)
 		{//ハンドルを触っていない状態
 			SetStateHandle(HANDLE_MAX);
 		}
-	}
-	else
-	{
-		SetStateHandle(HANDLE_MAX);
 	}
 
 	// 操作
